@@ -46,7 +46,7 @@ export default function Idea1HeroVisual() {
             <div className="h-1.5 w-1/2 bg-black/10 rounded-full" />
           </motion.div>
 
-          {/* CENTER: RCMS Core Engine */}
+          {/* CENTER: AstreWork Core Engine */}
           <motion.div 
             animate={{ 
               boxShadow: [
@@ -75,7 +75,7 @@ export default function Idea1HeroVisual() {
             <div className="w-12 h-12 bg-gradient-to-br from-[#0071e3] to-cyan-400 rounded-2xl flex items-center justify-center mb-3 shadow-lg relative z-10">
               <FileCode2 className="w-6 h-6 text-white" />
             </div>
-            <div className="text-[12px] font-bold tracking-widest text-[#1d1d1f] relative z-10">RCMS CORE</div>
+            <div className="text-[12px] font-bold tracking-widest text-[#1d1d1f] relative z-10">ASTREWORK CORE</div>
             
             <motion.div 
               animate={{ opacity: [1, 1, 0, 1] }}

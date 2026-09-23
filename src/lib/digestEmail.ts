@@ -28,8 +28,8 @@ export function generateDigestHtml(data: DigestData): string {
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #000; margin-bottom: 5px;">Remote Career Management System</h1>
-        <p style="color: #666; font-size: 16px; margin-top: 0;">Your Daily Job Digest</p>
+        <h1 style="color: #000; margin-bottom: 5px;">AstreWork</h1>
+        <p style="color: #666; font-size: 16px; margin-top: 0;">Autonomous Career Intelligence Digest</p>
       </div>
 
       <p>Hi ${userName},</p>

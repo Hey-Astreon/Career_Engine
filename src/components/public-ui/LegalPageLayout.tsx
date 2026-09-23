@@ -18,7 +18,7 @@ export default function LegalPageLayout({ title, lastUpdated, children }: LegalP
             <svg viewBox="0 0 100 100" className="w-5 h-5 text-[#1d1d1f]" fill="currentColor">
               <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
             </svg>
-            <span className="font-bold tracking-tight text-[15px]">RCMS</span>
+            <span className="font-bold tracking-tight text-[15px]">AstreWork</span>
           </Link>
         </div>
       </nav>

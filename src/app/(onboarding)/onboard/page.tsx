@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-2">Set up your workspace</h1>
-          <p className="text-[#86868b] text-[15px] font-medium">Let&apos;s personalize RCMS for your career goals.</p>
+          <p className="text-[#86868b] text-[15px] font-medium">Let&apos;s personalize AstreWork for your career goals.</p>
         </div>
         
         {/* Wizard */}

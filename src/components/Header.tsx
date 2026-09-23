@@ -21,7 +21,7 @@ export function Header() {
   return (
     <header className="ce-header">
       <div className="ce-header-title">
-        <b>RCMS</b>
+        <b>AstreWork</b>
         <span>{titles[pathname] || "Candidate workspace"}</span>
       </div>
       <div className="ce-command" aria-label="Search shortcut hint">

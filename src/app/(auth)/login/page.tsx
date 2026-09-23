@@ -40,7 +40,7 @@ export default function LoginPage() {
         <svg viewBox="0 0 100 100" className="w-8 h-8 text-black" fill="currentColor">
           <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
         </svg>
-        <span className="font-bold tracking-tighter text-xl">RCMS</span>
+        <span className="font-bold tracking-tighter text-xl">AstreWork</span>
       </div>
 
       <div className="w-full max-w-[400px] p-8 sm:p-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-black/[0.04]">
@@ -128,7 +128,7 @@ export default function LoginPage() {
         
         <div className="mt-8 text-center">
           <p className="text-[13px] text-[#86868b]">
-            New to RCMS? <a href="/onboard" className="text-[#0071e3] hover:underline hover:text-[#0077ED] font-medium">Create an account <ArrowRight className="inline-block w-3 h-3 ml-0.5" /></a>
+            New to AstreWork? <a href="/onboard" className="text-[#0071e3] hover:underline hover:text-[#0077ED] font-medium">Create an account <ArrowRight className="inline-block w-3 h-3 ml-0.5" /></a>
           </p>
         </div>
       </div>

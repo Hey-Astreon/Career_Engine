@@ -21,7 +21,7 @@ export const authOptions: NextAuthOptions = {
     }),
     EmailProvider({
       server: process.env.EMAIL_SERVER || "",
-      from: process.env.EMAIL_FROM || "noreply@rcms.app",
+      from: process.env.EMAIL_FROM || "noreply@astrework.com",
     }),
     CredentialsProvider({
       name: "Credentials",

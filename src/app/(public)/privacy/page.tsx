@@ -4,7 +4,7 @@ export default function PrivacyPolicy() {
   return (
     <LegalPageLayout title="Privacy Policy" lastUpdated="September 23, 2026">
       <p>
-        At RCMS (Remote Career Management System), we are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner. This Privacy Policy outlines how we collect, use, and safeguard your data.
+        At AstreWork, we are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner. This Privacy Policy outlines how we collect, use, and safeguard your data.
       </p>
 
       <h2>1. Information We Collect</h2>
@@ -22,7 +22,7 @@ export default function PrivacyPolicy() {
         We use the collected data for the following purposes:
       </p>
       <ul>
-        <li>To provide, maintain, and improve the RCMS platform.</li>
+        <li>To provide, maintain, and improve the AstreWork platform.</li>
         <li>To power our AI resume optimization and ATS-scoring features.</li>
         <li>To send you transactional emails, account updates, and support messages.</li>
         <li>To monitor usage trends and improve the user experience.</li>
@@ -40,7 +40,7 @@ export default function PrivacyPolicy() {
       <ul>
         <li>With service providers who assist us in operating the platform (e.g., cloud hosting, email delivery).</li>
         <li>If required by law, subpoena, or other legal processes.</li>
-        <li>To protect the rights, property, or safety of RCMS, our users, or the public.</li>
+        <li>To protect the rights, property, or safety of AstreWork, our users, or the public.</li>
       </ul>
 
       <h2>5. Data Security</h2>

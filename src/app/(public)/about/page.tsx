@@ -5,7 +5,7 @@ export default function AboutUs() {
   return (
     <LegalPageLayout title="About Us">
       <p className="text-xl font-medium text-[#1d1d1f] mb-8">
-        We built RCMS to solve a single, exhausting problem: sending resumes into the void.
+        We built AstreWork to solve a single, exhausting problem: sending resumes into the void.
       </p>
 
       <h2>Our Mission</h2>
@@ -13,7 +13,7 @@ export default function AboutUs() {
         The modern job search is broken. Highly qualified candidates spend hours adjusting margins, tweaking keywords, and manually tracking spreadsheets of applications across dozens of job boards. And despite all that effort, most applications are filtered out by Applicant Tracking Systems (ATS) before a human ever sees them.
       </p>
       <p>
-        RCMS (Remote Career Management System) was born out of frustration with this status quo. We believe that securing a great remote job shouldn't require you to become an expert in reverse-engineering recruiting software. 
+        AstreWork was born out of frustration with this status quo. We believe that securing a great remote job shouldn't require you to become an expert in reverse-engineering recruiting software. 
       </p>
 
       <h2>What We Do</h2>

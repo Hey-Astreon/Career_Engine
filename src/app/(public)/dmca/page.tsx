@@ -4,12 +4,12 @@ export default function DMCAPolicy() {
   return (
     <LegalPageLayout title="DMCA Copyright Policy" lastUpdated="September 23, 2026">
       <p>
-        RCMS (Remote Career Management System) respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 (DMCA), we will respond expeditiously to claims of copyright infringement committed using our service.
+        AstreWork respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 (DMCA), we will respond expeditiously to claims of copyright infringement committed using our service.
       </p>
 
       <h2>Reporting Copyright Infringement</h2>
       <p>
-        If you are a copyright owner, authorized to act on behalf of one, or authorized to act under any exclusive right under copyright, please report alleged copyright infringements taking place on or through the RCMS platform by submitting a formal DMCA Notice.
+        If you are a copyright owner, authorized to act on behalf of one, or authorized to act under any exclusive right under copyright, please report alleged copyright infringements taking place on or through the AstreWork platform by submitting a formal DMCA Notice.
       </p>
       <p>
         Your DMCA Notice must include the following information:
@@ -32,7 +32,7 @@ export default function DMCAPolicy() {
         Deliver this Notice, with all items completed, to our Designated Copyright Agent at:
       </p>
       <p>
-        <strong>Email:</strong> legal@rcms.com
+        <strong>Email:</strong> legal@astrework.com
       </p>
 
       <h2>Counter-Notice</h2>

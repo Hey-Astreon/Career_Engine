@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 /**
  * Public metrics endpoint for the landing page.
- * Returns live, real numbers from the RCMS database.
+ * Returns live, real numbers from the AstreWork database.
  * No authentication required — these are public trust signals.
  */
 export async function GET() {

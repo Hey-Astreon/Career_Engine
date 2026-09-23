@@ -60,7 +60,7 @@ function HeroSection({ metrics }: { metrics: { totalJobsIndexed: number; totalPr
             variants={fadeUp}
             className="text-[18px] sm:text-[21px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
           >
-            RCMS automatically finds verified remote jobs from {metrics.totalProviders || "20"}+ platforms,
+            AstreWork automatically finds verified remote jobs from {metrics.totalProviders || "20"}+ platforms,
             builds ATS-proof resumes that actually get read, and tracks every application —
             so you can focus on landing interviews, not managing spreadsheets.
           </motion.p>
@@ -227,7 +227,7 @@ function ProblemSection() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 3 — THE SOLUTION  (How RCMS Works)
+   SECTION 3 — THE SOLUTION  (How AstreWork Works)
    Goal: Show exactly how each pain point is eliminated. 3 clear steps.
    ════════════════════════════════════════════════════════════════════════════ */
 function SolutionSection() {
@@ -236,9 +236,9 @@ function SolutionSection() {
       step: "01",
       title: "We find the jobs, so you don't have to.",
       description:
-        "RCMS scans 20+ remote job platforms every hour — LinkedIn, Wellfound, Himalayas, WeWorkRemotely, and more. We automatically filter out expired listings, duplicates, and scam postings. You only see verified, active opportunities that match your profile.",
+        "AstreWork scans 20+ remote job platforms every hour — LinkedIn, Wellfound, Himalayas, WeWorkRemotely, and more. We automatically filter out expired listings, duplicates, and scam postings. You only see verified, active opportunities that match your profile.",
       image: "/landing-dashboard.png",
-      imageAlt: "RCMS Discovery Feed showing curated remote job listings with match scores",
+      imageAlt: "AstreWork Discovery Feed showing curated remote job listings with match scores",
       accent: "from-blue-500 to-cyan-400",
     },
     {
@@ -247,7 +247,7 @@ function SolutionSection() {
       description:
         "Our ATS Resume Maker analyzes your resume against real enterprise parsers and scores it on 6 critical metrics. It tells you exactly which keywords are missing, what formatting breaks ATS extraction, and how to optimize for a 95%+ pass rate — before you hit apply.",
       image: "/landing-resume-maker.png",
-      imageAlt: "RCMS ATS Resume Maker showing a Tier-1 resume with 99% ATS health score",
+      imageAlt: "AstreWork ATS Resume Maker showing a Tier-1 resume with 99% ATS health score",
       accent: "from-emerald-500 to-teal-400",
     },
     {
@@ -275,7 +275,7 @@ function SolutionSection() {
             variants={fadeUp}
             className="text-[36px] sm:text-[48px] font-semibold tracking-tight text-[#1d1d1f] mb-4 leading-tight"
           >
-            Here's how RCMS fixes it.
+            Here's how AstreWork fixes it.
           </motion.h2>
           <motion.p variants={fadeUp} className="text-[18px] text-[#6e6e73] font-medium">
             Three systems working together. One workspace doing the heavy lifting.
@@ -434,7 +434,7 @@ function TrustSection() {
             variants={fadeUp}
             className="text-[18px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-16 font-medium leading-relaxed"
           >
-            RCMS started as a personal tool we built to manage our own remote job search.
+            AstreWork started as a personal tool we built to manage our own remote job search.
             We open-sourced the career engine because nobody should have to fight
             ATS robots and ghost postings alone.
           </motion.p>
@@ -481,7 +481,7 @@ function CTASection() {
           <br className="hidden sm:block" /> than a spreadsheet.
         </motion.h2>
         <motion.p variants={fadeUp} className="text-[18px] text-[#6e6e73] font-medium mb-10 leading-relaxed">
-          Join RCMS and start managing your remote job search with the same precision
+          Join AstreWork and start managing your remote job search with the same precision
           that top engineering teams use to ship products.
         </motion.p>
         <motion.div variants={fadeUp}>
@@ -529,7 +529,7 @@ function InteractiveDemoSection() {
           Test the Engine.
         </h2>
         <p className="text-[16px] text-gray-400 font-medium mb-10 max-w-xl mx-auto">
-          Type your target role below to see how many verified remote opportunities RCMS can index for you right now.
+          Type your target role below to see how many verified remote opportunities AstreWork can index for you right now.
         </p>
         
         <form onSubmit={handleScan} className="max-w-lg mx-auto bg-white/10 p-2 rounded-2xl flex border border-white/10 backdrop-blur-md transition-all focus-within:border-white/30 focus-within:bg-white/20">
@@ -586,9 +586,9 @@ function InteractiveDemoSection() {
 function FAQSection() {
   const faqs = [
     { q: "Is my resume data private?", a: "Yes. Your resume data is only used for your job matching and ATS formatting. We never sell your data or use it to train public models." },
-    { q: "How is this different from LinkedIn or Indeed?", a: "LinkedIn is a social network. RCMS is a personal career engine. We aggregate jobs from LinkedIn, Indeed, and 18 other platforms, remove the noise, and track your applications automatically." },
+    { q: "How is this different from LinkedIn or Indeed?", a: "LinkedIn is a social network. AstreWork is a personal career engine. We aggregate jobs from LinkedIn, Indeed, and 18 other platforms, remove the noise, and track your applications automatically." },
     { q: "Does the ATS Resume Maker actually work?", a: "Our templates are tested against popular ATS parsers like Workday, Greenhouse, and Lever. We ensure strict layout parsing so your keywords are actually read by the machine." },
-    { q: "Is RCMS really free?", a: "The core engine (job discovery and basic resume scanning) is completely free. We plan to offer a Pro tier for advanced AI-driven cover letter generation in the future." },
+    { q: "Is AstreWork really free?", a: "The core engine (job discovery and basic resume scanning) is completely free. We plan to offer a Pro tier for advanced AI-driven cover letter generation in the future." },
   ];
   
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -645,7 +645,7 @@ export default function LandingPage() {
           <svg viewBox="0 0 100 100" className="w-5 h-5 text-[#1d1d1f]" fill="currentColor">
             <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
           </svg>
-          <span className="font-bold tracking-tight text-[15px]">RCMS</span>
+          <span className="font-bold tracking-tight text-[15px]">AstreWork</span>
         </div>
         <div className="flex items-center space-x-6 text-[14px] font-medium">
           <Link href="/login" className="text-[#6e6e73] hover:text-[#1d1d1f] transition-colors">
@@ -685,7 +685,7 @@ export default function LandingPage() {
               <h3 className="font-semibold text-[#1d1d1f] text-[13px] mb-4">Support</h3>
               <ul className="space-y-3 text-[13px] text-[#86868b]">
                 <li><Link href="/contact" className="hover:text-[#1d1d1f] transition-colors">Contact Us</Link></li>
-                <li><a href="mailto:support@rcms.com" className="hover:text-[#1d1d1f] transition-colors">Help Center</a></li>
+                <li><a href="mailto:support@astrework.com" className="hover:text-[#1d1d1f] transition-colors">Help Center</a></li>
               </ul>
             </div>
             <div>
@@ -705,12 +705,12 @@ export default function LandingPage() {
           </div>
           
           <div className="pt-8 border-t border-black/[0.04] flex flex-col md:flex-row justify-between items-center text-[12px] font-medium text-[#86868b] space-y-4 md:space-y-0">
-            <p>© {new Date().getFullYear()} RCMS. Built with conviction.</p>
+            <p>© {new Date().getFullYear()} AstreWork. Built with conviction.</p>
             <div className="flex items-center space-x-2">
               <svg viewBox="0 0 100 100" className="w-4 h-4 text-[#1d1d1f]" fill="currentColor">
                 <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
               </svg>
-              <span className="font-semibold text-[#1d1d1f]">Remote Career Management System</span>
+              <span className="font-semibold text-[#1d1d1f]">AstreWork Autonomous Career Engine</span>
             </div>
           </div>
         </div>

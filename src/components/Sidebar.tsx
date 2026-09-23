@@ -42,12 +42,12 @@ export function Sidebar() {
       <Link
         href="/"
         className="group block transition-all"
-        aria-label="RCMS - Remote Career Management System"
+        aria-label="AstreWork - Autonomous Remote Career Intelligence"
       >
         <div className="flex h-[54px] w-full items-center justify-center rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
           <Image
             src="/rcms-logo.png"
-            alt="RCMS - Remote Career Management System"
+            alt="AstreWork - Autonomous Remote Career Intelligence"
             width={180}
             height={50}
             className="h-full w-auto max-w-full object-contain"
@@ -56,7 +56,7 @@ export function Sidebar() {
         </div>
       </Link>
       <div className="ce-nav-label !mt-4">Candidate workspace</div>
-      <nav className="ce-nav" aria-label="RCMS navigation">
+      <nav className="ce-nav" aria-label="AstreWork navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
@@ -87,7 +87,7 @@ export function Sidebar() {
       </div>
       <div className="ce-rail-footer flex flex-col gap-1 items-start">
         <div>
-          <i className="ce-dot" />RCMS ONLINE
+          <i className="ce-dot" />AstreWork ONLINE
         </div>
         {schedulerStatus && (
           <div className="text-[9px] text-gray-500 flex items-center gap-1 mt-1">

@@ -58,7 +58,7 @@ export default function RegisterPage() {
         <svg viewBox="0 0 100 100" className="w-8 h-8 text-black" fill="currentColor">
           <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
         </svg>
-        <span className="font-bold tracking-tighter text-xl">RCMS</span>
+        <span className="font-bold tracking-tighter text-xl">AstreWork</span>
       </div>
 
       <div className="w-full max-w-[400px] p-8 sm:p-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-black/[0.04]">

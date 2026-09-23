@@ -4,7 +4,7 @@ export default function CookiePolicy() {
   return (
     <LegalPageLayout title="Cookie Policy" lastUpdated="September 23, 2026">
       <p>
-        This Cookie Policy explains how RCMS ("we", "us", or "our") uses cookies and similar tracking technologies when you visit our website and use our platform.
+        This Cookie Policy explains how AstreWork ("we", "us", or "our") uses cookies and similar tracking technologies when you visit our website and use our platform.
       </p>
 
       <h2>1. What are Cookies?</h2>
