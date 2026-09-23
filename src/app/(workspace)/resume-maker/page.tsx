@@ -31,8 +31,11 @@ import {
   renderResumeMarkdown,
   renderResumePlaintext,
 } from "@/lib/resumeBaseline";
+import { useProfileStore } from "@/store/useProfileStore";
+import { ResumeVariantsSidebar } from "@/components/ResumeVariantsSidebar";
 
 export default function ResumeMakerPage() {
+  const { activeProfileSlug, activeProfile } = useProfileStore();
   // Active starter preset selection
   const [selectedPresetId, setSelectedPresetId] = useState<string>("systems_backend");
   const [resumeData, setResumeData] = useState<OptimizedResume>(() => {
@@ -41,11 +44,13 @@ export default function ResumeMakerPage() {
 
   // UI state
   const [activeSection, setActiveSection] = useState<string>("header");
-  const [zoomScale, setZoomScale] = useState<number>(1);
+  const [zoomScale, setZoomScale] = useState<number>(0.85);
   const [showHeatmap, setShowHeatmap] = useState<boolean>(false);
   const [showFScan, setShowFScan] = useState<boolean>(false);
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [showVariantsDrawer, setShowVariantsDrawer] = useState<boolean>(false);
+  const [showAtsChecklist, setShowAtsChecklist] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,23 +65,52 @@ export default function ResumeMakerPage() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // Populate from active candidate profile
+  const handleSyncActiveProfile = () => {
+    if (!activeProfile) {
+      showToast("No active candidate profile found");
+      return;
+    }
+    setResumeData((prev) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      if (activeProfile.fullName) updated.header.fullName = activeProfile.fullName;
+      if (activeProfile.title) updated.header.targetHeadline = activeProfile.title;
+      if (activeProfile.location) updated.header.location = activeProfile.location;
+      if (activeProfile.email) updated.header.email = activeProfile.email;
+      if (activeProfile.phone) updated.header.phone = activeProfile.phone;
+      if (activeProfile.linkedinUrl) updated.header.linkedinUrl = activeProfile.linkedinUrl;
+      if (activeProfile.githubUrl) updated.header.githubUrl = activeProfile.githubUrl;
+      if (activeProfile.portfolioUrl) updated.header.portfolioUrl = activeProfile.portfolioUrl;
+
+      if (activeProfile.projects && activeProfile.projects.length > 0) {
+        updated.projects = activeProfile.projects.map((proj) => ({
+          title: proj.title,
+          techStack: proj.techStack || "",
+          liveDemoUrl: proj.liveDemoUrl || "",
+          githubUrl: proj.githubUrl || "",
+          bulletPoints: proj.bulletPoints
+            ? proj.bulletPoints.split("\n").filter(Boolean)
+            : [proj.architecture || "Engineered core distributed services and resilient workflows."],
+        }));
+      }
+
+      return updated;
+    });
+    setSelectedPresetId("custom_profile");
+    showToast(`Loaded details from "${activeProfile.fullName}"`);
+  };
+
   // Load Preset
   const handleSelectPreset = (preset: ResumePreset) => {
-    if (
-      window.confirm(
-        `Load preset "${preset.name}"? This will populate the editor with this Tier-1 baseline template.`
-      )
-    ) {
-      setSelectedPresetId(preset.id);
-      setResumeData(JSON.parse(JSON.stringify(preset.resume)));
-      showToast(`Loaded "${preset.name}" preset!`);
-    }
+    setSelectedPresetId(preset.id);
+    setResumeData(JSON.parse(JSON.stringify(preset.resume)));
+    showToast(`Loaded "${preset.name}" preset!`);
   };
 
   // Reset to current preset
   const handleResetCurrent = () => {
     const matched = RESUME_STARTER_PRESETS.find((p) => p.id === selectedPresetId);
-    if (matched && window.confirm("Reset all fields back to original preset values?")) {
+    if (matched) {
       setResumeData(JSON.parse(JSON.stringify(matched.resume)));
       showToast("Reset to preset baseline");
     }
@@ -343,7 +377,7 @@ export default function ResumeMakerPage() {
   };
 
   return (
-    <div className="ce-main !max-w-[1680px] !py-6">
+    <div className="ce-full-width-page w-full">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-[var(--ink)] px-4 py-2.5 text-xs font-semibold text-white shadow-2xl transition-all animate-bounce">
@@ -353,159 +387,142 @@ export default function ResumeMakerPage() {
       )}
 
       {/* Top Header Banner */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5 no-print">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4 border-b border-[var(--line)] pb-5 no-print">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <span className="ce-page-eyebrow flex items-center gap-1.5 text-blue-600">
               <Sparkles className="w-3.5 h-3.5" />
               TIER-1 ATS RESUME MAKER
             </span>
-            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-              100% ATS PARSER SAFE
-            </span>
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200">
-              A4 1-PAGE CALIBRATED
-            </span>
+            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">ATS SAFE</span>
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200">A4 · 1 PAGE</span>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--ink)] sm:text-3xl mt-1">
-            Build Your Tier-1 ATS-Friendly Resume
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--ink)] mt-1">
+            Build Your Tier-1 ATS Resume
           </h1>
-          <p className="mt-1 text-xs text-[var(--muted)] max-w-2xl leading-relaxed">
-            Create an elite, single-column resume with zero formatting traps (0 tables, 0 graphics, 100% machine-readable typography, and calibrated XYZ impact metrics).
-          </p>
         </div>
 
-        {/* Global Action Toolbar */}
+        {/* Global Action Toolbar — Two Clusters */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5"
-            title="Import existing JSON backup"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Import JSON</span>
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImportJson}
-            accept=".json"
-            className="hidden"
-          />
+          {/* Cluster 1: Data ops */}
+          <div className="flex items-center gap-1.5 border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
+            <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 px-1.5 py-0.5 rounded hover:bg-slate-100" title="Import JSON backup">
+              <Upload className="w-3 h-3" /><span>Import</span>
+            </button>
+            <input type="file" ref={fileInputRef} onChange={handleImportJson} accept=".json" className="hidden" />
+            <span className="text-slate-200">|</span>
+            <button onClick={handleExportJson} className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 px-1.5 py-0.5 rounded hover:bg-slate-100" title="Export JSON backup">
+              <Download className="w-3 h-3" /><span>Export</span>
+            </button>
+            <span className="text-slate-200">|</span>
+            <button onClick={handleResetCurrent} className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-red-600 px-1.5 py-0.5 rounded hover:bg-red-50" title="Reset to preset">
+              <RotateCcw className="w-3 h-3" /><span>Reset</span>
+            </button>
+            <span className="text-slate-200">|</span>
+            <button onClick={() => setShowVariantsDrawer(true)} className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded hover:bg-blue-50" title="Open Saved Resume Variants">
+              <FileText className="w-3 h-3" /><span>Variants</span>
+            </button>
+          </div>
 
-          <button
-            onClick={handleExportJson}
-            className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5"
-            title="Export JSON backup for later editing"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Save Backup</span>
-          </button>
-
-          <button
-            onClick={handleCopyMarkdown}
-            className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5"
-            title="Copy as clean Markdown"
-          >
-            {copiedFormat === "markdown" ? (
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-            ) : (
-              <Copy className="w-3.5 h-3.5" />
-            )}
-            <span>Copy Markdown</span>
-          </button>
-
-          <button
-            onClick={handleDownloadPlaintext}
-            className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5"
-            title="Download pure ATS ASCII Plaintext (.txt)"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>ATS Plaintext</span>
-          </button>
-
-          <button
-            onClick={handlePrint}
-            className="ce-button-primary !min-h-[34px] !text-xs gap-1.5 bg-blue-600 hover:bg-blue-700 border-blue-600 text-white shadow-sm"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print / PDF (A4)</span>
-          </button>
-
-          <Link
-            href="/resume-builder"
-            className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5 border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100"
-            title="Apply this resume to specific discovered job listings"
-          >
-            <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Match to Jobs</span>
-          </Link>
+          {/* Cluster 2: Export / Print */}
+          <div className="flex items-center gap-1.5">
+            <button onClick={handleCopyMarkdown} className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5" title="Copy as Markdown">
+              {copiedFormat === "markdown" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>Markdown</span>
+            </button>
+            <button onClick={handleDownloadPlaintext} className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5" title="ATS Plaintext">
+              <FileText className="w-3.5 h-3.5" /><span>ATS Text</span>
+            </button>
+            <button onClick={handlePrint} className="ce-button-primary !min-h-[34px] !text-xs gap-1.5">
+              <Printer className="w-3.5 h-3.5" /><span>Print / PDF</span>
+            </button>
+            <Link href="/resume-builder" className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5 border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100">
+              <ArrowRight className="w-3.5 h-3.5 text-emerald-600" /><span>Match Jobs</span>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Starter Presets Selector Carousel */}
-      <div className="mb-6 rounded-xl border border-[var(--line)] bg-white p-4 shadow-xs no-print">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink)]">
-              1-Click Role Starter Blueprints
-            </span>
-            <span className="text-[10px] text-[var(--muted)]">
-              Select a blueprint to auto-populate with verified Tier-1 bullet structures
-            </span>
+      {/* Variants Slide-In Drawer */}
+      {showVariantsDrawer && (
+        <div className="fixed inset-0 z-40 flex no-print" aria-modal="true">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowVariantsDrawer(false)} />
+          {/* Drawer Panel */}
+          <div className="relative ml-auto w-full max-w-sm h-full bg-white shadow-2xl flex flex-col border-l border-[var(--line)] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)] bg-gray-50">
+              <h2 className="font-bold text-sm text-[var(--ink)] flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-600" />
+                Resume Variant Manager
+              </h2>
+              <button onClick={() => setShowVariantsDrawer(false)} className="p-1 rounded hover:bg-gray-200 transition-colors">
+                <ArrowRight className="w-4 h-4 text-gray-500 rotate-180" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <ResumeVariantsSidebar
+                profileSlug={activeProfileSlug || "roushan"}
+                currentResumeData={resumeData}
+                onLoadVariant={(loadedData) => {
+                  setResumeData(loadedData);
+                  setShowVariantsDrawer(false);
+                  showToast("Variant loaded successfully");
+                }}
+              />
+            </div>
           </div>
-          <button
-            onClick={handleResetCurrent}
-            className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Reset Section</span>
-          </button>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-          {RESUME_STARTER_PRESETS.map((preset) => {
-            const isSelected = selectedPresetId === preset.id;
-            return (
-              <button
-                key={preset.id}
-                onClick={() => handleSelectPreset(preset)}
-                className={`flex flex-col text-left p-3 rounded-lg border transition-all ${
-                  isSelected
-                    ? "border-blue-600 bg-blue-50/50 shadow-xs ring-1 ring-blue-500/20"
-                    : "border-[var(--line)] bg-[var(--surface-muted)] hover:border-slate-400 hover:bg-white"
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span
-                    className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+      {/* Starter Presets — inside editor column header (below toolbar) */}
+
+      {/* Main Two-Column Studio Layout: 4 | 8 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column: Form Editor (4 cols) */}
+        <div className="lg:col-span-4 space-y-3 no-print">
+
+          {/* Preset Blueprint — sleek row */}
+          <div className="rounded-lg border border-[var(--line)] bg-white px-3 py-2.5 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Starter Blueprint</span>
+              <span className="text-[9px] text-[var(--muted)] hidden sm:block">Click to load baseline</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {activeProfile && (
+                <button
+                  onClick={handleSyncActiveProfile}
+                  title={`Populate with ${activeProfile.fullName}'s profile`}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all border ${
+                    selectedPresetId === "custom_profile"
+                      ? "bg-[var(--green)] text-white border-[var(--green)] shadow-xs"
+                      : "bg-[var(--green-soft)] text-[var(--green)] border-[var(--green)]/30 hover:bg-[var(--green)] hover:text-white"
+                  }`}
+                >
+                  <Sparkles className="h-3 w-3 shrink-0" />
+                  <span className="leading-none">My Profile ({activeProfile.fullName.split(" ")[0]})</span>
+                </button>
+              )}
+              {RESUME_STARTER_PRESETS.map((preset) => {
+                const isSelected = selectedPresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => handleSelectPreset(preset)}
+                    title={preset.description}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
                       isSelected
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-200 text-slate-700"
+                        ? "bg-slate-800 text-white shadow-sm"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
                     }`}
                   >
-                    {preset.badge}
-                  </span>
-                  {isSelected && (
-                    <span className="flex h-2 w-2 rounded-full bg-blue-600" />
-                  )}
-                </div>
-                <strong className="text-xs font-bold text-[var(--ink)] line-clamp-1">
-                  {preset.name}
-                </strong>
-                <p className="text-[10px] text-[var(--muted)] line-clamp-2 mt-1 leading-normal">
-                  {preset.description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                    {isSelected && <span className="h-1 w-1 rounded-full bg-emerald-400 shrink-0" />}
+                    <span className="leading-none">{preset.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Main Two-Column Studio Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Multi-Section Form Editor */}
-        <div className="lg:col-span-6 space-y-4 no-print">
           {/* Section 1: Contact & Header */}
           <div className="rounded-xl border border-[var(--line)] bg-white shadow-xs overflow-hidden">
             <button
@@ -533,8 +550,9 @@ export default function ResumeMakerPage() {
             </button>
 
             {activeSection === "header" && (
-              <div className="p-4 space-y-3 bg-white">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-4 bg-white">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Row 1 */}
                   <div>
                     <label className="block text-[11px] font-bold text-[var(--ink)] mb-1">
                       Full Legal / Preferred Name
@@ -559,19 +577,18 @@ export default function ResumeMakerPage() {
                       placeholder="e.g. Systems Engineer | Backend Architect | AI Developer Tools"
                     />
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Row 2 */}
                   <div>
                     <label className="block text-[11px] font-bold text-[var(--ink)] mb-1">
-                      Location
+                      Email Address
                     </label>
                     <input
-                      type="text"
-                      value={resumeData.header.location}
-                      onChange={(e) => updateHeader("location", e.target.value)}
+                      type="email"
+                      value={resumeData.header.email}
+                      onChange={(e) => updateHeader("email", e.target.value)}
                       className="ce-field px-2.5"
-                      placeholder="e.g. Bihar, India"
+                      placeholder="e.g. roushanraut404@gmail.com"
                     />
                   </div>
                   <div>
@@ -586,21 +603,22 @@ export default function ResumeMakerPage() {
                       placeholder="e.g. +91-9431483512"
                     />
                   </div>
-                  <div>
+
+                  {/* Row 3 */}
+                  <div className="sm:col-span-2">
                     <label className="block text-[11px] font-bold text-[var(--ink)] mb-1">
-                      Email Address
+                      Location
                     </label>
                     <input
-                      type="email"
-                      value={resumeData.header.email}
-                      onChange={(e) => updateHeader("email", e.target.value)}
+                      type="text"
+                      value={resumeData.header.location}
+                      onChange={(e) => updateHeader("location", e.target.value)}
                       className="ce-field px-2.5"
-                      placeholder="e.g. roushanraut404@gmail.com"
+                      placeholder="e.g. Bihar, India"
                     />
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Row 4 */}
                   <div>
                     <label className="block text-[11px] font-bold text-[var(--ink)] mb-1">
                       Portfolio / Website
@@ -625,7 +643,9 @@ export default function ResumeMakerPage() {
                       placeholder="https://github.com/Hey-Astreon"
                     />
                   </div>
-                  <div>
+
+                  {/* Row 5 */}
+                  <div className="sm:col-span-2">
                     <label className="block text-[11px] font-bold text-[var(--ink)] mb-1">
                       LinkedIn URL
                     </label>
@@ -1130,109 +1150,128 @@ export default function ResumeMakerPage() {
           </div>
         </div>
 
-        {/* Right Column: Live Real-Time ATS A4 Sheet Canvas */}
-        <div className="lg:col-span-6 space-y-4 sticky top-20 ats-print-container">
-          {/* Real-time ATS Audit Banner */}
-          <div className="rounded-xl border border-[var(--line)] bg-white p-3.5 shadow-xs flex items-center justify-between gap-3 no-print">
-            <div className="flex items-center gap-3">
-              <div
-                className={`grid h-10 w-10 place-items-center rounded-lg font-mono font-black text-sm ${
-                  audit.overallScore >= 93
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-blue-100 text-blue-800"
-                }`}
-              >
-                {audit.overallScore}
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <strong className="text-xs font-extrabold text-[var(--ink)]">
-                    ATS Audit: {audit.grade}
-                  </strong>
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+        {/* Right Column: Live A4 Preview (8 cols — wider for full A4) */}
+        <div className="lg:col-span-8 space-y-3 sticky top-20 ats-print-container">
+
+          {/* Unified ATS Control Bar */}
+          <div className="rounded-xl border border-[var(--line)] bg-white shadow-xs no-print overflow-hidden">
+            {/* Top Row: Score + Controls */}
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              {/* Score Badge + Info */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg font-mono font-black text-base ${
+                  audit.overallScore >= 93 ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"
+                }`}>
+                  {audit.overallScore}
                 </div>
-                <p className="text-[10px] text-[var(--muted)]">
-                  {audit.metricCount} quantifiable impact metrics detected · Single-column format
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <strong className="text-sm font-extrabold text-[var(--ink)]">ATS Audit: {audit.grade}</strong>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  </div>
+                  <p className="text-[10px] text-[var(--muted)] truncate">
+                    {audit.metricCount} metrics · Single-column format
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 transition-colors ${
-                  showHeatmap ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-                title="Toggle Recruiter Scanning Heatmap"
-              >
-                <Flame className="w-3 h-3" />
-                <span>Heatmap</span>
-              </button>
-
-              <button
-                onClick={() => setShowFScan(!showFScan)}
-                className={`px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 transition-colors ${
-                  showFScan ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-                title="Toggle F-Pattern Eye Scan Guide"
-              >
-                <Eye className="w-3 h-3" />
-                <span>F-Scan</span>
-              </button>
-
-              <div className="flex items-center border border-slate-200 rounded overflow-hidden">
+              {/* View Controls: unified pill group */}
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Heatmap toggle */}
                 <button
-                  onClick={() => setZoomScale((z) => Math.max(0.7, z - 0.1))}
-                  className="p-1 hover:bg-slate-100 text-slate-600"
-                  title="Zoom Out"
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  title="Toggle Recruiter Heatmap"
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    showHeatmap
+                      ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+                  }`}
                 >
-                  <ZoomOut className="w-3.5 h-3.5" />
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>Heatmap</span>
                 </button>
-                <span className="px-1 text-[10px] font-mono text-slate-500">
-                  {Math.round(zoomScale * 100)}%
-                </span>
-                <button
-                  onClick={() => setZoomScale((z) => Math.min(1.3, z + 0.1))}
-                  className="p-1 hover:bg-slate-100 text-slate-600"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* Audit Checklist Dropdown / Accordion */}
-          <div className="rounded-lg border border-[var(--line)] bg-slate-50/70 px-3 py-2 text-[11px] no-print">
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-slate-700 flex items-center gap-1">
-                <Info className="w-3 h-3 text-blue-600" />
-                ATS Health Checklist ({audit.checks.filter((c) => c.passed).length}/{audit.checks.length} Passed)
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1.5">
-              {audit.checks.map((check, cIdx) => (
-                <div key={cIdx} className="flex items-center gap-1.5 text-[10px]">
-                  {check.passed ? (
-                    <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-                  ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
-                  )}
-                  <span className={check.passed ? "text-slate-700" : "text-amber-800 font-semibold"}>
-                    {check.title}
+                {/* F-Scan toggle */}
+                <button
+                  onClick={() => setShowFScan(!showFScan)}
+                  title="Toggle F-Pattern Eye Scan"
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    showFScan
+                      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>F-Scan</span>
+                </button>
+
+                {/* Zoom — same visual weight */}
+                <div className="flex items-center gap-0.5 border border-slate-200 rounded-lg overflow-hidden ml-1">
+                  <button onClick={() => setZoomScale((z) => Math.max(0.5, z - 0.05))} className="p-1.5 hover:bg-slate-100 text-slate-500 transition-colors" title="Zoom Out">
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="px-1.5 text-[11px] font-mono font-semibold text-slate-700 min-w-[38px] text-center">
+                    {Math.round(zoomScale * 100)}%
                   </span>
+                  <button onClick={() => setZoomScale((z) => Math.min(1.3, z + 0.05))} className="p-1.5 hover:bg-slate-100 text-slate-500 transition-colors" title="Zoom In">
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {/* Collapsible ATS Checklist */}
+            <div className="border-t border-[var(--line)]">
+              <button
+                onClick={() => setShowAtsChecklist(!showAtsChecklist)}
+                className="w-full flex items-center justify-between px-4 py-2 text-[11px] hover:bg-slate-50 transition-colors"
+              >
+                <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                  <Info className="w-3 h-3 text-blue-500" />
+                  ATS Health Checklist
+                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                    audit.checks.filter(c => c.passed).length === audit.checks.length
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {audit.checks.filter((c) => c.passed).length}/{audit.checks.length} Passed
+                  </span>
+                </span>
+                {showAtsChecklist
+                  ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                  : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                }
+              </button>
+              {showAtsChecklist && (
+                <div className="px-4 pb-3 grid grid-cols-2 gap-1.5">
+                  {audit.checks.map((check, cIdx) => (
+                    <div key={cIdx} className="flex items-center gap-1.5 text-[10px]">
+                      {check.passed
+                        ? <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                        : <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                      }
+                      <span className={check.passed ? "text-slate-700" : "text-amber-800 font-semibold"}>
+                        {check.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Live A4 Sheet Render Container */}
-          <div className="overflow-auto max-h-[calc(100vh-210px)] rounded-xl border border-slate-300 bg-slate-200/70 p-4 flex justify-center shadow-inner ats-print-wrapper">
+          {/* Live A4 Sheet Render Container — overflow scroll so any zoom works */}
+          <div
+            className="overflow-auto rounded-xl border border-slate-300 bg-slate-100 shadow-inner ats-print-wrapper"
+            style={{ height: "calc(100vh - 240px)", padding: "16px" }}
+          >
             <div
               style={{
                 transform: `scale(${zoomScale})`,
                 transformOrigin: "top center",
                 transition: "transform 0.15s ease",
+                width: "210mm",
+                margin: "0 auto",
               }}
               className="relative"
             >

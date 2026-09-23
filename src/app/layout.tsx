@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { Sidebar } from "@/components/Sidebar";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "RCMS | Remote Career Management System",
-  description: "A focused remote career operating workspace powered by the local RCMS engine.",
+  description: "A premium remote career workspace.",
   icons: {
     icon: [
       { url: "/rcms-favicon.png", type: "image/png" },
@@ -22,19 +21,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <div className="ce-shell">
-          <Sidebar />
-          <div className="ce-workspace">
-            <Header />
-            <main className="ce-main">{children}</main>
-          </div>
-        </div>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

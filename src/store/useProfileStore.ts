@@ -33,12 +33,13 @@ export interface ProfileData {
 }
 
 interface ProfileState {
-  activeProfileSlug: "roushan" | "ayushi";
+  activeProfileSlug: string;
   activeProfile: ProfileData | null;
   allProfiles: ProfileData[];
   isLoading: boolean;
-  setActiveProfileSlug: (slug: "roushan" | "ayushi") => void;
+  setActiveProfileSlug: (slug: string) => void;
   setAllProfiles: (profiles: ProfileData[]) => void;
+  updateActiveProfile: (data: Partial<ProfileData>) => void;
   setIsLoading: (loading: boolean) => void;
 }
 
@@ -56,8 +57,29 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
   setAllProfiles: (profiles) =>
     set((state) => {
-      const active = profiles.find((p) => p.slug === state.activeProfileSlug) || profiles[0] || null;
-      return { allProfiles: profiles, activeProfile: active, isLoading: false };
+      const active =
+        profiles.find((p) => p.slug === state.activeProfileSlug) ||
+        profiles[0] ||
+        null;
+      return {
+        allProfiles: profiles,
+        activeProfile: active,
+        activeProfileSlug: active ? active.slug : state.activeProfileSlug,
+        isLoading: false,
+      };
+    }),
+
+  updateActiveProfile: (data) =>
+    set((state) => {
+      if (!state.activeProfile) return state;
+      const updatedActive = { ...state.activeProfile, ...data };
+      const updatedAll = state.allProfiles.map((p) =>
+        p.id === updatedActive.id ? updatedActive : p
+      );
+      return {
+        activeProfile: updatedActive,
+        allProfiles: updatedAll,
+      };
     }),
 
   setIsLoading: (loading) => set({ isLoading: loading }),

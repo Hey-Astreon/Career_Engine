@@ -54,6 +54,7 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
 .ce-header-title { min-width: 175px; }.ce-header-title b { display:block; color: var(--ink); font: 700 10px var(--font-mono), monospace; letter-spacing: .14em; }.ce-header-title span { display:block; margin-top:4px; color:var(--muted); font: 700 8px var(--font-mono),monospace; letter-spacing:.08em; text-transform:uppercase; }
 .ce-command { flex: 1; max-width: 470px; display:flex; align-items:center; gap:9px; min-height: 34px; padding: 0 10px; border:1px solid transparent; background:var(--surface-muted); color:var(--muted); font-size:11px; }.ce-command:hover{border-color:var(--line-strong);background:var(--surface)}.ce-command span{flex:1}.ce-command kbd{padding:2px 5px;border:1px solid var(--line-strong);background:var(--surface);font:700 8px var(--font-mono),monospace;color:var(--muted)}
 .ce-main { max-width: 1460px; margin: 0 auto; padding: 50px 48px 42px; }
+.ce-main:has(.ce-full-width-page) { max-width: none !important; padding: 24px 32px !important; }
 .ce-dashboard-flow { display: flex; flex-direction: column; }
 .ce-dashboard-flow > * { order: 10; }
 .ce-dashboard-flow > :first-child { order: 0; }
@@ -77,6 +78,10 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
 /* ==========================================================================
    ATS Resume Builder & 1-Page A4 Precision Print Engine
    ========================================================================== */
+
+/* Hide scrollbar but keep scrollable */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 .ats-a4-sheet {
   width: 210mm;

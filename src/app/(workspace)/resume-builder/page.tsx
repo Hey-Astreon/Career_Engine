@@ -23,6 +23,7 @@ import {
   ChevronUp,
   Clock,
   ExternalLink,
+  Briefcase,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -240,6 +241,41 @@ ${portfolio}`;
     setResumeData(baseline);
   };
 
+  const handleDispatchApplication = async () => {
+    if (!selectedJobId) {
+      alert("Please select a job from the Discovery Feed to dispatch.");
+      return;
+    }
+    
+    setIsOptimizing(true);
+    try {
+      const res = await fetch("/api/applications/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileSlug: activeProfileSlug || "roushan",
+          jobPostingId: selectedJobId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Application Successfully Dispatched to Pipeline Tracker!");
+        const jobUrl = jobs.find(j => j.id === selectedJobId)?.url;
+        if (jobUrl) {
+          window.open(jobUrl, "_blank");
+        }
+      } else {
+        alert("Dispatch failed: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to dispatch application.");
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+
   /**
    * 1-Click Auto-Named PDF Export
    */
@@ -428,10 +464,20 @@ ${portfolio}`;
             <button
               onClick={() => void handleOptimizeResume()}
               disabled={isOptimizing}
-              className="ce-button-primary disabled:opacity-60"
+              className="ce-button-secondary disabled:opacity-60"
             >
               <Sparkles className={`h-3.5 w-3.5 ${isOptimizing ? "animate-spin" : ""}`} />
-              {isOptimizing ? "Optimizing resume..." : "Optimize for this Job"}
+              {isOptimizing ? "Optimizing..." : "Optimize"}
+            </button>
+            
+            <button
+              onClick={handleDispatchApplication}
+              disabled={isOptimizing || customMode || !selectedJobId}
+              className="ce-button-primary !min-h-9"
+              title="Save to Pipeline Tracker & Open Application Link"
+            >
+              <Briefcase className="h-3.5 w-3.5" />
+              Dispatch Application
             </button>
 
             <button
@@ -440,7 +486,6 @@ ${portfolio}`;
               title="Reset to Master Profile Baseline"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              Reset Master
             </button>
           </div>
         </div>

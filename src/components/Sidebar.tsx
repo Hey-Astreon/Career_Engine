@@ -3,17 +3,40 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Globe2, Target, FileCheck, Sparkles, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Globe2, Target, FileCheck, Sparkles, ChevronRight, Briefcase, Clock, Send } from "lucide-react";
 
 const navItems = [
   { name: "Discovery", href: "/", icon: Globe2, badge: "LIVE" },
+  { name: "Applications", href: "/applications", icon: Briefcase },
   { name: "Match Studio", href: "/match", icon: Target },
+  { name: "Recruiter Radar", href: "/outreach", icon: Send, badge: "NEW" },
   { name: "Complete Application Kit", href: "/resume-builder", icon: FileCheck },
   { name: "ATS Resume Maker", href: "/resume-maker", icon: Sparkles, badge: "TIER-1" },
+  { name: "Alert Settings", href: "/settings", icon: Clock },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [schedulerStatus, setSchedulerStatus] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch("/api/scheduler");
+        const data = await res.json();
+        if (data.success) {
+          setSchedulerStatus(data.status);
+        }
+      } catch (err) {
+        console.error("Failed to load scheduler status", err);
+      }
+    };
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <aside className="ce-rail">
       <Link
@@ -62,8 +85,22 @@ export function Sidebar() {
           <i />
         </div>
       </div>
-      <div className="ce-rail-footer">
-        <i className="ce-dot" />RCMS ONLINE
+      <div className="ce-rail-footer flex flex-col gap-1 items-start">
+        <div>
+          <i className="ce-dot" />RCMS ONLINE
+        </div>
+        {schedulerStatus && (
+          <div className="text-[9px] text-gray-500 flex items-center gap-1 mt-1">
+            <Clock className="w-3 h-3" />
+            {schedulerStatus.isRunning ? (
+              <span className="text-[var(--blue)]">
+                Auto-sync active ({Math.round(schedulerStatus.intervalMs / 3600000)}h)
+              </span>
+            ) : (
+              <span>Auto-sync paused</span>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );

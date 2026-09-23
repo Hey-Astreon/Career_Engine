@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
     const applications = await db.application.findMany({
       where: { profileId: profile.id },
-      include: { jobPosting: true },
+      include: { jobPosting: true, opportunity: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -32,10 +32,14 @@ export async function GET(req: Request) {
         currentStatus = "QUIET";
       }
 
+      const companyName = app.opportunity?.company || app.jobPosting?.company || "Direct Portal";
+      const jobTitle = app.opportunity?.title || app.jobPosting?.title || "Software Developer";
+      const url = app.opportunity?.canonicalAppUrl || app.jobPosting?.url || "";
+
       return {
         id: app.id,
-        company: app.jobPosting?.company || "Direct Portal",
-        title: app.jobPosting?.title || "Software Developer",
+        company: companyName,
+        title: jobTitle,
         status: currentStatus,
         appliedDate: new Date(baseDate).toLocaleDateString("en-US", {
           month: "short",
@@ -43,7 +47,9 @@ export async function GET(req: Request) {
           year: "numeric",
         }),
         daysSilent,
-        jobUrl: app.jobPosting?.url || "",
+        jobUrl: url,
+        resumeVariantName: app.resumeVariantName,
+        atsExtractabilityScore: app.atsExtractabilityScore,
       };
     });
 
@@ -173,7 +179,7 @@ export async function PATCH(req: Request) {
     const updated = await db.application.update({
       where: { id },
       data: { status: targetStatus },
-      include: { jobPosting: true },
+      include: { jobPosting: true, opportunity: true },
     });
 
     return NextResponse.json({ success: true, application: updated });
@@ -185,3 +191,30 @@ export async function PATCH(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Application id required" },
+        { status: 400 }
+      );
+    }
+
+    await db.application.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting application:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete application" },
+      { status: 500 }
+    );
+  }
+}
+

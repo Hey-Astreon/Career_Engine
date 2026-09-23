@@ -128,12 +128,74 @@ model Profile {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  projects     Project[]
-  virtualExps  VirtualExperience[]
-  applications Application[]
-  matchScores  MatchScore[]
+  projects       Project[]
+  virtualExps    VirtualExperience[]
+  applications   Application[]
+  matchScores    MatchScore[]
+  resumeVariants ResumeVariant[]
+
+  userId         String? @unique
+  user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
+}
+
+// NextAuth Models
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  alertPreference UserAlertPreference?
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model Project {
@@ -294,6 +356,10 @@ model Application {
   tailoredCvPath         String?
   tailoredCoverLetter    String?
   atsExtractabilityScore Int?
+  resumeVariantName      String?
+  coldEmailDraft         String?
+  recruiterDmDraft       String?
+  dispatchedAt           DateTime?
   appliedAt              DateTime?
   lastContactAt          DateTime?
   notes                  String?
@@ -306,4 +372,55 @@ model Application {
 
   @@index([profileId, status])
   @@map("applications")
+}
+
+model ResumeVariant {
+  id           String   @id @default(uuid())
+  profileId    String
+  name         String
+  category     String   @default("General")
+  resumeData   String
+  atsScore     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, name])
+  @@index([profileId])
+  @@map("resume_variants")
+}
+
+model SchedulerRun {
+  id              String    @id @default(uuid())
+  triggeredBy     String    @default("CRON")
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  durationMs      Int?
+  totalDiscovered Int       @default(0)
+  totalInserted   Int       @default(0)
+  totalUpdated    Int       @default(0)
+  providersFailed Int       @default(0)
+  providersTotal  Int       @default(0)
+  alertsGenerated String    @default("[]")
+  status          String    @default("RUNNING")
+  error           String?
+
+  @@index([startedAt])
+  @@map("scheduler_runs")
+}
+
+model UserAlertPreference {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  emailDigest         Boolean  @default(true)
+  frequency           String   @default("DAILY")
+  categories          String   @default("[]")
+  matchScoreThreshold Int      @default(70)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_alert_preferences")
 }
