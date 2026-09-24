@@ -203,74 +203,72 @@ export async function evaluateJobFreshness(providerKey: string): Promise<{
 
   const cutoffTime = syncState.lastSuccessfulSyncAt;
 
-  return await db.$transaction(async (tx) => {
-    // 1. Find stale occurrences for this provider
-    const staleOccurrences = await tx.jobOccurrence.findMany({
-      where: {
-        providerKey,
-        lastSeenAt: { lt: cutoffTime },
-      },
-      select: { id: true, opportunityId: true },
-    });
-
-    if (staleOccurrences.length === 0) {
-      return { prunedOccurrences: 0, expiredOpportunities: 0 };
-    }
-
-    const staleIds = staleOccurrences.map((o) => o.id);
-    const affectedOppIds = Array.from(new Set(staleOccurrences.map((o) => o.opportunityId)));
-
-    // 2. Bulk delete stale occurrences
-    const deleteResult = await tx.jobOccurrence.deleteMany({
-      where: { id: { in: staleIds } },
-    });
-
-    let expiredCount = 0;
-
-    // 3. Re-query live DB count for each affected Opportunity
-    for (const oppId of affectedOppIds) {
-      const activeCount = await tx.jobOccurrence.count({
-        where: { opportunityId: oppId },
-      });
-
-      if (activeCount === 0) {
-        await tx.opportunity.update({
-          where: { id: oppId },
-          data: {
-            isExpired: true,
-            expiredAt: new Date(),
-          },
-        });
-        expiredCount++;
-      }
-    }
-
-    // 4. Mark stale JobPostings for this provider as expired
-    await tx.jobPosting.updateMany({
-      where: {
-        platform: providerKey as PlatformSource,
-        lastSeenAt: { lt: cutoffTime },
-        isExpired: false,
-      },
-      data: {
-        isExpired: true,
-      },
-    });
-
-    // 5. Hard 21-day ceiling: Expire any job posted more than 21 days (3 weeks) ago
-    const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
-    await tx.jobPosting.updateMany({
-      where: {
-        postedAt: { lt: twentyOneDaysAgo },
-        isExpired: false,
-      },
-      data: {
-        isExpired: true,
-      },
-    });
-
-    return { prunedOccurrences: deleteResult.count, expiredOpportunities: expiredCount };
+  // 1. Find stale occurrences for this provider
+  const staleOccurrences = await db.jobOccurrence.findMany({
+    where: {
+      providerKey,
+      lastSeenAt: { lt: cutoffTime },
+    },
+    select: { id: true, opportunityId: true },
   });
+
+  if (staleOccurrences.length === 0) {
+    return { prunedOccurrences: 0, expiredOpportunities: 0 };
+  }
+
+  const staleIds = staleOccurrences.map((o) => o.id);
+  const affectedOppIds = Array.from(new Set(staleOccurrences.map((o) => o.opportunityId)));
+
+  // 2. Bulk delete stale occurrences
+  const deleteResult = await db.jobOccurrence.deleteMany({
+    where: { id: { in: staleIds } },
+  });
+
+  // 3. Find which affected opportunities still have active occurrences in a single bulk query
+  const remainingActive = await db.jobOccurrence.findMany({
+    where: { opportunityId: { in: affectedOppIds } },
+    select: { opportunityId: true },
+  });
+  const activeOppIdSet = new Set(remainingActive.map((r) => r.opportunityId));
+  const expiredOppIds = affectedOppIds.filter((id) => !activeOppIdSet.has(id));
+
+  let expiredCount = 0;
+  if (expiredOppIds.length > 0) {
+    const updateResult = await db.opportunity.updateMany({
+      where: { id: { in: expiredOppIds } },
+      data: {
+        isExpired: true,
+        expiredAt: new Date(),
+      },
+    });
+    expiredCount = updateResult.count;
+  }
+
+  // 4. Mark stale JobPostings for this provider as expired in bulk
+  await db.jobPosting.updateMany({
+    where: {
+      platform: providerKey as PlatformSource,
+      lastSeenAt: { lt: cutoffTime },
+      isExpired: false,
+    },
+    data: {
+      isExpired: true,
+    },
+  });
+
+  // 5. Hard 21-day ceiling: Expire any job posted more than 21 days (3 weeks) ago
+  const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
+  await db.jobPosting.updateMany({
+    where: {
+      postedAt: { lt: twentyOneDaysAgo },
+      isExpired: false,
+    },
+    data: {
+      isExpired: true,
+    },
+  });
+
+  return { prunedOccurrences: deleteResult.count, expiredOpportunities: expiredCount };
 }
 
 /**
@@ -278,7 +276,10 @@ export async function evaluateJobFreshness(providerKey: string): Promise<{
  * 1. Upserts Opportunity & JobOccurrence (Phase 1/2 Multi-Signal Deduplication & Provenance Architecture)
  * 2. Upserts JobPosting for backward compatibility with existing API consumers
  */
-export async function ingestNormalizedJobs(jobs: NormalizedJob[]): Promise<{ insertedCount: number; updatedCount: number }> {
+export async function ingestNormalizedJobs(
+  jobs: NormalizedJob[],
+  maxToIngest: number = 80
+): Promise<{ insertedCount: number; updatedCount: number }> {
   let insertedCount = 0;
   let updatedCount = 0;
 
@@ -312,10 +313,19 @@ export async function ingestNormalizedJobs(jobs: NormalizedJob[]): Promise<{ ins
     return true;
   });
 
-  // Concurrently process in batches of 10 to optimize LibSQL roundtrips
-  const BATCH_SIZE = 10;
-  for (let i = 0; i < validJobs.length; i += BATCH_SIZE) {
-    const chunk = validJobs.slice(i, i + BATCH_SIZE);
+  // Sort freshest first
+  validJobs.sort((a, b) => {
+    const timeA = a.postedAt ? a.postedAt.getTime() : 0;
+    const timeB = b.postedAt ? b.postedAt.getTime() : 0;
+    return timeB - timeA;
+  });
+
+  const targetJobs = maxToIngest > 0 ? validJobs.slice(0, maxToIngest) : validJobs;
+
+  // Concurrently process in batches of 20 to optimize LibSQL roundtrips
+  const BATCH_SIZE = 20;
+  for (let i = 0; i < targetJobs.length; i += BATCH_SIZE) {
+    const chunk = targetJobs.slice(i, i + BATCH_SIZE);
     await Promise.all(
       chunk.map(async (job) => {
         const urlHash = generateUrlHash(job.canonicalAppUrl || job.discoveryUrl);
