@@ -19,11 +19,28 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: 📦 Install Dependencies
         run: npm ci
+
+      - name: ⚙️ Generate Prisma Client
+        run: npx prisma generate
+
+      - name: 🔐 Verify Turso Secrets
+        run: |
+          if [ -z "${{ secrets.TURSO_DATABASE_URL }}" ]; then
+            echo "::error::TURSO_DATABASE_URL secret is missing in GitHub Repository Secrets!"
+            echo "Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+          if [ -z "${{ secrets.TURSO_AUTH_TOKEN }}" ]; then
+            echo "::error::TURSO_AUTH_TOKEN secret is missing in GitHub Repository Secrets!"
+            echo "Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+          echo "✅ Turso cloud secrets successfully verified."
 
       - name: 🚀 Run 19-Source Scraping Engine (Direct Turso Cloud)
         run: npx tsx scripts/run-discovery-cli.ts
