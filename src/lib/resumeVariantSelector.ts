@@ -16,6 +16,11 @@ export interface RecommendedResumeVariant {
 }
 
 function resolveResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar", fileName: string): string {
+  const publicPath = path.resolve(process.cwd(), "public", "candidates", candidateFolder, fileName);
+  if (fs.existsSync(publicPath)) {
+    return publicPath.replace(/\\/g, "/");
+  }
+
   const primaryPath = `x:/Career_Engine/${candidateFolder}/14_final_documents/${fileName}`;
   if (fs.existsSync(primaryPath)) {
     return primaryPath;
@@ -26,7 +31,7 @@ function resolveResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar", f
     return relativePath.replace(/\\/g, "/");
   }
 
-  return primaryPath;
+  return publicPath.replace(/\\/g, "/");
 }
 
 export function selectRecommendedResumeVariant(

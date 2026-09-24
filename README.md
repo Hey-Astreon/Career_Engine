@@ -122,6 +122,38 @@ npm run build
 
 ---
 
+## ☁️ Deploying to Vercel (1-Click Ready)
+
+AstreWork is pre-configured for Vercel deployment with serverless LibSQL (Turso), bundled candidate PDF assets, and automated cron syncs.
+
+### 1. Import Repository on Vercel
+Connect your GitHub account and import `Hey-Astreon/Career_Engine`:
+- **Framework Preset:** Next.js
+- **Root Directory:** `./` (default)
+- **Build Command:** `prisma generate && next build` (defined in `vercel.json` and `package.json`)
+
+### 2. Configure Environment Variables in Vercel
+In your Vercel Project Settings → **Environment Variables**, paste the following keys:
+
+| Variable | Description |
+| :--- | :--- |
+| `TURSO_DATABASE_URL` | Remote Turso LibSQL connection (`libsql://...`) |
+| `TURSO_AUTH_TOKEN` | Turso database JWT auth token |
+| `GROQ_API_KEY` | Primary LLM inference key (`gpt-oss-120b`, ~500 t/s) |
+| `GEMINI_API_KEY` | Google Cloud Gemini 2.5 Flash API key |
+| `CEREBRAS_API_KEY` | Cerebras fast fallback API key |
+| `NVIDIA_NIM_API_KEY` | NVIDIA NIM Llama 3.3 reasoning key |
+| `NEXTAUTH_SECRET` | NextAuth session encryption secret |
+| `NEXTAUTH_URL` | Production deployment URL (e.g. `https://your-app.vercel.app`) |
+
+### 3. Synchronize Cloud Database Anytime
+Whenever new opportunities or candidate updates are made locally, sync them to Turso Cloud in one command:
+```bash
+npm run db:sync:turso
+```
+
+---
+
 ## 🏛️ Directory Structure
 
 ```text

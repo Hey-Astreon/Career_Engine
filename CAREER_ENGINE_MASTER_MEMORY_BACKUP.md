@@ -404,13 +404,20 @@ npm run dev
   - **Resume Variants Sidebar (`ResumeVariantsSidebar.tsx`):** Added dual-tab navigation ("Locked PDFs" vs "Saved Drafts") with direct 1-click preview and download for all official disk variants for the active profile.
   - **Complete Application Kit / Resume Builder (`/resume-builder`):** Added "Official PDF Variants" header action button with a comprehensive modal dialog allowing candidates to immediately inspect and download production-ready locked PDFs.
   - **Validation & Build Integrity:** Verified with live HTTP tests (200 OK, `application/pdf`, 110,966 bytes), 0 TypeScript errors (`npx tsc --noEmit`), and Next.js 16 Turbopack production build compiling all 45 routes with 0 errors.
+- [x] **Phase 13: Vercel Cloud Deployment Readiness & Infrastructure Hardening**
+  - **1. Candidate PDF Bundling:** Copied all 19 locked official PDF resumes + `usecase.md` for both Roushan Kumar and Ayushi Raj directly into `public/candidates/2_Ayushi_Raj/` and `public/candidates/3_Roushan_Kumar/`. Updated `/api/resume/download` and `resumeVariantSelector.ts` to prioritize bundled `process.cwd()/public/candidates/` paths, guaranteeing 100% cloud accessibility without missing drive letter dependencies on Vercel.
+  - **2. Turso Cloud Database Synchronization:** Executed automated cloud sync via `scripts/sync-to-turso.mjs`. Populated 3 candidate profiles, 6 projects, 6 virtual experiences, 19 provider sync states, 964 job postings, 622 opportunities, and 168 job occurrences into Turso LibSQL cloud database (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`).
+  - **3. Production Build Pipeline:** Updated `package.json` `"build"` script to `"prisma generate && next build"` ensuring seamless Prisma client compilation during Vercel CI deployment.
+  - **4. Vercel Configuration & Serverless Crons (`vercel.json`):** Configured 60s execution timeout ceiling (`maxDuration: 60`) for all `/api/**/*` routes to eliminate 504 gateway timeouts during multi-source scrapes. Added automated 1-hour cron schedule (`/api/scheduler?cron=true`) with native `x-vercel-cron` header handling.
 
 ### Current System Health Status
 - **Source Health:** 19 / 19 providers HEALTHY (100% operational).
+- **Cloud Database:** Turso LibSQL Cloud fully populated and synchronized.
+- **Candidate Documents:** 19 official PDF variants bundled into `public/candidates/`.
 - **TypeScript Integrity:** 0 errors across entire codebase (`npx tsc --noEmit` clean).
-- **Build Status:** Next.js 16 (Turbopack) production build compiles all 45 routes with 0 errors.
+- **Build Status:** Next.js 16 (Turbopack) production build compiles all 45 routes with 0 errors in 1.9s.
 - **Git Sync:** Branch `main` tracked and synchronized with `https://github.com/Hey-Astreon/Career_Engine.git`.
-- **Database Status:** LibSQL / SQLite database up to date, synced with 19 provider sync states and active job occurrences.
+- **Vercel Readiness:** 100% Plug-and-Play ready for Vercel deployment.
 
 ### Immediate Next Steps & Future Roadmap
 1. **End-to-End Application Dispatch Pipeline:** Link "Dispatch / Apply" directly to the `/applications` Kanban board with automated 5-day follow-up reminder alerts.

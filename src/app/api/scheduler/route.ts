@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import { discoveryScheduler } from "@/lib/scheduler";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const isCron = searchParams.get("cron") === "true" || req.headers.get("x-vercel-cron") !== null;
+
+    if (isCron) {
+      console.log("[Scheduler] Executing scheduled discovery run via Vercel Cron");
+      await discoveryScheduler.executeRun("SCHEDULED");
+      return NextResponse.json({
+        success: true,
+        message: "Vercel Cron scheduled run completed",
+        status: discoveryScheduler.getStatus(),
+      });
+    }
+
     const status = discoveryScheduler.getStatus();
     return NextResponse.json({ success: true, status });
   } catch (error) {

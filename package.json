@@ -5,9 +5,10 @@
   "scripts": {
     "d3-6": "npx ts-node -e \"import('./src/lib/providers/registry').then(m=>m.runAllProviders().then(()=>console.log('DONE')))\"",
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:sync:turso": "node scripts/sync-to-turso.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

@@ -23,11 +23,13 @@ function resolveCandidatePdf(slug: string, rawFileName?: string | null): { resol
   }
 
   const candidatePaths = [
+    path.resolve(process.cwd(), "public", "candidates", folder, safeFileName),
     `x:/Career_Engine/${folder}/14_final_documents/${safeFileName}`,
     `x:/Career_Engine/${folder}/${safeFileName}`,
     path.resolve(process.cwd(), "..", folder, "14_final_documents", safeFileName),
     path.resolve(process.cwd(), "..", folder, safeFileName),
     // Fallback to default master resume if a specific variant is missing
+    path.resolve(process.cwd(), "public", "candidates", folder, defaultFileName),
     `x:/Career_Engine/${folder}/14_final_documents/${defaultFileName}`,
     `x:/Career_Engine/${folder}/${defaultFileName}`,
     path.resolve(process.cwd(), "..", folder, "14_final_documents", defaultFileName),
