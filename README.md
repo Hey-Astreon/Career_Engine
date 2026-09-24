@@ -7,9 +7,12 @@
 [![React 19](https://img.shields.io/badge/React-19.0.0-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9%20(Strict)-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma 7](https://img.shields.io/badge/Prisma-7%20(LibSQL)-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](http://localhost:3000/api/sources/health)
+[![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](https://astrework.vercel.app/api/sources/health)
+[![Live Production](https://img.shields.io/badge/Live%20Production-astrework.vercel.app-success?style=for-the-badge&logo=vercel)](https://astrework.vercel.app)
 
 **AstreWork** is an autonomous, high-density AI Career Operating System engineered to streamline remote job discovery, multi-signal deduplication, deep 2-stage fit scoring, tailored application kit generation, and background auto-sync scheduling.
+
+🌐 **Live Production Deployment:** [https://astrework.vercel.app](https://astrework.vercel.app)
 
 </div>
 
@@ -122,15 +125,16 @@ npm run build
 
 ---
 
-## ☁️ Deploying to Vercel (1-Click Ready)
+## ☁️ Production Deployment on Vercel (LIVE)
 
-AstreWork is pre-configured for Vercel deployment with serverless LibSQL (Turso), bundled candidate PDF assets, and automated cron syncs.
+AstreWork is officially live in production on Vercel at **[https://astrework.vercel.app](https://astrework.vercel.app)** with serverless LibSQL (Turso Cloud), bundled candidate PDF assets, and automated daily background sync crons.
 
 ### 1. Import Repository on Vercel
-Connect your GitHub account and import `Hey-Astreon/Career_Engine`:
+Connected to GitHub repository `Hey-Astreon/Career_Engine` (`main` branch):
 - **Framework Preset:** Next.js
 - **Root Directory:** `./` (default)
 - **Build Command:** `prisma generate && next build` (defined in `vercel.json` and `package.json`)
+- **Live Production URL:** [https://astrework.vercel.app](https://astrework.vercel.app)
 
 ### 2. Configure Environment Variables in Vercel
 In your Vercel Project Settings → **Environment Variables**, paste the following keys:
