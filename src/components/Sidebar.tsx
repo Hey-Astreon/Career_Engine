@@ -24,16 +24,17 @@ export function Sidebar() {
     const fetchStatus = async () => {
       try {
         const res = await fetch("/api/scheduler");
+        if (!res.ok) return;
         const data = await res.json();
         if (data.success) {
           setSchedulerStatus(data.status);
         }
-      } catch (err) {
-        console.error("Failed to load scheduler status", err);
+      } catch {
+        // Graceful silence if server is compiling or offline
       }
     };
     fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
+    const interval = setInterval(fetchStatus, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -46,7 +47,7 @@ export function Sidebar() {
       >
         <div className="flex h-[54px] w-full items-center justify-center rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
           <Image
-            src="/rcms-logo.png"
+            src="/astrework-logo.png"
             alt="AstreWork - Autonomous Remote Career Intelligence"
             width={180}
             height={50}

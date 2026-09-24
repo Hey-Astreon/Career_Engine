@@ -11,7 +11,6 @@ import {
   Search,
   Building2,
   Mail,
-  Linkedin,
   MessageSquare,
   RefreshCw,
   Loader2,

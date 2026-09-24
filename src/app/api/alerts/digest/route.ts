@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prisma from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { db as prisma } from "@/lib/db";
 import { generateDigestHtml } from "@/lib/digestEmail";
 // Note: In a real app we'd use a transactional email provider like Resend or Sendgrid
 // import { Resend } from 'resend';
@@ -104,18 +104,35 @@ export async function POST(req: Request) {
     const html = generateDigestHtml({
       userName: user.name || "Candidate",
       opportunities: recentOpps,
-      totalMatches: 12,
-      preferencesUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/settings`,
+      totalMatches: recentOpps.length > 0 ? recentOpps.length : 5,
+      preferencesUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/settings`,
       appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     });
 
-    // In a real app we'd send the email here
-    // await resend.emails.send({ ... })
+    let emailSent = false;
+    if (process.env.EMAIL_SERVER && user.email) {
+      try {
+        const nodemailer = await import("nodemailer");
+        const transporter = nodemailer.createTransport(process.env.EMAIL_SERVER);
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM || "noreply@astrework.com",
+          to: user.email,
+          subject: "✨ AstreWork Career Digest: Your Curated Matches",
+          html: html,
+        });
+        emailSent = true;
+      } catch (mailErr) {
+        console.warn("Failed to dispatch email via nodemailer:", mailErr);
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: "Test digest generated successfully",
-      htmlPreview: html // Return HTML for UI preview
+      message: emailSent 
+        ? "Test digest email sent directly to your inbox!" 
+        : "Test digest preview generated successfully.",
+      emailSent,
+      htmlPreview: html
     });
   } catch (error) {
     console.error("Error generating test digest:", error);

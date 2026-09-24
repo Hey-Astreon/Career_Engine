@@ -45,12 +45,20 @@ export default function SettingsPage() {
     }
   };
 
+  const [testingDigest, setTestingDigest] = useState(false);
+  const [digestFeedback, setDigestFeedback] = useState<string | null>(null);
+
   const testDigest = async () => {
+    setTestingDigest(true);
+    setDigestFeedback(null);
     try {
       const res = await fetch("/api/alerts/digest", { method: "POST" });
       const data = await res.json();
+      if (data.message) {
+        setDigestFeedback(data.message);
+        setTimeout(() => setDigestFeedback(null), 5000);
+      }
       if (data.htmlPreview) {
-        // Open the HTML in a new window/tab to preview
         const win = window.open("", "_blank");
         if (win) {
           win.document.write(data.htmlPreview);
@@ -59,6 +67,9 @@ export default function SettingsPage() {
       }
     } catch (e) {
       console.error(e);
+      setDigestFeedback("Failed to trigger test digest");
+    } finally {
+      setTestingDigest(false);
     }
   };
 
@@ -164,14 +175,22 @@ export default function SettingsPage() {
               )}
             </div>
             
-            <div className="border-t border-[var(--line)] bg-gray-50 px-6 py-4 flex items-center justify-between">
-              <button 
-                onClick={testDigest}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors"
-              >
-                <Mail className="w-4 h-4" />
-                Preview Digest
-              </button>
+            <div className="border-t border-[var(--line)] bg-gray-50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={testDigest}
+                  disabled={testingDigest}
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  <Mail className="w-4 h-4" />
+                  {testingDigest ? "Dispatching..." : "Send Test Digest & Preview"}
+                </button>
+                {digestFeedback && (
+                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full animate-fade-in">
+                    {digestFeedback}
+                  </span>
+                )}
+              </div>
               
               <button 
                 onClick={handleSave}

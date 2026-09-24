@@ -3,15 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Search, FileX2, Ghost, CheckCircle2, Zap, ShieldCheck, BarChart3, ChevronDown, Terminal } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useEffect, useState } from "react";
 import Idea1HeroVisual from "@/components/Idea1HeroVisual";
 import DataDustBackground from "@/components/DataDustBackground";
 
 /* ── Animation Presets ── */
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
 };
 const stagger = {
   hidden: { opacity: 0 },

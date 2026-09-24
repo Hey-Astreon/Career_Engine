@@ -79,16 +79,15 @@ class DiscoveryScheduler {
 
     try {
       // 1. Fetch from providers
-      const results = await runAllProviders({ persistSyncState: true });
+      const { providerResults, allJobs } = await runAllProviders(undefined, { persistSyncState: true });
       
-      const failedProviders = results.filter(r => !r.success).length;
-      const allJobs = results.flatMap((r) => r.jobs);
+      const failedProviders = providerResults.filter((r) => !r.success).length;
       
       // 2. Ingest
       const metrics = await ingestNormalizedJobs(allJobs);
       
       // 3. Evaluate Alerts
-      const alerts = await evaluateSchedulerAlerts(results, metrics);
+      const alerts = await evaluateSchedulerAlerts(providerResults, metrics);
 
       // 4. Trigger Email Digests
       try {
@@ -122,7 +121,7 @@ class DiscoveryScheduler {
           totalInserted: metrics.insertedCount,
           totalUpdated: metrics.updatedCount,
           providersFailed: failedProviders,
-          providersTotal: results.length,
+          providersTotal: providerResults.length,
           alertsGenerated: JSON.stringify(alerts),
         },
       });

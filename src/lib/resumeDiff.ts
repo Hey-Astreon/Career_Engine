@@ -58,13 +58,13 @@ export function computeResumeDiff(oldVariant: OptimizedResume, newVariant: Optim
 
   // Skills
   const allSkillCategories = Array.from(new Set([
-    ...oldVariant.skills.map((s) => s.category),
-    ...newVariant.skills.map((s) => s.category),
+    ...oldVariant.skills.map((s) => s.categoryName),
+    ...newVariant.skills.map((s) => s.categoryName),
   ]));
 
   allSkillCategories.forEach((cat) => {
-    const oldSkill = oldVariant.skills.find((s) => s.category === cat)?.skillsText || "";
-    const newSkill = newVariant.skills.find((s) => s.category === cat)?.skillsText || "";
+    const oldSkill = oldVariant.skills.find((s) => s.categoryName === cat)?.skillsText || "";
+    const newSkill = newVariant.skills.find((s) => s.categoryName === cat)?.skillsText || "";
     if (oldSkill !== newSkill) {
       diff.skillChanges.push({
         section: cat,
@@ -100,25 +100,19 @@ export function computeResumeDiff(oldVariant: OptimizedResume, newVariant: Optim
   });
 
   // Education
-  const allEdu = Array.from(new Set([
-    ...oldVariant.education.map((e) => e.degree),
-    ...newVariant.education.map((e) => e.degree),
-  ]));
-
-  allEdu.forEach((degree) => {
-    const oldEdu = oldVariant.education.find((e) => e.degree === degree);
-    const newEdu = newVariant.education.find((e) => e.degree === degree);
-    const oldText = oldEdu ? `${oldEdu.university} - ${oldEdu.location}` : "";
-    const newText = newEdu ? `${newEdu.university} - ${newEdu.location}` : "";
-
-    if (oldText !== newText) {
+  const oldEdu = oldVariant.education;
+  const newEdu = newVariant.education;
+  if (oldEdu && newEdu) {
+    const oldText = `${oldEdu.degree} - ${oldEdu.university} (${oldEdu.period})`;
+    const newText = `${newEdu.degree} - ${newEdu.university} (${newEdu.period})`;
+    if (oldText !== newText || oldEdu.coursework !== newEdu.coursework) {
       diff.educationChanges.push({
-        degree,
+        degree: newEdu.degree || oldEdu.degree,
         old: oldText,
         new: newText,
       });
     }
-  });
+  }
 
   return diff;
 }

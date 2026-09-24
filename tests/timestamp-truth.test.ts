@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { formatRelativeAge } from "../src/app/page";
+import { formatRelativeAge } from "../src/app/(workspace)/dashboard/page";
 import { NormalizedJob } from "../src/lib/providers/types";
 import { PlatformSource } from "@prisma/client";
 import { GreenhouseProvider } from "../src/lib/providers/greenhouse";

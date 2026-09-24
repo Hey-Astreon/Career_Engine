@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
-import pdf from "pdf-parse";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require("pdf-parse");
 
 export async function POST(req: Request) {
   try {

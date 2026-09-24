@@ -121,8 +121,8 @@ Return a valid JSON object strictly matching this schema:
         "You are an expert talent acquisition and career outreach copywriter. Return ONLY valid JSON."
       );
 
-      if (aiResponse) {
-        const cleanJson = aiResponse.replace(/```json/gi, "").replace(/```/g, "").trim();
+      if (aiResponse?.text) {
+        const cleanJson = aiResponse.text.replace(/```json/gi, "").replace(/```/g, "").trim();
         const parsed = JSON.parse(cleanJson);
 
         return NextResponse.json({
