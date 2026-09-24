@@ -4,6 +4,8 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -51,15 +53,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center font-[var(--font-inter)] selection:bg-blue-100 selection:text-blue-900 px-4">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center font-[var(--font-inter)] selection:bg-blue-100 selection:text-blue-900 px-4 py-12">
       
       {/* Brand logo */}
-      <div className="absolute top-10 flex items-center justify-center space-x-2">
-        <svg viewBox="0 0 100 100" className="w-8 h-8 text-black" fill="currentColor">
-          <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
-        </svg>
-        <span className="font-bold tracking-tighter text-xl">AstreWork</span>
-      </div>
+      <Link href="/" className="mb-8 flex items-center justify-center transition-transform hover:scale-105">
+        <Image
+          src="/astrework-brand.png"
+          alt="AstreWork Logo"
+          width={1760}
+          height={363}
+          className="h-10 w-auto object-contain"
+          priority
+        />
+      </Link>
 
       <div className="w-full max-w-[400px] p-8 sm:p-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-black/[0.04]">
         

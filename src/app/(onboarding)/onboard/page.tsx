@@ -2,6 +2,8 @@ import OnboardingWizard from "@/components/OnboardingWizard";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 export default async function OnboardingPage() {
   const session = await getServerSession(authOptions);
@@ -16,9 +18,16 @@ export default async function OnboardingPage() {
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex justify-center items-center mb-6">
-             <svg viewBox="0 0 100 100" className="w-10 h-10 text-black" fill="currentColor">
-              <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
-            </svg>
+            <Link href="/" className="inline-block transition-transform hover:scale-105">
+              <Image
+                src="/astrework-brand.png"
+                alt="AstreWork Logo"
+                width={1760}
+                height={363}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            </Link>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-2">Set up your workspace</h1>
           <p className="text-[#86868b] text-[15px] font-medium">Let&apos;s personalize AstreWork for your career goals.</p>

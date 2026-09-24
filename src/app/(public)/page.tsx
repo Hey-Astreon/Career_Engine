@@ -641,11 +641,17 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white font-[var(--font-inter)] text-[#1d1d1f] selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-xl border-b border-black/[0.04] z-50 flex items-center px-6 sm:px-12">
-        <div className="flex-1 flex items-center space-x-2.5">
-          <svg viewBox="0 0 100 100" className="w-5 h-5 text-[#1d1d1f]" fill="currentColor">
-            <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
-          </svg>
-          <span className="font-bold tracking-tight text-[15px]">AstreWork</span>
+        <div className="flex-1 flex items-center">
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/astrework-brand.png"
+              alt="AstreWork Logo"
+              width={1760}
+              height={363}
+              className="h-8 w-auto object-contain"
+              priority
+            />
+          </Link>
         </div>
         <div className="flex items-center space-x-6 text-[14px] font-medium">
           <Link href="/login" className="text-[#6e6e73] hover:text-[#1d1d1f] transition-colors">
@@ -707,10 +713,14 @@ export default function LandingPage() {
           <div className="pt-8 border-t border-black/[0.04] flex flex-col md:flex-row justify-between items-center text-[12px] font-medium text-[#86868b] space-y-4 md:space-y-0">
             <p>© {new Date().getFullYear()} AstreWork. Built with conviction.</p>
             <div className="flex items-center space-x-2">
-              <svg viewBox="0 0 100 100" className="w-4 h-4 text-[#1d1d1f]" fill="currentColor">
-                <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
-              </svg>
-              <span className="font-semibold text-[#1d1d1f]">AstreWork Autonomous Career Engine</span>
+              <Image
+                src="/astrework-brand.png"
+                alt="AstreWork Logo"
+                width={1760}
+                height={363}
+                className="h-6 w-auto object-contain"
+              />
+              <span className="font-semibold text-[#1d1d1f]">Autonomous Career Engine</span>
             </div>
           </div>
         </div>

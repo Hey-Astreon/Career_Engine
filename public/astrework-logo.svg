@@ -1,0 +1,45 @@
+<svg viewBox="0 0 560 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    AW Monogram: thick uniform-width strokes as filled polygon
+    Grid: 200x200 monogram, text follows
+
+    A peak: x=80, y=8  (TALL)
+    W peak: x=210, y=65 (SHORTER, ~65% height)
+
+    Stroke width ~28px, traced as polygon outer/inner edges
+
+    Bottom-left base: (8, 192)
+    A left outer: (8,192) -> (68,8)
+    A right outer: (68,8) -> (128,8) ... no, the peak is a sharp point
+
+    Let me trace as a single polygon (clockwise outer, then counter-clockwise inner hole approach)
+    Using polyline stroke with thick stroke-width instead - simpler and correct
+  -->
+
+  <!-- Main AW shape using thick strokes with miter joins -->
+  <polyline
+    points="8,185  72,12  130,100  192,52  250,185"
+    fill="none"
+    stroke="#0f172a"
+    stroke-width="36"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+    stroke-miterlimit="8"
+  />
+
+  <!-- Blue right-pointing triangle (upper right of monogram) -->
+  <polygon
+    points="278,30  278,90  330,60"
+    fill="#2563eb"
+  />
+
+  <!-- AstreWork text -->
+  <text x="370" y="140"
+    font-family="system-ui, -apple-system, 'Inter', sans-serif"
+    font-size="108"
+    font-weight="800"
+    letter-spacing="-2"
+  >
+    <tspan fill="#0f172a">Astre</tspan><tspan fill="#2563eb">Work</tspan>
+  </text>
+</svg>

@@ -45,13 +45,13 @@ export function Sidebar() {
         className="group block transition-all"
         aria-label="AstreWork - Autonomous Remote Career Intelligence"
       >
-        <div className="flex h-[54px] w-full items-center justify-center rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
+        <div className="flex h-[52px] w-full items-center justify-center rounded-xl border border-[var(--line)] bg-white px-2 py-1 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
           <Image
-            src="/astrework-logo.png"
+            src="/astrework-brand.png"
             alt="AstreWork - Autonomous Remote Career Intelligence"
-            width={180}
-            height={50}
-            className="h-full w-auto max-w-full object-contain"
+            width={1760}
+            height={363}
+            className="w-full h-auto max-h-[44px] object-contain"
             priority
           />
         </div>

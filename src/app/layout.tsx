@@ -72,11 +72,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/astrework-favicon.png", type: "image/png" },
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.ico?v=2", sizes: "any" },
+      { url: "/icon.png?v=2", type: "image/png", sizes: "32x32" },
+      { url: "/icon-192.png?v=2", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png?v=2", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/astrework-favicon.png" }],
-    shortcut: "/astrework-favicon.png",
+    apple: [{ url: "/apple-icon.png?v=2", sizes: "180x180" }],
+    shortcut: "/favicon.ico?v=2",
   },
 };
 
@@ -106,7 +108,7 @@ const jsonLd = {
       "@type": "Organization",
       "name": "AstreWork",
       "url": "https://astrework.com",
-      "logo": "https://astrework.com/astrework-favicon.png",
+      "logo": "https://astrework.com/icon.png",
       "sameAs": ["https://github.com/Hey-Astreon/Career_Engine"],
     },
   ],
