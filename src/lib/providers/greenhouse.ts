@@ -16,7 +16,7 @@ import { GREENHOUSE_BOARDS, classifyAtsResponse } from "./ats_directory";
 export class GreenhouseProvider implements JobSourceProvider {
   name = "Greenhouse ATS";
   providerKey = PlatformSource.GREENHOUSE;
-  timeoutMs = 30000;
+  timeoutMs = 12000;
 
   async fetch(): Promise<ProviderResult> {
     const startTime = Date.now();
@@ -27,7 +27,7 @@ export class GreenhouseProvider implements JobSourceProvider {
     const companyFetches = GREENHOUSE_BOARDS.map(async (board) => {
       try {
         const apiUrl = `https://boards-api.greenhouse.io/v1/boards/${board.slug}/jobs?content=true`;
-        const res = await axios.get(apiUrl, { timeout: 10000, validateStatus: () => true });
+        const res = await axios.get(apiUrl, { timeout: 4500, validateStatus: () => true });
 
         const status = classifyAtsResponse(res.status, !!(res.data && Array.isArray(res.data.jobs)), res.data?.jobs?.length || 0);
 

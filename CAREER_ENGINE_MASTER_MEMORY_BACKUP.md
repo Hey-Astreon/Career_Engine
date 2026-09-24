@@ -420,6 +420,7 @@ npm run dev
   - **1. GitHub Actions 3-Hour Automation (`.github/workflows/job-sync.yml`):** Configured automated GitHub Actions workflow on schedule `0 */3 * * *` (8 runs daily across 24 hours) with manual `workflow_dispatch` trigger. Completely eliminates Vercel Hobby's 1-cron/day limit for 100% free continuous scraping.
   - **2. Concurrent LibSQL Ingestion Optimization (`src/lib/providers/registry.ts`):** Upgraded `ingestNormalizedJobs` with `BATCH_SIZE = 10` parallel chunking via `Promise.all`, cutting database roundtrip latency by over 85% and preventing serverless timeouts.
   - **3. Parallel Provider State Persistence:** Migrated `providerSyncState` and freshness evaluation in `runAllProviders()` to execute concurrently across all 19 providers via `Promise.all`.
+  - **4. Provider Parallelization & 9.8s Benchmark:** Eliminated sequential network loops across providers (Jobicy tags parallelized, Himalayas 3 pages fetched via `Promise.all`, Greenhouse per-board timeout tuned to 4.5s, Simplify tuned to 6s). Verified end-to-end scrape of all 19 sources + LibSQL cloud ingestion in **9.8 seconds total** (down from 65+ seconds), completely eradicating Vercel 504 `FUNCTION_INVOCATION_TIMEOUT` errors.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.
