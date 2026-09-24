@@ -1,53 +1,43 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
+import { siteConfig } from "@/lib/siteConfig";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
-const baseUrl = process.env.NEXTAUTH_URL || "https://astrework.com";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "AstreWork | Autonomous Remote Career Intelligence & Application Engine",
+    default: "AstreWork | Autonomous Remote Career Intelligence & ATS Resume Engine",
     template: "%s | AstreWork",
   },
-  description:
-    "AstreWork is the premier autonomous remote career intelligence platform. Featuring multi-provider job scraping, deep ATS resume scoring, one-click application dispatching, and automated recruiter outreach.",
-  keywords: [
-    "AstreWork",
-    "remote jobs",
-    "autonomous job application",
-    "ATS resume maker",
-    "career engine",
-    "remote career management",
-    "job scraper",
-    "direct recruiter outreach",
-    "AI job application",
-    "deep link ATS",
+  description: siteConfig.description,
+  keywords: siteConfig.keywords,
+  authors: [
+    { name: "Roushan Kumar (Astreon)", url: "https://github.com/Hey-Astreon" },
+    { name: "Ayushi Raj", url: "https://github.com/Silenttears-cloud" },
   ],
-  authors: [{ name: "Astreon", url: "https://github.com/Hey-Astreon" }],
-  creator: "Astreon",
+  creator: "Roushan Kumar",
   publisher: "AstreWork",
+  category: "technology",
   alternates: {
-    canonical: "/",
+    canonical: siteConfig.url,
   },
   openGraph: {
-    title: "AstreWork | Autonomous Remote Career Intelligence & Application Engine",
-    description:
-      "Autonomous remote job discovery, deep ATS resume scoring, 1-click application dispatching, and direct recruiter outreach.",
-    url: baseUrl,
+    title: "AstreWork | Autonomous Remote Career Intelligence & ATS Resume Engine",
+    description: siteConfig.description,
+    url: siteConfig.url,
     siteName: "AstreWork",
     locale: "en_US",
     type: "website",
     images: [
       {
-        url: "/landing-dashboard.png",
+        url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: "AstreWork Autonomous Career Engine Dashboard",
+        alt: "AstreWork Autonomous Remote Career Engine Dashboard",
       },
     ],
   },
@@ -55,9 +45,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AstreWork | Autonomous Remote Career Intelligence",
     description:
-      "Autonomous remote job discovery, deep ATS resume scoring, 1-click dispatching, and outreach.",
+      "Autonomous 19-provider remote job discovery, deep ATS resume scoring, 1-click tailored application kits, and background job synchronization.",
     creator: "@Hey_Astreon",
-    images: ["/landing-dashboard.png"],
+    images: [siteConfig.ogImage],
   },
   robots: {
     index: true,
@@ -69,6 +59,9 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
   icons: {
     icon: [
@@ -86,13 +79,38 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "WebSite",
+      "@id": `${siteConfig.url}/#website`,
+      "url": siteConfig.url,
+      "name": "AstreWork",
+      "description": siteConfig.description,
+      "publisher": {
+        "@id": `${siteConfig.url}/#organization`,
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${siteConfig.url}/dashboard?search={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
       "@type": "SoftwareApplication",
+      "@id": `${siteConfig.url}/#software`,
       "name": "AstreWork",
       "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "url": "https://astrework.com",
-      "description":
-        "Autonomous remote career intelligence and application engine featuring multi-provider job scraping, deep ATS scoring, and auto-dispatching.",
+      "operatingSystem": "All Modern Web Browsers",
+      "url": siteConfig.url,
+      "description": siteConfig.description,
+      "featureList": [
+        "19-Provider Autonomous Remote Job Scraping Engine",
+        "Deterministic Stage-1 & AI Stage-2 Fit Scoring",
+        "Enterprise ATS-Compliant Resume Maker with 5 Presets",
+        "One-Click Tailored Application Kit Generation",
+        "Automated 3-Hour Background Discovery Scheduler",
+      ],
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -100,16 +118,71 @@ const jsonLd = {
       },
       "creator": {
         "@type": "Person",
-        "name": "Astreon",
+        "name": "Roushan Kumar",
         "url": "https://github.com/Hey-Astreon",
       },
     },
     {
       "@type": "Organization",
+      "@id": `${siteConfig.url}/#organization`,
       "name": "AstreWork",
-      "url": "https://astrework.com",
-      "logo": "https://astrework.com/icon.png",
-      "sameAs": ["https://github.com/Hey-Astreon/Career_Engine"],
+      "url": siteConfig.url,
+      "logo": `${siteConfig.url}/icon.png`,
+      "sameAs": [
+        "https://github.com/Hey-Astreon/Career_Engine",
+        "https://astreon.me",
+        "https://ayushiraj.me",
+      ],
+      "founders": [
+        {
+          "@type": "Person",
+          "name": "Roushan Kumar",
+          "url": "https://github.com/Hey-Astreon",
+        },
+        {
+          "@type": "Person",
+          "name": "Ayushi Raj",
+          "url": "https://github.com/Silenttears-cloud",
+        },
+      ],
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${siteConfig.url}/#faq`,
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is my resume data private?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Your resume data is strictly isolated to your workspace for job matching, tailoring, and ATS formatting. We never sell your data or use it to train public models.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "How is AstreWork different from LinkedIn or Indeed?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AstreWork continuously scans 19+ verified remote developer boards every 3 hours, eliminates expired and ghost listings, scores your profile against job descriptions, and generates tailored ATS-proof resumes and outreach kits automatically.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "Does the ATS Resume Maker actually work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Our ATS Resume Maker scores your resume against real enterprise parsers, validates typography, margins, and keyword density, and outputs certified A4 PDF variants tested for maximum extractability.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "Is AstreWork free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. AstreWork is free to use for individual job seekers, built by engineers to eliminate the frustration of sending applications into the void.",
+          },
+        },
+      ],
     },
   ],
 };

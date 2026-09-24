@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import LegalPageLayout from "@/components/public-ui/LegalPageLayout";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Privacy Policy detailing how AstreWork safeguards your career information, resumes, and data privacy.",
+  alternates: {
+    canonical: "/privacy",
+  },
+};
 
 export default function PrivacyPolicy() {
   return (

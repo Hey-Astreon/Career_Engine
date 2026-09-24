@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import LegalPageLayout from "@/components/public-ui/LegalPageLayout";
+
+export const metadata: Metadata = {
+  title: "DMCA Copyright Policy",
+  description: "Digital Millennium Copyright Act (DMCA) Notice & Policy for AstreWork.",
+  alternates: {
+    canonical: "/dmca",
+  },
+};
 
 export default function DMCAPolicy() {
   return (

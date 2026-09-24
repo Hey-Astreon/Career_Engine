@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import LegalPageLayout from "@/components/public-ui/LegalPageLayout";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  description: "Cookie Policy explaining tracking technologies and privacy standards used by AstreWork.",
+  alternates: {
+    canonical: "/cookie-policy",
+  },
+};
 
 export default function CookiePolicy() {
   return (

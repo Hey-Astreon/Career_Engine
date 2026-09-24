@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import LegalPageLayout from "@/components/public-ui/LegalPageLayout";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "About Us | Our Mission & Story",
+  description:
+    "We built AstreWork to solve a single, exhausting problem: sending resumes into the void. Learn how our autonomous career engine empowers engineers.",
+  alternates: {
+    canonical: "/about",
+  },
+};
 
 export default function AboutUs() {
   return (

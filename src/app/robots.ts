@@ -1,16 +1,36 @@
 import { MetadataRoute } from "next";
+import { siteConfig } from "@/lib/siteConfig";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXTAUTH_URL || "https://astrework.com";
-
   return {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/api/", "/dashboard", "/match", "/resume-builder", "/resume-maker", "/applications", "/outreach", "/settings"],
+        allow: [
+          "/",
+          "/about",
+          "/contact",
+          "/terms",
+          "/privacy",
+          "/dmca",
+          "/cookie-policy",
+          "/login",
+          "/register",
+          "/onboard",
+        ],
+        disallow: [
+          "/api/",
+          "/dashboard",
+          "/match",
+          "/resume-builder",
+          "/resume-maker",
+          "/applications",
+          "/outreach",
+          "/settings",
+        ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${siteConfig.url}/sitemap.xml`,
+    host: siteConfig.url,
   };
 }

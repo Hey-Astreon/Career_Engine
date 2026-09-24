@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import LegalPageLayout from "@/components/public-ui/LegalPageLayout";
+
+export const metadata: Metadata = {
+  title: "Terms and Conditions",
+  description: "Terms and Conditions governing the use of the AstreWork autonomous remote career platform.",
+  alternates: {
+    canonical: "/terms",
+  },
+};
 
 export default function TermsAndConditions() {
   return (

@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import LegalPageLayout from "@/components/public-ui/LegalPageLayout";
 import { Mail, MessageSquare } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Contact Us & Support",
+  description:
+    "Get in touch with the AstreWork team. Reach out for support, feedback, feature requests, or enterprise partnerships.",
+  alternates: {
+    canonical: "/contact",
+  },
+};
 
 export default function ContactUs() {
   return (
