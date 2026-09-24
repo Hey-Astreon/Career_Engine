@@ -52,10 +52,15 @@ REQUIRED JSON SCHEMA:
       return NextResponse.json({ error: "AI failed to extract data." }, { status: 500 });
     }
 
-    const parsedData = JSON.parse(result.text);
+    let parsedData;
+    try {
+      parsedData = JSON.parse(result.text);
+    } catch {
+      return NextResponse.json({ error: "AI returned malformed data. Please try again." }, { status: 422 });
+    }
 
     return NextResponse.json(parsedData);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Onboarding Extract Error]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

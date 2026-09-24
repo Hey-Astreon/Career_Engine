@@ -155,11 +155,13 @@ export async function PATCH(req: Request) {
     }
 
     const prismaStatusMap: Record<string, ApplicationStatus> = {
+      DISCOVERED: ApplicationStatus.DISCOVERED,
       SHORTLISTED: ApplicationStatus.SHORTLISTED,
       APPLIED: ApplicationStatus.APPLIED,
       SCREENING: ApplicationStatus.SCREENING,
       TECHNICAL_ROUND: ApplicationStatus.TECHNICAL_ROUND,
       OFFER: ApplicationStatus.OFFER,
+      REJECTED: ApplicationStatus.REJECTED,
       QUIET: ApplicationStatus.QUIET,
     };
 
@@ -186,8 +188,8 @@ export async function PATCH(req: Request) {
   } catch (error) {
     console.error("Error updating application status:", error);
     return NextResponse.json(
-      { success: true, message: "Fallback state updated" },
-      { status: 200 }
+      { success: false, error: "Failed to update application status" },
+      { status: 500 }
     );
   }
 }

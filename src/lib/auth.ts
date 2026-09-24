@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-  // @ts-ignore - PrismaAdapter types mismatch slightly with NextAuth v4, but it works
+  // @ts-expect-error - PrismaAdapter types mismatch slightly with NextAuth v4, but it works
   adapter: PrismaAdapter(db),
   providers: [
     GoogleProvider({

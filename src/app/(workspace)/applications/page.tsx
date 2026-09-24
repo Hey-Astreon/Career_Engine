@@ -48,6 +48,7 @@ export default function ApplicationsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchApplications();
   }, [activeProfileSlug]);
 

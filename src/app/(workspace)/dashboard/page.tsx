@@ -61,10 +61,59 @@ export default function Home() {
   const loadEndpointDiagnostics = async () => { setIsEndpointDiagnosticsLoading(true); try { const response = await fetch("/api/diagnostics/provider-endpoints?days=1"); const data = await response.json(); if (data.success) setEndpointDiagnostics(data); } catch (error) { console.error("Failed to load endpoint diagnostics:", error); } finally { setIsEndpointDiagnosticsLoading(false); } };
   const loadSchedulerStatus = async () => { try { const res = await fetch("/api/scheduler"); const data = await res.json(); if (data.success) setSchedulerStatus(data.status); } catch (error) { console.error(error); } };
   
-  const [schedulerStatus, setSchedulerStatus] = useState<any>(null);
+  const [schedulerStatus, setSchedulerStatus] = useState<Record<string, unknown> | null>(null);
 
-  useEffect(() => { async function loadJobs() { try { const response = await fetch("/api/jobs/scrape"); const data = await response.json(); if (data.success && Array.isArray(data.jobs)) setJobs(data.jobs); } catch (error) { console.error("Failed to load jobs:", error); } finally { setIsLoadingJobs(false); } } void loadJobs(); void loadSourceHealth(); void loadEndpointDiagnostics(); void loadSchedulerStatus(); }, []);
-  useEffect(() => { if (!jobs.length) return; let cancelled = false; async function loadScores() { try { const response = await fetch("/api/jobs/feed-scores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileSlug: activeProfileSlug || "roushan", jobPostingIds: jobs.map((job) => job.id) }) }); const data = await response.json(); if (!cancelled && data.success && data.scores) setScoresMap(data.scores); } catch (error) { console.error("Failed to load feed scores:", error); } } loadScores(); return () => { cancelled = true; }; }, [jobs, activeProfileSlug]);
+  useEffect(() => {
+    async function loadJobs() {
+      try {
+        const response = await fetch("/api/jobs/scrape");
+        const data = await response.json();
+        if (data.success && Array.isArray(data.jobs)) {
+          setJobs(data.jobs);
+        }
+      } catch (error) {
+        console.error("Failed to load jobs:", error);
+      } finally {
+        setIsLoadingJobs(false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadJobs();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadSourceHealth();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadEndpointDiagnostics();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadSchedulerStatus();
+  }, []);
+
+  useEffect(() => {
+    if (!jobs.length) return;
+    let cancelled = false;
+    async function loadScores() {
+      try {
+        const response = await fetch("/api/jobs/feed-scores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            profileSlug: activeProfileSlug || "roushan",
+            jobPostingIds: jobs.map((job) => job.id),
+          }),
+        });
+        const data = await response.json();
+        if (!cancelled && data.success && data.scores) {
+          setScoresMap(data.scores);
+        }
+      } catch (error) {
+        console.error("Failed to load feed scores:", error);
+      }
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadScores();
+    return () => {
+      cancelled = true;
+    };
+  }, [jobs, activeProfileSlug]);
 
   const handleTriggerScrape = async () => { setIsScraping(true); try { const response = await fetch("/api/jobs/scrape", { method: "POST" }); const data = await response.json(); if (data.success && Array.isArray(data.jobs)) { setJobs(data.jobs); setFeedPage(1); setExperienceRange(DEFAULT_HERO_FILTERS.experienceRange); setMaximumPostedDays(DEFAULT_HERO_FILTERS.maximumPostedDays); setRemoteRoleView(DEFAULT_HERO_FILTERS.remoteRoleView); setLastRun({ totalDiscovered: Number(data.totalDiscovered) || 0, totalRejected: Number(data.totalRejected) || 0, newJobsInserted: Number(data.newJobsInserted) || 0, jobsUpdated: Number(data.jobsUpdated) || 0, completedAt: new Date().toISOString(), providers: Array.isArray(data.providerSummary) ? data.providerSummary : [] }); } await Promise.all([loadSourceHealth(), loadEndpointDiagnostics(), loadSchedulerStatus()]); } catch (error) { console.error("Scraper execution error:", error); } finally { setIsScraping(false); } };
   const handleGenerateKit = async (job: JobItem) => { try { const response = await fetch("/api/jobs/kit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileSlug: activeProfileSlug || "roushan", jobPostingId: job.id }) }); const data = await response.json(); alert(data.success ? `Application kit generated for ${job.company}. Open Application Kit to review it.` : `Kit generation error: ${data.error || "Please try again."}`); } catch (error) { console.error("Failed to generate kit:", error); } };

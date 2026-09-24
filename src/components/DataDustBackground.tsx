@@ -19,12 +19,9 @@ interface Particle {
 export default function DataDustBackground() {
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [particles, setParticles] = useState<Particle[]>([]);
 
-  // Pre-generate 55 particles so they stay stable across renders
-  const particles: Particle[] = useMemo(() => {
+  useEffect(() => {
     const colors = [
       "rgba(0, 113, 227, 0.65)", // Apple Blue
       "rgba(14, 165, 233, 0.6)",  // Sky Blue
@@ -33,18 +30,17 @@ export default function DataDustBackground() {
       "rgba(56, 189, 248, 0.7)",  // Cyan-blue
     ];
 
-    return Array.from({ length: 55 }).map((_, i) => {
-      // Varied sizes: mostly 2.5px to 5px, with a few 6px glowing beacons
+    const generated = Array.from({ length: 55 }).map((_, i) => {
       const isBeacon = i % 8 === 0;
       const size = isBeacon ? 5.5 : Math.random() * 2.5 + 2.5;
-      const left = Math.random() * 96 + 2; // 2% to 98%
-      const top = Math.random() * 90 + 5;  // 5% to 95%
-      const duration = Math.random() * 12 + 10; // 10s to 22s for smooth float
-      const delay = Math.random() * -20; // negative delay so all appear active immediately
+      const left = Math.random() * 96 + 2;
+      const top = Math.random() * 90 + 5;
+      const duration = Math.random() * 12 + 10;
+      const delay = Math.random() * -20;
       const color = colors[i % colors.length];
       const glow = isBeacon || Math.random() > 0.5;
-      const driftX = (Math.random() - 0.5) * 40; // -20px to +20px horizontal drift
-      const floatY = -(Math.random() * 140 + 80); // float up 80px to 220px
+      const driftX = (Math.random() - 0.5) * 40;
+      const floatY = -(Math.random() * 140 + 80);
 
       return {
         id: i,
@@ -59,6 +55,11 @@ export default function DataDustBackground() {
         floatY,
       };
     });
+    
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setParticles(generated);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
   }, []);
 
   if (!mounted) return null;

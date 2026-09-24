@@ -2,7 +2,6 @@ import { runAllProviders } from "./providers/registry";
 import { ingestNormalizedJobs } from "./providers/registry";
 import { db } from "./db";
 import { evaluateSchedulerAlerts } from "./schedulerAlerts";
-import { generateDigestHtml } from "./digestEmail";
 
 export type SchedulerStatus = {
   isRunning: boolean;
@@ -62,7 +61,7 @@ class DiscoveryScheduler {
     }, this.intervalMs);
   }
 
-  public async executeRun(triggeredBy: string = "MANUAL"): Promise<any> {
+  public async executeRun(triggeredBy: string = "MANUAL"): Promise<Record<string, unknown>> {
     if (this.isExecuting) {
       throw new Error("Scheduler run already in progress");
     }
@@ -128,13 +127,14 @@ class DiscoveryScheduler {
 
       this.lastRunAt = new Date(endTime);
       return updatedRun;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       await db.schedulerRun.update({
         where: { id: runRecord.id },
         data: {
           status: "FAILED",
           completedAt: new Date(),
-          error: error.message || "Unknown error",
+          error: errorMessage,
         },
       });
       throw error;

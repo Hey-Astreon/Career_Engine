@@ -68,7 +68,7 @@ export function generateAtsAutoFillUrl(
     }
 
     return { autoFillUrl: url.toString(), isSupported };
-  } catch (error) {
+  } catch {
     // If URL parsing fails, return original
     return { autoFillUrl: originalUrl, isSupported: false };
   }

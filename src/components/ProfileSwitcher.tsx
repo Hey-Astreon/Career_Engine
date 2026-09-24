@@ -66,7 +66,7 @@ export function ProfileSwitcher() {
     ? "AR"
     : "CA";
 
-  const isUserOwned = Boolean((activeProfile as any)?.isOwner);
+  const isUserOwned = Boolean((activeProfile as unknown as Record<string, unknown>)?.isOwner);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -105,8 +105,8 @@ export function ProfileSwitcher() {
           <div className="max-h-72 overflow-y-auto p-1 space-y-0.5">
             {allProfiles.map((p) => {
               const isSelected = activeProfileSlug === p.slug;
-              const isOwner = Boolean((p as any).isOwner);
-              const isTemplate = Boolean((p as any).isTemplate);
+              const isOwner = Boolean((p as unknown as Record<string, unknown>).isOwner);
+              const isTemplate = Boolean((p as unknown as Record<string, unknown>).isTemplate);
               const initials = getInitials(p.fullName);
 
               return (

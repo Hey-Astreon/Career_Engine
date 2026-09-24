@@ -41,7 +41,7 @@ Every line of code, design asset, and architecture decision must adhere to Tier-
 ## 🗝️ SECTION 3: RULE 9 — FOUNDER PROTOCOL (CODE 9926) & MASTER MEMORY AUTOLOAD
 
 Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Protocol 9926"**, **"Code 9926"**, or in any fresh conversation/session:
-1. **Immediate Memory Lock:** Immediately read and acknowledge [`CAREER_AGENT_MASTER_MEMORY_BACKUP.md`](file:///x:/job_engine/ai_career_engine/CAREER_AGENT_MASTER_MEMORY_BACKUP.md) and [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/job_engine/ai_career_engine/.agents/skills/career-agent-expert/SKILL.md).
+1. **Immediate Memory Lock:** Immediately read and acknowledge [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/1_RCMS/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) and [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/Career_Engine/1_RCMS/.agents/skills/career-agent-expert/SKILL.md).
 2. **State Restoration:** Check git status, database health, running services, and the "Exactly Where We Left Off" ledger to seamlessly resume execution without asking the user to re-explain context.
 3. **Immutable Loyalty:** This protocol binds you to the highest standard of execution, loyalty, and technical rigor until explicitly overridden by code `9926`.
 

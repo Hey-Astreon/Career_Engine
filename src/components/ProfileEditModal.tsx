@@ -29,6 +29,7 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
 
   useEffect(() => {
     if (activeProfile && isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         fullName: activeProfile.fullName || "",
         title: activeProfile.title || "",
@@ -70,8 +71,8 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
       setTimeout(() => {
         onClose();
       }, 900);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Something went wrong saving your profile.");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong saving your profile.");
     } finally {
       setIsSaving(false);
     }

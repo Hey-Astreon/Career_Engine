@@ -27,6 +27,7 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
 
   // Compare modal state
   const [showCompareModal, setShowCompareModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [compareDiff, setCompareDiff] = useState<any>(null);
   const [selectedForCompare, setSelectedForCompare] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVariants();
   }, [profileSlug]);
 
@@ -234,7 +236,7 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
               {compareDiff.diff.skillChanges.length > 0 && (
                 <div className="border rounded-lg overflow-hidden">
                   <div className="bg-gray-100 p-2 font-bold text-xs border-b">Skills Changes</div>
-                  {compareDiff.diff.skillChanges.map((sc: any, idx: number) => (
+                  {compareDiff.diff.skillChanges.map((sc: { section: string, old: string, new: string }, idx: number) => (
                     <div key={idx} className="border-b last:border-0">
                       <div className="px-3 py-1 bg-gray-50 text-xs font-semibold">{sc.section}</div>
                       <div className="grid grid-cols-2">
@@ -249,7 +251,7 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
               {compareDiff.diff.projectChanges.length > 0 && (
                 <div className="border rounded-lg overflow-hidden">
                   <div className="bg-gray-100 p-2 font-bold text-xs border-b">Project Changes</div>
-                  {compareDiff.diff.projectChanges.map((pc: any, idx: number) => (
+                  {compareDiff.diff.projectChanges.map((pc: { title: string, oldBullets: string[], newBullets: string[] }, idx: number) => (
                     <div key={idx} className="border-b last:border-0 p-3">
                       <div className="font-bold text-sm mb-2">{pc.title}</div>
                       <div className="grid grid-cols-2 gap-4">

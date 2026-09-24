@@ -18,7 +18,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [schedulerStatus, setSchedulerStatus] = useState<any>(null);
+  const [schedulerStatus, setSchedulerStatus] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const fetchStatus = async () => {

@@ -85,7 +85,7 @@ export function formatFormalCoverLetter(
   const githubStr = candidate.githubUrl ? ` | ${candidate.githubUrl.replace(/^https?:\/\//, "")}` : "";
 
   // Extract core body paragraphs, stripping pre-existing greetings or signoffs
-  let bodyText = (rawLetter || "")
+  const bodyText = (rawLetter || "")
     .replace(/^Dear\s+[^,\n]+,?/gi, "")
     .replace(/^To\s+the\s+Hiring\s+Manager,?/gi, "")
     .replace(/Sincerely,[\s\S]*$/gi, "")

@@ -32,7 +32,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const { name, category, resumeData, atsScore } = body;
     
-    const updateData: any = {};
+    const updateData: { name?: string; category?: string; atsScore?: number; resumeData?: string } = {};
     if (name !== undefined) updateData.name = name;
     if (category !== undefined) updateData.category = category;
     if (atsScore !== undefined) updateData.atsScore = atsScore;

@@ -84,6 +84,7 @@ export default function ResumeBuilderPage() {
   useEffect(() => {
     const slug = activeProfileSlug || "roushan";
     const baseline = getMasterResumeBaseline(slug);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setResumeData(baseline);
   }, [activeProfileSlug]);
 
@@ -207,7 +208,7 @@ ${portfolio}`;
   const handleOptimizeResume = async (jobId?: string) => {
     setIsOptimizing(true);
     try {
-      const payload: any = {
+      const payload: Record<string, string> = {
         profileSlug: activeProfileSlug || "roushan",
       };
 

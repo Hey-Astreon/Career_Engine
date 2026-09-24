@@ -29,6 +29,7 @@ function statusTone(status: string) {
   return { dot: "bg-[var(--red)]", chip: "ce-chip-red", bar: "bg-[var(--red)]" };
 }
 
+// eslint-disable-next-line react-hooks/purity
 export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: ProviderHealthSnapshot[]; nowTick?: number }) {
   const [expandedProvider, setExpandedProvider] = useState<string | null>(null);
   const reportRows = [...rows].sort((left, right) => left.provider.localeCompare(right.provider));

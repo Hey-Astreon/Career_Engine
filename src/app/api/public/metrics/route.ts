@@ -19,7 +19,7 @@ export async function GET() {
       totalProviders: totalProviders,
       totalProfiles: totalProfiles,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Public Metrics Error]", error);
     return NextResponse.json({
       totalJobsIndexed: 0,

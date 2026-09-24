@@ -1,5 +1,5 @@
 import { queryMultiProviderLLM } from "./router";
-import { CandidateContext, extractSkills } from "./scorer";
+import { extractSkills } from "./scorer";
 export * from "../resumeBaseline";
 import {
   OptimizedResume,
