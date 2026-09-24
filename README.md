@@ -59,8 +59,8 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 - Application status pipeline (Discovered → Shortlisted → Applied → Screening → Technical Round → Offer).
 
 ### 5. ⏰ Autonomous Background Sync Scheduler & Alert Engine
-- **GitHub Actions 3-Hour Automation (`.github/workflows/job-sync.yml`):** Runs on automated cron schedule `0 */3 * * *` (8 runs daily) with on-demand manual triggers, refreshing all 19 remote job feeds continuously without Vercel Hobby limits.
-- **DiscoveryScheduler & Concurrency:** Singleton engine with concurrent `BATCH_SIZE = 10` LibSQL insertion batches and parallel provider state syncing.
+- **Autonomous GitHub Actions Runner (`.github/workflows/job-sync.yml`):** Runs on automated cron schedule `0 */3 * * *` (8 runs daily) and manual dispatch, directly executing `scripts/run-discovery-cli.ts` on dedicated Ubuntu VM runners with direct connection to Turso Cloud, completely decoupling heavy web scraping from Vercel's 60s serverless gateway timeouts.
+- **DiscoveryScheduler & Concurrency:** Singleton engine with concurrent `BATCH_SIZE = 20` LibSQL insertion batches and non-blocking bulk freshness queries.
 - **Telemetry:** Real-time provider health dashboard tracking per-endpoint latency, error codes, and insertion yields.
 - **UI Integration:** Live pulse status indicators in the Sidebar and one-click "Enable Auto-Sync" / "Pause Sync" controls on the Dashboard.
 

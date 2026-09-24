@@ -8,7 +8,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "db:sync:turso": "node scripts/sync-to-turso.mjs"
+    "db:sync:turso": "node scripts/sync-to-turso.mjs",
+    "scrape:cli": "npx tsx scripts/run-discovery-cli.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

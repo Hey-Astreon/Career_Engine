@@ -5,44 +5,28 @@ on:
     # Runs every 3 hours (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
     - cron: '0 */3 * * *'
   workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Reason for manual trigger'
-        required: false
-        default: 'Manual on-demand sync from GitHub'
 
 jobs:
   scrape-and-sync:
     name: 🌐 19-Source Discovery Sync
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
-      - name: 🚀 Ping AstreWork Scheduler API
-        id: sync
-        run: |
-          echo "Starting 19-provider scraping cycle on AstreWork production..."
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" --max-time 180 "https://astrework.vercel.app/api/scheduler?cron=true")
-          
-          BODY=$(echo "$RESPONSE" | sed -e '$d')
-          STATUS=$(echo "$RESPONSE" | tail -n 1 | cut -d':' -f2)
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
 
-          echo "Response Status: $STATUS"
-          echo "Response Body: $BODY"
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
-          if [ "$STATUS" -ne 200 ]; then
-            echo "❌ Failed with HTTP status $STATUS"
-            exit 1
-          fi
+      - name: 📦 Install Dependencies
+        run: npm ci
 
-          echo "status=$STATUS" >> $GITHUB_OUTPUT
-
-      - name: 📊 Generate Summary Report
-        if: always()
-        run: |
-          echo "### 🔄 AstreWork Remote Job Sync Execution" >> $GITHUB_STEP_SUMMARY
-          echo "- **Target:** https://astrework.vercel.app/api/scheduler" >> $GITHUB_STEP_SUMMARY
-          echo "- **Providers:** 19 Active Remote Platforms" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trigger:** ${{ github.event_name == 'schedule' && 'Automated Cron (Every 3 Hours)' || 'Manual Trigger' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **HTTP Status:** \`${{ steps.sync.outputs.status || 'Failed' }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+      - name: 🚀 Run 19-Source Scraping Engine (Direct Turso Cloud)
+        run: npx tsx scripts/run-discovery-cli.ts
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}

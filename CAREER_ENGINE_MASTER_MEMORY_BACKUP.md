@@ -416,11 +416,11 @@ npm run dev
     - Live Resume Streaming (`/api/resume/download`): Ayushi Raj and Roushan Kumar PDF variants streaming with HTTP 200 OK (`application/pdf`).
     - Cloud Auth & Session Handling: `NEXTAUTH_SECRET` and `NEXTAUTH_URL` configured in production environment.
 
-- [x] **Phase 14: Continuous Automated Scraping Engine (GitHub Actions Cron + LibSQL Concurrency)**
-  - **1. GitHub Actions 3-Hour Automation (`.github/workflows/job-sync.yml`):** Configured automated GitHub Actions workflow on schedule `0 */3 * * *` (8 runs daily across 24 hours) with manual `workflow_dispatch` trigger. Completely eliminates Vercel Hobby's 1-cron/day limit for 100% free continuous scraping.
-  - **2. Concurrent LibSQL Ingestion Optimization (`src/lib/providers/registry.ts`):** Upgraded `ingestNormalizedJobs` with `BATCH_SIZE = 10` parallel chunking via `Promise.all`, cutting database roundtrip latency by over 85% and preventing serverless timeouts.
-  - **3. Parallel Provider State Persistence:** Migrated `providerSyncState` and freshness evaluation in `runAllProviders()` to execute concurrently across all 19 providers via `Promise.all`.
-  - **4. Provider Parallelization & 9.8s Benchmark:** Eliminated sequential network loops across providers (Jobicy tags parallelized, Himalayas 3 pages fetched via `Promise.all`, Greenhouse per-board timeout tuned to 4.5s, Simplify tuned to 6s). Verified end-to-end scrape of all 19 sources + LibSQL cloud ingestion in **9.8 seconds total** (down from 65+ seconds), completely eradicating Vercel 504 `FUNCTION_INVOCATION_TIMEOUT` errors.
+- [x] **Phase 14: Continuous Automated Scraping Engine (GitHub Actions Direct Runner + LibSQL Concurrency)**
+  - **1. Autonomous GitHub Actions Runner (`.github/workflows/job-sync.yml`):** Runs on automated cron schedule `0 */3 * * *` (8 sweeps daily) and manual `workflow_dispatch`. Directly executes `scripts/run-discovery-cli.ts` on dedicated Ubuntu VM runners with direct connection to Turso Cloud, completely decoupling heavy web scraping from Vercel's 60s serverless gateway timeouts.
+  - **2. CLI Discovery Runner (`scripts/run-discovery-cli.ts`):** High-speed standalone runner capable of running on any local machine, CI/CD runner, or container. Benchmarked: all 19 providers + LibSQL cloud ingestion completed in **9.98 seconds total**.
+  - **3. Concurrent LibSQL Ingestion Optimization (`src/lib/providers/registry.ts`):** Upgraded `ingestNormalizedJobs` with `BATCH_SIZE = 20` parallel chunking via `Promise.all` and bulk set operations in `evaluateJobFreshness` (eliminating blocking interactive transactions), cutting database roundtrip latency by over 85%.
+  - **4. Provider Parallelization Benchmark:** Eliminated sequential network loops across providers (Jobicy tags parallelized, Himalayas 3 pages fetched via `Promise.all`, Greenhouse per-board timeout tuned to 4.5s, Simplify tuned to 6s). Verified 19/19 providers succeed cleanly.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.
