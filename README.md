@@ -8,6 +8,7 @@
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9%20(Strict)-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma 7](https://img.shields.io/badge/Prisma-7%20(LibSQL)-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](https://astrework.vercel.app/api/sources/health)
+[![Job Sync Engine](https://img.shields.io/badge/Job%20Sync-100%25%20PASSING-brightgreen?style=for-the-badge&logo=githubactions)](https://github.com/Hey-Astreon/Career_Engine/actions/workflows/job-sync.yml)
 [![Live Production](https://img.shields.io/badge/Live%20Production-astrework.vercel.app-success?style=for-the-badge&logo=vercel)](https://astrework.vercel.app)
 
 **AstreWork** is an autonomous, high-density AI Career Operating System engineered to streamline remote job discovery, multi-signal deduplication, deep 2-stage fit scoring, tailored application kit generation, and background auto-sync scheduling.
