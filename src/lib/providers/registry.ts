@@ -127,35 +127,6 @@ export async function runAllProviders(
       logProviderDiagnostics(provider.providerKey, result);
       totalDiscovered += result.jobsDiscovered;
       totalRejected += result.jobsRejected;
-
-      if (persistSyncState) {
-        // Update ProviderSyncState in DB only for production discovery runs.
-        await db.providerSyncState.upsert({
-          where: { providerKey: provider.providerKey },
-          update: {
-            status: result.success ? SyncStatus.HEALTHY : SyncStatus.DEGRADED,
-            lastSyncAttemptAt: new Date(),
-            ...(result.success ? { lastSuccessfulSyncAt: new Date(), consecutiveFailures: 0 } : { lastFailedSyncAt: new Date(), lastError: result.error }),
-            totalJobsSeen: { increment: result.jobsDiscovered },
-          },
-          create: {
-            providerKey: provider.providerKey,
-            status: result.success ? SyncStatus.HEALTHY : SyncStatus.DEGRADED,
-            lastSyncAttemptAt: new Date(),
-            lastSuccessfulSyncAt: result.success ? new Date() : null,
-            lastFailedSyncAt: result.success ? null : new Date(),
-            lastError: result.error,
-            totalJobsSeen: result.jobsDiscovered,
-          },
-        }).catch((err) => console.warn(`[SyncState Warning] Failed to update ${provider.providerKey}:`, err.message));
-
-        // Freshness pruning is also production-only; a diagnostics run must never expire live roles.
-        if (result.success) {
-          await evaluateJobFreshness(provider.providerKey).catch((err) =>
-            console.warn(`[Freshness Warning] Failed to evaluate freshness for ${provider.providerKey}:`, err.message)
-          );
-        }
-      }
     } else {
       const errorMsg = res.reason?.message || "Execution error";
       providerResults.push({
@@ -168,6 +139,42 @@ export async function runAllProviders(
         jobsRejected: 0,
       });
     }
+  }
+
+  if (persistSyncState) {
+    // Update ProviderSyncState and evaluate freshness concurrently across all providers
+    await Promise.all(
+      settled.map(async (res, i) => {
+        const provider = providers[i];
+        if (res.status === "fulfilled") {
+          const result = res.value;
+          await db.providerSyncState.upsert({
+            where: { providerKey: provider.providerKey },
+            update: {
+              status: result.success ? SyncStatus.HEALTHY : SyncStatus.DEGRADED,
+              lastSyncAttemptAt: new Date(),
+              ...(result.success ? { lastSuccessfulSyncAt: new Date(), consecutiveFailures: 0 } : { lastFailedSyncAt: new Date(), lastError: result.error }),
+              totalJobsSeen: { increment: result.jobsDiscovered },
+            },
+            create: {
+              providerKey: provider.providerKey,
+              status: result.success ? SyncStatus.HEALTHY : SyncStatus.DEGRADED,
+              lastSyncAttemptAt: new Date(),
+              lastSuccessfulSyncAt: result.success ? new Date() : null,
+              lastFailedSyncAt: result.success ? null : new Date(),
+              lastError: result.error,
+              totalJobsSeen: result.jobsDiscovered,
+            },
+          }).catch((err) => console.warn(`[SyncState Warning] Failed to update ${provider.providerKey}:`, err.message));
+
+          if (result.success) {
+            await evaluateJobFreshness(provider.providerKey).catch((err) =>
+              console.warn(`[Freshness Warning] Failed to evaluate freshness for ${provider.providerKey}:`, err.message)
+            );
+          }
+        }
+      })
+    );
   }
 
   return {
@@ -277,166 +284,176 @@ export async function ingestNormalizedJobs(jobs: NormalizedJob[]): Promise<{ ins
 
   // Ensure ProviderSyncState rows exist for all provider keys in this batch before JobOccurrence upserts
   const providerKeys = Array.from(new Set(jobs.map((j) => j.providerKey)));
-  for (const pk of providerKeys) {
-    await db.providerSyncState.upsert({
-      where: { providerKey: pk },
-      update: {},
-      create: {
-        providerKey: pk,
-        status: SyncStatus.HEALTHY,
-        totalJobsSeen: 0,
-      },
-    }).catch(() => {});
-  }
+  await Promise.all(
+    providerKeys.map((pk) =>
+      db.providerSyncState.upsert({
+        where: { providerKey: pk },
+        update: {},
+        create: {
+          providerKey: pk,
+          status: SyncStatus.HEALTHY,
+          totalJobsSeen: 0,
+        },
+      }).catch(() => {})
+    )
+  );
 
-  for (const job of jobs) {
-    // Strict 21-day ceiling: Discard jobs posted more than 21 days (3 weeks) ago
+  // Filter valid jobs in-memory first
+  const validJobs = jobs.filter((job) => {
     if (job.postedAt && isOlderThanMaxPostingAge(job.postedAt, MAX_POSTING_AGE_DAYS)) {
-      continue;
+      return false;
     }
-
     const validAppUrl = job.canonicalAppUrl && isValidHttpUrl(job.canonicalAppUrl) ? job.canonicalAppUrl : null;
     const validDiscoveryUrl = job.discoveryUrl && isValidHttpUrl(job.discoveryUrl) ? job.discoveryUrl : null;
     const primaryUrl = validAppUrl || validDiscoveryUrl;
-
-    if (!primaryUrl) {
-      // Skip job record if neither application URL nor discovery URL is a valid HTTP/HTTPS URL
-      continue;
-    }
-
+    if (!primaryUrl) return false;
     job.canonicalAppUrl = primaryUrl;
     job.discoveryUrl = validDiscoveryUrl || primaryUrl;
+    return true;
+  });
 
-    const urlHash = generateUrlHash(job.canonicalAppUrl || job.discoveryUrl);
+  // Concurrently process in batches of 10 to optimize LibSQL roundtrips
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < validJobs.length; i += BATCH_SIZE) {
+    const chunk = validJobs.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      chunk.map(async (job) => {
+        const urlHash = generateUrlHash(job.canonicalAppUrl || job.discoveryUrl);
 
-    const resolvedRemoteScope = (job.remoteScope && job.remoteScope !== "UNKNOWN")
-      ? job.remoteScope
-      : parseRemoteScope(job.location || "", job.rawDescription || "");
+        const resolvedRemoteScope = (job.remoteScope && job.remoteScope !== "UNKNOWN")
+          ? job.remoteScope
+          : parseRemoteScope(job.location || "", job.rawDescription || "");
 
-    // 1. Ingest into JobPosting model for backward compatibility
-    const existingJobPosting = await db.jobPosting.findUnique({
-      where: { urlHash },
-    });
+        // 1. Ingest into JobPosting model for backward compatibility
+        try {
+          const existingJobPosting = await db.jobPosting.findUnique({
+            where: { urlHash },
+          });
 
-    if (existingJobPosting) {
-      await db.jobPosting.update({
-        where: { id: existingJobPosting.id },
-        data: {
-          lastSeenAt: new Date(),
-          isExpired: false,
-          rawDescription: job.rawDescription || existingJobPosting.rawDescription,
-          hasFullText: job.hasFullText,
-          remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : (existingJobPosting.remoteScope || "UNKNOWN"),
-        },
-      });
-      updatedCount++;
-    } else {
-      await db.jobPosting.create({
-        data: {
-          urlHash,
-          url: job.canonicalAppUrl || job.discoveryUrl,
-          company: job.company,
-          title: job.title,
-          category: job.category || "Software Developer",
-          jobType: job.jobType || "Remote Full-Time",
-          experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
-          platform: job.providerKey,
-          location: job.location,
-          isRemote: job.isRemote,
-          remoteScope: resolvedRemoteScope,
-          opportunitySignals: JSON.stringify(job.opportunitySignals || []),
-          postedAt: job.postedAt,
-          rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
-          hasFullText: job.hasFullText,
-          lastSeenAt: new Date(),
-          isExpired: false,
-        },
-      });
-      insertedCount++;
-    }
+          if (existingJobPosting) {
+            await db.jobPosting.update({
+              where: { id: existingJobPosting.id },
+              data: {
+                lastSeenAt: new Date(),
+                isExpired: false,
+                rawDescription: job.rawDescription || existingJobPosting.rawDescription,
+                hasFullText: job.hasFullText,
+                remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : (existingJobPosting.remoteScope || "UNKNOWN"),
+              },
+            });
+            updatedCount++;
+          } else {
+            await db.jobPosting.create({
+              data: {
+                urlHash,
+                url: job.canonicalAppUrl || job.discoveryUrl,
+                company: job.company,
+                title: job.title,
+                category: job.category || "Software Developer",
+                jobType: job.jobType || "Remote Full-Time",
+                experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
+                platform: job.providerKey,
+                location: job.location,
+                isRemote: job.isRemote,
+                remoteScope: resolvedRemoteScope,
+                opportunitySignals: JSON.stringify(job.opportunitySignals || []),
+                postedAt: job.postedAt,
+                rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
+                hasFullText: job.hasFullText,
+                lastSeenAt: new Date(),
+                isExpired: false,
+              },
+            });
+            insertedCount++;
+          }
+        } catch (err) {
+          console.warn(`[JobPosting Ingestion Warning] Failed for ${job.title}:`, (err as Error).message);
+        }
 
-    // 2. Ingest into Opportunity & JobOccurrence model (Canonical Deduplication Architecture)
-    try {
-      const dedupKey = computeDeduplicationKey(job);
+        // 2. Ingest into Opportunity & JobOccurrence model (Canonical Deduplication Architecture)
+        try {
+          const dedupKey = computeDeduplicationKey(job);
 
-      const existingOpp = await db.opportunity.findFirst({
-        where: {
-          companySlug: job.companySlug,
-          title: job.title,
-          location: job.location,
-        },
-      });
+          const existingOpp = await db.opportunity.findFirst({
+            where: {
+              companySlug: job.companySlug,
+              title: job.title,
+              location: job.location,
+            },
+          });
 
-      let oppId: string;
-      if (existingOpp) {
-        oppId = existingOpp.id;
-        const upgradeDirectUrl = isDirectAtsUrl(job.canonicalAppUrl) && !isDirectAtsUrl(existingOpp.canonicalAppUrl);
-        const upgradeDescription = job.hasFullText && !existingOpp.hasFullText;
-        const upgradePostedAt = !existingOpp.postedAt && job.postedAt;
+          let oppId: string;
+          if (existingOpp) {
+            oppId = existingOpp.id;
+            const upgradeDirectUrl = isDirectAtsUrl(job.canonicalAppUrl) && !isDirectAtsUrl(existingOpp.canonicalAppUrl);
+            const upgradeDescription = job.hasFullText && !existingOpp.hasFullText;
+            const upgradePostedAt = !existingOpp.postedAt && job.postedAt;
 
-        await db.opportunity.update({
-          where: { id: oppId },
-          data: {
-            lastSeenAt: new Date(),
-            isExpired: false,
-            remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : existingOpp.remoteScope,
-            opportunitySignals: JSON.stringify(job.opportunitySignals || []),
-            ...(upgradePostedAt ? { postedAt: job.postedAt } : {}),
-            ...(upgradeDirectUrl ? { canonicalAppUrl: job.canonicalAppUrl } : {}),
-            ...(upgradeDescription ? { rawDescription: job.rawDescription, hasFullText: true } : {}),
-          },
-        });
-      } else {
-        const newOpp = await db.opportunity.create({
-          data: {
-            company: job.company,
-            companySlug: job.companySlug,
-            title: job.title,
-            category: job.category || "Software Developer",
-            jobType: job.jobType || "Remote Full-Time",
-            experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
-            location: job.location,
-            isRemote: job.isRemote,
-            remoteRegion: job.remoteRegion || "Worldwide",
-            remoteScope: resolvedRemoteScope,
-            opportunitySignals: JSON.stringify(job.opportunitySignals || []),
-            canonicalAppUrl: job.canonicalAppUrl || job.discoveryUrl,
-            rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
-            hasFullText: job.hasFullText,
-            postedAt: job.postedAt,
-            lastSeenAt: new Date(),
-            isExpired: false,
-          },
-        });
-        oppId = newOpp.id;
-      }
+            await db.opportunity.update({
+              where: { id: oppId },
+              data: {
+                lastSeenAt: new Date(),
+                isExpired: false,
+                remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : existingOpp.remoteScope,
+                opportunitySignals: JSON.stringify(job.opportunitySignals || []),
+                ...(upgradePostedAt ? { postedAt: job.postedAt } : {}),
+                ...(upgradeDirectUrl ? { canonicalAppUrl: job.canonicalAppUrl } : {}),
+                ...(upgradeDescription ? { rawDescription: job.rawDescription, hasFullText: true } : {}),
+              },
+            });
+          } else {
+            const newOpp = await db.opportunity.create({
+              data: {
+                company: job.company,
+                companySlug: job.companySlug,
+                title: job.title,
+                category: job.category || "Software Developer",
+                jobType: job.jobType || "Remote Full-Time",
+                experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
+                location: job.location,
+                isRemote: job.isRemote,
+                remoteRegion: job.remoteRegion || "Worldwide",
+                remoteScope: resolvedRemoteScope,
+                opportunitySignals: JSON.stringify(job.opportunitySignals || []),
+                canonicalAppUrl: job.canonicalAppUrl || job.discoveryUrl,
+                rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
+                hasFullText: job.hasFullText,
+                postedAt: job.postedAt,
+                lastSeenAt: new Date(),
+                isExpired: false,
+              },
+            });
+            oppId = newOpp.id;
+          }
 
-      // Record source occurrence for provenance
-      const occurrenceKey = job.sourceJobId || dedupKey;
-      await db.jobOccurrence.upsert({
-        where: {
-          providerKey_sourceJobId: {
-            providerKey: job.providerKey,
-            sourceJobId: occurrenceKey,
-          },
-        },
-        update: {
-          lastSeenAt: new Date(),
-          applicationUrl: job.canonicalAppUrl,
-        },
-        create: {
-          opportunityId: oppId,
-          providerKey: job.providerKey,
-          sourceJobId: occurrenceKey,
-          discoveryUrl: job.discoveryUrl,
-          applicationUrl: job.canonicalAppUrl,
-          postedAt: job.postedAt,
-          lastSeenAt: new Date(),
-        },
-      });
-    } catch (err) {
-      console.warn(`[Opportunity Ingestion Warning] Failed for ${job.title} at ${job.company}:`, (err as Error).message);
-    }
+          // Record source occurrence for provenance
+          const occurrenceKey = job.sourceJobId || dedupKey;
+          await db.jobOccurrence.upsert({
+            where: {
+              providerKey_sourceJobId: {
+                providerKey: job.providerKey,
+                sourceJobId: occurrenceKey,
+              },
+            },
+            update: {
+              lastSeenAt: new Date(),
+              applicationUrl: job.canonicalAppUrl,
+            },
+            create: {
+              opportunityId: oppId,
+              providerKey: job.providerKey,
+              sourceJobId: occurrenceKey,
+              discoveryUrl: job.discoveryUrl,
+              applicationUrl: job.canonicalAppUrl,
+              postedAt: job.postedAt,
+              lastSeenAt: new Date(),
+            },
+          });
+        } catch (err) {
+          console.warn(`[Opportunity Ingestion Warning] Failed for ${job.title} at ${job.company}:`, (err as Error).message);
+        }
+      })
+    );
   }
 
   return { insertedCount, updatedCount };
