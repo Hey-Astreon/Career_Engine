@@ -409,6 +409,7 @@ npm run dev
   - **2. Turso Cloud Database Synchronization:** Executed automated cloud sync via `scripts/sync-to-turso.mjs`. Populated 3 candidate profiles, 6 projects, 6 virtual experiences, 19 provider sync states, 964 job postings, 622 opportunities, and 168 job occurrences into Turso LibSQL cloud database (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`).
   - **3. Production Build Pipeline:** Updated `package.json` `"build"` script to `"prisma generate && next build"` ensuring seamless Prisma client compilation during Vercel CI deployment.
   - **4. Vercel Configuration & Serverless Crons (`vercel.json`):** Configured 60s execution timeout ceiling (`maxDuration: 60`) for all `/api/**/*` routes to eliminate 504 gateway timeouts during multi-source scrapes. Added daily cron schedule (`0 0 * * *`) targeting `/api/scheduler?cron=true` compliant with Vercel Hobby plan limits, with native `x-vercel-cron` header handling.
+  - **5. Cross-Platform Dependency Decoupling:** Removed hardcoded Windows binary `@libsql/win32-x64-msvc` from `package.json` dependencies, resolving `EBADPLATFORM` error and enabling native Linux x64 compilation on Vercel build containers.
 
 ### Current System Health Status
 - **Source Health:** 19 / 19 providers HEALTHY (100% operational).
