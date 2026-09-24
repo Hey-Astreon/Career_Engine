@@ -18,7 +18,7 @@ async function main() {
       portfolioUrl: "https://astreon.me",
       githubUrl: "https://github.com/Hey-Astreon",
       linkedinUrl: "https://linkedin.com/in/astreon4547",
-      masterResumePath: "x:/job_engine/Roushan_Kumar/Roushan_Kumar_Resume.pdf",
+      masterResumePath: "x:/Career_Engine/3_Roushan_Kumar/Roushan_Kumar_Resume.pdf",
     },
     create: {
       slug: "roushan",
@@ -30,7 +30,7 @@ async function main() {
       portfolioUrl: "https://astreon.me",
       githubUrl: "https://github.com/Hey-Astreon",
       linkedinUrl: "https://linkedin.com/in/astreon4547",
-      masterResumePath: "x:/job_engine/Roushan_Kumar/Roushan_Kumar_Resume.pdf",
+      masterResumePath: "x:/Career_Engine/3_Roushan_Kumar/Roushan_Kumar_Resume.pdf",
     },
   });
 
@@ -124,7 +124,7 @@ async function main() {
       portfolioUrl: "https://ayushiraj.me",
       githubUrl: "https://github.com/Silenttears-cloud",
       linkedinUrl: "https://www.linkedin.com/in/alrya404/",
-      masterResumePath: "x:/job_engine/Ayushi_Raj/Ayushi_Raj_Resume.pdf",
+      masterResumePath: "x:/Career_Engine/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf",
     },
     create: {
       slug: "ayushi",
@@ -136,7 +136,7 @@ async function main() {
       portfolioUrl: "https://ayushiraj.me",
       githubUrl: "https://github.com/Silenttears-cloud",
       linkedinUrl: "https://www.linkedin.com/in/alrya404/",
-      masterResumePath: "x:/job_engine/Ayushi_Raj/Ayushi_Raj_Resume.pdf",
+      masterResumePath: "x:/Career_Engine/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf",
     },
   });
 

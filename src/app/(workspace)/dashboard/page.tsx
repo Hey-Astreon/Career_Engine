@@ -61,7 +61,7 @@ export default function Home() {
   const loadEndpointDiagnostics = async () => { setIsEndpointDiagnosticsLoading(true); try { const response = await fetch("/api/diagnostics/provider-endpoints?days=1"); const data = await response.json(); if (data.success) setEndpointDiagnostics(data); } catch (error) { console.error("Failed to load endpoint diagnostics:", error); } finally { setIsEndpointDiagnosticsLoading(false); } };
   const loadSchedulerStatus = async () => { try { const res = await fetch("/api/scheduler"); const data = await res.json(); if (data.success) setSchedulerStatus(data.status); } catch (error) { console.error(error); } };
   
-  const [schedulerStatus, setSchedulerStatus] = useState<Record<string, unknown> | null>(null);
+  const [schedulerStatus, setSchedulerStatus] = useState<{ isRunning: boolean; intervalMs: number; lastRunAt: string | null; nextRunAt: string | null } | null>(null);
 
   useEffect(() => {
     async function loadJobs() {
@@ -129,16 +129,20 @@ export default function Home() {
   const resetFilters = () => { setSearchTerm(""); setSelectedCategory("ALL"); setSelectedPlatform("ALL"); setMinMatchScore("ALL"); setSortBy("RECENT"); setExperienceRange(DEFAULT_HERO_FILTERS.experienceRange); setMaximumPostedDays(DEFAULT_HERO_FILTERS.maximumPostedDays); setRemoteRoleView(DEFAULT_HERO_FILTERS.remoteRoleView); setFeedPage(1); };
 
   return <div className="ce-dashboard-flow">
-    {schedulerStatus?.isRunning && schedulerStatus?.lastRunAt && (
+    {schedulerStatus?.isRunning && (
       <div className="bg-[var(--blue-soft)] border border-[var(--blue)] px-4 py-2 rounded-lg mb-4 flex items-center justify-between no-print text-[11px] text-[var(--ink)]">
         <span className="flex items-center gap-2 font-medium">
           <span className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--blue)] opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--blue)]"></span>
           </span>
-          Auto-refresh active
+          Auto-sync active ({Math.round(((schedulerStatus.intervalMs as number) || 3600000) / 3600000)}h cycle)
         </span>
-        <span className="text-[var(--muted)]">Last scan: {formatRelativeAge(null, schedulerStatus.lastRunAt.toString(), nowTick)}</span>
+        <span className="text-[var(--muted)]">
+          {schedulerStatus.lastRunAt 
+            ? `Last scan: ${formatRelativeAge(null, schedulerStatus.lastRunAt.toString(), nowTick)}`
+            : "Next scan scheduled"}
+        </span>
       </div>
     )}
     <section className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"><div className="max-w-3xl"><div className="ce-page-eyebrow">Live opportunity intelligence <span className="mx-2 text-[var(--line-strong)]">/</span> provider feed active</div><h1 className="ce-page-title">Verified remote roles,<br />built for your next move.</h1><p className="ce-page-copy">The feed starts with every active role returned by your provider pipeline. Use these optional filters when you want to narrow by experience, posting age, or role type.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Experience range</span><select value={experienceRange} onChange={(event) => setExperienceRange(event.target.value === "ANY" ? "ANY" : Number(event.target.value) as ExperienceFilter)} className="ce-field w-full px-3"><option value="ANY">All experience levels</option><option value={1}>0–1 years</option><option value={2}>0–2 years</option><option value={3}>0–3 years</option></select></label><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Maximum days posted</span><select value={maximumPostedDays} onChange={(event) => setMaximumPostedDays(event.target.value === "ANY" ? "ANY" : Number(event.target.value) as PostingWindowFilter)} className="ce-field w-full px-3"><option value="ANY">Any posting date</option><option value={7}>Under 1 week</option><option value={14}>Under 2 weeks</option><option value={21}>Under 3 weeks</option></select></label><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Remote opportunities</span><select value={remoteRoleView} onChange={(event) => setRemoteRoleView(event.target.value as RemoteRoleView)} className="ce-field w-full px-3"><option value="ALL">Jobs & internships</option><option value="JOBS">Remote jobs only</option><option value="INTERNSHIPS">Remote internships only</option></select></label></div></div><div className="flex flex-wrap gap-2">

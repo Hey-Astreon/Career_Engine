@@ -27,8 +27,8 @@ interface SimplifyEndpointResult {
   telemetry: ProviderEndpointTelemetry;
 }
 
-const ENDPOINT_TIMEOUT_MS = 6_500;
-const MAX_ATTEMPTS = 2;
+const ENDPOINT_TIMEOUT_MS = 8_500;
+const MAX_ATTEMPTS = 1;
 const BASE_RETRY_DELAY_MS = 300;
 const MAX_RETRY_AFTER_MS = 3_500;
 const RETRYABLE_HTTP_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
@@ -62,7 +62,7 @@ function shouldRetry(error: unknown): boolean {
 export class SimplifyProvider implements JobSourceProvider {
   name = "Simplify Jobs";
   providerKey = PlatformSource.SIMPLIFY;
-  timeoutMs = 15000;
+  timeoutMs = 25000;
 
   private async fetchEndpoint(endpointKey: string, endpoint: string): Promise<SimplifyEndpointResult> {
     const startedAt = Date.now();

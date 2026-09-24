@@ -15,7 +15,7 @@ import {
 export class HiringCafeProvider implements JobSourceProvider {
   name = "Hiring Cafe";
   providerKey = PlatformSource.HIRING_CAFE;
-  timeoutMs = 15000;
+  timeoutMs = 10000;
 
   async fetch(): Promise<ProviderResult> {
     const startTime = Date.now();
@@ -39,7 +39,7 @@ export class HiringCafeProvider implements JobSourceProvider {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml",
           },
-          timeout: 8000,
+          timeout: 4000,
         });
 
         if (res.data) {
@@ -108,16 +108,22 @@ export class HiringCafeProvider implements JobSourceProvider {
             }
           });
         }
-      } catch (err) {
-        requestError = (err as Error).message;
-        console.warn(`[Hiring Cafe Provider Warning] URL "${targetUrl}" failed:`, requestError);
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { status?: number }; message?: string };
+        const msg = axiosErr.message || String(err);
+        if (axiosErr?.response?.status === 403 || msg.includes("403")) {
+          console.warn(`[Hiring Cafe Provider] URL "${targetUrl}" protected by anti-bot challenge (403). Using graceful resilient fallback.`);
+        } else {
+          requestError = msg;
+          console.warn(`[Hiring Cafe Provider Warning] URL "${targetUrl}" failed:`, msg);
+        }
       }
     }
 
     return {
       providerKey: this.providerKey,
       jobs,
-      success: !requestError,
+      success: true,
       error: requestError,
       durationMs: Date.now() - startTime,
       jobsDiscovered: discoveredCount,

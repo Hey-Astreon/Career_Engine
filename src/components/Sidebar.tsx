@@ -16,9 +16,16 @@ const navItems = [
   { name: "Alert Settings", href: "/settings", icon: Clock },
 ];
 
+interface SchedulerStatusState {
+  isRunning: boolean;
+  intervalMs: number;
+  lastRunAt: string | null;
+  nextRunAt: string | null;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
-  const [schedulerStatus, setSchedulerStatus] = useState<Record<string, unknown> | null>(null);
+  const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatusState | null>(null);
 
   useEffect(() => {
     const fetchStatus = async () => {

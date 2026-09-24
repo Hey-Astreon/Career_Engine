@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 /**
  * Resume Variant Recommendation Engine
  * Adheres strictly to the official decision matrix codified in usecase.md
@@ -10,6 +13,20 @@ export interface RecommendedResumeVariant {
   pdfPath: string;
   reasoning: string;
   keyStrengths: string[];
+}
+
+function resolveResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar", fileName: string): string {
+  const primaryPath = `x:/Career_Engine/${candidateFolder}/14_final_documents/${fileName}`;
+  if (fs.existsSync(primaryPath)) {
+    return primaryPath;
+  }
+
+  const relativePath = path.resolve(process.cwd(), "..", candidateFolder, "14_final_documents", fileName);
+  if (fs.existsSync(relativePath)) {
+    return relativePath.replace(/\\/g, "/");
+  }
+
+  return primaryPath;
 }
 
 export function selectRecommendedResumeVariant(
@@ -42,7 +59,7 @@ export function selectRecommendedResumeVariant(
       return {
         variantName: "Resume A — AI Product Developer",
         fileName: "Ayushi_Raj_AI_Product_Developer_Resume.pdf",
-        pdfPath: "x:/job_engine/Ayushi_Raj/14_final_documents/Ayushi_Raj_AI_Product_Developer_Resume.pdf",
+        pdfPath: resolveResumePdf("2_Ayushi_Raj", "Ayushi_Raj_AI_Product_Developer_Resume.pdf"),
         reasoning: "Selected for AI, GenAI, and high-growth startup opportunities. Highlights IDBI FinSync AI integrations, Astra Vision sandbox, and full-stack product velocity.",
         keyStrengths: ["IDBI FinSync (Gemini API)", "Astra Vision AST Parser", "React & Fastify", "Product Velocity"],
       };
@@ -51,7 +68,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "Resume B — Software Engineer (Backend & Systems)",
       fileName: "Ayushi_Raj_Software_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Ayushi_Raj/14_final_documents/Ayushi_Raj_Software_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("2_Ayushi_Raj", "Ayushi_Raj_Software_Engineer_Resume.pdf"),
       reasoning: "Selected for general SWE, backend APIs, Java/Spring Boot, and enterprise engineering environments. Highlights Alyra Lock zero-knowledge cryptography, Astra Vision sandboxing, and database optimization.",
       keyStrengths: ["Alyra Lock (AES-GCM/PBKDF2)", "Astra Vision Isolation", "Spring Boot & REST APIs", "Database 3NF"],
     };
@@ -69,7 +86,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "AI Training & Evaluation Engineer",
       fileName: "Roushan_Kumar_AI_Training_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_AI_Training_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_AI_Training_Engineer_Resume.pdf"),
       reasoning: "Targeted for code evaluation, RLHF annotation, and AI benchmark platforms (Scale AI, Alignerr, Mercor). Highlights Astra Vision code parsing, AST syntax trees, and 100% test verification.",
       keyStrengths: ["Code Quality Benchmarks", "AST Syntax Analysis", "Synthetic Data Validation", "Automated xUnit/JUnit Tests"],
     };
@@ -80,7 +97,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "AI Engineer",
       fileName: "Roushan_Kumar_AI_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_AI_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_AI_Engineer_Resume.pdf"),
       reasoning: "Targeted for GenAI, LLM application, and AI platform engineering. Highlights Astra Vision ChromaDB vector search & Tree-Sitter AST, IDBI FinSync Gemini integration, and low-latency execution.",
       keyStrengths: ["Astra Vision (ChromaDB + Tree-Sitter)", "IDBI FinSync (Gemini API)", "FastAPI Microservices", "Subprocess Sandboxes"],
     };
@@ -91,7 +108,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "Python Developer",
       fileName: "Roushan_Kumar_Python_Developer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_Python_Developer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Python_Developer_Resume.pdf"),
       reasoning: "Targeted for Python development, data processing, and automation. Highlights FastAPI microservices, PyTest, Tree-Sitter AST parsers, and Walmart Python ETL pipelines.",
       keyStrengths: ["FastAPI Microservices", "Tree-Sitter AST Parsers", "PyTest Test Suites", "Python SQLite ETL"],
     };
@@ -104,7 +121,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "Backend Engineer",
       fileName: "Roushan_Kumar_Backend_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_Backend_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Backend_Engineer_Resume.pdf"),
       reasoning: "Targeted for backend services, systems architecture, and API design. Highlights CommBank C#/.NET Core controllers, MongoDB partial updates, xUnit/JUnit test suites, and bitwise data structures.",
       keyStrengths: ["CommBank C#/.NET Web API", "MongoDB $set Atomic Updates", "xUnit & JUnit Test Suites", "Bitwise Max Heap"],
     };
@@ -115,7 +132,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "Full Stack Engineer",
       fileName: "Roushan_Kumar_Full_Stack_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_Full_Stack_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Full_Stack_Engineer_Resume.pdf"),
       reasoning: "Targeted for full stack roles across React, Next.js, Node.js, and backend APIs. Highlights IDBI FinSync Next.js/Fastify dashboard, Alyra Lock React/Express vault, and CommBank Goal Manager.",
       keyStrengths: ["IDBI FinSync Next.js Monorepo", "Alyra Lock React & Express", "CommBank React/Redux Goal Manager", "PostgreSQL & Prisma"],
     };
@@ -126,7 +143,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "Product Engineer",
       fileName: "Roushan_Kumar_Product_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_Product_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Product_Engineer_Resume.pdf"),
       reasoning: "Targeted for product engineering and user-facing SaaS. Highlights user experience, IDBI FinSync wealth management features, Shiptivity Kanban board, and zero-knowledge privacy UX.",
       keyStrengths: ["IDBI FinSync Product UX", "Shiptivity Kanban Workflow", "Alyra Lock Client Privacy", "Next.js & Redux"],
     };
@@ -137,7 +154,7 @@ export function selectRecommendedResumeVariant(
     return {
       variantName: "Startup Software Engineer",
       fileName: "Roushan_Kumar_Startup_Software_Engineer_Resume.pdf",
-      pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_Startup_Software_Engineer_Resume.pdf",
+      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Startup_Software_Engineer_Resume.pdf"),
       reasoning: "Targeted for fast-paced early-stage startups and YC product teams. Highlights autonomous rapid prototyping, sub-200ms latency, zero-to-one feature shipping, and full-stack ownership.",
       keyStrengths: ["Zero-to-One Shipping", "Full-Stack Autonomy", "Sub-200ms Latency", "Automated Test Coverage"],
     };
@@ -147,7 +164,7 @@ export function selectRecommendedResumeVariant(
   return {
     variantName: "Software Engineer",
     fileName: "Roushan_Kumar_Software_Engineer_Resume.pdf",
-    pdfPath: "x:/job_engine/Roushan_Kumar/14_final_documents/Roushan_Kumar_Software_Engineer_Resume.pdf",
+    pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Software_Engineer_Resume.pdf"),
     reasoning: "Balanced general software engineering resume. Covers CommBank .NET simulation, Alyra Lock zero-knowledge security, IDBI FinSync, and Astra Vision developer platform.",
     keyStrengths: ["CommBank C#/.NET Simulation", "Alyra Lock Cryptographic Vault", "IDBI FinSync AI Platform", "Astra Vision AST Sandbox"],
   };

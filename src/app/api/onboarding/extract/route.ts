@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require("pdf-parse");
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdf = require("pdf-parse");
     const formData = await req.formData();
     const file = formData.get("resume") as File;
 

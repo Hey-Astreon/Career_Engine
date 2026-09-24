@@ -13,6 +13,13 @@ import { Micro1Provider } from "./micro1";
 import { SimplifyProvider } from "./simplify";
 import { ArcDevProvider } from "./arcdev";
 import { BuiltInProvider } from "./builtin";
+import { ArbeitnowProvider } from "./arbeitnow";
+import { RemotiveProvider } from "./remotive";
+import { LeverProvider } from "./lever";
+import { RecruiteeProvider } from "./recruitee";
+import { SmartRecruitersProvider } from "./smartrecruiters";
+import { WorkableProvider } from "./workable";
+import { HiringCafeProvider } from "./hiringcafe";
 import { generateUrlHash, computeDeduplicationKey, isDirectAtsUrl } from "./dedup";
 import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS } from "./normalize";
 import { isValidHttpUrl } from "@/lib/urlValidator";
@@ -31,6 +38,13 @@ export const ACTIVE_PROVIDERS: JobSourceProvider[] = [
   new JobicyProvider(),
   new Micro1Provider(),
   new RemoteOKProvider(),
+  new ArbeitnowProvider(),
+  new RemotiveProvider(),
+  new LeverProvider(),
+  new RecruiteeProvider(),
+  new SmartRecruitersProvider(),
+  new WorkableProvider(),
+  new HiringCafeProvider(),
 ];
 
 export interface ProviderRunOptions {
