@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProfileStore } from "@/store/useProfileStore";
 import {
   X,
@@ -17,6 +17,8 @@ import {
   MapPin,
   Send,
   HelpCircle,
+  Download,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { generateAtsAutoFillUrl } from "@/lib/deepLinkEngine";
@@ -37,9 +39,56 @@ interface QuickApplyDrawerProps {
   job: JobItem | null;
 }
 
+interface OfficialVariantItem {
+  variantName: string;
+  fileName: string;
+  category: string;
+  description: string;
+  keyStrengths: string[];
+}
+
 export function QuickApplyDrawer({ isOpen, onClose, job }: QuickApplyDrawerProps) {
-  const { activeProfile } = useProfileStore();
+  const { activeProfile, activeProfileSlug } = useProfileStore();
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [officialVariants, setOfficialVariants] = useState<OfficialVariantItem[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<string>("");
+
+  useEffect(() => {
+    async function loadVariants() {
+      try {
+        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug || "roushan"}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.officialVariants)) {
+          setOfficialVariants(data.officialVariants);
+          // Smart preselection based on job title
+          const title = (job?.title || "").toLowerCase();
+          let best = data.officialVariants[0]?.fileName;
+          if (/ai|ml|llm|genai/i.test(title)) {
+            const aiVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("AI_") || v.fileName.includes("AI_Product"));
+            if (aiVar) best = aiVar.fileName;
+          } else if (/python/i.test(title)) {
+            const pyVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Python"));
+            if (pyVar) best = pyVar.fileName;
+          } else if (/backend|system|api|c#|\.net/i.test(title)) {
+            const beVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Backend"));
+            if (beVar) best = beVar.fileName;
+          } else if (/full\s*stack/i.test(title)) {
+            const fsVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Full_Stack"));
+            if (fsVar) best = fsVar.fileName;
+          } else if (/product/i.test(title)) {
+            const prodVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Product"));
+            if (prodVar) best = prodVar.fileName;
+          }
+          setSelectedVariant(best || data.officialVariants[0]?.fileName || "");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    if (isOpen && job) {
+      void loadVariants();
+    }
+  }, [isOpen, job, activeProfileSlug]);
 
   if (!isOpen || !job) return null;
 
@@ -123,6 +172,65 @@ ${candidateEmail} | ${candidatePhone}`;
             <span>Open Application</span>
             <ExternalLink className="h-3 w-3" />
           </a>
+        </div>
+
+        {/* Tailored PDF Resume Section (Option 1 - 1-Click Access) */}
+        <div className="rounded-xl border border-[var(--blue)] bg-[var(--blue-soft)]/60 p-3.5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--blue)] flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5" />
+              Tailored Resume PDF (Locked Official A4)
+            </span>
+            <span className="ce-chip ce-chip-blue font-mono text-[8px]">
+              Ready for Submission
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <label className="block text-[9px] font-mono uppercase tracking-wider text-[var(--muted)] mb-1">
+                Selected Variant
+              </label>
+              <select
+                value={selectedVariant}
+                onChange={(e) => setSelectedVariant(e.target.value)}
+                className="ce-field w-full text-[11px] font-semibold text-[var(--ink)] bg-white"
+                aria-label="Select resume variant"
+              >
+                {officialVariants.map((v) => (
+                  <option key={v.fileName} value={v.fileName}>
+                    {v.variantName} ({v.category})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 sm:pt-4 shrink-0">
+              {selectedVariant && (
+                <>
+                  <a
+                    href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(selectedVariant)}&view=inline`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ce-button-secondary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5"
+                    title="Preview PDF in browser"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-[var(--blue)]" />
+                    Preview
+                  </a>
+                  <a
+                    href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(selectedVariant)}&view=attachment`}
+                    download={selectedVariant}
+                    className="ce-button-primary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5 shadow-sm"
+                    title={`Download official ${selectedVariant}`}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download PDF
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Candidate Credentials Section (1-Click Copy) */}

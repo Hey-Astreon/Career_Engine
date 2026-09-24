@@ -1,7 +1,7 @@
 "use client";
 
 import { useProfileStore } from "@/store/useProfileStore";
-import { AlertTriangle, Building2, CheckCircle2, ExternalLink, Search, Sparkles, Target } from "lucide-react";
+import { AlertTriangle, Building2, CheckCircle2, ChevronDown, ChevronUp, Download, ExternalLink, Eye, Search, Sparkles, Target } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FormattedJobDescription } from "@/components/FormattedJobDescription";
 import { canFetchMatchSourceText } from "@/lib/matchDescription";
@@ -25,6 +25,14 @@ interface RecommendedResumeVariant {
   keyStrengths: string[];
 }
 
+interface OfficialVariantItem {
+  variantName: string;
+  fileName: string;
+  category: string;
+  description: string;
+  keyStrengths: string[];
+}
+
 interface MatchScoreData {
   score: number;
   hardSkills: string[];
@@ -44,6 +52,23 @@ export default function MatchStudioPage() {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [search, setSearch] = useState("");
   const [descriptionUpdatedJobId, setDescriptionUpdatedJobId] = useState<string | null>(null);
+  const [officialVariants, setOfficialVariants] = useState<OfficialVariantItem[]>([]);
+  const [showAllVariants, setShowAllVariants] = useState(false);
+
+  useEffect(() => {
+    async function loadOfficialVariants() {
+      try {
+        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug || "roushan"}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.officialVariants)) {
+          setOfficialVariants(data.officialVariants);
+        }
+      } catch (err) {
+        console.error("Failed to load official variants:", err);
+      }
+    }
+    void loadOfficialVariants();
+  }, [activeProfileSlug]);
 
   useEffect(() => {
     async function loadJobs() {
@@ -175,21 +200,116 @@ export default function MatchStudioPage() {
           </div>
 
           {matchData?.recommendedResumeVariant && (
-            <section className="mt-5 border border-[var(--blue)] bg-[var(--blue-soft)] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[.1em] text-[var(--blue)]">
+            <section className="mt-5 border border-[var(--blue)] bg-[var(--blue-soft)] p-4 rounded-lg">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="font-mono text-[9px] font-bold uppercase tracking-[.1em] text-[var(--blue)] flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" />
                   Recommended Resume Variant
                 </span>
-                <span className="ce-chip ce-chip-blue font-mono text-[8px]">
+                <span className="ce-chip ce-chip-blue font-mono text-[9px]">
                   {matchData.recommendedResumeVariant.fileName}
                 </span>
               </div>
-              <strong className="mt-1 block text-[14px] text-[var(--ink)]">
+              <strong className="mt-2 block text-[15px] font-bold text-[var(--ink)]">
                 {matchData.recommendedResumeVariant.variantName}
               </strong>
-              <p className="mt-1 text-[11px] leading-4 text-[var(--ink-soft)]">
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--ink-soft)]">
                 {matchData.recommendedResumeVariant.reasoning}
               </p>
+
+              {matchData.recommendedResumeVariant.keyStrengths?.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--muted)]">Strengths:</span>
+                  {matchData.recommendedResumeVariant.keyStrengths.map((str) => (
+                    <span key={str} className="ce-chip ce-chip-blue font-medium text-[9px]">
+                      {str}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Action Buttons: 1-Click Download & Preview */}
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--blue)]/20 pt-3">
+                <a
+                  href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(matchData.recommendedResumeVariant.fileName)}&view=attachment`}
+                  download={matchData.recommendedResumeVariant.fileName}
+                  className="ce-button-primary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5 shadow-sm"
+                  title={`Download locked official ${matchData.recommendedResumeVariant.fileName}`}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download Tailored PDF
+                </a>
+                <a
+                  href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(matchData.recommendedResumeVariant.fileName)}&view=inline`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ce-button-secondary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5"
+                  title="Open PDF preview in a new tab"
+                >
+                  <Eye className="h-3.5 w-3.5 text-[var(--blue)]" />
+                  Preview PDF
+                </a>
+                {officialVariants.length > 0 && (
+                  <button
+                    onClick={() => setShowAllVariants(!showAllVariants)}
+                    className="ce-button-quiet ml-auto !min-h-8 !px-2 text-[10px] text-[var(--blue)] font-medium inline-flex items-center gap-1"
+                  >
+                    {showAllVariants ? (
+                      <>Hide other variants <ChevronUp className="h-3 w-3" /></>
+                    ) : (
+                      <>Browse all {officialVariants.length} variants <ChevronDown className="h-3 w-3" /></>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Collapsible drawer of all candidate variants */}
+              {showAllVariants && officialVariants.length > 0 && (
+                <div className="mt-3.5 border-t border-[var(--blue)]/20 pt-3 space-y-2">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                    All Official Locked PDF Variants for {activeProfile?.fullName || "Candidate"}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {officialVariants.map((v) => (
+                      <div
+                        key={v.fileName}
+                        className={`rounded border p-2.5 text-[11px] flex flex-col justify-between ${
+                          v.fileName === matchData.recommendedResumeVariant?.fileName
+                            ? "border-[var(--blue)] bg-white/90 shadow-xs"
+                            : "border-[var(--line)] bg-white/60"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-semibold text-[var(--ink)] line-clamp-1">{v.variantName}</span>
+                            <span className="ce-chip text-[8px] font-mono shrink-0">{v.category}</span>
+                          </div>
+                          <p className="mt-1 text-[10px] text-[var(--muted)] line-clamp-2">{v.description}</p>
+                        </div>
+                        <div className="mt-2.5 flex items-center gap-1.5 border-t border-[var(--line)] pt-2">
+                          <a
+                            href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ce-button-secondary !min-h-6 !px-2 text-[9px] inline-flex items-center gap-1 flex-1 justify-center"
+                          >
+                            <Eye className="h-2.5 w-2.5 text-[var(--blue)]" />
+                            Preview
+                          </a>
+                          <a
+                            href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
+                            download={v.fileName}
+                            className="ce-button-primary !min-h-6 !px-2 text-[9px] inline-flex items-center gap-1 flex-1 justify-center"
+                          >
+                            <Download className="h-2.5 w-2.5" />
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
           )}
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getAllResumeVariants } from "@/lib/resumeVariantSelector";
 
 const MAX_VARIANTS = 20;
 
@@ -33,7 +34,9 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, variants });
+    const officialVariants = getAllResumeVariants(profileSlug);
+
+    return NextResponse.json({ success: true, variants, officialVariants });
   } catch (error) {
     console.error("GET variants error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch variants" }, { status: 500 });

@@ -396,19 +396,26 @@ npm run dev
   - **P2 - Candidate Profile Synchronization:** Fixed legacy path bugs in `resumeVariantSelector.ts` to dynamically resolve from active workspace directories (`x:/Career_Engine/2_Ayushi_Raj/14_final_documents/` and `x:/Career_Engine/3_Roushan_Kumar/14_final_documents/`). Verified native PDF ATS text extraction (78,000+ characters, `isParseable: true`).
   - **P3 - Multi-LLM AI Router & Match Studio:** Re-architected priority cascade to Groq (`openai/gpt-oss-120b`, ~500t/s) and Google Cloud Native Gemini (`gemini-2.5-flash`), Cerebras, NVIDIA NIM, and deterministic fallback. Stage 2 scoring evaluates in <2s and caches in SQLite for 4ms retrieval.
   - **P4 - Background Auto-Sync Scheduler & Alert Engine:** Global singleton `DiscoveryScheduler` manages 1-hour recurring auto-scrapes with execution locks (`isExecuting`). Auto-sync active banner and toggle controls wired cleanly to Dashboard and Sidebar.
+- [x] **Phase 12: 1-Click PDF Variant Downloader & Streamer API (Option 1 Complete)**
+  - **Streaming & Download API (`/api/resume/download`):** Built high-performance route handler supporting inline preview (`view=inline`) and direct attachment download (`view=attachment`) with strict path traversal defenses (`path.basename()`). Seamlessly resolves locked candidate PDFs from disk (`x:/Career_Engine/2_Ayushi_Raj/14_final_documents/` and `x:/Career_Engine/3_Roushan_Kumar/14_final_documents/`).
+  - **Comprehensive Variant Catalog:** Added `getAllResumeVariants()` in `src/lib/resumeVariantSelector.ts` providing full metadata, category tags, descriptions, and key strengths for all 9 Roushan Kumar variants and 10 Ayushi Raj variants.
+  - **Match Studio Integration (`/match`):** Upgraded Recommended Resume Variant card with 1-click "Download Tailored PDF" button, "Preview PDF" button, key strengths badge pills, and a collapsible "Browse all variants" explorer allowing candidates to preview or download any official locked PDF.
+  - **Quick Apply Toolkit Integration (`QuickApplyDrawer.tsx`):** Added a prominent "Tailored Resume PDF (Locked Official A4)" card directly in the drawer with smart auto-selection based on role title, variant dropdown, 1-click preview, and 1-click download right alongside external ATS submission.
+  - **Resume Variants Sidebar (`ResumeVariantsSidebar.tsx`):** Added dual-tab navigation ("Locked PDFs" vs "Saved Drafts") with direct 1-click preview and download for all official disk variants for the active profile.
+  - **Complete Application Kit / Resume Builder (`/resume-builder`):** Added "Official PDF Variants" header action button with a comprehensive modal dialog allowing candidates to immediately inspect and download production-ready locked PDFs.
+  - **Validation & Build Integrity:** Verified with live HTTP tests (200 OK, `application/pdf`, 110,966 bytes), 0 TypeScript errors (`npx tsc --noEmit`), and Next.js 16 Turbopack production build compiling all 45 routes with 0 errors.
 
 ### Current System Health Status
 - **Source Health:** 19 / 19 providers HEALTHY (100% operational).
 - **TypeScript Integrity:** 0 errors across entire codebase (`npx tsc --noEmit` clean).
-- **Build Status:** Next.js 16 (Turbopack) production build compiles all 45 routes in 1.8s.
-- **Git Sync:** Branch `main` tracked and synchronized with `https://github.com/Hey-Astreon/Career_Engine.git` (Commit `f7297b2`).
+- **Build Status:** Next.js 16 (Turbopack) production build compiles all 45 routes with 0 errors.
+- **Git Sync:** Branch `main` tracked and synchronized with `https://github.com/Hey-Astreon/Career_Engine.git`.
 - **Database Status:** LibSQL / SQLite database up to date, synced with 19 provider sync states and active job occurrences.
 
 ### Immediate Next Steps & Future Roadmap
-1. **1-Click PDF Variant Downloader & Streamer:** Add `/api/resume/download?variant=...&slug=...` streaming the authentic PDF directly from `14_final_documents` with 1-click Download buttons in Dashboard & Match Studio.
-2. **End-to-End Application Dispatch Pipeline:** Link "Dispatch / Apply" directly to the `/applications` Kanban board with automated 5-day follow-up reminder alerts.
-3. **STAR Story & Technical Interview Kit Explorer:** Surface the extensive STAR libraries and project interview kits from `08_star_story_library/` and `09_project_interview_kits/` in a dedicated interview assistant.
-4. **Architectural Split (Vercel + Render):** Extract the `playwright` scraper into a separate Node.js worker hosted on Render to bypass Vercel's 50MB serverless limit.
+1. **End-to-End Application Dispatch Pipeline:** Link "Dispatch / Apply" directly to the `/applications` Kanban board with automated 5-day follow-up reminder alerts.
+2. **STAR Story & Technical Interview Kit Explorer:** Surface the extensive STAR libraries and project interview kits from `08_star_story_library/` and `09_project_interview_kits/` in a dedicated interview assistant.
+3. **Architectural Split (Vercel + Render):** Extract the `playwright` scraper into a separate Node.js worker hosted on Render to bypass Vercel's 50MB serverless limit.
 
 ---
 

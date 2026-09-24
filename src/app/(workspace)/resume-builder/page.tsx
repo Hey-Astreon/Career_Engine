@@ -24,6 +24,9 @@ import {
   Clock,
   ExternalLink,
   Briefcase,
+  Download,
+  FileText,
+  X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -48,6 +51,14 @@ interface ApplicationKitData {
   followUpEmail: string;
 }
 
+interface OfficialVariantItem {
+  variantName: string;
+  fileName: string;
+  category: string;
+  description: string;
+  keyStrengths: string[];
+}
+
 export default function ResumeBuilderPage() {
   const { activeProfileSlug, activeProfile } = useProfileStore();
   const [jobs, setJobs] = useState<JobItem[]>([]);
@@ -68,6 +79,8 @@ export default function ResumeBuilderPage() {
   const [showFScan, setShowFScan] = useState(false);
   const [injectedNotification, setInjectedNotification] = useState<string | null>(null);
   const [copiedKitTab, setCopiedKitTab] = useState<string | null>(null);
+  const [officialVariants, setOfficialVariants] = useState<OfficialVariantItem[]>([]);
+  const [showOfficialModal, setShowOfficialModal] = useState(false);
 
   // Synchronized Outreach Suite State
   const [activeOutreachTab, setActiveOutreachTab] = useState<"coverLetter" | "linkedin" | "email" | "followup">("coverLetter");
@@ -79,6 +92,22 @@ export default function ResumeBuilderPage() {
     followUpEmail: "",
   });
   const [isLoadingKit, setIsLoadingKit] = useState(false);
+
+  // Load official PDF variants
+  useEffect(() => {
+    async function loadOfficialVariants() {
+      try {
+        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug || "roushan"}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.officialVariants)) {
+          setOfficialVariants(data.officialVariants);
+        }
+      } catch (err) {
+        console.error("Failed to load official variants:", err);
+      }
+    }
+    void loadOfficialVariants();
+  }, [activeProfileSlug]);
 
   // Load baseline when candidate switches
   useEffect(() => {
@@ -406,6 +435,14 @@ ${portfolio}`;
             {activeProfile?.fullName || "Candidate"}
           </span>
           <button
+            onClick={() => setShowOfficialModal(true)}
+            className="ce-button-secondary !min-h-9 !px-3.5 inline-flex items-center gap-2"
+            title="Access locked official PDF variants from disk"
+          >
+            <FileText className="h-3.5 w-3.5 text-[var(--blue)]" />
+            Official PDF Variants ({officialVariants.length})
+          </button>
+          <button
             onClick={handlePrint}
             className="ce-button-primary !min-h-9 !px-4"
             title={`Downloads as ${activeProfile?.fullName || "Candidate"}_Resume_${resumeData.targetCompany || "Company"}.pdf`}
@@ -415,6 +452,80 @@ ${portfolio}`;
           </button>
         </div>
       </section>
+
+      {/* Official PDF Variants Modal */}
+      {showOfficialModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print">
+          <div className="bg-white rounded-xl border border-[var(--line)] shadow-2xl w-full max-w-2xl overflow-hidden max-h-[85vh] flex flex-col">
+            <div className="p-4 border-b border-[var(--line)] flex justify-between items-center bg-gray-50/70">
+              <div>
+                <h2 className="font-bold text-sm text-[var(--ink)] flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[var(--blue)]" />
+                  Official Locked PDF Variants — {activeProfile?.fullName || "Candidate"}
+                </h2>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5">
+                  Production-ready canonical PDF resumes from <code>14_final_documents</code>.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowOfficialModal(false)}
+                className="ce-button-quiet !min-h-8 !px-2 rounded-md"
+                aria-label="Close dialog"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto space-y-2.5 flex-1">
+              {officialVariants.map((v) => (
+                <div
+                  key={v.fileName}
+                  className="p-3 rounded-lg border border-[var(--line)] bg-white hover:border-blue-300 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-xs text-[var(--ink)]">{v.variantName}</span>
+                      <span className="ce-chip text-[8px] font-mono">{v.category}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-1 line-clamp-1">{v.description}</p>
+                    {v.keyStrengths?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {v.keyStrengths.slice(0, 3).map((s) => (
+                          <span key={s} className="bg-blue-50 text-blue-700 text-[8px] px-1.5 py-0.5 rounded font-medium">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ce-button-secondary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1"
+                      title="Preview PDF in new tab"
+                    >
+                      <Eye className="w-3 h-3 text-[var(--blue)]" />
+                      Preview
+                    </a>
+                    <a
+                      href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
+                      download={v.fileName}
+                      className="ce-button-primary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1"
+                      title="Download PDF"
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Injected Notification Banner */}
       {injectedNotification && (

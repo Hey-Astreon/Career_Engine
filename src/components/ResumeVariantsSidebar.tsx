@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { OptimizedResume } from "@/lib/ai/resumeOptimizer";
-import { Save, Copy, FileText, Trash2, SplitSquareHorizontal, Eye, X } from "lucide-react";
+import { Save, Copy, FileText, Trash2, SplitSquareHorizontal, Eye, X, Download, Sparkles, ShieldCheck } from "lucide-react";
 
 export interface SavedVariant {
   id: string;
@@ -8,6 +8,14 @@ export interface SavedVariant {
   category: string;
   atsScore: number;
   updatedAt: string;
+}
+
+export interface OfficialVariant {
+  variantName: string;
+  fileName: string;
+  category: string;
+  description: string;
+  keyStrengths: string[];
 }
 
 interface Props {
@@ -18,6 +26,8 @@ interface Props {
 
 export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVariant }: Props) {
   const [variants, setVariants] = useState<SavedVariant[]>([]);
+  const [officialVariants, setOfficialVariants] = useState<OfficialVariant[]>([]);
+  const [activeTab, setActiveTab] = useState<"official" | "custom">("official");
   const [isLoading, setIsLoading] = useState(false);
   
   // Save modal state
@@ -38,6 +48,9 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
       const data = await res.json();
       if (data.success) {
         setVariants(data.variants || []);
+        if (Array.isArray(data.officialVariants)) {
+          setOfficialVariants(data.officialVariants);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -123,22 +136,106 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
 
   return (
     <div className="bg-white border border-[var(--line)] rounded-xl shadow-sm flex flex-col h-full max-h-[800px]">
-      <div className="p-4 border-b border-[var(--line)] flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-        <h2 className="font-bold text-[var(--ink)] flex items-center gap-2">
-          <Save className="w-4 h-4 text-[var(--blue)]" />
-          Saved Variants
-        </h2>
-        <button onClick={() => setShowSaveModal(true)} className="ce-button-primary !py-1 !px-2 !text-xs !min-h-0">
-          Save Current
-        </button>
+      <div className="p-3 border-b border-[var(--line)] bg-gray-50/50 rounded-t-xl space-y-2">
+        <div className="flex justify-between items-center">
+          <h2 className="font-bold text-xs text-[var(--ink)] flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-[var(--blue)]" />
+            Resume Variants
+          </h2>
+          {activeTab === "custom" && (
+            <button onClick={() => setShowSaveModal(true)} className="ce-button-primary !py-0.5 !px-2 !text-[10px] !min-h-0">
+              Save Current
+            </button>
+          )}
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="grid grid-cols-2 gap-1 bg-gray-200/70 p-0.5 rounded-lg text-[10px] font-semibold">
+          <button
+            type="button"
+            onClick={() => setActiveTab("official")}
+            className={`py-1 rounded text-center transition-all ${
+              activeTab === "official"
+                ? "bg-white text-[var(--ink)] shadow-xs"
+                : "text-gray-500 hover:text-[var(--ink)]"
+            }`}
+          >
+            Locked PDFs ({officialVariants.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("custom")}
+            className={`py-1 rounded text-center transition-all ${
+              activeTab === "custom"
+                ? "bg-white text-[var(--ink)] shadow-xs"
+                : "text-gray-500 hover:text-[var(--ink)]"
+            }`}
+          >
+            Saved Drafts ({variants.length})
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {isLoading ? (
           <div className="text-xs text-gray-500 text-center py-4">Loading variants...</div>
+        ) : activeTab === "official" ? (
+          officialVariants.length === 0 ? (
+            <div className="text-xs text-gray-400 text-center py-4 border border-dashed rounded-md">
+              No locked PDF variants found on disk.
+            </div>
+          ) : (
+            officialVariants.map((v) => (
+              <div
+                key={v.fileName}
+                className="p-2.5 border border-[var(--line)] rounded-lg bg-gray-50/60 hover:border-blue-300 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-1 mb-1">
+                    <span className="font-semibold text-xs text-[var(--ink)] line-clamp-1" title={v.variantName}>
+                      {v.variantName}
+                    </span>
+                    <span className="ce-chip text-[8px] font-mono shrink-0">
+                      {v.category}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed mb-2">
+                    {v.description}
+                  </p>
+                  {v.keyStrengths?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {v.keyStrengths.slice(0, 2).map((s) => (
+                        <span key={s} className="bg-blue-50 text-blue-700 text-[8px] px-1.5 py-0.5 rounded font-medium">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-1.5 border-t border-[var(--line)] pt-2 mt-1">
+                  <a
+                    href={`/api/resume/download?slug=${profileSlug}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1 py-1 text-[10px] border border-gray-200 text-gray-700 hover:bg-gray-100 bg-white rounded font-medium transition-colors"
+                  >
+                    <Eye className="w-3 h-3 text-[var(--blue)]" /> Preview
+                  </a>
+                  <a
+                    href={`/api/resume/download?slug=${profileSlug}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
+                    download={v.fileName}
+                    className="flex-1 flex items-center justify-center gap-1 py-1 text-[10px] bg-[var(--ink)] hover:opacity-90 text-white rounded font-medium transition-opacity"
+                  >
+                    <Download className="w-3 h-3" /> Download
+                  </a>
+                </div>
+              </div>
+            ))
+          )
         ) : variants.length === 0 ? (
           <div className="text-xs text-gray-400 text-center py-4 border border-dashed rounded-md">
-            No saved variants. (Max 20)
+            No custom saved variants. (Max 20)
           </div>
         ) : (
           variants.map((v) => (

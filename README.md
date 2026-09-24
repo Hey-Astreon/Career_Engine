@@ -33,13 +33,19 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 
 ### 3. 👤 Candidate Profile & Targeted Asset Synchronization
 - **Candidate Profiles:** Seamlessly switch between **Roushan Kumar** and **Ayushi Raj** via the header `ProfileSwitcher`.
-- **Locked Resume Variant Selector:** Maps job descriptions directly to 8 specialized resume variants in candidate disk repositories (`2_Ayushi_Raj` & `3_Roushan_Kumar`):
+- **Locked Resume Variant Selector:** Maps job descriptions directly to specialized resume variants in candidate disk repositories (`2_Ayushi_Raj` & `3_Roushan_Kumar`):
   - AI Engineer / GenAI Specialist
   - AI Training & Benchmark Specialist (RLHF, Scale AI)
   - Backend & Systems Engineer (.NET, C#, Spring Boot, Java)
   - Full Stack Engineer (React, Next.js, Node.js)
   - Product Engineer & Startup Software Engineer
 - **Empirical ATS Parseability:** Real-time PDF text layer extractability verification scoring 78,000+ characters directly from disk buffers (`isParseable: true`).
+- **1-Click PDF Variant Downloader & Previewer (`/api/resume/download`):**
+  - High-speed streaming route handler with path traversal security (`path.basename()`), supporting inline viewing (`view=inline`) and direct download (`view=attachment`).
+  - **Match Studio Integration:** 1-Click "Download Tailored PDF" button, "Preview PDF" button, and collapsible catalog explorer for all candidate variants.
+  - **Quick Apply Toolkit:** Integrated tailored PDF card inside `QuickApplyDrawer` with dynamic variant pre-selection, instant download, and preview.
+  - **Resume Variants Sidebar:** Dual-tab workspace ("Locked PDFs" vs "Saved Drafts") with 1-click preview and download for all official disk variants.
+  - **Complete Application Kit / Resume Builder:** Header modal providing full catalog inspection and instant downloads.
 
 ### 4. 📝 1-Click Application Kit & Outreach Suite
 - Generates tailored application materials for every opportunity:

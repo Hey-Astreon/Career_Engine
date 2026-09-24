@@ -169,3 +169,157 @@ export function selectRecommendedResumeVariant(
     keyStrengths: ["CommBank C#/.NET Simulation", "Alyra Lock Cryptographic Vault", "IDBI FinSync AI Platform", "Astra Vision AST Sandbox"],
   };
 }
+
+export interface OfficialResumeVariant {
+  variantName: string;
+  fileName: string;
+  category: string;
+  description: string;
+  keyStrengths: string[];
+}
+
+export function getAllResumeVariants(profileSlug: string): OfficialResumeVariant[] {
+  const normalized = (profileSlug || "roushan").toLowerCase();
+
+  if (normalized === "ayushi") {
+    return [
+      {
+        variantName: "Resume A — AI Product Developer",
+        fileName: "Ayushi_Raj_AI_Product_Developer_Resume.pdf",
+        category: "AI & GenAI",
+        description: "Primary AI & startup variant highlighting IDBI FinSync Gemini API and Astra Vision AST parser.",
+        keyStrengths: ["IDBI FinSync (Gemini API)", "Astra Vision AST Parser", "React & Fastify", "Product Velocity"],
+      },
+      {
+        variantName: "Resume B — Software Engineer (Backend & Systems)",
+        fileName: "Ayushi_Raj_Software_Engineer_Resume.pdf",
+        category: "Backend & Systems",
+        description: "Core SWE & systems variant highlighting Alyra Lock AES-GCM cryptography and Spring Boot APIs.",
+        keyStrengths: ["Alyra Lock (AES-GCM)", "Astra Vision Isolation", "Spring Boot & REST APIs", "Database Design"],
+      },
+      {
+        variantName: "AI Engineer",
+        fileName: "Ayushi_Raj_AI_Engineer_Resume.pdf",
+        category: "AI / ML",
+        description: "Specialized for LLM applications, intelligent workflows, and vector architectures.",
+        keyStrengths: ["Gemini Multi-Modal API", "Vector Embeddings", "Fastify Microservices", "Full-Stack AI"],
+      },
+      {
+        variantName: "AI Training & Evaluation Engineer",
+        fileName: "Ayushi_Raj_AI_Training_Engineer_Resume.pdf",
+        category: "AI Training & RLHF",
+        description: "Specialized for code eval, benchmark engineering, and synthetic data verification.",
+        keyStrengths: ["AST Code Syntax Evaluation", "Automated Test Suites", "Benchmark Analysis", "Data Verification"],
+      },
+      {
+        variantName: "Backend Engineer",
+        fileName: "Ayushi_Raj_Backend_Engineer_Resume.pdf",
+        category: "Backend & APIs",
+        description: "Specialized for backend API design, database schemas, and enterprise systems.",
+        keyStrengths: ["Spring Boot & Java", "RESTful Architecture", "Relational Database Design", "Security Cryptography"],
+      },
+      {
+        variantName: "Full Stack Engineer",
+        fileName: "Ayushi_Raj_Full_Stack_Engineer_Resume.pdf",
+        category: "Full Stack",
+        description: "Specialized for end-to-end web apps combining React frontends with resilient backends.",
+        keyStrengths: ["React & TypeScript", "Fastify & Node.js", "State Management", "API Integrations"],
+      },
+      {
+        variantName: "Product Engineer",
+        fileName: "Ayushi_Raj_Product_Engineer_Resume.pdf",
+        category: "Product / UX",
+        description: "Specialized for product-focused software engineering, design systems, and UX flows.",
+        keyStrengths: ["User Flow Architecture", "FinTech Product UX", "Component Systems", "Full-Stack Velocity"],
+      },
+      {
+        variantName: "Python Developer",
+        fileName: "Ayushi_Raj_Python_Developer_Resume.pdf",
+        category: "Python & Data",
+        description: "Specialized for Python backend services, automation scripts, and data handling.",
+        keyStrengths: ["Python Microservices", "PyTest Validation", "ETL & Scripting", "Data Parsing"],
+      },
+      {
+        variantName: "Startup Software Engineer",
+        fileName: "Ayushi_Raj_Startup_Software_Engineer_Resume.pdf",
+        category: "YC & Startups",
+        description: "Tailored for early-stage startups and high-velocity shipping across the entire stack.",
+        keyStrengths: ["Zero-to-One Shipping", "Full-Stack Autonomy", "Sub-200ms Latency", "Rapid Prototyping"],
+      },
+      {
+        variantName: "Master Resume (Canonical)",
+        fileName: "Ayushi_Raj_Resume.pdf",
+        category: "Master",
+        description: "Comprehensive baseline resume covering all projects, competencies, and engineering outcomes.",
+        keyStrengths: ["Full Project Breadth", "IDBI FinSync", "Alyra Lock", "Astra Vision Platform"],
+      },
+    ];
+  }
+
+  // Roushan Kumar Variants
+  return [
+    {
+      variantName: "Software Engineer",
+      fileName: "Roushan_Kumar_Software_Engineer_Resume.pdf",
+      category: "Software Engineering",
+      description: "Balanced general SWE resume. CommBank C#/.NET, Alyra Lock vault, IDBI FinSync, and Astra Vision.",
+      keyStrengths: ["CommBank C#/.NET Simulation", "Alyra Lock Cryptographic Vault", "IDBI FinSync AI Platform", "Astra Vision AST Sandbox"],
+    },
+    {
+      variantName: "AI Engineer",
+      fileName: "Roushan_Kumar_AI_Engineer_Resume.pdf",
+      category: "AI & GenAI",
+      description: "Targeted for GenAI, LLM application, and AI platform engineering with ChromaDB and Tree-Sitter.",
+      keyStrengths: ["Astra Vision (ChromaDB + Tree-Sitter)", "IDBI FinSync (Gemini API)", "FastAPI Microservices", "Subprocess Sandboxes"],
+    },
+    {
+      variantName: "AI Training & Evaluation Engineer",
+      fileName: "Roushan_Kumar_AI_Training_Engineer_Resume.pdf",
+      category: "AI Training & RLHF",
+      description: "Targeted for code evaluation, RLHF annotation, and AI benchmark platforms (Scale AI, Alignerr, Mercor).",
+      keyStrengths: ["Code Quality Benchmarks", "AST Syntax Analysis", "Synthetic Data Validation", "Automated xUnit/JUnit Tests"],
+    },
+    {
+      variantName: "Backend Engineer",
+      fileName: "Roushan_Kumar_Backend_Engineer_Resume.pdf",
+      category: "Backend & Systems",
+      description: "Targeted for backend services, systems architecture, and API design with C#/.NET and MongoDB.",
+      keyStrengths: ["CommBank C#/.NET Web API", "MongoDB $set Atomic Updates", "xUnit & JUnit Test Suites", "Bitwise Max Heap"],
+    },
+    {
+      variantName: "Full Stack Engineer",
+      fileName: "Roushan_Kumar_Full_Stack_Engineer_Resume.pdf",
+      category: "Full Stack",
+      description: "Targeted for full stack roles across React, Next.js, Node.js, and backend APIs.",
+      keyStrengths: ["IDBI FinSync Next.js Monorepo", "Alyra Lock React & Express", "CommBank React/Redux Goal Manager", "PostgreSQL & Prisma"],
+    },
+    {
+      variantName: "Python Developer",
+      fileName: "Roushan_Kumar_Python_Developer_Resume.pdf",
+      category: "Python & Automation",
+      description: "Targeted for Python development, data processing, and automation with FastAPI and PyTest.",
+      keyStrengths: ["FastAPI Microservices", "Tree-Sitter AST Parsers", "PyTest Test Suites", "Python SQLite ETL"],
+    },
+    {
+      variantName: "Product Engineer",
+      fileName: "Roushan_Kumar_Product_Engineer_Resume.pdf",
+      category: "Product / UX",
+      description: "Targeted for product engineering and user-facing SaaS, emphasizing high-conversion UX.",
+      keyStrengths: ["IDBI FinSync Product UX", "Shiptivity Kanban Workflow", "Alyra Lock Client Privacy", "Next.js & Redux"],
+    },
+    {
+      variantName: "Startup Software Engineer",
+      fileName: "Roushan_Kumar_Startup_Software_Engineer_Resume.pdf",
+      category: "YC & Startups",
+      description: "Targeted for fast-paced early-stage startups and YC product teams with sub-200ms latency.",
+      keyStrengths: ["Zero-to-One Shipping", "Full-Stack Autonomy", "Sub-200ms Latency", "Automated Test Coverage"],
+    },
+    {
+      variantName: "Master Resume (Canonical)",
+      fileName: "Roushan_Kumar_Resume.pdf",
+      category: "Master",
+      description: "Comprehensive canonical resume encompassing all systems, banking simulations, and AI architectures.",
+      keyStrengths: ["CommBank .NET", "Alyra Lock Zero-Knowledge", "Astra Vision AST", "IDBI FinSync"],
+    },
+  ];
+}
