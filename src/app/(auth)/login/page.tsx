@@ -1,10 +1,33 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
-import { ArrowRight, Mail } from "lucide-react";
+import { useState, Suspense } from "react";
+import { ArrowRight, AlertCircle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+
+function LoginErrorBanner() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  if (!error) return null;
+
+  let message = "An error occurred during authentication. Please try again.";
+  if (error === "OAuthAccountNotLinked" || error === "Callback") {
+    message = "Your email is registered with another sign-in method. Account linking is now enabled—please click sign in again.";
+  } else if (error === "CredentialsSignin") {
+    message = "Invalid email or password. Please verify your details.";
+  } else if (error === "AccessDenied") {
+    message = "Access was denied. Please approve required permissions.";
+  }
+
+  return (
+    <div className="mb-6 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 text-[13px] font-medium leading-relaxed flex items-start gap-2.5">
+      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+      <span>{message}</span>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -51,7 +74,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[400px] p-8 sm:p-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-black/[0.04]">
         
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-3">
             Welcome back
           </h1>
@@ -59,6 +82,10 @@ export default function LoginPage() {
             Enter your details to sign in to your remote career workspace.
           </p>
         </div>
+
+        <Suspense fallback={null}>
+          <LoginErrorBanner />
+        </Suspense>
 
         <form onSubmit={handleEmailSignIn} className="space-y-4">
           <div className="space-y-3">

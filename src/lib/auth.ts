@@ -31,10 +31,52 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID || "",
       clientSecret: process.env.GITHUB_SECRET || "",
+      allowDangerousEmailAccountLinking: true,
+      userinfo: {
+        url: "https://api.github.com/user",
+        async request({ client, tokens }) {
+          const profile = await client.userinfo(tokens.access_token!);
+          if (!profile.email) {
+            try {
+              const res = await fetch("https://api.github.com/user/emails", {
+                headers: {
+                  Authorization: `Bearer ${tokens.access_token}`,
+                  "User-Agent": "AstreWork-OAuth-Client",
+                  Accept: "application/vnd.github.v3+json",
+                },
+              });
+              if (res.ok) {
+                const emails = (await res.json()) as Array<{
+                  email: string;
+                  primary: boolean;
+                  verified: boolean;
+                }>;
+                if (Array.isArray(emails) && emails.length > 0) {
+                  const selected =
+                    emails.find((e) => e.primary && e.verified)?.email ||
+                    emails.find((e) => e.verified)?.email ||
+                    emails.find((e) => e.primary)?.email ||
+                    emails[0]?.email;
+                  if (selected) {
+                    profile.email = selected;
+                  }
+                }
+              }
+            } catch (err) {
+              console.error("[GitHub OAuth] Failed to fetch user emails:", err);
+            }
+          }
+          if (!profile.email && profile.login) {
+            profile.email = `${profile.login}@users.noreply.github.com`;
+          }
+          return profile;
+        },
+      },
     }),
     EmailProvider({
       server: process.env.EMAIL_SERVER || "",
@@ -81,6 +123,10 @@ export const authOptions: NextAuthOptions = {
     newUser: "/onboard", // Redirect new users to onboarding
   },
   callbacks: {
+    async signIn({ user, account }) {
+      console.log(`[NextAuth] Successful authorization with provider: ${account?.provider}, email: ${user?.email}`);
+      return true;
+    },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.sub as string;
@@ -94,4 +140,5 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
   },
+  debug: process.env.NODE_ENV !== "production" || process.env.NEXTAUTH_DEBUG === "true",
 };
