@@ -7,6 +7,24 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
+// Sanitize legacy NEXTAUTH_URL from older project settings
+if (
+  !process.env.NEXTAUTH_URL ||
+  process.env.NEXTAUTH_URL.includes("career-engine")
+) {
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  } else if (process.env.NODE_ENV === "production") {
+    process.env.NEXTAUTH_URL = "https://astrework.vercel.app";
+  }
+}
+if (
+  process.env.NEXTAUTH_URL_INTERNAL &&
+  process.env.NEXTAUTH_URL_INTERNAL.includes("career-engine")
+) {
+  process.env.NEXTAUTH_URL_INTERNAL = process.env.NEXTAUTH_URL;
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db) as NextAuthOptions["adapter"],
   providers: [
