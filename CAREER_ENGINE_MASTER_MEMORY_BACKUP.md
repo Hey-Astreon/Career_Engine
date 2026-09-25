@@ -432,6 +432,10 @@ npm run dev
   - **2. Live Provider Verification (`/api/auth/providers`):** Confirmed all OAuth endpoints (Google, GitHub, Credentials, Email) generate 100% accurate sign-in and callback URLs targeting `https://astrework.vercel.app`.
   - **3. User Registration & Database Storage:** Verified live production `/api/auth/register` creates hashed users in Turso LibSQL cloud database with HTTP 201 Created.
   - **4. Google & GitHub OAuth Alignment:** Diagnosed `redirect_uri_mismatch` root cause for Google Cloud Console and documented exact steps for Google/GitHub developer settings.
+  - **5. Multi-Provider Account Linking & GitHub Email Fallback:** Enabled `allowDangerousEmailAccountLinking: true` so Google and GitHub OAuth accounts under the same verified email automatically link to the same user profile without `error=Callback`.
+- [x] **Phase 17: Workspace Navigation & Discovery Route Alignment**
+  - **1. Discovery Route Mapping (`Sidebar.tsx`):** Fixed the "Discovery" navigation link in the candidate workspace sidebar from `"/"` (public landing page) to `"/dashboard"` (the authoritative discovery feed workspace).
+  - **2. Sidebar Brand Logo Mapping (`Sidebar.tsx`):** Updated the workspace sidebar brand logo to navigate directly to `"/dashboard"` instead of kicking logged-in users out to the public landing page.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.
