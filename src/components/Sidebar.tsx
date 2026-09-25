@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Globe2, Target, FileCheck, Sparkles, ChevronRight, Briefcase, Clock, Send } from "lucide-react";
 
 const navItems = [
-  { name: "Discovery", href: "/", icon: Globe2, badge: "LIVE" },
+  { name: "Discovery", href: "/dashboard", icon: Globe2, badge: "LIVE" },
   { name: "Applications", href: "/applications", icon: Briefcase },
   { name: "Match Studio", href: "/match", icon: Target },
   { name: "Recruiter Radar", href: "/outreach", icon: Send, badge: "NEW" },
@@ -48,7 +48,7 @@ export function Sidebar() {
   return (
     <aside className="ce-rail">
       <Link
-        href="/"
+        href="/dashboard"
         className="group block transition-all"
         aria-label="AstreWork - Autonomous Remote Career Intelligence"
       >
