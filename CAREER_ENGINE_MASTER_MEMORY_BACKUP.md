@@ -427,6 +427,11 @@ npm run dev
   - **3. Hardened Crawler Directives (`/robots.txt`):** Configured permissive crawler directives allowing public portals and strictly isolating authenticated workspace tools (`/dashboard`, `/match`, `/resume-builder`, `/applications`, `/outreach`, `/api/`).
   - **4. Rich JSON-LD Structured Data Suite:** Deployed complete Schema.org graph schema embedding `WebSite` (with dynamic search query action), `SoftwareApplication` (feature breakdown and zero-cost offer), `Organization` (founding team Roushan Kumar & Ayushi Raj linked to GitHub & portfolio domains), and `FAQPage` schema powering rich Google Search accordion snippets.
   - **5. Dedicated Route Metadata & Google Verification:** Created dedicated metadata layouts for `/login`, `/register`, `/onboard`, and all legal/public pages with strict canonical alternates and dynamic `verification.google` tag support for 1-click Google Search Console verification.
+- [x] **Phase 16: Authentication & OAuth Overhaul (Domain Sanitization & Provider Whitelisting)**
+  - **1. Automatic Production Domain Sanitization (`auth.ts` & `[...nextauth]/route.ts`):** Implemented runtime sanitization for `NEXTAUTH_URL` and `NEXTAUTH_URL_INTERNAL`, guaranteeing any legacy `career-engine.vercel.app` string is automatically overridden to authoritative `https://astrework.vercel.app`.
+  - **2. Live Provider Verification (`/api/auth/providers`):** Confirmed all OAuth endpoints (Google, GitHub, Credentials, Email) generate 100% accurate sign-in and callback URLs targeting `https://astrework.vercel.app`.
+  - **3. User Registration & Database Storage:** Verified live production `/api/auth/register` creates hashed users in Turso LibSQL cloud database with HTTP 201 Created.
+  - **4. Google & GitHub OAuth Alignment:** Diagnosed `redirect_uri_mismatch` root cause for Google Cloud Console and documented exact steps for Google/GitHub developer settings.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.
