@@ -4,6 +4,7 @@ import GitHubProvider from "next-auth/providers/github";
 import EmailProvider from "next-auth/providers/email";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { AdapterAccount } from "next-auth/adapters";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
@@ -25,19 +26,20 @@ if (
   process.env.NEXTAUTH_URL_INTERNAL = process.env.NEXTAUTH_URL;
 }
 
-const baseAdapter = PrismaAdapter(db) as NextAuthOptions["adapter"];
-export const authOptions: NextAuthOptions = {
-  adapter: {
-    ...baseAdapter,
-    linkAccount: async (account) => {
-      // Strip GitHub's new refresh_token_expires_in so Prisma doesn't crash on Account.create
-      const { refresh_token_expires_in, ...safeAccount } = account as any;
-      if (baseAdapter?.linkAccount) {
-        return await baseAdapter.linkAccount(safeAccount);
-      }
-      return account;
-    },
+const baseAdapter = PrismaAdapter(db);
+// Wrap linkAccount to silently strip GitHub's non-standard `refresh_token_expires_in`
+// field that causes Prisma to throw on Account.create when signing in with GitHub.
+const patchedAdapter = {
+  ...baseAdapter,
+  linkAccount: async (account: AdapterAccount) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { refresh_token_expires_in, ...safeAccount } = account as AdapterAccount & { refresh_token_expires_in?: number };
+    return (baseAdapter.linkAccount as (a: AdapterAccount) => Promise<void>)(safeAccount);
   },
+};
+
+export const authOptions: NextAuthOptions = {
+  adapter: patchedAdapter as NextAuthOptions["adapter"],
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
