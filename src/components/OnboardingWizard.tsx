@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileText, CheckCircle2, ChevronRight, FileUp, Sparkles, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnboardingWizard() {
   const router = useRouter();
@@ -104,8 +105,15 @@ export default function OnboardingWizard() {
         </div>
       </div>
 
+      <AnimatePresence mode="wait">
       {step === 1 && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <motion.div
+          key="step1"
+          initial={{ opacity: 0, x: 15 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -15 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        >
           <h2 className="text-2xl font-semibold text-[#1d1d1f] mb-6 tracking-tight">Let&apos;s start with the basics</h2>
           <div className="space-y-4">
             <div>
@@ -115,7 +123,7 @@ export default function OnboardingWizard() {
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 className="w-full h-12 bg-[#f5f5f7] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-xl px-4 text-[15px] text-[#1d1d1f] transition-all outline-none border border-transparent"
-                placeholder="Steve Jobs"
+                placeholder="John Doe"
               />
             </div>
             <div>
@@ -125,7 +133,7 @@ export default function OnboardingWizard() {
                 value={formData.targetHeadline}
                 onChange={(e) => setFormData({ ...formData, targetHeadline: e.target.value })}
                 className="w-full h-12 bg-[#f5f5f7] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-xl px-4 text-[15px] text-[#1d1d1f] transition-all outline-none border border-transparent"
-                placeholder="Senior Full Stack Engineer"
+                placeholder="Full-Stack Developer"
               />
             </div>
           </div>
@@ -138,11 +146,17 @@ export default function OnboardingWizard() {
               Next Step <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {step === 2 && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <motion.div
+          key="step2"
+          initial={{ opacity: 0, x: 15 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -15 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        >
           <h2 className="text-2xl font-semibold text-[#1d1d1f] mb-2 tracking-tight">Import your existing resume</h2>
           <p className="text-[#86868b] text-[15px] mb-6">Our Gemini AI will extract your experience, skills, and projects instantly.</p>
           
@@ -189,11 +203,17 @@ export default function OnboardingWizard() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {step === 3 && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <motion.div
+          key="step3"
+          initial={{ opacity: 0, x: 15 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -15 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        >
           <h2 className="text-2xl font-semibold text-[#1d1d1f] mb-2 tracking-tight">Review & Finalize</h2>
           <p className="text-[#86868b] text-[15px] mb-6">Verify the extracted data looks correct. You can always edit this later.</p>
           
@@ -224,9 +244,9 @@ export default function OnboardingWizard() {
               <CheckCircle2 className="w-4 h-4" /> Create Profile
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
-
+      </AnimatePresence>
     </div>
   );
 }

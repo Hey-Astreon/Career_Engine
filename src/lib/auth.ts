@@ -25,8 +25,19 @@ if (
   process.env.NEXTAUTH_URL_INTERNAL = process.env.NEXTAUTH_URL;
 }
 
+const baseAdapter = PrismaAdapter(db) as NextAuthOptions["adapter"];
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db) as NextAuthOptions["adapter"],
+  adapter: {
+    ...baseAdapter,
+    linkAccount: async (account) => {
+      // Strip GitHub's new refresh_token_expires_in so Prisma doesn't crash on Account.create
+      const { refresh_token_expires_in, ...safeAccount } = account as any;
+      if (baseAdapter?.linkAccount) {
+        return await baseAdapter.linkAccount(safeAccount);
+      }
+      return account;
+    },
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",

@@ -3,8 +3,9 @@ import {
   evaluateHardEligibility,
   extractSkills,
 } from "./scorer";
+import { evaluateTrust, type TrustVerdict, type TrustTier } from "./astreShield";
 
-export type FeedScoreType = "BASE_MATCH" | "FINAL_MATCH" | "INELIGIBLE";
+export type FeedScoreType = "BASE_MATCH" | "FINAL_MATCH" | "INELIGIBLE" | "SHIELD_BLOCKED";
 
 export interface FeedItemScoreResult {
   jobId: string;
@@ -16,6 +17,10 @@ export interface FeedItemScoreResult {
   cached: boolean;
   hardSkills?: string[];
   missingSkills?: string[];
+  /** AstreShield trust audit result — present for all non-cached jobs */
+  trustVerdict?: TrustVerdict;
+  /** Convenience alias: trust tier for UI rendering without parsing full verdict */
+  trustTier?: TrustTier;
 }
 
 export interface MinimalJobPostingInput {
@@ -61,6 +66,34 @@ export function computeBatchFeedScores(
   for (const job of jobs) {
     if (!job || !job.id) continue;
 
+    // 0. 🛡️ ASTRESHIELD — Scam/Fraud Detection (Runs BEFORE eligibility scoring)
+    // RED-tier jobs are immediately flagged and save all downstream compute.
+    // AMBER/GREEN verdicts are forwarded to the feed card for badge rendering.
+    const trustVerdict = evaluateTrust({
+      jobId: job.id,
+      title: job.title,
+      rawDescription: job.rawDescription,
+      canonicalAppUrl: job.url,
+      providerKey: job.platform,
+    });
+
+    if (trustVerdict.tier === "RED") {
+      resultMap.set(job.id, {
+        jobId: job.id,
+        score: 0,
+        scoreType: "SHIELD_BLOCKED",
+        displayLabel: "⚠️ AstreShield Alert",
+        eligible: false,
+        rejectionReason: trustVerdict.headline,
+        cached: false,
+        hardSkills: [],
+        missingSkills: [],
+        trustVerdict,
+        trustTier: "RED",
+      });
+      continue;
+    }
+
     // 1. MANDATORY CACHE SAFETY RULE: Always evaluate Layer 1 Hard Eligibility FIRST.
     // An old cached AI evaluation MUST NOT override a current hard eligibility failure.
     const hardElig = evaluateHardEligibility(
@@ -82,6 +115,8 @@ export function computeBatchFeedScores(
         cached: false,
         hardSkills: [],
         missingSkills: ["Domain Eligibility"],
+        trustVerdict,
+        trustTier: trustVerdict.tier,
       });
       continue;
     }
@@ -98,6 +133,9 @@ export function computeBatchFeedScores(
         cached: true,
         hardSkills: cachedItem.hardSkills ? JSON.parse(cachedItem.hardSkills) : [],
         missingSkills: cachedItem.missingSkills ? JSON.parse(cachedItem.missingSkills) : [],
+        // Note: trust verdict is NOT cached — re-evaluated fresh every time
+        trustVerdict,
+        trustTier: trustVerdict.tier,
       });
       continue;
     }
@@ -167,6 +205,8 @@ export function computeBatchFeedScores(
       cached: false,
       hardSkills,
       missingSkills,
+      trustVerdict,
+      trustTier: trustVerdict.tier,
     });
   }
 

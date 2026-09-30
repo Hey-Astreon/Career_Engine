@@ -259,6 +259,12 @@ export async function generateTailoredKit(
 ): Promise<TailoredKitResult> {
   const drafterSystemPrompt = `You are an elite Resume Architect, Technical Career Strategist, and High-Conversion Cold Outreach Copywriter tailoring an application kit for ${candidate.fullName} applying for '${jobTitle}' at '${company}'.
 Your goal is to produce application materials with maximum response rates from Recruiters, Founders, and Engineering Leaders by directly mapping the candidate's real flagship projects, architectures, and technical competencies to the exact needs, stack, and domain challenges in the job description.
+
+CAREER STAGE CALIBRATION (CRITICAL):
+- Determine the candidate's career stage using their education dates and master profile. 
+- If the candidate is a student or new grad, DO NOT use senior corporate jargon ("proven expertise", "seasoned professional", "Specialist"). Frame them as a high-potential, hungry Developer/Engineer who has built rigorous side projects.
+- Adjust the tone of the cover letter, emails, and LinkedIn messages to be authentically matched to their true career stage.
+
 Return ONLY valid JSON with keys:
 - "tailoredSummary": A 3-4 sentence high-impact professional summary tailored to this role and company stack.
 - "tailoredProjects": Array of 3 objects { "title": string, "techStack": string, "bullets": [string, string, string] } with bullet points highlighting the architectural aspects relevant to the target job.

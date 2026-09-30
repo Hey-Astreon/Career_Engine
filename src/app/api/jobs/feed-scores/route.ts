@@ -151,10 +151,11 @@ export async function POST(req: Request) {
     const scoringTimeMs = Date.now() - scoringStartTime;
 
     // 7. Format Output Response Map
-    const scoresOutput: Record<string, ReturnType<typeof scoreResultsMap.get>> = {};
+    const scoresOutput: Record<string, unknown> = {};
     let cachedCount = 0;
     let deterministicCount = 0;
     let ineligibleCount = 0;
+    let shieldBlockedCount = 0;
 
     scoreResultsMap.forEach((res, jobId) => {
       scoresOutput[jobId] = {
@@ -167,9 +168,22 @@ export async function POST(req: Request) {
         cached: res.cached,
         hardSkills: res.hardSkills || [],
         missingSkills: res.missingSkills || [],
+        // 🛡️ AstreShield trust audit — serialized subset needed by the UI
+        trustTier: res.trustTier ?? "GREEN",
+        trustScore: res.trustVerdict?.score ?? 100,
+        trustHeadline: res.trustVerdict?.headline,
+        trustDetail: res.trustVerdict?.detail,
+        trustFlags: (res.trustVerdict?.flags ?? []).map((f) => ({
+          signalId: f.signalId,
+          label: f.label,
+          impact: f.impact,
+          layer: f.layer,
+          evidence: f.evidence,
+        })),
       };
 
-      if (res.cached) cachedCount++;
+      if (res.scoreType === "SHIELD_BLOCKED") shieldBlockedCount++;
+      else if (res.cached) cachedCount++;
       else if (!res.eligible) ineligibleCount++;
       else deterministicCount++;
     });
@@ -185,6 +199,7 @@ export async function POST(req: Request) {
         cachedCount,
         deterministicCount,
         ineligibleCount,
+        shieldBlockedCount,
         dbTimeMs,
         scoringTimeMs,
         latencyMs: totalLatencyMs,

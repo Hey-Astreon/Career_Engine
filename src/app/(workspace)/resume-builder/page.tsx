@@ -83,7 +83,7 @@ export default function ResumeBuilderPage() {
   const [showOfficialModal, setShowOfficialModal] = useState(false);
 
   // Synchronized Outreach Suite State
-  const [activeOutreachTab, setActiveOutreachTab] = useState<"coverLetter" | "linkedin" | "email" | "followup">("coverLetter");
+  const [activeOutreachTab, setActiveOutreachTab] = useState<"coverLetter" | "linkedin" | "email" | "followup" | "screener">("coverLetter");
   const [isEditingOutreach, setIsEditingOutreach] = useState(false);
   const [kitData, setKitData] = useState<ApplicationKitData>({
     coverLetter: "",
@@ -92,6 +92,38 @@ export default function ResumeBuilderPage() {
     followUpEmail: "",
   });
   const [isLoadingKit, setIsLoadingKit] = useState(false);
+
+  // Screener QA State
+  const [screenerQuestions, setScreenerQuestions] = useState("");
+  const [screenerAnswers, setScreenerAnswers] = useState("");
+  const [isGeneratingScreener, setIsGeneratingScreener] = useState(false);
+
+  const generateScreener = async () => {
+    if (!screenerQuestions.trim()) return;
+    setIsGeneratingScreener(true);
+    try {
+      const jdContent = customMode ? `${customTitle}\n${customCompany}\n${customDesc}` : (jobs.find(j => j.id === selectedJobId)?.rawDescription || "No JD provided.");
+      const res = await fetch("/api/jobs/screener-qa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questions: screenerQuestions,
+          jobDescription: jdContent,
+          tailoredResume: JSON.stringify(resumeData, null, 2)
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScreenerAnswers(data.answers);
+      } else {
+        console.error(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingScreener(false);
+    }
+  };
 
   // Load official PDF variants
   useEffect(() => {
@@ -409,8 +441,9 @@ ${portfolio}`;
     if (activeOutreachTab === "coverLetter") return kitData.coverLetter;
     if (activeOutreachTab === "linkedin") return kitData.linkedInMessage;
     if (activeOutreachTab === "email") return kitData.coldEmail;
+    if (activeOutreachTab === "screener") return screenerAnswers || "";
     return kitData.followUpEmail;
-  }, [activeOutreachTab, kitData]);
+  }, [activeOutreachTab, kitData, screenerAnswers]);
 
   const wordCount = useMemo(() => {
     return currentOutreachText ? currentOutreachText.trim().split(/\s+/).length : 0;
@@ -1124,6 +1157,20 @@ ${portfolio}`;
               <RotateCcw className="h-3.5 w-3.5" />
               7-Day Follow-Up
             </button>
+            <button
+              onClick={() => {
+                setActiveOutreachTab("screener");
+                setIsEditingOutreach(false);
+              }}
+              className={`ce-chip cursor-pointer !min-h-9 !px-3.5 !text-[12px] font-semibold transition-all ${
+                activeOutreachTab === "screener"
+                  ? "bg-[var(--ink)] text-white shadow-sm"
+                  : "bg-[var(--surface-muted)] text-[var(--ink)] hover:bg-[var(--line)]"
+              }`}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              Screener Q&A
+            </button>
           </div>
         </div>
 
@@ -1137,6 +1184,7 @@ ${portfolio}`;
                 {activeOutreachTab === "linkedin" && "LinkedIn Recruiter InMail / Connection Hook (300 Chars)"}
                 {activeOutreachTab === "email" && "Executive Cold Pitch to Founder / Engineering VP"}
                 {activeOutreachTab === "followup" && "High-Signal 7-Day Respectful Follow-Up"}
+                {activeOutreachTab === "screener" && "Application Screener Copilot"}
               </span>
               <span className="ce-chip ce-chip-blue !min-h-5 !px-2 !text-[10px] font-mono">
                 {wordCount} words · {Math.max(1, Math.round(wordCount / 200))} min read
@@ -1144,14 +1192,16 @@ ${portfolio}`;
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsEditingOutreach(!isEditingOutreach)}
-                className="ce-button-secondary !min-h-8 !px-3 !text-[11px]"
-                title="Toggle Edit Mode"
-              >
-                <Edit3 className="h-3.5 w-3.5" />
-                {isEditingOutreach ? "Reader Mode" : "Edit Text"}
-              </button>
+              {activeOutreachTab !== "screener" && (
+                <button
+                  onClick={() => setIsEditingOutreach(!isEditingOutreach)}
+                  className="ce-button-secondary !min-h-8 !px-3 !text-[11px]"
+                  title="Toggle Edit Mode"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                  {isEditingOutreach ? "Reader Mode" : "Edit Text"}
+                </button>
+              )}
 
               <button
                 onClick={() => void handleCopyOutreach(currentOutreachText, activeOutreachTab)}
@@ -1173,7 +1223,40 @@ ${portfolio}`;
           </div>
 
           {/* Main Reading / Editing Body */}
-          {isLoadingKit ? (
+          {activeOutreachTab === "screener" ? (
+            <div className="flex flex-col gap-4">
+              <textarea
+                rows={6}
+                value={screenerQuestions}
+                onChange={(e) => setScreenerQuestions(e.target.value)}
+                placeholder="Paste application questions here (e.g., 'Why should we hire you?')"
+                className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 font-mono text-[12.5px] leading-6 text-[var(--ink)] focus:outline-none focus:ring-1 focus:ring-[var(--blue)] resize-y min-h-[140px]"
+              />
+              <button 
+                onClick={generateScreener}
+                disabled={isGeneratingScreener || !screenerQuestions.trim()}
+                className="ce-button-primary w-fit !h-10"
+              >
+                {isGeneratingScreener ? (
+                  <>
+                    <Sparkles className="h-4 w-4 animate-spin mr-2" />
+                    Generating Answers...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Draft Answers
+                  </>
+                )}
+              </button>
+              
+              {screenerAnswers && (
+                <div className="mt-2 rounded-lg bg-[var(--surface)] p-6 text-[13.5px] leading-7 text-[var(--ink)] whitespace-pre-line border border-[var(--line)] min-h-[160px] font-sans">
+                  {screenerAnswers}
+                </div>
+              )}
+            </div>
+          ) : isLoadingKit ? (
             <div className="py-16 text-center text-[13px] text-[var(--muted)]">
               <Sparkles className="mx-auto h-6 w-6 animate-spin text-[var(--blue)] mb-3" />
               Synchronizing tailored outreach copy with target parameters...

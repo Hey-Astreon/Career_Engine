@@ -66,7 +66,26 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
 .ce-surface { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }.ce-muted-surface{border:1px solid var(--line);background:var(--surface-muted)}
 .ce-button-primary,.ce-button-secondary,.ce-button-quiet{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 13px;border-radius:6px;font-size:11px;font-weight:750;transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease}.ce-button-primary{border:1px solid var(--ink);background:var(--ink);color:#fff}.ce-button-primary:hover{background:var(--blue);border-color:var(--blue)}.ce-button-secondary{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}.ce-button-secondary:hover{border-color:var(--blue);color:var(--blue)}.ce-button-quiet{border:1px solid transparent;background:transparent;color:var(--muted)}.ce-button-quiet:hover{background:var(--surface-muted);color:var(--ink)}.ce-button-primary:active,.ce-button-secondary:active{transform:scale(.98)}
 .ce-field { min-height: 37px; width: 100%; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-muted); color: var(--ink); font-size: 11px; outline: none; }.ce-field:focus{border-color:var(--blue);background:var(--surface)}
-.ce-chip{display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0 7px;border-radius:4px;background:var(--surface-muted);color:var(--muted);font:700 8px var(--font-mono),monospace;letter-spacing:.03em}.ce-chip-green{background:var(--green-soft);color:var(--green)}.ce-chip-blue{background:var(--blue-soft);color:var(--blue)}.ce-chip-red{background:var(--red-soft);color:var(--red)}
+.ce-chip{display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0 7px;border-radius:4px;background:var(--surface-muted);color:var(--muted);font:700 8px var(--font-mono),monospace;letter-spacing:.03em}.ce-chip-green{background:var(--green-soft);color:var(--green)}.ce-chip-blue{background:var(--blue-soft);color:var(--blue)}.ce-chip-red{background:var(--red-soft);color:var(--red)}.ce-chip-amber{background:var(--amber-soft);color:var(--amber)}
+
+/* ── AstreShield Trust Tier UI ──────────────────────────────────────────── */
+/* Badge: inline trust tier indicator shown alongside MatchBadge */
+.shield-badge{display:inline-flex;align-items:center;gap:4px;min-height:20px;padding:0 6px;border-radius:4px;font:700 7px var(--font-mono),monospace;letter-spacing:.05em;text-transform:uppercase}
+.shield-badge--green{background:var(--green-soft);color:var(--green)}
+.shield-badge--amber{background:var(--amber-soft);color:var(--amber)}
+.shield-badge--red{background:var(--red-soft);color:var(--red)}
+/* Card dimming: RED jobs remain visible (not hidden) — dimmed so user knows they're protected */
+.shield-blocked-card{opacity:.55;filter:grayscale(.35);transition:opacity .2s ease,filter .2s ease}
+.shield-blocked-card:hover{opacity:.88;filter:grayscale(0)}
+/* Drawer audit panel */
+.shield-panel{border:1px solid var(--line);padding:16px;margin-top:4px}
+.shield-panel--amber{border-color:var(--amber);background:var(--amber-soft)}
+.shield-panel--red{border-color:var(--red);background:var(--red-soft)}
+.shield-flag-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:10px;line-height:1.5}.shield-flag-row:last-child{border-bottom:none}
+.shield-flag-impact{font:700 9px var(--font-mono),monospace;min-width:30px;text-align:right;flex-shrink:0}
+.shield-flag-impact--neg{color:var(--red)}.shield-flag-impact--pos{color:var(--green)}
+.shield-flag-evidence{margin-top:3px;font:400 9px var(--font-mono),monospace;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 .ce-drawer-backdrop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(15,23,42,.42);backdrop-filter:blur(5px)}.ce-drawer{width:min(1120px,100%);max-height:min(880px,calc(100dvh - 56px));overflow:auto;padding:30px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 72px rgba(21,35,56,.22)}
 @media (max-width: 920px){.ce-shell{display:block}.ce-rail{position:relative;width:100%;min-height:0;height:auto;flex-direction:row;align-items:center;gap:14px;padding:14px 18px}.ce-nav-label,.ce-rail-context,.ce-rail-footer{display:none}.ce-nav{display:flex;flex:1;overflow:auto}.ce-nav-link{display:flex;min-width:max-content;gap:7px;padding:0 9px}.ce-workspace{width:100%;margin-left:0}.ce-header{padding:0 22px}.ce-main{padding:38px 24px}.ce-header-title{display:none}}
 @media (max-width: 620px){.ce-rail{padding:12px 14px;overflow:hidden}.ce-brand-copy span{display:none}.ce-brand-copy strong{font-size:13px}.ce-nav-link span{font-size:10px}.ce-nav-badge{display:none}.ce-header{height:61px;gap:8px;padding:0 14px;overflow:hidden}.ce-command{min-width:0;max-width:none;flex:1}.ce-command span{overflow:hidden;font-size:9px;text-overflow:ellipsis;white-space:nowrap}.ce-command kbd{display:none}.ce-main{min-width:0;padding:30px 14px;overflow:hidden}.ce-page-title{font-size:31px}.ce-page-copy{font-size:11px}.ce-drawer-backdrop{align-items:flex-end;padding:0}.ce-drawer{max-height:92dvh;padding:18px;border-radius:10px 10px 0 0}}
@@ -88,7 +107,7 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   height: 297mm;
   min-height: 297mm;
   max-height: 297mm;
-  padding: 10.5mm 13.5mm 10.5mm;
+  padding: 10.5mm 9mm;
   background: #ffffff;
   color: #111827;
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
