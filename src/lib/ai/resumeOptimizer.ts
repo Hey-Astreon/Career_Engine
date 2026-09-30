@@ -31,32 +31,42 @@ export async function optimizeResumeForJob(
 STRICT WRITING & RECRUITING RULES:
 1. CAREER STAGE CALIBRATION (CRITICAL):
    - Analyze the candidate's education timeline and experience.
-   - If they are a student (future graduation), frame them as an exceptional, high-potential Student/Developer. DO NOT use senior titles like "Specialist", "Senior Engineer", or "Expert" in the headline or summary. Use "Developer", "Enthusiast", or "Intern".
-   - If they are a junior/new grad, use standard titles (e.g., "Software Engineer") but avoid terms implying decades of experience like "Expert" or "Seasoned".
-   - ALways retain high-value technical keywords (e.g., JavaScript, TypeScript, AI) in the headline and summary regardless of career stage.
+   - If they are a student (future graduation), use "Developer" or "Engineer" but NEVER titles implying years of professional experience like "Specialist", "Senior Engineer", "Expert", or "Seasoned".
+   - Do NOT mention the candidate's university or college in the summary. Recruiters do not evaluate candidates based on institution name at the summary-scan stage.
+   - Do NOT frame virtual simulations or structured engineering programs as "no experience". They are real, verifiable engineering contributions and should be acknowledged as such.
 
-2. FACTUAL INTEGRITY (NO HALLUCINATIONS):
-   - NEVER fabricate years of experience or enterprise domains the candidate never built (e.g. NEVER claim to be an SAP consultant, Salesforce developer, or 10-year veteran).
+2. PROFESSIONAL SUMMARY RULES (MOST CRITICAL):
+   - The summary is NOT a skills inventory. NEVER list tech stacks as comma-separated strings inside the summary.
+     FORBIDDEN: "Proficient across TypeScript, Node.js, Python FastAPI, C#/.NET Core, and Java Spring Boot..."
+     FORBIDDEN: "Demonstrated mastery in database normalization (3NF), Redis token-bucket caching, and automated testing (Jest, PyTest, xUnit)..."
+   - Write in clean, human narrative prose. The summary answers: WHO is this person, WHAT kind of problems do they solve, and WHAT makes them worth reading further.
+   - Technologies belong in the Skills and Projects sections. The summary should reference a domain or problem space, not name-drop individual tools.
+   - 3 sentences maximum. Each sentence must carry independent meaning.
+   - ALLOWED: "Backend Developer with a focus on distributed systems and cryptographic security, with shipped projects that demonstrate end-to-end ownership."
+   - ALLOWED: "Drawn to roles where system reliability and developer tooling intersect — particularly at scale."
+
+3. FACTUAL INTEGRITY (NO HALLUCINATIONS):
+   - NEVER fabricate years of experience or enterprise domains the candidate never built.
    - Frame their real strengths to demonstrate exceptional transferability for '${jobTitle}' at '${company}'.
 
-2. BAN ROBOTIC AI BUZZWORDS & FLUFF:
-   - FORBIDDEN WORDS: "Seasoned", "Proven track record", "Passionate", "Driving excellence", "Results-oriented", "Spearheaded", "Dynamic", "Adept at".
-   - Use direct, authoritative, human technical statements.
+4. BAN ROBOTIC AI BUZZWORDS & FLUFF:
+   - FORBIDDEN WORDS IN SUMMARY: "Seasoned", "Proven track record", "Passionate", "Driving excellence", "Results-oriented", "Spearheaded", "Dynamic", "Adept at", "Systems-focused", "Deep expertise in".
+   - Use direct, authoritative, human statements that a person would actually write.
 
-3. GOOGLE XYZ POWER-VERB FORMULA FOR ALL BULLETS:
+5. GOOGLE XYZ POWER-VERB FORMULA FOR ALL PROJECT BULLETS:
    - Structure: [Decisive Technical Verb] [Specific System Built/Optimized] using [Exact Tech Stack] to [Achieve concrete performance/reliability outcome].
    - Verbs to use: Architected, Engineered, Benchmarked, Streamlined, Hardened, Containerized, Decoupled, Orchestrated, Profiled, Accelerated.
    - Example: "Architected streaming financial analytics pipeline using Google Gemini SDK and Fastify microservices, slashing transaction anomaly detection latency by 35%."
 
-4. ATS FORMATTING & GEOMETRY:
+6. ATS FORMATTING & GEOMETRY:
    - Strictly maintain the 6 standard sections (Header, Professional Summary, 6 Categorized Skill Groups, 3 Flagship Projects, 3 Virtual Simulations, Education).
-   - Keep the summary to exactly 4 dense, impactful lines (no fluff).
+   - Keep the summary to exactly 3 impactful sentences (no fluff, no tech dumps).
    - Ensure standard capitalization: PostgreSQL, FastAPI, TypeScript, Node.js, xUnit, Web Crypto API (AES-GCM 256-bit), PBKDF2.
    - NEVER mention Coco AI.
 
 Return ONLY a valid JSON object with keys:
 - "targetHeadline": string (Punchy 1-line tailored professional title, e.g. "Software Engineer | Backend, Systems & Distributed Architecture")
-- "summary": string (Dense, authoritative 4-line summary highlighting real systems strengths mapped to the role)
+- "summary": string (3-sentence narrative prose summary. NO comma-separated tech lists. Describes WHO they are and WHAT they build, not WHICH tools they use.)
 - "skills": array of 6 objects { "categoryName": string, "skillsText": string } (Front-load matching skills in each category)
 - "projects": array of 3 objects { "title": string, "techStack": string, "liveDemoUrl": string, "githubUrl": string, "bullets": [string, string, string] } (Google XYZ bullet points)
 `;
@@ -135,7 +145,7 @@ function generateDynamicOptimizedFallback(
 ): OptimizedResume {
   const topSkillStr = targetSkills.length > 0 ? targetSkills.slice(0, 4).join(", ") : "low-latency APIs, distributed microservices, and robust database design";
 
-  const tailoredSummary = `Systems-focused Software Engineer with deep expertise in building high-throughput REST APIs, concurrent microservice architectures, and full-stack applications with emphasis on ${topSkillStr}. Demonstrated track record of architecting AST code-graph compilers, zero-knowledge cryptographic vaults, and AI-powered transaction ledgers. Proficient in database normalization (3NF), Redis caching, and automated testing (xUnit, Jest, PyTest) aligned with ${jobTitle} initiatives at ${company}.`;
+  const tailoredSummary = `Backend Developer with hands-on experience building production systems across REST APIs, distributed architecture, and AI-integrated tooling — work that has shipped to real users. Has contributed to structured engineering simulations at industry-grade organisations, working through actual codebases to deliver measurable outcomes. Focused on ${jobTitle} challenges at ${company}, particularly where system reliability, concurrency, and security intersect.`;
 
   const tailoredSkills = baseline.skills.map((cat) => {
     const matching = targetSkills.filter((s) => cat.skillsText.toLowerCase().includes(s.toLowerCase()));

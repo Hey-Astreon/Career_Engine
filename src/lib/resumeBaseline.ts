@@ -77,7 +77,7 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
         linkedinUrl: "https://www.linkedin.com/in/alrya404/",
       },
       summary:
-        "Systems-focused Software Engineer with deep expertise in building low-latency REST APIs, multi-model LLM orchestration gateways, and full-stack web applications. Proficient across TypeScript, Node.js, Python FastAPI, C#/.NET Core, and Java Spring Boot, with a proven track record of architecting zero-knowledge cryptographic vaults and automated developer sandboxes. Demonstrated mastery in database normalization (3NF), Redis token-bucket caching, and automated testing (Jest, PyTest, xUnit) to deliver robust software systems.",
+        "Full-Stack Developer with a strong focus on backend systems, cryptographic security, and AI-integrated web applications. Has independently shipped production-grade projects spanning financial platforms, zero-knowledge vaults, and code-parsing sandboxes — each built to solve a real engineering problem end-to-end. Brings hands-on experience from structured engineering simulations at Commonwealth Bank, YC (Shiptivity), and Walmart, and gravitates toward roles where system design and developer tooling intersect.",
       skills: [
         {
           categoryName: "Backend & Systems",
@@ -193,7 +193,7 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
       linkedinUrl: "https://linkedin.com/in/astreon4547",
     },
     summary:
-      "Systems-focused Software Engineer with deep expertise in building low-latency REST APIs, concurrent microservice architectures, and full-stack web applications. Proficient across C#/.NET Core, Java Spring Boot, Python FastAPI, and modern TypeScript runtimes (Node.js, Express, React, Next.js), with a proven track record of architecting zero-knowledge cryptographic vaults and autonomous AI developer sandboxes. Demonstrated mastery in database normalization (3NF), asynchronous event loops, and automated test automation (xUnit, JUnit 5, PyTest) to deliver robust, enterprise-grade software products.",
+      "Backend-focused Developer with hands-on experience building production systems across distributed APIs, cryptographic security, and AI tooling — projects that have reached real users and solved real problems. Has contributed to engineering simulations for Commonwealth Bank, YC (Shiptivity), and Walmart, working through actual codebases and delivering measurable outcomes. Drawn to roles at the intersection of system reliability and developer experience, with a particular interest in how software handles scale, concurrency, and security at the infrastructure layer.",
     skills: [
       {
         categoryName: "Backend & Systems",
