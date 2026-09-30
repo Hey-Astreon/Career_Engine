@@ -917,7 +917,7 @@ ${portfolio}`;
           {/* Printable A4 Sheet Container */}
           <div
             style={{ transform: `scale(${zoomScale})`, transformOrigin: "top center" }}
-            className="transition-transform duration-150 relative"
+            className="transition-transform duration-150 relative ats-print-container ats-print-wrapper"
           >
             <div id="ats-resume-document" className="ats-a4-sheet relative">
               {/* Recruiter 6-Second Scan Guide HUD Overlays */}

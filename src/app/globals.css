@@ -205,6 +205,11 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   letter-spacing: 0.04em;
 }
 
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -219,6 +224,8 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
     width: 210mm !important;
     height: 297mm !important;
     overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .no-print,
@@ -229,6 +236,15 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   button,
   .ce-command {
     display: none !important;
+  }
+
+  .ce-shell {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    min-height: 0 !important;
+    width: 100% !important;
   }
 
   .ce-workspace,
@@ -254,7 +270,8 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   }
 
   .ats-print-wrapper > div,
-  .ats-print-container > div {
+  .ats-print-container > div,
+  .ats-a4-sheet {
     transform: none !important;
   }
 
@@ -263,12 +280,13 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
     height: 297mm !important;
     max-height: 297mm !important;
     min-height: 297mm !important;
-    padding: 10.5mm 13.5mm 10.5mm !important;
+    padding: 10.5mm 9mm !important;
     box-shadow: none !important;
     border: none !important;
     margin: 0 auto !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
+    box-sizing: border-box !important;
   }
 }
 
