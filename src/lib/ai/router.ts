@@ -21,7 +21,12 @@ function cleanJsonResponse(rawText: string): string {
 
 /**
  * Universal Multi-Provider LLM Router with zero-downtime automatic failover.
- * Priority Cascade: Groq (Ultra-Fast 500t/s) -> NVIDIA NIM (Llama 3.1 70B) -> Cerebras (GPT-OSS 120B) -> Gemini -> Fallback
+ * 
+ * Priority Cascade (Oct 2026):
+ *  1. Groq          → openai/gpt-oss-120b      (500+ t/s, ultra-fast inference)
+ *  2. Gemini        → gemini-3.8-flash          (Google GA, Sept 2 2026, 1M ctx)
+ *  3. Cerebras      → qwen-3.8-27b              (Current primary shared inference)
+ *  4. NVIDIA NIM    → meta/llama-4-maverick     (Llama 4 series, vision+text)
  */
 export async function queryMultiProviderLLM(
   systemPrompt: string,
@@ -33,7 +38,7 @@ export async function queryMultiProviderLLM(
   const cerebrasKey = process.env.CEREBRAS_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
 
-  // 1. Try Groq (Ultra-Fast 500+ tokens/sec with OpenAI GPT-OSS 120B / 20B)
+  // 1. Try Groq (Ultra-Fast 500+ tokens/sec — openai/gpt-oss-120b)
   if (groqKey && !groqKey.includes("YOUR_")) {
     try {
       const res = await axios.post(
@@ -58,36 +63,36 @@ export async function queryMultiProviderLLM(
       const text = res.data?.choices?.[0]?.message?.content;
       if (text) return { text: cleanJsonResponse(text), provider: "groq" };
     } catch (err) {
-      console.warn("[LLM Router Warning] Groq failed, falling over to Gemini:", (err as Error).message);
+      console.warn("[LLM Router] Groq failed, falling over to Gemini:", (err as Error).message);
     }
   }
 
-  // 2. Try Gemini 2.5 Flash (Ultra-Reliable Google Cloud Native GenAI)
+  // 2. Try Gemini 3.8 Flash (Google GA — Sept 2, 2026 — 1M token context, agentic workflows)
   if (geminiKey && !geminiKey.includes("YOUR_")) {
     try {
       const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
       const res = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiKey}`,
         {
           contents: [{ parts: [{ text: fullPrompt }] }],
           generationConfig: responseJson ? { responseMimeType: "application/json" } : undefined,
         },
-        { timeout: 10000 }
+        { timeout: 12000 }
       );
       const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) return { text: cleanJsonResponse(text), provider: "gemini" };
     } catch (err) {
-      console.warn("[LLM Router Warning] Gemini failed, falling over to Cerebras / NVIDIA:", (err as Error).message);
+      console.warn("[LLM Router] Gemini 3.8 Flash failed, falling over to Cerebras:", (err as Error).message);
     }
   }
 
-  // 3. Try Cerebras (GPT-OSS 120B / Qwen 27B)
+  // 3. Try Cerebras (qwen-3.8-27b — Current primary shared inference model, Oct 2026)
   if (cerebrasKey && !cerebrasKey.includes("YOUR_")) {
     try {
       const res = await axios.post(
         "https://api.cerebras.ai/v1/chat/completions",
         {
-          model: "gpt-oss-120b",
+          model: "qwen-3.8-27b",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -106,17 +111,17 @@ export async function queryMultiProviderLLM(
       const text = res.data?.choices?.[0]?.message?.content;
       if (text) return { text: cleanJsonResponse(text), provider: "cerebras" };
     } catch (err) {
-      console.warn("[LLM Router Warning] Cerebras failed, falling over to NVIDIA NIM:", (err as Error).message);
+      console.warn("[LLM Router] Cerebras failed, falling over to NVIDIA NIM:", (err as Error).message);
     }
   }
 
-  // 4. Try NVIDIA NIM (Llama 3.2 Vision / Instruct)
+  // 4. Try NVIDIA NIM (meta/llama-4-maverick — Llama 4 series, text+vision, Oct 2026)
   if (nvidiaKey && !nvidiaKey.includes("YOUR_")) {
     try {
       const res = await axios.post(
         "https://integrate.api.nvidia.com/v1/chat/completions",
         {
-          model: "meta/llama-3.2-11b-vision-instruct",
+          model: "meta/llama-4-maverick",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -128,15 +133,16 @@ export async function queryMultiProviderLLM(
             Authorization: `Bearer ${nvidiaKey}`,
             "Content-Type": "application/json",
           },
-          timeout: 10000,
+          timeout: 12000,
         }
       );
       const text = res.data?.choices?.[0]?.message?.content;
       if (text) return { text: cleanJsonResponse(text), provider: "nvidia" };
     } catch (err) {
-      console.warn("[LLM Router Warning] NVIDIA NIM failed:", (err as Error).message);
+      console.warn("[LLM Router] NVIDIA NIM failed:", (err as Error).message);
     }
   }
 
   return { text: "", provider: "fallback" };
 }
+
