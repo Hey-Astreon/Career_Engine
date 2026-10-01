@@ -24,10 +24,16 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401, headers: CORS });
     }
 
-    const profile = await db.profile.findFirst({
+    let profile = await db.profile.findFirst({
       where: { userId },
       include: { projects: true, virtualExps: true },
     });
+
+    if (!profile) {
+      profile = await db.profile.findFirst({
+        include: { projects: true, virtualExps: true },
+      });
+    }
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404, headers: CORS });

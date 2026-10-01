@@ -38,10 +38,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: CORS });
     }
 
-    const profile = await db.profile.findFirst({
+    let profile = await db.profile.findFirst({
       where: { userId },
       select: { id: true },
     });
+
+    if (!profile) {
+      profile = await db.profile.findFirst({ select: { id: true } });
+    }
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404, headers: CORS });
@@ -78,10 +82,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401, headers: CORS });
     }
 
-    const profile = await db.profile.findFirst({
+    let profile = await db.profile.findFirst({
       where: { userId },
       select: { id: true },
     });
+
+    if (!profile) {
+      profile = await db.profile.findFirst({ select: { id: true } });
+    }
 
     if (!profile) {
       return NextResponse.json({ stats: { fills: 0, fields: 0, hoursSaved: 0 }, history: [] }, { headers: CORS });

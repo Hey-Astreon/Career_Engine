@@ -14,7 +14,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   /* ── CONFIG ─────────────────────────────────────────────────────── */
   var TOKEN = '__AP_TOKEN__';
-  var API   = 'https://astrework.vercel.app/api/autopilot';
+  var API   = '__AP_ORIGIN__/api/autopilot';
 
   /* ── GUARD: remove if already open ─────────────────────────────── */
   var existing = document.getElementById('ap-hud');
@@ -165,7 +165,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     document.getElementById('ap-status-text').textContent = text;
     var dot = document.getElementById('ap-dot');
     dot.className = state === 'done' ? 'ap-dot-done' : state === 'error' ? 'ap-dot-error' : '';
-    dot.id = 'ap-dot'; // reset for animation
+    dot.id = 'ap-dot'; /* reset for animation */
   }
   function setProgress(filled, total) {
     var pct = total > 0 ? Math.round((filled / total) * 100) : 0;
@@ -201,17 +201,17 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   ];
 
   function getLabelText(input) {
-    // Try aria-label
+    /* Try aria-label */
     var ariaLabel = input.getAttribute('aria-label') || '';
-    // Try associated label
+    /* Try associated label */
     var labelEl = input.labels && input.labels[0];
     var labelText = labelEl ? labelEl.textContent : '';
-    // Try placeholder
+    /* Try placeholder */
     var placeholder = input.placeholder || '';
-    // Try parent context (2 levels up)
+    /* Try parent context (2 levels up) */
     var parent = input.parentElement && input.parentElement.parentElement;
     var contextText = parent ? parent.textContent : '';
-    return [ariaLabel, labelText, placeholder, contextText].join(' ').toLowerCase().replace(/\\s+/g,' ');
+    return [ariaLabel, labelText, placeholder, contextText].join(' ').toLowerCase().replace(/\s+/g,' ');
   }
 
   function classifyField(input) {
@@ -226,7 +226,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       var score = p.kw.filter(function(k) { return signals.includes(k); }).length;
       if (score > best.score) { best = { type: p.type, score: score }; }
     });
-    // Unknown textareas = screening question
+    /* Unknown textareas = screening question */
     if (!best.type && input.tagName === 'TEXTAREA') return 'SCREENING';
     return best.type;
   }
@@ -235,7 +235,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     var inputs = document.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=file]):not([type=checkbox]):not([type=radio]), textarea, select');
     var results = [];
     inputs.forEach(function(inp) {
-      // Skip invisible fields
+      /* Skip invisible fields */
       var rect = inp.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
       var computed = window.getComputedStyle(inp);
@@ -273,7 +273,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
         }).join('');
         setNativeValue(inputEl, display);
         if (onUpdate) onUpdate(display);
-        // Fast speed: 0.8s total for typical field
+        /* Fast speed: 0.8s total for typical field */
         iteration += length > 100 ? 1.5 : 0.6;
         if (iteration >= length) {
           setNativeValue(inputEl, targetValue);
@@ -355,8 +355,8 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       case 'PORTFOLIO':     return profile.portfolioUrl;
       case 'TITLE':         return profile.title;
       case 'SUMMARY':       return profile.professionalSummary;
-      case 'WORK_AUTH':     return null; // handled as checkbox/select separately
-      case 'SALARY':        return null; // skip — too variable
+      case 'WORK_AUTH':     return null; /* handled as checkbox/select separately */
+      case 'SALARY':        return null; /* skip — too variable */
       case 'COVER_LETTER':
       case 'SCREENING': {
         var labelText = getLabelText(field.element);
@@ -432,7 +432,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     setProgress(filled, fields.length);
     setCount(filled, fields.length);
 
-    // Small delay between fields for visual clarity
+    /* Small delay between fields for visual clarity */
     await new Promise(function(r) { setTimeout(r, 120); });
   }
 
@@ -465,7 +465,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   document.getElementById('ap-redo').addEventListener('click', function() {
     hud.remove(); styleEl.remove();
-    // Re-trigger by re-evaluating the bookmarklet
+    /* Re-trigger by re-evaluating the bookmarklet */
   });
 
 })();`;
@@ -474,14 +474,14 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
  * Build the complete bookmarklet javascript: href for a given token.
  * The token is substituted into the script and the whole thing is URI-encoded.
  */
-export function buildBookmarkletHref(token: string): string {
-  const script = BOOKMARKLET_SCRIPT.replace("__AP_TOKEN__", token);
-  // Minify: collapse whitespace (light minification — preserves logic)
-  const minified = script
-    .replace(/\/\*[\s\S]*?\*\//g, "") // strip block comments
-    .replace(/\/\/[^\n]*/g, "")        // strip line comments
-    .replace(/\n\s*/g, " ")            // collapse newlines
-    .replace(/\s{2,}/g, " ")           // collapse spaces
+export function buildBookmarkletHref(token: string, origin: string = "https://astrework.vercel.app"): string {
+  const cleanOrigin = origin.replace(/\/$/, "");
+  const minified = BOOKMARKLET_SCRIPT
+    .replace("__AP_TOKEN__", token)
+    .replace("__AP_ORIGIN__", cleanOrigin)
+    .replace(/\/\*[\s\S]*?\*\//g, "") /* strip block comments only */
+    .replace(/\n\s*/g, " ")            /* collapse newlines */
+    .replace(/\s{2,}/g, " ")           /* collapse spaces */
     .trim();
 
   return `javascript:${encodeURIComponent(minified)}`;

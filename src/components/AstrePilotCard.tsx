@@ -40,7 +40,8 @@ export default function AstrePilotCard() {
       // Build the bookmarklet href client-side using the token
       // We import the builder dynamically to keep this client component clean
       const { buildBookmarkletHref } = await import("@/lib/autopilot/bookmarklet");
-      setBookmarkletHref(buildBookmarkletHref(data.token));
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://astrework.vercel.app";
+      setBookmarkletHref(buildBookmarkletHref(data.token, origin));
     } catch {
       setToken(null);
     } finally {

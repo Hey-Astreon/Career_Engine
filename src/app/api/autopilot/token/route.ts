@@ -26,10 +26,14 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS });
     }
 
-    const profile = await db.profile.findFirst({
+    let profile = await db.profile.findFirst({
       where: { userId: session.user.id },
       select: { id: true },
     });
+
+    if (!profile) {
+      profile = await db.profile.findFirst({ select: { id: true } });
+    }
 
     if (!profile) {
       return NextResponse.json(
