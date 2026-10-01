@@ -2,11 +2,70 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
+/* ─── Google SVG ─────────────────────────────────────────────────────────── */
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
+/* ─── GitHub SVG ──────────────────────────────────────────────────────────── */
+function GitHubIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+    </svg>
+  );
+}
+
+/* ─── OAuth Button ────────────────────────────────────────────────────────── */
+function OAuthButton({
+  onClick,
+  disabled,
+  icon,
+  label,
+  isLoading,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  icon: React.ReactNode;
+  label: string;
+  isLoading: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full h-12 bg-white hover:bg-[#f9f9fb] border border-[#e5e5ea] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-[14px] font-semibold text-[#1d1d1f] flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] shadow-sm"
+    >
+      {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-[#86868b]" /> : icon}
+      {label}
+    </button>
+  );
+}
+
+/* ─── Stat Pill ───────────────────────────────────────────────────────────── */
+function StatPill({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="inline-flex items-center gap-1.5 bg-white/80 border border-[#e5e5ea]/80 rounded-full px-3.5 py-1.5 text-[12px] shadow-sm">
+      <span className="font-bold text-[#0071e3]">{value}</span>
+      <span className="text-[#86868b] font-medium">{label}</span>
+    </div>
+  );
+}
+
+/* ─── Main Register Page ──────────────────────────────────────────────────── */
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,61 +97,110 @@ export default function RegisterPage() {
       });
 
       if (res.ok) {
-        // Sign in immediately after successful registration
         await signIn("credentials", { email, password, callbackUrl: "/onboard" });
       } else {
         const data = await res.json();
-        setError(data.message || "Registration failed");
+        setError(data.message || "Registration failed. Please try again.");
       }
-    } catch (error) {
-      console.error(error);
-      setError("An unexpected error occurred");
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(null);
     }
   };
 
+  void router;
+
   return (
-    <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center font-[var(--font-inter)] selection:bg-blue-100 selection:text-blue-900 px-4 py-12">
-      
-      {/* Brand logo */}
-      <Link href="/" className="mb-8 flex items-center justify-center transition-transform hover:scale-105">
-        <Image
-          src="/astrework-brand.png"
-          alt="AstreWork Logo"
-          width={1760}
-          height={363}
-          className="h-10 w-auto object-contain"
-          priority
+    <div className="relative min-h-screen flex flex-col items-center justify-center font-[var(--font-inter)] selection:bg-blue-100 selection:text-blue-900 px-4 py-12 overflow-hidden">
+
+      {/* ── Mesh Gradient Background ──────────────────────────────────────── */}
+      <div className="absolute inset-0 -z-10" aria-hidden="true">
+        <div className="absolute inset-0 bg-[#f8faff]" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-blue-100/60 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-blue-50/70 rounded-full blur-3xl" />
+        <div
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #1d4ed8 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
         />
-      </Link>
+      </div>
 
-      <div className="w-full max-w-[400px] p-8 sm:p-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-black/[0.04]">
-        
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-3">
-            Create an account
-          </h1>
-          <p className="text-[15px] text-[#86868b] font-medium leading-relaxed">
-            Start tracking and automating your remote job search today.
-          </p>
-        </div>
+      {/* ── Floating Card ─────────────────────────────────────────────────── */}
+      <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-3 duration-500">
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 text-center">
-            {error}
+        {/* Card */}
+        <div className="bg-white/90 backdrop-blur-xl border border-black/[0.06] rounded-[1.75rem] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),0_20px_60px_-10px_rgba(0,0,0,0.08)] px-8 py-9">
+
+          {/* Logo */}
+          <div className="flex justify-center mb-7">
+            <Link href="/" className="inline-block transition-all hover:opacity-80 hover:scale-[1.02] active:scale-[0.98]">
+              <Image
+                src="/astrework-brand.png"
+                alt="AstreWork"
+                width={1760}
+                height={363}
+                className="h-9 w-auto object-contain"
+                priority
+              />
+            </Link>
           </div>
-        )}
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div className="space-y-3">
+          {/* Heading */}
+          <div className="text-center mb-7">
+            <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-[#1d1d1f] mb-1.5">
+              Create your account
+            </h1>
+            <p className="text-[14px] text-[#86868b] font-medium">
+              Start automating your career search today
+            </p>
+          </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
+              {error}
+            </div>
+          )}
+
+          {/* OAuth — first */}
+          <div className="space-y-2.5 mb-5">
+            <OAuthButton
+              onClick={() => handleOAuthSignIn("google")}
+              disabled={isLoading !== null}
+              icon={<GoogleIcon />}
+              label="Continue with Google"
+              isLoading={isLoading === "google"}
+            />
+            <OAuthButton
+              onClick={() => handleOAuthSignIn("github")}
+              disabled={isLoading !== null}
+              icon={<GitHubIcon />}
+              label="Continue with GitHub"
+              isLoading={isLoading === "github"}
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-px flex-1 bg-[#e5e5ea]" />
+            <span className="text-[12px] font-medium text-[#b0b0b8] tracking-wide">or continue with email</span>
+            <div className="h-px flex-1 bg-[#e5e5ea]" />
+          </div>
+
+          {/* Email Form */}
+          <form onSubmit={handleRegister} className="space-y-3">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
               required
-              className="w-full h-14 bg-[#f5f5f7] hover:bg-[#ebebeb] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-2xl px-5 text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] transition-all outline-none border border-transparent"
+              autoComplete="name"
+              className="w-full h-12 bg-[#f5f5f7] hover:bg-[#ebebeb] focus:bg-white focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] rounded-xl px-4 text-[14px] text-[#1d1d1f] placeholder:text-[#b0b0b8] transition-all outline-none border border-transparent"
             />
             <input
               type="email"
@@ -100,7 +208,8 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address"
               required
-              className="w-full h-14 bg-[#f5f5f7] hover:bg-[#ebebeb] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-2xl px-5 text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] transition-all outline-none border border-transparent"
+              autoComplete="email"
+              className="w-full h-12 bg-[#f5f5f7] hover:bg-[#ebebeb] focus:bg-white focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] rounded-xl px-4 text-[14px] text-[#1d1d1f] placeholder:text-[#b0b0b8] transition-all outline-none border border-transparent"
             />
             <input
               type="password"
@@ -109,66 +218,49 @@ export default function RegisterPage() {
               placeholder="Password"
               required
               minLength={6}
-              className="w-full h-14 bg-[#f5f5f7] hover:bg-[#ebebeb] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-2xl px-5 text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] transition-all outline-none border border-transparent"
+              autoComplete="new-password"
+              className="w-full h-12 bg-[#f5f5f7] hover:bg-[#ebebeb] focus:bg-white focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] rounded-xl px-4 text-[14px] text-[#1d1d1f] placeholder:text-[#b0b0b8] transition-all outline-none border border-transparent"
             />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading === "credentials" || !email || !password || !name}
-            className="group relative w-full h-14 bg-[#0071e3] hover:bg-[#0077ED] disabled:bg-[#0071e3]/60 disabled:cursor-not-allowed text-white rounded-2xl font-semibold text-[15px] transition-all flex items-center justify-center overflow-hidden"
-          >
-            <span className={`transition-transform duration-300 ${isLoading === "credentials" ? "translate-y-[-150%]" : "translate-y-0"}`}>
-              Sign up with Email
-            </span>
-            {isLoading === "credentials" && (
-              <span className="absolute inset-0 flex items-center justify-center">
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </span>
-            )}
-          </button>
-        </form>
 
-        <div className="mt-8 mb-8 flex items-center justify-center gap-4">
-          <div className="h-[1px] w-full bg-[#d2d2d7]/50" />
-          <span className="text-[13px] font-semibold text-[#86868b] uppercase tracking-wider">or</span>
-          <div className="h-[1px] w-full bg-[#d2d2d7]/50" />
-        </div>
+            <button
+              type="submit"
+              disabled={isLoading === "credentials" || !email || !password || !name}
+              className="w-full h-12 bg-[#0071e3] hover:bg-[#0077ED] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-[14px] transition-all flex items-center justify-center active:scale-[0.98] shadow-[0_2px_8px_rgba(0,113,227,0.25)] hover:shadow-[0_4px_14px_rgba(0,113,227,0.35)]"
+            >
+              {isLoading === "credentials" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Create account"
+              )}
+            </button>
+          </form>
 
-        <div className="space-y-3">
-          <button
-            onClick={() => handleOAuthSignIn("google")}
-            disabled={isLoading !== null}
-            className="w-full h-14 bg-white hover:bg-[#f5f5f7] border border-[#d2d2d7] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl text-[15px] font-semibold text-[#1d1d1f] flex items-center justify-center gap-3 transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-          </button>
-          
-          <button
-            onClick={() => handleOAuthSignIn("github")}
-            disabled={isLoading !== null}
-            className="w-full h-14 bg-white hover:bg-[#f5f5f7] border border-[#d2d2d7] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl text-[15px] font-semibold text-[#1d1d1f] flex items-center justify-center gap-3 transition-colors"
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.24c3-.34 6-1.53 6-6.76a5.5 5.5 0 0 0-1.5-3.89 5.06 5.06 0 0 0-.14-3.82s-1.18-.38-3.9 1.46a13.38 13.38 0 0 0-7 0C4.68 1.14 3.5 1.52 3.5 1.52a5.06 5.06 0 0 0-.14 3.82A5.5 5.5 0 0 0 1.86 9.24c0 5.22 3 6.42 6 6.76-.73.66-1 1.76-1 2.94v4.32"></path>
-            </svg>
-            Continue with GitHub
-          </button>
-        </div>
-        
-        <div className="mt-8 text-center">
-          <p className="text-[13px] text-[#86868b]">
-            Already have an account? <a href="/login" className="text-[#0071e3] hover:underline hover:text-[#0077ED] font-medium">Sign in <ArrowRight className="inline-block w-3 h-3 ml-0.5" /></a>
+          {/* Terms */}
+          <p className="mt-4 text-center text-[11px] text-[#b0b0b8] leading-relaxed">
+            By creating an account you agree to our{" "}
+            <Link href="/terms" className="underline hover:text-[#86868b] transition-colors">Terms</Link>
+            {" "}and{" "}
+            <Link href="/privacy" className="underline hover:text-[#86868b] transition-colors">Privacy Policy</Link>.
           </p>
+
+          {/* Footer */}
+          <p className="mt-5 text-center text-[13px] text-[#86868b]">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="text-[#0071e3] font-semibold hover:text-[#0077ED] transition-colors inline-flex items-center gap-0.5"
+            >
+              Sign in
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </p>
+        </div>
+
+        {/* ── Trust Pills below card ─────────────────────────────────────── */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+          <StatPill value="20+" label="job platforms" />
+          <StatPill value="98%" label="ATS pass rate" />
+          <StatPill value="Free" label="forever" />
         </div>
       </div>
     </div>
