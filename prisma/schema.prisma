@@ -133,6 +133,7 @@ model Profile {
   applications   Application[]
   matchScores    MatchScore[]
   resumeVariants ResumeVariant[]
+  autopilotFills AutopilotFill[]
 
   userId         String? @unique
   user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -389,6 +390,24 @@ model ResumeVariant {
   @@unique([profileId, name])
   @@index([profileId])
   @@map("resume_variants")
+}
+
+model AutopilotFill {
+  id           String   @id @default(uuid())
+  profileId    String
+  siteUrl      String
+  company      String?
+  jobTitle     String?
+  fieldsTotal  Int
+  fieldsFilled Int
+  hasAiAnswers Boolean  @default(false)
+  filledAt     DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([filledAt])
+  @@map("autopilot_fills")
 }
 
 model SchedulerRun {

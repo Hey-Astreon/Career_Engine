@@ -7,6 +7,7 @@ import {
   FileText, RefreshCw, AlertTriangle, CheckCircle2,
   ChevronDown, ChevronUp,
 } from "lucide-react";
+import AstrePilotCard from "@/components/AstrePilotCard";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -522,6 +523,15 @@ export default function SettingsPage() {
           </div>
 
         </div>
+
+        {/* ── AstrePilot Section ───────────────────────────────────────── */}
+        <div className="mt-10">
+          <p className="ce-page-eyebrow mb-1">Automation</p>
+          <h2 className="text-[18px] font-bold tracking-tight text-[var(--ink)] mb-1">AstrePilot</h2>
+          <p className="text-[12px] text-[var(--muted)] mb-4">Intelligent autofill for job application forms — powered by your AstreWork profile.</p>
+          <AstrePilotCard />
+        </div>
+
       </main>
     </div>
   );
