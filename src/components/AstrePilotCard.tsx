@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink } from "lucide-react";
+import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy } from "lucide-react";
 
 interface Stats {
   fills: number;
@@ -29,6 +29,7 @@ export default function AstrePilotCard() {
   const [regenLoading, setRegenLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedBookmarklet, setCopiedBookmarklet] = useState(false);
 
   const loadToken = useCallback(async () => {
     setLoadingToken(true);
@@ -80,6 +81,13 @@ export default function AstrePilotCard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCopyBookmarklet = async () => {
+    if (!bookmarkletHref || bookmarkletHref === "#") return;
+    await navigator.clipboard.writeText(bookmarkletHref);
+    setCopiedBookmarklet(true);
+    setTimeout(() => setCopiedBookmarklet(false), 2500);
+  };
+
   const isConnected = Boolean(token);
 
   return (
@@ -125,7 +133,7 @@ export default function AstrePilotCard() {
               {
                 n: "1",
                 title: "Save your AstrePilot bookmark",
-                desc: "Drag the button on the right into your browser's bookmarks bar.",
+                desc: "Drag the button → OR → click \"Copy Bookmarklet\", then right-click your bookmarks bar → Add Page → paste as URL.",
               },
               {
                 n: "2",
@@ -182,6 +190,18 @@ export default function AstrePilotCard() {
                     AstrePilot
                   </a>
                 </div>
+                {/* Copy bookmarklet for Chrome/Edge manual install */}
+                <button
+                  onClick={handleCopyBookmarklet}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--blue)] hover:text-[var(--ink)] bg-[var(--blue-soft)] hover:bg-[var(--line)] border border-[var(--blue)]/20 rounded-lg px-3 py-1.5 transition-all w-full justify-center"
+                  title="For Chrome: copy this, then right-click bookmarks bar → Add Page → paste as URL"
+                >
+                  {copiedBookmarklet ? (
+                    <><Check className="w-3 h-3 text-[var(--green)]" /><span className="text-[var(--green)]">Copied! Paste as bookmark URL</span></>
+                  ) : (
+                    <><Copy className="w-3 h-3" />Copy Bookmarklet Code</>  
+                  )}
+                </button>
                 <div className="text-[10px] text-[var(--muted)] text-center leading-relaxed">
                   Your profile is securely embedded.
                   <br />Token expires in 90 days.
