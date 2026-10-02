@@ -181,7 +181,7 @@ function ProfileIdentityCard() {
       </label>
       <input
         type={type}
-        value={form[field]}
+        value={form[field] as string}
         onChange={(e) => setForm({ ...form, [field]: e.target.value })}
         placeholder={placeholder}
         className="w-full h-10 px-3 text-[13px] rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] focus:bg-white focus:border-[var(--blue)] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all text-[var(--ink)]"
