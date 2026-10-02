@@ -15,16 +15,18 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    const { fullName, targetHeadline, location, email, phone, linkedinUrl, portfolioUrl, githubUrl } = body;
+    const {
+      fullName, targetHeadline, location, email, phone,
+      linkedinUrl, portfolioUrl, githubUrl,
+      // New AstrePilot brain fields
+      careerStage, yearsOfExperience, workType, salaryRange,
+      workAuthorized, requiresVisa, targetCountries, primarySkills,
+    } = body;
 
-    // Validate required fields
     if (!fullName || !targetHeadline) {
       return NextResponse.json(
         { message: "Full Name and Target Headline are required" },
@@ -32,44 +34,44 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user already has a profile
+    const profileData = {
+      fullName,
+      title: targetHeadline,
+      location: location || "Remote",
+      email: email || session.user.email || "",
+      phone: phone || null,
+      linkedinUrl: linkedinUrl || null,
+      portfolioUrl: portfolioUrl || null,
+      githubUrl: githubUrl || null,
+      // AstrePilot brain fields
+      careerStage: careerStage || null,
+      yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : null,
+      workType: workType || null,
+      salaryRange: salaryRange || null,
+      workAuthorized: workAuthorized !== false, // default true
+      requiresVisa: requiresVisa === true,
+      targetCountries: targetCountries ? JSON.stringify(targetCountries) : null,
+      primarySkills: primarySkills ? JSON.stringify(primarySkills) : null,
+    };
+
     const existingProfile = await db.profile.findUnique({
       where: { userId: session.user.id },
     });
 
     if (existingProfile) {
-      // Update existing profile
       const updatedProfile = await db.profile.update({
         where: { userId: session.user.id },
-        data: {
-          fullName,
-          title: targetHeadline,
-          location: location || "Remote",
-          email: email || session.user.email || "",
-          phone: phone || null,
-          linkedinUrl: linkedinUrl || null,
-          portfolioUrl: portfolioUrl || null,
-          githubUrl: githubUrl || null,
-        },
+        data: profileData,
       });
-
       return NextResponse.json({ profile: updatedProfile });
     }
 
-    // Create new profile
     const newProfile = await db.profile.create({
       data: {
         userId: session.user.id,
         slug: generateSlug(fullName),
-        fullName,
-        title: targetHeadline,
-        location: location || "Remote",
-        email: email || session.user.email || "",
-        phone: phone || null,
-        linkedinUrl: linkedinUrl || null,
-        portfolioUrl: portfolioUrl || null,
-        githubUrl: githubUrl || null,
-        masterResumePath: "/resumes/placeholder.pdf", // Placeholder for now
+        masterResumePath: "/resumes/placeholder.pdf",
+        ...profileData,
       },
     });
 

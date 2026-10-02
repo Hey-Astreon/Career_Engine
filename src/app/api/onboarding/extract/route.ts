@@ -25,29 +25,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Could not extract sufficient text from PDF." }, { status: 400 });
     }
 
-    // AI Extraction System Prompt
-    const systemPrompt = `You are a professional resume parser. You will receive the raw text of a candidate's resume.
-Your task is to extract the data into a strict JSON format matching our OptimizedResume schema.
-Extract their Full Name, current or target Job Title, Location, Email, Phone, and URLs.
-Do NOT invent information. If something is missing, leave it as an empty string.
+    const systemPrompt = `You are a professional resume parser. Extract structured data from the raw resume text provided.
 
-REQUIRED JSON SCHEMA:
+CRITICAL RULES — follow strictly to avoid hallucinations:
+1. ONLY extract information that is explicitly present in the resume text.
+2. If a field cannot be determined with HIGH confidence, output null for that field.
+3. For careerStage detection: use concrete evidence ONLY (graduation year, job titles, years of experience listed). 
+   - "student" = currently enrolled in college/university, no full-time jobs listed
+   - "fresher" = graduated within last 1 year, 0-1 years of experience or internships only
+   - "junior" = 1-3 years of professional experience
+   - "mid" = 3-7 years of professional experience
+   - "senior" = 7+ years of professional experience or "Senior", "Lead", "Principal" in title
+   - If unclear, return null — NEVER guess.
+4. For yearsOfExperience: Calculate from work history dates if present. Return integer. Null if not determinable.
+5. For primarySkills: Extract only explicitly listed technical skills (languages, frameworks, tools). Max 10.
+6. For salaryRange: Return null unless explicitly stated in resume.
+7. For workType: Return null unless explicitly mentioned ("remote", "hybrid", "onsite" preference).
+
+OUTPUT (strict JSON, no markdown):
 {
   "header": {
-    "fullName": "Extracted Name",
-    "targetHeadline": "Extracted Title",
-    "location": "Extracted Location",
-    "phone": "Extracted Phone",
-    "email": "Extracted Email",
-    "portfolioUrl": "Extracted Portfolio URL",
-    "githubUrl": "Extracted Github URL",
-    "linkedinUrl": "Extracted Linkedin URL"
+    "fullName": "string or null",
+    "targetHeadline": "string or null",
+    "location": "string or null",
+    "phone": "string or null",
+    "email": "string or null",
+    "portfolioUrl": "string or null",
+    "githubUrl": "string or null",
+    "linkedinUrl": "string or null"
+  },
+  "career": {
+    "careerStage": "student|fresher|junior|mid|senior or null",
+    "yearsOfExperience": "integer or null",
+    "primarySkills": ["skill1", "skill2"] or [],
+    "workType": "remote|hybrid|onsite or null",
+    "salaryRange": "string or null",
+    "workAuthorized": true
   }
 }`;
 
-    const userPrompt = `Here is the raw resume text:\n\n${rawText}`;
+    const userPrompt = `Resume text:\n\n${rawText}`;
 
-    // Use existing multi-provider router
     const result = await queryMultiProviderLLM(systemPrompt, userPrompt, true);
 
     if (!result.text) {
@@ -56,7 +74,9 @@ REQUIRED JSON SCHEMA:
 
     let parsedData;
     try {
-      parsedData = JSON.parse(result.text);
+      // Strip markdown code fences if present
+      const cleaned = result.text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+      parsedData = JSON.parse(cleaned);
     } catch {
       return NextResponse.json({ error: "AI returned malformed data. Please try again." }, { status: 422 });
     }
@@ -67,3 +87,4 @@ REQUIRED JSON SCHEMA:
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

@@ -77,8 +77,15 @@ export async function GET(req: Request) {
         githubUrl: profile.githubUrl ?? "",
         portfolioUrl: profile.portfolioUrl ?? "",
         professionalSummary,
-        workAuthorized: true,
-        requiresVisa: false,
+        // AstrePilot brain fields
+        careerStage: profile.careerStage ?? null,
+        yearsOfExperience: profile.yearsOfExperience ?? null,
+        workType: profile.workType ?? "remote",
+        salaryRange: profile.salaryRange ?? null,
+        workAuthorized: profile.workAuthorized ?? true,
+        requiresVisa: profile.requiresVisa ?? false,
+        targetCountries: profile.targetCountries ? JSON.parse(profile.targetCountries) : [],
+        primarySkills: profile.primarySkills ? JSON.parse(profile.primarySkills) : [],
         // Raw context for AI answer generation
         _context: {
           projects: profile.projects.map((p) => ({
