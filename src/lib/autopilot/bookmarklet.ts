@@ -106,6 +106,22 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     'color:#60a5fa;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:600;',
     'cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}',
     '#ap-redo:hover{background:rgba(59,130,246,0.12);}',
+
+    /* Source badges */
+    '.ap-badge{font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;letter-spacing:0.04em;flex-shrink:0;}',
+    '.ap-badge-profile{color:#94a3b8;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);}',
+    '.ap-badge-session{color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);}',
+    '.ap-badge-ai{color:#c084fc;background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.2);}',
+    '.ap-value-ai{color:#c084fc !important;font-style:italic;}',
+
+    /* Autofill button */
+    '#ap-autofill{background:linear-gradient(135deg,#1d5fd1,#3b82f6);border:none;',
+    'color:#fff;border-radius:8px;padding:5px 13px;font-size:11px;font-weight:700;',
+    'cursor:pointer;letter-spacing:0.03em;transition:all 0.2s;',
+    'box-shadow:0 0 0 0 rgba(59,130,246,0.5);animation:ap-glow 1.8s ease-in-out infinite;}',
+    '#ap-autofill:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,130,246,0.45);}',
+    '#ap-autofill:disabled{animation:none;box-shadow:none;}',
+    '@keyframes ap-glow{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.5);}50%{box-shadow:0 0 0 6px rgba(59,130,246,0);}}',
   ].join('');
   document.head.appendChild(styleEl);
 
@@ -428,6 +444,67 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     }
   }
 
+  /* ── SOURCE BADGE HELPER ─────────────────────────────────────────── */
+  function getSource(fieldType, session) {
+    if (fieldType === 'COVER_LETTER' || fieldType === 'SCREENING') return 'ai';
+    if (fieldType === 'TITLE' || fieldType === 'SUMMARY' || fieldType === 'SALARY') {
+      return session ? 'session' : 'profile';
+    }
+    return 'profile';
+  }
+
+  /* ── PREVIEW VALUE (sync — no AI calls) ──────────────────────────── */
+  function resolvePreview(field, profile, session) {
+    switch(field.type) {
+      case 'FIRST_NAME':  return profile.firstName  || null;
+      case 'LAST_NAME':   return profile.lastName   || null;
+      case 'FULL_NAME':   return profile.fullName   || null;
+      case 'EMAIL':       return profile.email      || null;
+      case 'PHONE':       return profile.phone      || null;
+      case 'LOCATION':    return profile.location   || null;
+      case 'LINKEDIN':    return profile.linkedinUrl || null;
+      case 'GITHUB':      return profile.githubUrl  || null;
+      case 'PORTFOLIO':   return profile.portfolioUrl || null;
+      case 'TITLE':       return session ? session.jobTitle : (profile.title || null);
+      case 'SUMMARY':     return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
+      case 'SALARY':      return session ? (session.salaryRange || null) : (profile.salaryRange || null);
+      case 'COVER_LETTER':return null; /* AI — filled at runtime */
+      case 'SCREENING':   return null; /* AI — filled at runtime */
+      default: return null;
+    }
+  }
+
+  /* ── RENDER PREVIEW LIST ─────────────────────────────────────────── */
+  function renderPreviewList(previews) {
+    list.innerHTML = '';
+    rowEls = {};
+    previews.forEach(function(p) {
+      var f = p.field;
+      var src = p.source; /* 'profile' | 'session' | 'ai' */
+      var row = el('div', { className: 'ap-row', id: 'ap-row-' + f.id });
+      var icon = el('div', { className: 'ap-icon' }, [TYPE_ICONS[f.type] || '·']);
+      var label = el('div', { className: 'ap-row-label ap-label-active' }, [TYPE_LABELS[f.type] || f.type]);
+      var badge;
+      if (src === 'ai') {
+        badge = el('div', { className: 'ap-badge ap-badge-ai' }, ['AI']);
+      } else if (src === 'session') {
+        badge = el('div', { className: 'ap-badge ap-badge-session' }, ['Session']);
+      } else {
+        badge = el('div', { className: 'ap-badge ap-badge-profile' }, ['Profile']);
+      }
+      var valueEl = el('div', { className: src === 'ai' ? 'ap-row-value ap-value-ai' : 'ap-row-value' },
+        [src === 'ai' ? '✦ AI answer' : (p.value ? p.value.slice(0, 18) : '—')]);
+      var statusEl = el('div', { className: 'ap-pending' }, ['○']);
+      row.appendChild(icon);
+      row.appendChild(label);
+      row.appendChild(badge);
+      row.appendChild(valueEl);
+      row.appendChild(statusEl);
+      list.appendChild(row);
+      rowEls[f.id] = { row, label, value: valueEl, status: statusEl };
+    });
+  }
+
   /* ── MAIN EXECUTION ──────────────────────────────────────────────── */
   setStatus('Connecting to AstreWork…', 'loading');
 
@@ -437,7 +514,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     var profileRes = await apFetch('/profile');
     if (!profileRes.ok) throw new Error('auth');
     profile = await profileRes.json();
-    
+
     var sessionRes = await apFetch('/session');
     if (sessionRes.ok) {
       var sessData = await sessionRes.json();
@@ -445,90 +522,139 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     }
   } catch(e) {
     setStatus('⚠ Could not connect. Check your token.', 'error');
-    document.getElementById('ap-dot').style.background = '#ef4444';
-    document.getElementById('ap-dot').style.animation = 'none';
+    var dot0 = document.getElementById('ap-dot');
+    dot0.style.background = '#ef4444';
+    dot0.style.animation = 'none';
     return;
   }
 
+  /* Update tag with session info */
   if (session) {
     var tag = document.getElementById('ap-tag');
     tag.textContent = 'PRIMED: ' + (session.company || 'JOB').toUpperCase();
-    tag.style.background = 'rgba(34, 197, 94, 0.12)';
+    tag.style.background = 'rgba(34,197,94,0.12)';
     tag.style.color = '#4ade80';
-    tag.style.borderColor = 'rgba(34, 197, 94, 0.2)';
+    tag.style.borderColor = 'rgba(34,197,94,0.2)';
   }
 
-  setStatus('Scanning fields…', 'loading');
+  /* ── PHASE 1: SCAN + PREVIEW ─────────────────────────────────────── */
+  setStatus('Scanning page…', 'loading');
   var fields = scanFields();
 
   if (fields.length === 0) {
     setStatus('No fillable fields found on this page.', 'error');
+    var dot1 = document.getElementById('ap-dot');
+    dot1.style.background = '#ef4444';
+    dot1.style.animation = 'none';
     return;
   }
 
-  renderFieldList(fields);
-  setStatus('Filling ' + fields.length + ' fields…', 'loading');
-  setProgress(0, fields.length);
+  /* Resolve all non-AI values synchronously for instant preview */
+  var previews = fields.map(function(f) {
+    return { field: f, value: resolvePreview(f, profile, session), source: getSource(f.type, session) };
+  });
 
-  var filled = 0;
-  var hadAI = false;
+  var aiCount = previews.filter(function(p) { return p.source === 'ai'; }).length;
+  var dataCount = previews.filter(function(p) { return p.value; }).length;
 
-  for (var i = 0; i < fields.length; i++) {
-    var f = fields[i];
-    markActive(f);
+  renderPreviewList(previews);
 
-    if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') { hadAI = true; }
+  setStatus('Ready — ' + fields.length + ' fields detected', 'done');
+  var dot2 = document.getElementById('ap-dot');
+  dot2.style.background = '#22c55e';
+  dot2.style.animation = 'none';
 
-    var value = await resolveValue(f, profile, session);
-    var skipped = !value || value.trim() === '';
+  /* Update footer to show AUTOFILL button */
+  var countEl = document.getElementById('ap-count');
+  countEl.textContent = dataCount + ' instant' + (aiCount > 0 ? ', ' + aiCount + ' AI' : '');
+  countEl.className = 'ap-count-idle';
 
-    if (!skipped) {
-      await decodeFill(f.element, value, function(v) { updateRowValue(f, v); });
-      filled++;
+  /* Inject Autofill button */
+  var autofillBtn = el('button', { id: 'ap-autofill' }, ['⚡ Autofill']);
+  document.getElementById('ap-footer').insertBefore(autofillBtn, document.getElementById('ap-redo'));
+
+  /* ── PHASE 2: FILL (triggered on click) ─────────────────────────── */
+  var fillStarted = false;
+  autofillBtn.addEventListener('click', async function() {
+    if (fillStarted) return;
+    fillStarted = true;
+
+    autofillBtn.disabled = true;
+    autofillBtn.textContent = 'Filling…';
+    autofillBtn.style.opacity = '0.6';
+    autofillBtn.style.cursor = 'default';
+
+    /* Reset pulse dot */
+    var dotFill = document.getElementById('ap-dot');
+    dotFill.style.background = '#3b82f6';
+    dotFill.style.animation = '';
+    dotFill.className = '';
+
+    setStatus('Filling ' + fields.length + ' fields…', 'loading');
+    setProgress(0, fields.length);
+
+    var filled = 0;
+    var hadAI = false;
+
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      markActive(f);
+
+      var isAI = (f.type === 'COVER_LETTER' || f.type === 'SCREENING');
+      if (isAI) { hadAI = true; }
+
+      var value = await resolveValue(f, profile, session);
+      var skipped = !value || value.trim() === '';
+
+      if (!skipped) {
+        await decodeFill(f.element, value, function(v) { updateRowValue(f, v); });
+        filled++;
+      }
+
+      updateRowValue(f, skipped ? '' : value);
+      markDone(f, skipped);
+      setProgress(filled, fields.length);
+      setCount(filled, fields.length);
+
+      await new Promise(function(r) { setTimeout(r, 120); });
     }
 
-    updateRowValue(f, skipped ? '' : value);
-    markDone(f, skipped);
-    setProgress(filled, fields.length);
-    setCount(filled, fields.length);
+    /* ── LOG ─────────────────────────────────────────────────────── */
+    var siteInfo = { siteUrl: window.location.href, company: '', jobTitle: '' };
+    var titleMatch = document.title.match(/(.+?)\s*[|\-–—]\s*(.+)/);
+    if (titleMatch) {
+      siteInfo.jobTitle = titleMatch[1].trim().slice(0, 150);
+      siteInfo.company  = titleMatch[2].trim().slice(0, 100);
+    }
+    try {
+      await apFetch('/log', {
+        method: 'POST',
+        body: JSON.stringify({
+          siteUrl: siteInfo.siteUrl,
+          company: session ? session.company : siteInfo.company,
+          jobTitle: session ? session.jobTitle : siteInfo.jobTitle,
+          fieldsTotal: fields.length,
+          fieldsFilled: filled,
+          hasAiAnswers: hadAI,
+        }),
+      });
+    } catch(e) { /* silent */ }
 
-    /* Small delay between fields for visual clarity */
-    await new Promise(function(r) { setTimeout(r, 120); });
-  }
-
-  /* ── LOG TO ASTREWORK ────────────────────────────────────────────── */
-  var siteInfo = { siteUrl: window.location.href, company: '', jobTitle: '' };
-  var titleMatch = document.title.match(/(.+?)\\s*[\\|\\-–—]\\s*(.+)/);
-  if (titleMatch) {
-    siteInfo.jobTitle = titleMatch[1].trim().slice(0, 150);
-    siteInfo.company  = titleMatch[2].trim().slice(0, 100);
-  }
-  try {
-    await apFetch('/log', {
-      method: 'POST',
-      body: JSON.stringify({
-        siteUrl: siteInfo.siteUrl,
-        company: siteInfo.company,
-        jobTitle: siteInfo.jobTitle,
-        fieldsTotal: fields.length,
-        fieldsFilled: filled,
-        hasAiAnswers: hadAI,
-      }),
-    });
-  } catch(e) { /* silent — logging failure should not affect UX */ }
-
-  /* ── DONE ────────────────────────────────────────────────────────── */
-  setStatus('✦ ' + filled + ' / ' + fields.length + ' fields filled', 'done');
-  document.getElementById('ap-dot').style.background = '#22c55e';
-  document.getElementById('ap-dot').style.animation = 'none';
-  setProgress(fields.length, fields.length);
+    /* ── DONE ────────────────────────────────────────────────────── */
+    setStatus('✦ ' + filled + ' / ' + fields.length + ' filled', 'done');
+    var dotDone = document.getElementById('ap-dot');
+    dotDone.style.background = '#22c55e';
+    dotDone.style.animation = 'none';
+    setProgress(fields.length, fields.length);
+    autofillBtn.style.display = 'none';
+  });
 
   document.getElementById('ap-redo').addEventListener('click', function() {
     hud.remove(); styleEl.remove();
-    /* Re-trigger by re-evaluating the bookmarklet */
   });
 
 })();`;
+
 
 /**
  * Build the complete bookmarklet javascript: href for a given token.
