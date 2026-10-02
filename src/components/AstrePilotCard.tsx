@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy } from "lucide-react";
+import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy, BrainCircuit } from "lucide-react";
 
 interface Stats {
   fills: number;
@@ -20,11 +20,18 @@ interface FillRecord {
   filledAt: string;
 }
 
+interface SessionRecord {
+  company: string | null;
+  jobTitle: string | null;
+  createdAt: string;
+}
+
 export default function AstrePilotCard() {
   const [token, setToken] = useState<string | null>(null);
   const [bookmarkletHref, setBookmarkletHref] = useState<string>("#");
   const [stats, setStats] = useState<Stats>({ fills: 0, fields: 0, hoursSaved: 0 });
   const [history, setHistory] = useState<FillRecord[]>([]);
+  const [session, setSession] = useState<SessionRecord | null>(null);
   const [loadingToken, setLoadingToken] = useState(true);
   const [regenLoading, setRegenLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -53,13 +60,21 @@ export default function AstrePilotCard() {
   const loadStats = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch("/api/autopilot/log", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setStats(data.stats);
-      setHistory(data.history ?? []);
+      const [statsRes, sessionRes] = await Promise.all([
+        fetch("/api/autopilot/log", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("/api/autopilot/session", { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      
+      if (statsRes.ok) {
+        const data = await statsRes.json();
+        setStats(data.stats);
+        setHistory(data.history ?? []);
+      }
+      
+      if (sessionRes.ok) {
+        const sData = await sessionRes.json();
+        setSession(sData.session || null);
+      }
     } catch {
       /* silent */
     }
@@ -172,6 +187,30 @@ export default function AstrePilotCard() {
             </div>
           ) : token ? (
             <>
+              {/* Brain Context Indicator */}
+              {session ? (
+                <div className="w-full bg-[var(--green-soft)] border border-[var(--green)]/20 rounded-xl p-3 flex items-start gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--green)]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <BrainCircuit className="w-4 h-4 text-[var(--green)]" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold tracking-widest text-[var(--green)] uppercase mb-0.5">Brain Primed</div>
+                    <div className="text-[13px] font-bold text-[var(--ink)] leading-tight">{session.company || "Company"}</div>
+                    <div className="text-[11px] text-[var(--muted)] truncate max-w-[200px]">{session.jobTitle || "Job Role"}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full bg-[var(--surface-muted)] border border-[var(--line)] rounded-xl p-3 flex items-start gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--line)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <BrainCircuit className="w-4 h-4 text-[var(--muted)]" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold tracking-widest text-[var(--muted)] uppercase mb-0.5">Brain Empty</div>
+                    <div className="text-[11px] text-[var(--muted)] leading-snug">Use Custom JD Mode to prime AstrePilot for a specific role.</div>
+                  </div>
+                </div>
+              )}
+
               {/* Draggable bookmarklet button */}
               <div className="flex flex-col items-center gap-2 w-full">
                 <div className="text-[10px] text-[var(--muted)] font-medium">
