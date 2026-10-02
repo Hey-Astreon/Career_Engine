@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   getMasterResumeBaseline,
@@ -65,6 +67,34 @@ export async function POST(req: Request) {
       optimizedResume.targetCompany = company;
     }
 
+    // FIRE & FORGET: Save AstrePilot session for the logged-in user
+    // This is separate from the slug-based save in optimizeResumeForJob
+    // because the slug lookup may fail; this uses the real auth session
+    try {
+      const authSession = await getServerSession(authOptions);
+      if (authSession?.user?.id && jobDescription.length > 20) {
+        const profile = await db.profile.findFirst({
+          where: { userId: authSession.user.id },
+          select: { id: true },
+        });
+        if (profile) {
+          await db.autopilotSession.create({
+            data: {
+              profileId: profile.id,
+              company,
+              jobTitle,
+              jdText: jobDescription,
+              tailoredSummary: optimizedResume.summary,
+              keySkills: JSON.stringify(optimizedResume.matchedKeywords ?? []),
+            }
+          });
+        }
+      }
+    } catch (sessionErr) {
+      console.error("[autopilot session save]", sessionErr);
+      // Non-fatal — resume optimization still returns successfully
+    }
+
     const markdown = renderResumeMarkdown(optimizedResume);
     const plaintext = renderResumePlaintext(optimizedResume);
 
@@ -82,3 +112,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+
