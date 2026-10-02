@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { discoveryScheduler } from "@/lib/scheduler";
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const isCron = searchParams.get("cron") === "true" || req.headers.get("x-vercel-cron") !== null;
+    const authHeader = req.headers.get("authorization");
+    const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}` || req.headers.get("x-vercel-cron") !== null;
 
     if (isCron) {
+      if (req.headers.get("x-vercel-cron") && process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        console.warn("Unauthorized cron attempt");
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      }
       console.log("[Scheduler] Executing scheduled discovery run via Vercel Cron");
       await discoveryScheduler.executeRun("SCHEDULED");
       return NextResponse.json({
@@ -14,6 +20,11 @@ export async function GET(req: Request) {
         message: "Vercel Cron scheduled run completed",
         status: discoveryScheduler.getStatus(),
       });
+    }
+
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const status = discoveryScheduler.getStatus();
@@ -26,6 +37,11 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
 
@@ -60,6 +76,11 @@ export async function POST(req: Request) {
 
 export async function DELETE() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     discoveryScheduler.stop();
     return NextResponse.json({ success: true, status: discoveryScheduler.getStatus() });
   } catch (error) {

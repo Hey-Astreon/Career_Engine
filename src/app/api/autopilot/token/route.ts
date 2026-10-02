@@ -32,10 +32,6 @@ export async function GET() {
     });
 
     if (!profile) {
-      profile = await db.profile.findFirst({ select: { id: true } });
-    }
-
-    if (!profile) {
       return NextResponse.json(
         { error: "No profile found. Complete onboarding first." },
         { status: 404, headers: CORS }

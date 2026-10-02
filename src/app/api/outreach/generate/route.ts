@@ -40,6 +40,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (profile.userId !== session.user.id) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not own this profile" },
+        { status: 403 }
+      );
+    }
+
     // 2. Fetch Job Posting
     const job = await db.jobPosting.findUnique({
       where: { id: jobPostingId },

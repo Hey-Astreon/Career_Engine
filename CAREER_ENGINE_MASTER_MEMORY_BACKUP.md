@@ -436,6 +436,14 @@ npm run dev
 - [x] **Phase 17: Workspace Navigation & Discovery Route Alignment**
   - **1. Discovery Route Mapping (`Sidebar.tsx`):** Fixed the "Discovery" navigation link in the candidate workspace sidebar from `"/"` (public landing page) to `"/dashboard"` (the authoritative discovery feed workspace).
   - **2. Sidebar Brand Logo Mapping (`Sidebar.tsx`):** Updated the workspace sidebar brand logo to navigate directly to `"/dashboard"` instead of kicking logged-in users out to the public landing page.
+- [x] **Phase 18: AstrePilot (HUD Autofill & AI Form Injector)**
+  - **1. Glassmorphic React Injection:** Integrated a draggable, glowing AI HUD directly into any external job application portal via bookmarklet. Features real-time state tracking, field resolution, and smooth UI animations.
+  - **2. AI Screening Intelligence:** Dynamic resolution of unknown textareas as "Screening Questions", intercepting DOM state and querying AstreWork's LLM router (`/api/autopilot/answer`) to auto-write contextual answers based on active candidate profiles and primed Application Kits.
+  - **3. Undo & State Safety:** High-visibility `ap-filled-field` CSS highlighting and a complete DOM state-revert (Undo) function preventing AI overwrites from permanently damaging manual form entries. Dispatches `input`/`change` events for React/Vue SPA forms.
+- [x] **Phase 19: The "Bug Bounty" API Security & Isolation Audit**
+  - **1. Complete API Lockdown:** Audited all 45+ endpoints. Closed massive zero-day vulnerabilities in `api/jobs/scrape` and `api/scheduler` by enforcing `getServerSession` and `CRON_SECRET` validation, preventing unauthorized pipeline triggers and DoS attacks.
+  - **2. Strict Multi-Tenant Data Isolation:** Patched `jobs/feed-scores`, `jobs/match`, `jobs/kit`, `outreach/generate`, `resume/variants`, and `applications/route` to strictly validate `profile.userId === session.user.id`. Impossible to spoof or extract foreign profiles.
+  - **3. Hallucination Containment:** Upgraded the AstrePilot `autopilot/answer` system prompt with stringent constraints preventing the AI from fabricating companies, job titles, metrics, or credentials not explicitly found in the profile context.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.

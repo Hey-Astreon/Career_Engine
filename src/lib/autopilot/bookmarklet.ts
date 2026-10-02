@@ -104,10 +104,10 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     'padding:9px 14px;border-top:1px solid rgba(255,255,255,0.05);}',
     '#ap-count{font-size:11px;font-weight:600;color:#22c55e;}',
     '#ap-count.ap-count-idle{color:#475569;}',
-    '#ap-redo{border:1px solid rgba(59,130,246,0.35);background:transparent;',
+    '#ap-action-btn{border:1px solid rgba(59,130,246,0.35);background:transparent;',
     'color:#60a5fa;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:600;',
     'cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}',
-    '#ap-redo:hover{background:rgba(59,130,246,0.12);}',
+    '#ap-action-btn:hover{background:rgba(59,130,246,0.12);}',
     '.ap-badge{font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;letter-spacing:0.04em;flex-shrink:0;}',
     '.ap-badge-profile{color:#94a3b8;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);}',
     '.ap-badge-session{color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);}',
@@ -120,6 +120,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     '#ap-autofill:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,130,246,0.45);}',
     '#ap-autofill:disabled{animation:none;box-shadow:none;}',
     '@keyframes ap-glow{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.5);}50%{box-shadow:0 0 0 6px rgba(59,130,246,0);}}',
+    '.ap-filled-field{box-shadow:0 0 0 2px rgba(59,130,246,0.8), 0 0 8px rgba(59,130,246,0.4) !important; transition:box-shadow 0.3s ease;}',
   ].join('');
   document.head.appendChild(styleEl);
 
@@ -141,7 +142,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   var list = el('div', { id: 'ap-list' });
   var footer = el('div', { id: 'ap-footer' }, [
     el('div', { id: 'ap-count', className: 'ap-count-idle' }, ['Ready']),
-    el('button', { id: 'ap-redo' }, ['↺ Redo']),
+    el('button', { id: 'ap-action-btn' }, ['Close']),
   ]);
   hud.appendChild(header);
   hud.appendChild(statusSection);
@@ -149,7 +150,13 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   hud.appendChild(footer);
   document.body.appendChild(hud);
 
-  document.getElementById('ap-close').addEventListener('click', function() { hud.remove(); styleEl.remove(); });
+  function closeHUD() {
+    if (typeof fields !== 'undefined' && fields.length) {
+      fields.forEach(function(f) { f.element.classList.remove('ap-filled-field'); });
+    }
+    hud.remove(); styleEl.remove();
+  }
+  document.getElementById('ap-close').addEventListener('click', closeHUD);
 
   /* ── DRAGGABLE ───────────────────────────────────────────────────── */
   (function makeDraggable() {
@@ -218,7 +225,8 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     { type: 'TITLE',        kw: ['headline','current_title','job_title','current_role','current_position'] },
     { type: 'COVER_LETTER', kw: ['cover_letter','coverletter','cover letter','motivation_letter','brief summary','cover note'] },
     { type: 'SUMMARY',      kw: ['summary','about_yourself','professional_summary','about you'] },
-    { type: 'WORK_AUTH',    kw: ['work_auth','work_authorization'] },
+    { type: 'WORK_AUTH',    kw: ['work_auth','work_authorization','authorized to work','legally authorized'] },
+    { type: 'VISA',         kw: ['visa','sponsorship','require sponsorship'] },
     { type: 'SALARY',       kw: ['salary','expected_salary','desired_salary','salary_expectation','compensation'] },
   ];
 
@@ -285,7 +293,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     /* Only scan explicit text-like inputs — no radio/checkbox/hidden/button */
     var inputs = document.querySelectorAll(
       'input[type=text], input[type=email], input[type=tel], input[type=url],\
-       input[type=number], input:not([type]), textarea, select'
+       input[type=number], input[type=radio], input:not([type]), textarea, select'
     );
     var results = [];
     var seenTypes = {};
@@ -308,13 +316,54 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
         seenTypes[type] = true;
       }
 
-      results.push({ element: inp, type: type, id: 'f' + Math.random().toString(36).slice(2,7) });
+      var origVal = (inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox')) ? inp.checked : inp.value;
+      results.push({ element: inp, type: type, id: 'f' + Math.random().toString(36).slice(2,7), originalValue: origVal });
     });
     return results;
   }
 
   /* ── NATIVE VALUE SETTER (works with React / Vue controlled inputs) */
   function setNativeValue(el, value) {
+    if (el.tagName === 'INPUT' && el.type === 'radio') {
+      var radios = document.querySelectorAll('input[type="radio"][name="' + el.name + '"]');
+      var target = null;
+      var valLower = String(value).toLowerCase();
+      for (var i = 0; i < radios.length; i++) {
+        var rVal = String(radios[i].value).toLowerCase();
+        var labelText = getLabelText(radios[i]).toLowerCase();
+        if (rVal === valLower || labelText.includes(valLower) || (valLower === 'yes' && (rVal==='true' || rVal==='1')) || (valLower === 'no' && (rVal==='false' || rVal==='0'))) {
+          target = radios[i];
+          break;
+        }
+      }
+      if (target) {
+        target.checked = true;
+        target.dispatchEvent(new Event('input',  { bubbles: true }));
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+    
+    if (el.tagName === 'SELECT') {
+      var valLower = String(value).toLowerCase();
+      var targetOpt = null;
+      for (var i = 0; i < el.options.length; i++) {
+        var opt = el.options[i];
+        var oVal = opt.value.toLowerCase();
+        var oText = opt.text.toLowerCase();
+        if (oVal === valLower || oText.includes(valLower) || (valLower === 'yes' && (oVal==='true' || oVal==='1')) || (valLower === 'no' && (oVal==='false' || oVal==='0'))) {
+          targetOpt = opt;
+          break;
+        }
+      }
+      if (targetOpt) {
+        el.value = targetOpt.value;
+        el.dispatchEvent(new Event('input',  { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
     var proto = el.tagName === 'TEXTAREA'
       ? window.HTMLTextAreaElement.prototype
       : window.HTMLInputElement.prototype;
@@ -328,11 +377,20 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   /* ── DECODE FILL ANIMATION ───────────────────────────────────────── */
   var CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@._-+#$';
   function decodeFill(inputEl, targetValue, onUpdate) {
+    if (inputEl.tagName === 'SELECT' || (inputEl.tagName === 'INPUT' && inputEl.type === 'radio')) {
+      return new Promise(function(resolve) {
+        setNativeValue(inputEl, targetValue);
+        if (onUpdate) onUpdate(targetValue);
+        resolve();
+      });
+    }
+
     return new Promise(function(resolve) {
       var iteration = 0;
-      var length = targetValue.length;
+      var length = String(targetValue).length;
+      var strValue = String(targetValue);
       var interval = setInterval(function() {
-        var display = targetValue.split('').map(function(char, i) {
+        var display = strValue.split('').map(function(char, i) {
           if (char === ' ' || char === '\\n') return char;
           if (i < Math.floor(iteration)) return char;
           return CHARSET[Math.floor(Math.random() * CHARSET.length)];
@@ -355,14 +413,14 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   var TYPE_ICONS = {
     FIRST_NAME:'👤', LAST_NAME:'👤', FULL_NAME:'👤', EMAIL:'✉', PHONE:'📞',
     LOCATION:'📍', LINKEDIN:'🔗', GITHUB:'🐙', PORTFOLIO:'🌐', TITLE:'💼',
-    COVER_LETTER:'📝', SUMMARY:'📄', WORK_AUTH:'✅', SALARY:'💰', SCREENING:'❓',
+    COVER_LETTER:'📝', SUMMARY:'📄', WORK_AUTH:'✅', VISA:'🛂', SALARY:'💰', SCREENING:'❓',
   };
   var TYPE_LABELS = {
     FIRST_NAME:'First Name', LAST_NAME:'Last Name', FULL_NAME:'Full Name',
     EMAIL:'Email Address', PHONE:'Phone Number', LOCATION:'Location',
     LINKEDIN:'LinkedIn URL', GITHUB:'GitHub URL', PORTFOLIO:'Portfolio URL',
     TITLE:'Job Title', COVER_LETTER:'Cover Letter', SUMMARY:'Summary',
-    WORK_AUTH:'Work Authorization', SALARY:'Salary', SCREENING:'Screening Q',
+    WORK_AUTH:'Work Authorization', VISA:'Visa Sponsorship', SALARY:'Salary', SCREENING:'Screening Q',
   };
   var rowEls = {};
 
@@ -421,7 +479,8 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       case 'PORTFOLIO':     return profile.portfolioUrl;
       case 'TITLE':         return session ? session.jobTitle : profile.title;
       case 'SUMMARY':       return session ? session.tailoredSummary : profile.professionalSummary;
-      case 'WORK_AUTH':     return null; /* handled as checkbox/select separately */
+      case 'WORK_AUTH':     return profile.workAuthorized ? 'Yes' : 'No';
+      case 'VISA':          return profile.requiresVisa ? 'Yes' : 'No';
       case 'SALARY':        return session ? session.salaryRange : (profile.salaryRange || null);
       case 'COVER_LETTER':
       case 'SCREENING': {
@@ -474,6 +533,8 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       case 'TITLE':       return session ? session.jobTitle : (profile.title || null);
       case 'SUMMARY':     return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
       case 'SALARY':      return session ? (session.salaryRange || null) : (profile.salaryRange || null);
+      case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
+      case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
       case 'COVER_LETTER':return null; /* AI — filled at runtime */
       case 'SCREENING':   return null; /* AI — filled at runtime */
       default: return null;
@@ -580,7 +641,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   /* Inject Autofill button */
   var autofillBtn = el('button', { id: 'ap-autofill' }, ['⚡ Autofill']);
-  document.getElementById('ap-footer').insertBefore(autofillBtn, document.getElementById('ap-redo'));
+  document.getElementById('ap-footer').insertBefore(autofillBtn, document.getElementById('ap-action-btn'));
 
   /* ── PHASE 2: FILL (triggered on click) ─────────────────────────── */
   var fillStarted = false;
@@ -618,6 +679,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       if (!skipped) {
         var capturedF = f; /* capture current iteration value to avoid var-loop closure bug */
         await decodeFill(capturedF.element, value, function(v) { updateRowValue(capturedF, v); });
+        capturedF.element.classList.add('ap-filled-field');
         filled++;
       }
 
@@ -651,16 +713,36 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     } catch(e) { /* silent */ }
 
     /* ── DONE ────────────────────────────────────────────────────── */
-    setStatus('✦ ' + filled + ' / ' + fields.length + ' filled', 'done');
+    var timeSaved = Math.round((filled * 1.5));
+    var timeStr = timeSaved > 0 ? (' • Saved ~' + timeSaved + 'm') : '';
+    setStatus('✦ ' + filled + ' / ' + fields.length + ' filled' + timeStr, 'done');
     var dotDone = document.getElementById('ap-dot');
     dotDone.style.background = '#22c55e';
     dotDone.style.animation = 'none';
     setProgress(fields.length, fields.length);
     autofillBtn.style.display = 'none';
+
+    var actionBtn = document.getElementById('ap-action-btn');
+    actionBtn.textContent = '↺ Undo';
+    actionBtn.style.color = '#ef4444';
+    actionBtn.style.borderColor = 'rgba(239,68,68,0.35)';
   });
 
-  document.getElementById('ap-redo').addEventListener('click', function() {
-    hud.remove(); styleEl.remove();
+  document.getElementById('ap-action-btn').addEventListener('click', function() {
+    if (this.textContent === '↺ Undo') {
+      fields.forEach(function(f) {
+        if (f.originalValue !== undefined) {
+          if (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox')) {
+            f.element.checked = f.originalValue;
+          } else {
+            f.element.value = f.originalValue;
+          }
+          f.element.dispatchEvent(new Event('input', { bubbles: true }));
+          f.element.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    }
+    closeHUD();
   });
 
 })();`;

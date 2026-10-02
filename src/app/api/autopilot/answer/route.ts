@@ -71,8 +71,9 @@ RULES FOR YOUR ANSWER:
 - Write in first person as the candidate
 - Keep it to 2-4 sentences maximum (form fields have character limits)
 - Be specific and genuine — reference real projects or experiences when relevant
+- CRITICAL: Do NOT hallucinate. If you lack specific experience for the question, answer truthfully by focusing on transferable skills and eagerness to learn.
+- Never invent past job titles, years of experience, certifications, or company names not provided in the context.
 - Never start with "I am excited to..." or sycophantic openers
-- Do not fabricate companies, certifications, or experiences not mentioned above
 - ${company ? `Tailor the answer to ${company} and their engineering culture` : "Tailor to the role"}
 - Sound human, not like a cover letter template`;
 

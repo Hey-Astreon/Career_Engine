@@ -21,6 +21,13 @@ interface ProfileForm {
   linkedinUrl: string;
   portfolioUrl: string;
   githubUrl: string;
+  careerStage: string;
+  yearsOfExperience: string;
+  workType: string;
+  salaryRange: string;
+  workAuthorized: boolean;
+  requiresVisa: boolean;
+  primarySkills: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -36,6 +43,13 @@ function ProfileIdentityCard() {
     linkedinUrl: "",
     portfolioUrl: "",
     githubUrl: "",
+    careerStage: "",
+    yearsOfExperience: "",
+    workType: "remote",
+    salaryRange: "",
+    workAuthorized: true,
+    requiresVisa: false,
+    primarySkills: [],
   });
   const [originalForm, setOriginalForm] = useState<ProfileForm | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +81,13 @@ function ProfileIdentityCard() {
             linkedinUrl: profile.linkedinUrl ?? "",
             portfolioUrl: profile.portfolioUrl ?? "",
             githubUrl: profile.githubUrl ?? "",
+            careerStage: profile.careerStage ?? "",
+            yearsOfExperience: profile.yearsOfExperience ? String(profile.yearsOfExperience) : "",
+            workType: profile.workType ?? "remote",
+            salaryRange: profile.salaryRange ?? "",
+            workAuthorized: profile.workAuthorized ?? true,
+            requiresVisa: profile.requiresVisa ?? false,
+            primarySkills: profile.primarySkills ? JSON.parse(profile.primarySkills) : [],
           };
           setForm(mapped);
           setOriginalForm(mapped);
@@ -115,6 +136,7 @@ function ProfileIdentityCard() {
       const data = await res.json();
       if (data.header) {
         setForm((prev) => ({
+          ...prev,
           fullName: data.header.fullName || prev.fullName,
           title: data.header.targetHeadline || prev.title,
           location: data.header.location || prev.location,
@@ -123,6 +145,13 @@ function ProfileIdentityCard() {
           linkedinUrl: data.header.linkedinUrl || prev.linkedinUrl,
           portfolioUrl: data.header.portfolioUrl || prev.portfolioUrl,
           githubUrl: data.header.githubUrl || prev.githubUrl,
+          careerStage: data.career?.careerStage || prev.careerStage,
+          yearsOfExperience: data.career?.yearsOfExperience ? String(data.career.yearsOfExperience) : prev.yearsOfExperience,
+          workType: data.career?.workType || prev.workType,
+          salaryRange: data.career?.salaryRange || prev.salaryRange,
+          workAuthorized: data.career?.workAuthorized ?? prev.workAuthorized,
+          requiresVisa: data.career?.requiresVisa ?? prev.requiresVisa,
+          primarySkills: data.career?.primarySkills || prev.primarySkills,
         }));
         setExtractMsg("✓ AI extracted fields below — review then Save Changes.");
         setExpanded(true);
@@ -283,6 +312,38 @@ function ProfileIdentityCard() {
                 <Field label="LinkedIn URL" field="linkedinUrl" placeholder="https://linkedin.com/in/…" />
                 <Field label="Portfolio URL" field="portfolioUrl" placeholder="https://yoursite.dev" />
                 <Field label="GitHub URL" field="githubUrl" placeholder="https://github.com/…" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-4 border-t border-[var(--line)]">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Career Stage</label>
+                  <select
+                    value={form.careerStage}
+                    onChange={(e) => setForm({ ...form, careerStage: e.target.value })}
+                    className="w-full h-10 px-3 text-[13px] rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] focus:bg-white focus:border-[var(--blue)] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all text-[var(--ink)]"
+                  >
+                    <option value="">Not set</option>
+                    <option value="student">Student</option>
+                    <option value="fresher">Fresher</option>
+                    <option value="junior">Junior</option>
+                    <option value="mid">Mid-level</option>
+                    <option value="senior">Senior</option>
+                  </select>
+                </div>
+                <Field label="Years of Exp" field="yearsOfExperience" type="number" placeholder="e.g. 2" />
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Work Type</label>
+                  <select
+                    value={form.workType}
+                    onChange={(e) => setForm({ ...form, workType: e.target.value })}
+                    className="w-full h-10 px-3 text-[13px] rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] focus:bg-white focus:border-[var(--blue)] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all text-[var(--ink)]"
+                  >
+                    <option value="remote">Remote</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="onsite">On-site</option>
+                  </select>
+                </div>
+                <Field label="Salary Range" field="salaryRange" placeholder="e.g. $80k - $100k" />
               </div>
 
               {/* Context note */}

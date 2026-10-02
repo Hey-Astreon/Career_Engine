@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { questions, jobDescription, tailoredResume } = await req.json();
 
     if (!questions || !jobDescription || !tailoredResume) {

@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clampHistoryDays, PROVIDER_FAILURE_ALERT_THRESHOLD_PERCENT, summarizeDailyEndpointRuns, summarizeProviderFailureAlerts } from "@/lib/providerEndpointTelemetry";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const days = clampHistoryDays(searchParams.get("days"));
     const providerKey = searchParams.get("provider")?.trim().toUpperCase() || undefined;

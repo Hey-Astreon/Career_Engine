@@ -44,10 +44,19 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
   - Full Stack Engineer (React, Next.js, Node.js)
   - Product Engineer & Startup Software Engineer
 - **Empirical ATS Parseability:** Real-time PDF text layer extractability verification scoring 78,000+ characters directly from disk buffers (`isParseable: true`).
-- **1-Click PDF Variant Downloader & Previewer (`/api/resume/download`):**
-  - High-speed streaming route handler with path traversal security (`path.basename()`), supporting inline viewing (`view=inline`) and direct download (`view=attachment`).
-  - **Match Studio Integration:** 1-Click "Download Tailored PDF" button, "Preview PDF" button, and collapsible catalog explorer for all candidate variants.
-  - **Quick Apply Toolkit:** Integrated tailored PDF card inside `QuickApplyDrawer` with dynamic variant pre-selection, instant download, and preview.
+  - **1-Click PDF Variant Downloader & Previewer (`/api/resume/download`):**
+    - High-speed streaming route handler with path traversal security (`path.basename()`), supporting inline viewing (`view=inline`) and direct download (`view=attachment`).
+    - **Match Studio Integration:** 1-Click "Download Tailored PDF" button, "Preview PDF" button, and collapsible catalog explorer for all candidate variants.
+    - **Quick Apply Toolkit:** Integrated tailored PDF card inside `QuickApplyDrawer` with dynamic variant pre-selection, instant download, and preview.
+
+### 4. 🚀 AstrePilot (Autonomous Form Autofill & AI Injector)
+- **Glassmorphic Bookmarklet HUD:** Drag-and-drop overlay UI deployed directly onto external ATS portals (Greenhouse, Lever, Workday).
+- **Zero-Hallucination AI Screening:** Automatically intercepts unknown `<textarea>` screening questions and queries the AstreWork multi-LLM backend (`/api/autopilot/answer`) to generate contextually accurate, non-hallucinated answers on the fly based on the active session's tailored resume.
+- **Safety First (Undo & Highlight):** Safely injects values using native DOM event dispatching (triggering React/Vue bindings). Features `ap-filled-field` visual highlighting and a strict **1-click Undo** mechanism to revert all AI inputs instantly.
+
+### 5. 🔒 Enterprise-Grade API Security & Multi-Tenant Isolation
+- **Pipeline Lockdown:** Complete session-based verification enforcing `CRON_SECRET` and `getServerSession` boundaries over expensive data sync and scrape pipeline triggers.
+- **Strict Data Isolation:** All resume matching, kit generation, application tracking, and AI reasoning endpoints enforce strict `userId` alignment, eliminating cross-tenant spoofing and data leaks.
   - **Resume Variants Sidebar:** Dual-tab workspace ("Locked PDFs" vs "Saved Drafts") with 1-click preview and download for all official disk variants.
   - **Complete Application Kit / Resume Builder:** Header modal providing full catalog inspection and instant downloads.
 

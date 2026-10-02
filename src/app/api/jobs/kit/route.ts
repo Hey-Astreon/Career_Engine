@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateTailoredKit } from "@/lib/ai/drafter";
 import { validatePDFExtractability } from "@/lib/ai/ats_validator";
@@ -30,6 +32,11 @@ function sanitizeText(inputText?: string | null): string {
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     let body: { profileSlug?: unknown; jobPostingId?: unknown };
     try {
       body = await req.json();
@@ -69,6 +76,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "Profile or JobPosting not found" },
         { status: 404 }
+      );
+    }
+
+    if (profile.userId !== session.user.id) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not own this profile" },
+        { status: 403 }
       );
     }
 

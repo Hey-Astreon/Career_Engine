@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeBatchFeedScores, CachedScoreItem } from "@/lib/ai/batchScorer";
 
@@ -8,6 +10,11 @@ export async function POST(req: Request) {
   const startTime = Date.now();
 
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     let body: { profileSlug?: unknown; jobPostingIds?: unknown };
     try {
       body = await req.json();
@@ -43,6 +50,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "Candidate profile not found" },
         { status: 404 }
+      );
+    }
+
+    if (profile.userId !== session.user.id) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not own this profile" },
+        { status: 403 }
       );
     }
 

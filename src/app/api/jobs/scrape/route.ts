@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
 import { runAllProviders, ingestNormalizedJobs } from "@/lib/providers/registry";
@@ -34,6 +36,11 @@ function interleavePlatforms<T extends { platform: string }>(jobsList: T[]): T[]
 
 export async function POST() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const scrapeRunId = randomUUID();
     console.log("[Discovery Engine Phase 1] Running provider registry concurrently...");
     
@@ -102,6 +109,11 @@ export async function POST() {
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
     const rawActive = await db.jobPosting.findMany({
       where: {

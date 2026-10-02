@@ -81,8 +81,8 @@ export async function GET(req: Request) {
         salaryRange: profile.salaryRange ?? null,
         workAuthorized: profile.workAuthorized ?? true,
         requiresVisa: profile.requiresVisa ?? false,
-        targetCountries: profile.targetCountries ? JSON.parse(profile.targetCountries) : [],
-        primarySkills: profile.primarySkills ? JSON.parse(profile.primarySkills) : [],
+        targetCountries: (() => { try { return profile.targetCountries ? JSON.parse(profile.targetCountries) : []; } catch { return []; } })(),
+        primarySkills: (() => { try { return profile.primarySkills ? JSON.parse(profile.primarySkills) : []; } catch { return []; } })(),
         // Raw context for AI answer generation
         _context: {
           projects: profile.projects.map((p) => ({

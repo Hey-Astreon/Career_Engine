@@ -44,10 +44,6 @@ export async function POST(req: Request) {
     });
 
     if (!profile) {
-      profile = await db.profile.findFirst({ select: { id: true } });
-    }
-
-    if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404, headers: CORS });
     }
 
@@ -86,10 +82,6 @@ export async function GET(req: Request) {
       where: { userId },
       select: { id: true },
     });
-
-    if (!profile) {
-      profile = await db.profile.findFirst({ select: { id: true } });
-    }
 
     if (!profile) {
       return NextResponse.json({ stats: { fills: 0, fields: 0, hoursSaved: 0 }, history: [] }, { headers: CORS });

@@ -72,6 +72,13 @@ export async function PATCH(req: Request) {
       linkedinUrl,
       portfolioUrl,
       githubUrl,
+      careerStage,
+      yearsOfExperience,
+      workType,
+      salaryRange,
+      workAuthorized,
+      requiresVisa,
+      primarySkills,
     } = body;
 
     const existing = await db.profile.findFirst({
@@ -96,6 +103,13 @@ export async function PATCH(req: Request) {
         ...(linkedinUrl !== undefined ? { linkedinUrl: linkedinUrl ? String(linkedinUrl).trim() : null } : {}),
         ...(portfolioUrl !== undefined ? { portfolioUrl: portfolioUrl ? String(portfolioUrl).trim() : null } : {}),
         ...(githubUrl !== undefined ? { githubUrl: githubUrl ? String(githubUrl).trim() : null } : {}),
+        ...(careerStage !== undefined ? { careerStage: careerStage ? String(careerStage) : null } : {}),
+        ...(yearsOfExperience !== undefined ? { yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : null } : {}),
+        ...(workType !== undefined ? { workType: workType ? String(workType) : null } : {}),
+        ...(salaryRange !== undefined ? { salaryRange: salaryRange ? String(salaryRange) : null } : {}),
+        ...(workAuthorized !== undefined ? { workAuthorized: Boolean(workAuthorized) } : {}),
+        ...(requiresVisa !== undefined ? { requiresVisa: Boolean(requiresVisa) } : {}),
+        ...(primarySkills !== undefined ? { primarySkills: primarySkills ? JSON.stringify(primarySkills) : null } : {}),
       },
       include: {
         projects: true,

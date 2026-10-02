@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdf = require("pdf-parse");
     const formData = await req.formData();
