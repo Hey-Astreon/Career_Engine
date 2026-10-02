@@ -184,64 +184,108 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   /* ── FIELD SCANNER ──────────────────────────────────────────────── */
   var FIELD_PATTERNS = [
-    { type: 'FIRST_NAME',  kw: ['first_name','firstname','fname','given_name','first-name','first name'] },
-    { type: 'LAST_NAME',   kw: ['last_name','lastname','lname','family_name','surname','last-name','last name'] },
-    { type: 'FULL_NAME',   kw: ['full_name','fullname','your_name','applicant_name','candidate_name','name'] },
-    { type: 'EMAIL',       kw: ['email','e-mail','mail','applicant_email','email_address','email address'] },
-    { type: 'PHONE',       kw: ['phone','telephone','tel','mobile','cell','contact_number','phone_number','phone number'] },
-    { type: 'LOCATION',    kw: ['location','city','current_location','city_state','where are you','where do you'] },
-    { type: 'LINKEDIN',    kw: ['linkedin','linked_in','linkedin_url','linkedin_profile','linkedin.com'] },
-    { type: 'GITHUB',      kw: ['github','git_hub','github_url','github_profile','github.com'] },
-    { type: 'PORTFOLIO',   kw: ['portfolio','website','personal_site','personal_website','portfolio_url','personal url','your website'] },
-    { type: 'TITLE',       kw: ['headline','current_title','job_title','current role','your title','current position'] },
-    { type: 'COVER_LETTER',kw: ['cover_letter','coverletter','cover letter','motivation letter','why do you want','why are you interested'] },
-    { type: 'SUMMARY',     kw: ['summary','about_yourself','tell us about yourself','professional summary','bio','about you'] },
-    { type: 'WORK_AUTH',   kw: ['authorized','work_auth','authorization','eligible','work in','visa','sponsorship','legally authorized'] },
-    { type: 'SALARY',      kw: ['salary','compensation','pay','wage','expected_salary','desired_salary','salary expectation'] },
+    { type: 'FIRST_NAME',   kw: ['first_name','firstname','fname','given_name','first-name','first name','givenname'] },
+    { type: 'LAST_NAME',    kw: ['last_name','lastname','lname','family_name','surname','last-name','last name','familyname'] },
+    { type: 'FULL_NAME',    kw: ['full_name','fullname','legal_name','full-name','full-legal','full legal'] },
+    { type: 'EMAIL',        kw: ['email','e-mail','email_address','emailaddress'] },
+    { type: 'PHONE',        kw: ['phone','telephone','mobile','cell','contact_number','phone_number','phonenumber'] },
+    { type: 'LOCATION',     kw: ['location','current_location','city_state','city_country','current location'] },
+    { type: 'LINKEDIN',     kw: ['linkedin','linkedin_url','linkedin_profile'] },
+    { type: 'GITHUB',       kw: ['github','github_url','github_profile'] },
+    { type: 'PORTFOLIO',    kw: ['portfolio','portfolio_url','personal_website','personal_site'] },
+    { type: 'TITLE',        kw: ['headline','current_title','job_title','current_role','current_position'] },
+    { type: 'COVER_LETTER', kw: ['cover_letter','coverletter','cover letter','motivation_letter','brief summary','cover note'] },
+    { type: 'SUMMARY',      kw: ['summary','about_yourself','professional_summary','about you'] },
+    { type: 'WORK_AUTH',    kw: ['work_auth','work_authorization'] },
+    { type: 'SALARY',       kw: ['salary','expected_salary','desired_salary','salary_expectation','compensation'] },
   ];
 
   function getLabelText(input) {
-    /* Try aria-label */
-    var ariaLabel = input.getAttribute('aria-label') || '';
-    /* Try associated label */
+    var ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
     var labelEl = input.labels && input.labels[0];
-    var labelText = labelEl ? labelEl.textContent : '';
-    /* Try placeholder */
-    var placeholder = input.placeholder || '';
-    /* Try parent context (2 levels up) */
-    var parent = input.parentElement && input.parentElement.parentElement;
-    var contextText = parent ? parent.textContent : '';
-    return [ariaLabel, labelText, placeholder, contextText].join(' ').toLowerCase().replace(/\s+/g,' ');
+    /* Use direct text nodes only to avoid picking up sibling field labels */
+    var labelText = '';
+    if (labelEl) {
+      for (var n = 0; n < labelEl.childNodes.length; n++) {
+        if (labelEl.childNodes[n].nodeType === 3) labelText += labelEl.childNodes[n].textContent;
+      }
+      if (!labelText) labelText = labelEl.textContent;
+    }
+    var placeholder = (input.placeholder || '').toLowerCase();
+    return [ariaLabel, labelText.toLowerCase(), placeholder].join(' ').replace(/\s+/g,' ');
   }
 
   function classifyField(input) {
-    var signals = [
-      (input.getAttribute('name') || ''),
-      (input.getAttribute('id') || ''),
-      getLabelText(input),
-    ].join(' ').toLowerCase();
+    /* HIGH weight: name + id attributes — most reliable, field-specific */
+    var attrSignal = [
+      (input.getAttribute('name') || '').toLowerCase(),
+      (input.getAttribute('id') || '').toLowerCase(),
+    ].join(' ');
+
+    /* MEDIUM weight: aria-label, direct <label> text, placeholder */
+    var ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
+    var labelEl = input.labels && input.labels[0];
+    /* Use only the text node (not nested child text) to avoid picking up sibling field labels */
+    var labelText = '';
+    if (labelEl) {
+      for (var n = 0; n < labelEl.childNodes.length; n++) {
+        if (labelEl.childNodes[n].nodeType === 3) { labelText += labelEl.childNodes[n].textContent; }
+      }
+      if (!labelText) { labelText = labelEl.textContent; }
+    }
+    labelText = labelText.toLowerCase();
+    var placeholder = (input.placeholder || '').toLowerCase();
+    var labelSignal = [ariaLabel, labelText, placeholder].join(' ');
+
+    /* LOW weight: immediate parent text only (NOT grandparent — avoids row-level bleed) */
+    var parentEl = input.parentElement;
+    var contextSignal = parentEl ? (parentEl.getAttribute('class') || '' + parentEl.id || '').toLowerCase() : '';
 
     var best = { type: null, score: 0 };
     FIELD_PATTERNS.forEach(function(p) {
-      var score = p.kw.filter(function(k) { return signals.includes(k); }).length;
+      var score = 0;
+      p.kw.forEach(function(k) {
+        if (attrSignal.includes(k))    score += 10; /* name/id exact match — very strong */
+        if (labelSignal.includes(k))   score += 3;  /* label/placeholder — medium */
+        if (contextSignal.includes(k)) score += 1;  /* class/id context — tiebreaker only */
+      });
       if (score > best.score) { best = { type: p.type, score: score }; }
     });
-    /* Unknown textareas = screening question */
+
+    /* Unmatched textareas = screening question */
     if (!best.type && input.tagName === 'TEXTAREA') return 'SCREENING';
+    /* Minimum threshold: must score >= 3 (at least a label match — not just noise) */
+    if (best.score < 3) return null;
     return best.type;
   }
 
   function scanFields() {
-    var inputs = document.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=file]):not([type=checkbox]):not([type=radio]), textarea, select');
+    /* Only scan explicit text-like inputs — no radio/checkbox/hidden/button */
+    var inputs = document.querySelectorAll(
+      'input[type=text], input[type=email], input[type=tel], input[type=url],\
+       input[type=number], input:not([type]), textarea, select'
+    );
     var results = [];
+    var seenTypes = {};
     inputs.forEach(function(inp) {
       /* Skip invisible fields */
       var rect = inp.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
       var computed = window.getComputedStyle(inp);
       if (computed.display === 'none' || computed.visibility === 'hidden') return;
+
       var type = classifyField(inp);
       if (!type) return;
+
+      /* Deduplicate typed fields — only first detected instance of each type fills
+       * (prevents same email field appearing twice if re-scanned, or location
+       * being detected from both a 'city' and 'state' field)
+       * SCREENING questions are exempt from deduplication */
+      if (type !== 'SCREENING') {
+        if (seenTypes[type]) return;
+        seenTypes[type] = true;
+      }
+
       results.push({ element: inp, type: type, id: 'f' + Math.random().toString(36).slice(2,7) });
     });
     return results;
