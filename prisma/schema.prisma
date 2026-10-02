@@ -134,6 +134,7 @@ model Profile {
   matchScores    MatchScore[]
   resumeVariants ResumeVariant[]
   autopilotFills AutopilotFill[]
+  autopilotSessions AutopilotSession[]
 
   userId         String? @unique
   user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -442,4 +443,23 @@ model UserAlertPreference {
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_alert_preferences")
+}
+
+model AutopilotSession {
+  id              String   @id @default(uuid())
+  profileId       String
+  company         String?
+  jobTitle        String?
+  jdText          String
+  tailoredSummary String
+  keySkills       String   @default("[]") // JSON array
+  salaryRange     String?
+  workType        String?
+  createdAt       DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([createdAt])
+  @@map("autopilot_sessions")
 }

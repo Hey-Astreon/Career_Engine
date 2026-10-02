@@ -1,5 +1,6 @@
 import { queryMultiProviderLLM } from "./router";
 import { extractSkills } from "./scorer";
+import { db } from "@/lib/db";
 export * from "../resumeBaseline";
 import {
   OptimizedResume,
@@ -109,7 +110,7 @@ TASKS:
       const atsRatio = targetSkills.length > 0 ? (finalMatched.length / targetSkills.length) : 0.9;
       const atsScore = Math.min(99, Math.max(65, Math.round(atsRatio * 100)));
 
-      return {
+      const result: OptimizedResume = {
         header: {
           ...baseline.header,
           targetHeadline: tailoredHeadline,
@@ -126,13 +127,51 @@ TASKS:
         missingKeywords: finalMissing,
         tailoringNotes: `Tailored for ${jobTitle} at ${company} via Tier-1 Recruiter Engine (${aiRes.provider.toUpperCase()}).`,
       };
+
+      // FIRE & FORGET: Update AstrePilot Brain
+      db.profile.findUnique({ where: { slug: profileSlug }, select: { id: true } })
+        .then(prof => {
+          if (prof) {
+            db.autopilotSession.create({
+              data: {
+                profileId: prof.id,
+                company,
+                jobTitle,
+                jdText: jobDescription,
+                tailoredSummary,
+                keySkills: JSON.stringify(finalMatched),
+              }
+            }).catch((e: Error) => console.error("Failed to save autopilot session:", e));
+          }
+        }).catch((e: Error) => console.error("Failed to find profile for session:", e));
+
+      return result;
     }
   } catch (err) {
     console.warn("[Resume Optimizer Warning] AI generation failed, using dynamic recruiter fallback:", (err as Error).message);
   }
 
   // Dynamic Rule-Based Optimizer Fallback
-  return generateDynamicOptimizedFallback(baseline, jobTitle, company, targetSkills, matchedKeywords, missingKeywords);
+  const fallbackResult = generateDynamicOptimizedFallback(baseline, jobTitle, company, targetSkills, matchedKeywords, missingKeywords);
+  
+  // FIRE & FORGET: Update AstrePilot Brain for Fallback
+  db.profile.findUnique({ where: { slug: profileSlug }, select: { id: true } })
+    .then(prof => {
+      if (prof) {
+        db.autopilotSession.create({
+          data: {
+            profileId: prof.id,
+            company,
+            jobTitle,
+            jdText: jobDescription,
+            tailoredSummary: fallbackResult.summary,
+            keySkills: JSON.stringify(fallbackResult.matchedKeywords),
+          }
+        }).catch((e: Error) => console.error("Failed to save autopilot session fallback:", e));
+      }
+    }).catch((e: Error) => console.error("Failed to find profile for session fallback:", e));
+
+  return fallbackResult;
 }
 
 function generateDynamicOptimizedFallback(

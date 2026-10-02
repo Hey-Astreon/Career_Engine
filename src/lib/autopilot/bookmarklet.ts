@@ -342,7 +342,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   }
 
   /* ── RESOLVE VALUE FOR FIELD ─────────────────────────────────────── */
-  async function resolveValue(field, profile) {
+  async function resolveValue(field, profile, session) {
     switch(field.type) {
       case 'FIRST_NAME':    return profile.firstName;
       case 'LAST_NAME':     return profile.lastName;
@@ -353,23 +353,24 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       case 'LINKEDIN':      return profile.linkedinUrl;
       case 'GITHUB':        return profile.githubUrl;
       case 'PORTFOLIO':     return profile.portfolioUrl;
-      case 'TITLE':         return profile.title;
-      case 'SUMMARY':       return profile.professionalSummary;
+      case 'TITLE':         return session ? session.jobTitle : profile.title;
+      case 'SUMMARY':       return session ? session.tailoredSummary : profile.professionalSummary;
       case 'WORK_AUTH':     return null; /* handled as checkbox/select separately */
-      case 'SALARY':        return null; /* skip — too variable */
+      case 'SALARY':        return session ? session.salaryRange : null;
       case 'COVER_LETTER':
       case 'SCREENING': {
         var labelText = getLabelText(field.element);
         var question = labelText.slice(0, 300) || (field.type === 'COVER_LETTER' ? 'Write a cover letter' : 'Tell us about yourself');
-        var company = document.title.replace(/ \\|.*/, '').trim().slice(0, 60);
+        var company = session && session.company ? session.company : document.title.replace(/ \\|.*/, '').trim().slice(0, 60);
+        var jobTitle = session && session.jobTitle ? session.jobTitle : '';
         try {
           var res = await apFetch('/answer', {
             method: 'POST',
             body: JSON.stringify({
               question: question,
               company: company,
-              jobTitle: '',
-              context: profile._context,
+              jobTitle: jobTitle,
+              context: session ? 'JOB DESCRIPTION:\\n' + session.jdText + '\\n\\nTAILORED PROFILE:\\n' + session.tailoredSummary : profile._context,
             }),
           });
           if (!res.ok) return null;
@@ -387,15 +388,30 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   setStatus('Connecting to AstreWork…', 'loading');
 
   var profile;
+  var session = null;
   try {
     var profileRes = await apFetch('/profile');
     if (!profileRes.ok) throw new Error('auth');
     profile = await profileRes.json();
+    
+    var sessionRes = await apFetch('/session');
+    if (sessionRes.ok) {
+      var sessData = await sessionRes.json();
+      session = sessData.session;
+    }
   } catch(e) {
     setStatus('⚠ Could not connect. Check your token.', 'error');
     document.getElementById('ap-dot').style.background = '#ef4444';
     document.getElementById('ap-dot').style.animation = 'none';
     return;
+  }
+
+  if (session) {
+    var tag = document.getElementById('ap-tag');
+    tag.textContent = 'PRIMED: ' + (session.company || 'JOB').toUpperCase();
+    tag.style.background = 'rgba(34, 197, 94, 0.12)';
+    tag.style.color = '#4ade80';
+    tag.style.borderColor = 'rgba(34, 197, 94, 0.2)';
   }
 
   setStatus('Scanning fields…', 'loading');
@@ -419,7 +435,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
     if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') { hadAI = true; }
 
-    var value = await resolveValue(f, profile);
+    var value = await resolveValue(f, profile, session);
     var skipped = !value || value.trim() === '';
 
     if (!skipped) {

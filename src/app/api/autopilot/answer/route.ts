@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       question: string;
       company?: string;
       jobTitle?: string;
-      context?: {
+      context?: string | {
         projects?: Array<{ title: string; techStack: string; architecture?: string }>;
         virtualExps?: Array<{ company: string; role: string; outcome?: string }>;
       };
@@ -46,21 +46,26 @@ export async function POST(req: Request) {
       select: { fullName: true, title: true, location: true },
     });
 
-    const projectsText = context?.projects
-      ?.map((p) => `- ${p.title} (${p.techStack})${p.architecture ? ": " + p.architecture : ""}`)
-      .join("\n") ?? "";
+    let contextString = "";
+    if (typeof context === "string") {
+      contextString = context;
+    } else {
+      const projectsText = context?.projects
+        ?.map((p) => `- ${p.title} (${p.techStack})${p.architecture ? ": " + p.architecture : ""}`)
+        .join("\n") ?? "";
 
-    const expsText = context?.virtualExps
-      ?.map((e) => `- ${e.role} at ${e.company}${e.outcome ? ": " + e.outcome : ""}`)
-      .join("\n") ?? "";
+      const expsText = context?.virtualExps
+        ?.map((e) => `- ${e.role} at ${e.company}${e.outcome ? ": " + e.outcome : ""}`)
+        .join("\n") ?? "";
+
+      if (projectsText || expsText) {
+        contextString = `CANDIDATE PROJECTS:\n${projectsText || "Various software projects"}\n\nCANDIDATE EXPERIENCE:\n${expsText || "Virtual simulations and hands-on project work"}`;
+      }
+    }
 
     const systemPrompt = `You are answering a job application screening question on behalf of ${profile?.fullName ?? "a software developer"}, a ${profile?.title ?? "developer"} based in ${profile?.location ?? "India"}.
 
-CANDIDATE PROJECTS:
-${projectsText || "Various software projects"}
-
-CANDIDATE EXPERIENCE:
-${expsText || "Virtual simulations and hands-on project work"}
+${contextString}
 
 RULES FOR YOUR ANSWER:
 - Write in first person as the candidate
