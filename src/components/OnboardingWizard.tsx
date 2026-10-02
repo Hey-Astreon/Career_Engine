@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   FileText, CheckCircle2, ChevronRight, FileUp,
-  Sparkles, Loader2, Brain, Link2, User, Briefcase, Globe
+  Sparkles, Loader2, Brain, Link2, User, Briefcase, Globe, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -46,13 +47,16 @@ const STEP_META = [
 
 export default function OnboardingWizard() {
   const router = useRouter();
+  const { data: authSession } = useSession();
   const [step, setStep] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [formData, setFormData] = useState<FormData>({
-    fullName: "", targetHeadline: "", location: "", email: "",
+    fullName: "", targetHeadline: "", location: "",
+    email: "", // will be populated from authSession after mount
     careerStage: null, yearsOfExperience: "", workType: "remote",
     salaryRange: "", workAuthorized: true, requiresVisa: false,
     phone: "", linkedinUrl: "", githubUrl: "", portfolioUrl: "",
@@ -61,6 +65,10 @@ export default function OnboardingWizard() {
 
   const set = (key: keyof FormData, value: FormData[keyof FormData]) =>
     setFormData((p) => ({ ...p, [key]: value }));
+
+  /* Pre-populate email from OAuth session if user hasn't typed it yet */
+  const oauthEmail = authSession?.user?.email ?? "";
+  const effectiveEmail = formData.email || oauthEmail;
 
   const extractResume = async () => {
     if (!file) return;
@@ -96,15 +104,28 @@ export default function OnboardingWizard() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setSubmitError("");
     try {
       const res = await fetch("/api/onboarding/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : null }),
+        body: JSON.stringify({
+          ...formData,
+          email: effectiveEmail,
+          yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : null,
+        }),
       });
-      if (res.ok) router.push("/dashboard");
-    } catch(e) { console.error(e); }
-    finally { setIsSubmitting(false); }
+      if (res.ok) {
+        router.push("/dashboard");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setSubmitError(err.message || "Could not create profile. Please try again.");
+      }
+    } catch {
+      setSubmitError("Network error. Check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const ic = "w-full h-12 bg-[#f5f5f7] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-xl px-4 text-[15px] text-[#1d1d1f] transition-all outline-none border border-transparent placeholder:text-[#b0b0b8]";
@@ -292,7 +313,13 @@ export default function OnboardingWizard() {
                 </div>
               ))}
             </div>
-            <div className="mt-8 flex items-center justify-between border-t border-black/[0.04] pt-6">
+            {submitError && (
+              <div className="mt-4 flex items-center gap-2 text-red-500 text-[13px] bg-red-50 border border-red-100 rounded-xl p-3">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{submitError}</span>
+              </div>
+            )}
+            <div className="mt-6 flex items-center justify-between border-t border-black/[0.04] pt-6">
               <button onClick={() => setStep(4)} className="text-[#86868b] hover:text-[#1d1d1f] text-[15px] font-medium transition-colors">← Back</button>
               <button onClick={handleSubmit} disabled={isSubmitting}
                 className="bg-black text-white hover:bg-[#1d1d1f] disabled:opacity-50 rounded-full px-8 py-3 text-[15px] font-semibold flex items-center gap-2 shadow-lg transition-all">

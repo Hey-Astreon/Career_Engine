@@ -30,13 +30,10 @@ export async function GET(req: Request) {
     });
 
     if (!profile) {
-      profile = await db.profile.findFirst({
-        include: { projects: true, virtualExps: true },
-      });
-    }
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404, headers: CORS });
+      return NextResponse.json(
+        { error: "Profile not found. Please complete onboarding at astrework.vercel.app/onboard" },
+        { status: 404, headers: CORS }
+      );
     }
 
     // Split full name into first/last for granular form filling

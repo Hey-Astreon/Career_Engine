@@ -35,9 +35,11 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   }
 
   function apFetch(path, opts) {
-    return fetch(API + path, Object.assign({
-      headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }
-    }, opts));
+    var defaultHeaders = { 'Authorization': 'Bearer ' + TOKEN };
+    if (!opts || !opts.method || opts.method === 'POST' || opts.method === 'PUT') {
+      defaultHeaders['Content-Type'] = 'application/json';
+    }
+    return fetch(API + path, Object.assign({ headers: defaultHeaders }, opts));
   }
 
   /* ── INJECT STYLES ───────────────────────────────────────────────── */
@@ -106,15 +108,11 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     'color:#60a5fa;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:600;',
     'cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}',
     '#ap-redo:hover{background:rgba(59,130,246,0.12);}',
-
-    /* Source badges */
     '.ap-badge{font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;letter-spacing:0.04em;flex-shrink:0;}',
     '.ap-badge-profile{color:#94a3b8;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);}',
     '.ap-badge-session{color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);}',
     '.ap-badge-ai{color:#c084fc;background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.2);}',
     '.ap-value-ai{color:#c084fc !important;font-style:italic;}',
-
-    /* Autofill button */
     '#ap-autofill{background:linear-gradient(135deg,#1d5fd1,#3b82f6);border:none;',
     'color:#fff;border-radius:8px;padding:5px 13px;font-size:11px;font-weight:700;',
     'cursor:pointer;letter-spacing:0.03em;transition:all 0.2s;',
@@ -180,8 +178,16 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   function setStatus(text, state) {
     document.getElementById('ap-status-text').textContent = text;
     var dot = document.getElementById('ap-dot');
-    dot.className = state === 'done' ? 'ap-dot-done' : state === 'error' ? 'ap-dot-error' : '';
-    dot.id = 'ap-dot'; /* reset for animation */
+    if (state === 'done') {
+      dot.style.background = '#22c55e';
+      dot.style.animation = 'none';
+    } else if (state === 'error') {
+      dot.style.background = '#ef4444';
+      dot.style.animation = 'none';
+    } else {
+      dot.style.background = '#3b82f6';
+      dot.style.animation = 'ap-pulse 1.4s ease-in-out infinite';
+    }
   }
   function setProgress(filled, total) {
     var pct = total > 0 ? Math.round((filled / total) * 100) : 0;
@@ -416,7 +422,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       case 'TITLE':         return session ? session.jobTitle : profile.title;
       case 'SUMMARY':       return session ? session.tailoredSummary : profile.professionalSummary;
       case 'WORK_AUTH':     return null; /* handled as checkbox/select separately */
-      case 'SALARY':        return session ? session.salaryRange : null;
+      case 'SALARY':        return session ? session.salaryRange : (profile.salaryRange || null);
       case 'COVER_LETTER':
       case 'SCREENING': {
         var labelText = getLabelText(field.element);
@@ -512,6 +518,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   var session = null;
   try {
     var profileRes = await apFetch('/profile');
+    if (profileRes.status === 404) throw new Error('profile404');
     if (!profileRes.ok) throw new Error('auth');
     profile = await profileRes.json();
 
@@ -521,7 +528,9 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       session = sessData.session;
     }
   } catch(e) {
-    setStatus('⚠ Could not connect. Check your token.', 'error');
+    var errMsg = '⚠ Could not connect. Check your token.';
+    if (e && e.message === 'profile404') { errMsg = '⚠ No profile found. Complete onboarding first.'; }
+    setStatus(errMsg, 'error');
     var dot0 = document.getElementById('ap-dot');
     dot0.style.background = '#ef4444';
     dot0.style.animation = 'none';
@@ -607,7 +616,8 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       var skipped = !value || value.trim() === '';
 
       if (!skipped) {
-        await decodeFill(f.element, value, function(v) { updateRowValue(f, v); });
+        var capturedF = f; /* capture current iteration value to avoid var-loop closure bug */
+        await decodeFill(capturedF.element, value, function(v) { updateRowValue(capturedF, v); });
         filled++;
       }
 
