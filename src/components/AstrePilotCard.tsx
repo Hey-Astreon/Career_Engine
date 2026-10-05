@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy, BrainCircuit } from "lucide-react";
+import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy, BrainCircuit, Puzzle, Bookmark, Download } from "lucide-react";
 
 interface Stats {
   fills: number;
@@ -37,6 +37,7 @@ export default function AstrePilotCard() {
   const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedBookmarklet, setCopiedBookmarklet] = useState(false);
+  const [installMode, setInstallMode] = useState<"extension" | "bookmarklet">("extension");
 
   const loadToken = useCallback(async () => {
     setLoadingToken(true);
@@ -117,7 +118,7 @@ export default function AstrePilotCard() {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[14px] font-bold text-[var(--ink)] tracking-tight">AstrePilot</span>
               <span className="text-[8px] font-bold tracking-widest text-[var(--blue)] bg-[var(--blue-soft)] border border-[var(--blue)]/20 rounded px-1.5 py-0.5 uppercase">
-                Beta
+                Chrome Extension & Bookmarklet
               </span>
             </div>
             <p className="text-[12px] text-[var(--muted)] leading-relaxed">
@@ -135,32 +136,86 @@ export default function AstrePilotCard() {
         </div>
       </div>
 
+      {/* ── Mode Selector Tabs ───────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 px-6 pt-4 border-b border-[var(--line)] bg-[var(--surface-muted)]/50">
+        <button
+          onClick={() => setInstallMode("extension")}
+          className={`flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-t-lg transition-all border-b-2 ${
+            installMode === "extension"
+              ? "border-[var(--blue)] text-[var(--blue)] bg-[var(--surface)]"
+              : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]"
+          }`}
+        >
+          <Puzzle className="w-3.5 h-3.5" />
+          <span>Chrome Extension</span>
+          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-[var(--blue-soft)] text-[var(--blue)] border border-[var(--blue)]/20">
+            Recommended
+          </span>
+        </button>
+        <button
+          onClick={() => setInstallMode("bookmarklet")}
+          className={`flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-t-lg transition-all border-b-2 ${
+            installMode === "bookmarklet"
+              ? "border-[var(--blue)] text-[var(--blue)] bg-[var(--surface)]"
+              : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]"
+          }`}
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+          <span>Browser Bookmarklet</span>
+          <span className="text-[9px] font-medium text-[var(--muted)]">No install</span>
+        </button>
+      </div>
+
       {/* ── Body ────────────────────────────────────────────────────────── */}
       <div className="grid md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-[var(--line)]">
 
-        {/* Left — How to set up */}
+        {/* Left — Setup Instructions */}
         <div className="p-6">
           <p className="text-[9px] font-bold tracking-widest text-[var(--muted)] uppercase mb-4">
-            How to set up
+            {installMode === "extension" ? "How to install Extension" : "How to set up Bookmarklet"}
           </p>
           <ol className="space-y-4">
-            {[
-              {
-                n: "1",
-                title: "Save your AstrePilot bookmark",
-                desc: "Drag the button → OR → click \"Copy Bookmarklet\", then right-click your bookmarks bar → Add Page → paste as URL.",
-              },
-              {
-                n: "2",
-                title: "Open any job application form",
-                desc: "Navigate to Greenhouse, Lever, LinkedIn, or any company careers page.",
-              },
-              {
-                n: "3",
-                title: "Click ⚡ AstrePilot in your bookmarks",
-                desc: "Your profile fills instantly with a decode animation. Review and submit.",
-              },
-            ].map((step) => (
+            {(installMode === "extension"
+              ? [
+                  {
+                    n: "1",
+                    title: "Download & Unzip AstrePilot",
+                    desc: "Download astrepilot-extension.zip and extract the files to a folder on your computer.",
+                  },
+                  {
+                    n: "2",
+                    title: "Open chrome://extensions",
+                    desc: "Open Chrome or Edge extensions manager, and turn ON \"Developer mode\" (top-right toggle).",
+                  },
+                  {
+                    n: "3",
+                    title: "Click \"Load unpacked\"",
+                    desc: "Select the extracted extension folder. AstrePilot will appear in your browser extensions bar.",
+                  },
+                  {
+                    n: "4",
+                    title: "Autofill with 1 click or Ctrl+Shift+A",
+                    desc: "On any job application (Greenhouse, Lever, Workday, etc.), click the AstrePilot icon or press Ctrl+Shift+A!",
+                  },
+                ]
+              : [
+                  {
+                    n: "1",
+                    title: "Save your AstrePilot bookmark",
+                    desc: "Drag the button → OR → click \"Copy Bookmarklet\", then right-click your bookmarks bar → Add Page → paste as URL.",
+                  },
+                  {
+                    n: "2",
+                    title: "Open any job application form",
+                    desc: "Navigate to Greenhouse, Lever, LinkedIn, or any company careers page.",
+                  },
+                  {
+                    n: "3",
+                    title: "Click ⚡ AstrePilot in your bookmarks",
+                    desc: "Your profile fills instantly with a decode animation. Review and submit.",
+                  },
+                ]
+            ).map((step) => (
               <li key={step.n} className="flex gap-3">
                 <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--blue-soft)] text-[var(--blue)] text-[10px] font-bold flex items-center justify-center mt-0.5">
                   {step.n}
@@ -174,10 +229,10 @@ export default function AstrePilotCard() {
           </ol>
         </div>
 
-        {/* Right — Bookmarklet + token */}
+        {/* Right — Actions & Tools */}
         <div className="p-6 flex flex-col items-center justify-center gap-5">
           <p className="text-[9px] font-bold tracking-widest text-[var(--muted)] uppercase self-start">
-            Your AstrePilot
+            {installMode === "extension" ? "Download AstrePilot Extension" : "Your AstrePilot Bookmarklet"}
           </p>
 
           {loadingToken ? (
@@ -211,53 +266,76 @@ export default function AstrePilotCard() {
                 </div>
               )}
 
-              {/* Draggable bookmarklet button */}
-              <div className="flex flex-col items-center gap-2 w-full">
-                <div className="text-[10px] text-[var(--muted)] font-medium">
-                  Drag this button to your bookmarks bar →
-                </div>
-                <div className="border-2 border-dashed border-[var(--line)] rounded-xl p-3 w-full flex justify-center">
-                  {/* eslint-disable-next-line react/jsx-no-target-blank */}
+              {installMode === "extension" ? (
+                /* Chrome Extension UI */
+                <div className="flex flex-col items-center gap-3 w-full">
                   <a
-                    href={bookmarkletHref}
-                    draggable
-                    onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#0c1220] hover:bg-[#131b2e] rounded-xl text-white font-bold text-[13px] tracking-tight transition-colors cursor-grab active:cursor-grabbing select-none shadow-lg"
-                    title="Drag me to your bookmarks bar"
+                    href="/downloads/astrepilot-extension.zip"
+                    download="astrepilot-extension.zip"
+                    className="flex items-center justify-center gap-2.5 w-full py-3 px-4 bg-[var(--blue)] hover:bg-[var(--blue-light)] text-white font-bold text-[13px] rounded-xl shadow-md hover:shadow-lg transition-all"
                   >
-                    <Zap className="w-4 h-4 text-blue-400" />
-                    AstrePilot
+                    <Download className="w-4 h-4" />
+                    <span>Download Chrome Extension (.zip)</span>
                   </a>
-                </div>
-                {/* Copy bookmarklet for Chrome/Edge manual install */}
-                <button
-                  onClick={handleCopyBookmarklet}
-                  className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--blue)] hover:text-[var(--ink)] bg-[var(--blue-soft)] hover:bg-[var(--line)] border border-[var(--blue)]/20 rounded-lg px-3 py-1.5 transition-all w-full justify-center"
-                  title="For Chrome: copy this, then right-click bookmarks bar → Add Page → paste as URL"
-                >
-                  {copiedBookmarklet ? (
-                    <><Check className="w-3 h-3 text-[var(--green)]" /><span className="text-[var(--green)]">Copied! Paste as bookmark URL</span></>
-                  ) : (
-                    <><Copy className="w-3 h-3" />Copy Bookmarklet Code</>  
-                  )}
-                </button>
-                <div className="text-[10px] text-[var(--muted)] text-center leading-relaxed">
-                  Your profile is securely embedded.
-                  <br />Token expires in 90 days.
-                </div>
-              </div>
 
-              {/* Token copy */}
-              <button
-                onClick={handleCopyToken}
-                className="flex items-center gap-1.5 text-[10px] text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
-              >
-                {copied ? (
-                  <><Check className="w-3 h-3 text-[var(--green)]" /><span className="text-[var(--green)]">Token copied</span></>
-                ) : (
-                  <><ExternalLink className="w-3 h-3" />Copy raw token</>
-                )}
-              </button>
+                  <div className="flex items-center justify-between w-full px-2 text-[10px] text-[var(--muted)]">
+                    <span className="flex items-center gap-1 font-semibold text-[var(--green)]">
+                      <Check className="w-3 h-3" /> Manifest V3 Ready
+                    </span>
+                    <span>Version 1.0.0</span>
+                  </div>
+
+                  <button
+                    onClick={handleCopyToken}
+                    className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--blue)] hover:text-[var(--ink)] bg-[var(--blue-soft)] hover:bg-[var(--line)] border border-[var(--blue)]/20 rounded-lg px-3 py-1.5 transition-all w-full justify-center mt-1"
+                  >
+                    {copied ? (
+                      <><Check className="w-3 h-3 text-[var(--green)]" /><span className="text-[var(--green)]">Token copied to clipboard</span></>
+                    ) : (
+                      <><Copy className="w-3 h-3" />Copy Connection Token</>
+                    )}
+                  </button>
+                  <p className="text-[10px] text-[var(--muted)] text-center leading-relaxed">
+                    Auto-connects automatically when AstreWork is open in any tab.
+                  </p>
+                </div>
+              ) : (
+                /* Bookmarklet UI */
+                <div className="flex flex-col items-center gap-2 w-full">
+                  <div className="text-[10px] text-[var(--muted)] font-medium">
+                    Drag this button to your bookmarks bar →
+                  </div>
+                  <div className="border-2 border-dashed border-[var(--line)] rounded-xl p-3 w-full flex justify-center">
+                    {/* eslint-disable-next-line react/jsx-no-target-blank */}
+                    <a
+                      href={bookmarkletHref}
+                      draggable
+                      onClick={(e) => e.preventDefault()}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-[#0c1220] hover:bg-[#131b2e] rounded-xl text-white font-bold text-[13px] tracking-tight transition-colors cursor-grab active:cursor-grabbing select-none shadow-lg"
+                      title="Drag me to your bookmarks bar"
+                    >
+                      <Zap className="w-4 h-4 text-blue-400" />
+                      AstrePilot
+                    </a>
+                  </div>
+                  {/* Copy bookmarklet for Chrome/Edge manual install */}
+                  <button
+                    onClick={handleCopyBookmarklet}
+                    className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--blue)] hover:text-[var(--ink)] bg-[var(--blue-soft)] hover:bg-[var(--line)] border border-[var(--blue)]/20 rounded-lg px-3 py-1.5 transition-all w-full justify-center"
+                    title="For Chrome: copy this, then right-click bookmarks bar → Add Page → paste as URL"
+                  >
+                    {copiedBookmarklet ? (
+                      <><Check className="w-3 h-3 text-[var(--green)]" /><span className="text-[var(--green)]">Copied! Paste as bookmark URL</span></>
+                    ) : (
+                      <><Copy className="w-3 h-3" />Copy Bookmarklet Code</>  
+                    )}
+                  </button>
+                  <div className="text-[10px] text-[var(--muted)] text-center leading-relaxed">
+                    Your profile is securely embedded.
+                    <br />Token expires in 90 days.
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex items-center gap-2 text-[12px] text-[var(--amber)] bg-[var(--amber-soft)] border border-[var(--amber)]/20 rounded-lg px-3 py-2">

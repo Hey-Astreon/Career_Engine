@@ -28,7 +28,7 @@ interface SimplifyEndpointResult {
 }
 
 const ENDPOINT_TIMEOUT_MS = 6_000;
-const MAX_ATTEMPTS = 1;
+const MAX_ATTEMPTS = 2;
 const BASE_RETRY_DELAY_MS = 300;
 const MAX_RETRY_AFTER_MS = 3_500;
 const RETRYABLE_HTTP_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);

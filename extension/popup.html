@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstrePilot</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo">AW</div>
+        <div>
+          <h1 class="title">AstrePilot</h1>
+          <span class="subtitle">Autonomous Job Assistant</span>
+        </div>
+      </div>
+      <div id="conn-badge" class="badge badge-disconnected">
+        <span class="dot"></span>
+        <span id="conn-text">Disconnected</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Loading State -->
+      <div id="view-loading" class="view">
+        <div class="spinner"></div>
+        <p class="loading-text">Connecting to AstreWork…</p>
+      </div>
+
+      <!-- Connected View -->
+      <div id="view-connected" class="view hidden">
+        <div class="profile-card">
+          <div class="avatar" id="user-avatar">RK</div>
+          <div class="profile-info">
+            <h2 id="user-name" class="user-name">Candidate Name</h2>
+            <p id="user-title" class="user-title">Target Role / Headline</p>
+          </div>
+        </div>
+
+        <div id="primed-box" class="primed-box hidden">
+          <span class="primed-label">🎯 PRIMED SESSION:</span>
+          <span id="primed-target" class="primed-target">Acme Corp</span>
+        </div>
+
+        <div class="action-section">
+          <button id="btn-launch-hud" class="btn btn-primary">
+            <span class="btn-icon">⚡</span>
+            <span>Launch AstrePilot HUD</span>
+          </button>
+          <button id="btn-autofill-direct" class="btn btn-secondary">
+            <span>⚡ Autofill Page Instantly</span>
+          </button>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="stat-val" id="stat-fills">0</span>
+            <span class="stat-lbl">Fills</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat-fields">0</span>
+            <span class="stat-lbl">Fields</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat-hours">0h</span>
+            <span class="stat-lbl">Saved</span>
+          </div>
+        </div>
+
+        <p class="shortcut-hint">Shortcut: <kbd>Ctrl+Shift+A</kbd> on any job form</p>
+      </div>
+
+      <!-- Setup / Connect View -->
+      <div id="view-setup" class="view hidden">
+        <div class="setup-hero">
+          <div class="setup-icon">🚀</div>
+          <h3>Connect Your Profile</h3>
+          <p>Link AstrePilot with your AstreWork workspace to enable 1-click intelligent autofill.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="input-origin">AstreWork Server</label>
+          <select id="input-origin" class="select-input">
+            <option value="https://astrework.vercel.app">Production (astrework.vercel.app)</option>
+            <option value="http://localhost:3000">Localhost (http://localhost:3000)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="input-token">AstrePilot Token</label>
+          <div class="token-input-row">
+            <input type="password" id="input-token" placeholder="Paste your token from Settings" class="text-input">
+            <button id="btn-auto-token" class="btn-mini" title="Auto-fetch from open AstreWork tab">Auto</button>
+          </div>
+        </div>
+
+        <button id="btn-connect" class="btn btn-primary">
+          <span>Connect AstrePilot</span>
+        </button>
+
+        <a id="link-get-token" href="#" class="help-link">Where do I find my token?</a>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a id="link-dashboard" href="#" class="footer-link">Open AstreWork Dashboard →</a>
+      <button id="btn-settings-toggle" class="btn-icon-link" title="Settings / Disconnect">⚙</button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

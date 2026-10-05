@@ -444,6 +444,12 @@ npm run dev
   - **1. Complete API Lockdown:** Audited all 45+ endpoints. Closed massive zero-day vulnerabilities in `api/jobs/scrape` and `api/scheduler` by enforcing `getServerSession` and `CRON_SECRET` validation, preventing unauthorized pipeline triggers and DoS attacks.
   - **2. Strict Multi-Tenant Data Isolation:** Patched `jobs/feed-scores`, `jobs/match`, `jobs/kit`, `outreach/generate`, `resume/variants`, and `applications/route` to strictly validate `profile.userId === session.user.id`. Impossible to spoof or extract foreign profiles.
   - **3. Hallucination Containment:** Upgraded the AstrePilot `autopilot/answer` system prompt with stringent constraints preventing the AI from fabricating companies, job titles, metrics, or credentials not explicitly found in the profile context.
+- [x] **Phase 20: AstrePilot Native Chrome Extension (Manifest V3)**
+  - **1. Standalone Manifest V3 Architecture:** Built complete extension package in `extension/` featuring `manifest.json` (V3), service worker `background.js`, content script `content.js`, isolated `hud.css`, and popup suite (`popup.html`, `popup.css`, `popup.js`).
+  - **2. Automatic ATS Recognition & Badging:** Background service worker scans tab navigation against known ATS portals (`boards.greenhouse.io`, `jobs.lever.co`, `myworkdayjobs.com`, `jobs.ashbyhq.com`, `smartrecruiters.com`, etc.) and automatically displays an active `ATS` badge.
+  - **3. Global Keyboard Shortcut:** Configured `Ctrl+Shift+A` (or `Command+Shift+A` on Mac) to toggle and launch the glassmorphic HUD on any web page without clicking browser UI.
+  - **4. Glassmorphic Action Popup:** Dark mode glassmorphic UI displaying candidate identity, connection status, primed role/session tags, live autofill stats, 1-click token auto-detection from open AstreWork tabs, and direct fill actions.
+  - **5. 1-Click ZIP Packaging & Workspace Integration:** Automated compression generating `public/downloads/astrepilot-extension.zip`. Enhanced `AstrePilotCard` with tabbed mode selector ("Chrome Extension (Recommended)" vs "Browser Bookmarklet") and 1-click ZIP download.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.
@@ -451,6 +457,7 @@ npm run dev
 - **Source Health:** 19 / 19 providers HEALTHY (100% operational on Turso Cloud).
 - **Cloud Database:** Turso LibSQL Cloud fully populated and synchronized.
 - **Candidate Documents:** 19 official PDF variants bundled and streaming in production.
+- **AstrePilot Suite:** Native Manifest V3 Chrome Extension + Glassmorphic Injected HUD + 1-Click Bookmarklet.
 - **TypeScript Integrity:** 0 errors across entire codebase (`npx tsc --noEmit` clean).
 - **Build Status:** Next.js 16 (Turbopack) production build compiles with 0 errors in CI/CD.
 - **Git Sync:** Branch `main` tracked and synchronized with `https://github.com/Hey-Astreon/Career_Engine.git`.

@@ -50,9 +50,11 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
     - **Quick Apply Toolkit:** Integrated tailored PDF card inside `QuickApplyDrawer` with dynamic variant pre-selection, instant download, and preview.
 
 ### 4. 🚀 AstrePilot (Autonomous Form Autofill & AI Injector)
-- **Glassmorphic Bookmarklet HUD:** Drag-and-drop overlay UI deployed directly onto external ATS portals (Greenhouse, Lever, Workday).
+- **Native Chrome Extension (Manifest V3):** Packaged browser extension featuring a glassmorphic action popup UI, background service worker, automatic ATS portal detection badge (`boards.greenhouse.io`, `jobs.lever.co`, `myworkdayjobs.com`, `ashbyhq.com`, etc.), and global keyboard shortcut (`Ctrl+Shift+A`).
+- **Glassmorphic Injected HUD:** Draggable overlay UI deployed directly onto external ATS portals with real-time field classification, profile previews, and matrix decoding animations.
 - **Zero-Hallucination AI Screening:** Automatically intercepts unknown `<textarea>` screening questions and queries the AstreWork multi-LLM backend (`/api/autopilot/answer`) to generate contextually accurate, non-hallucinated answers on the fly based on the active session's tailored resume.
 - **Safety First (Undo & Highlight):** Safely injects values using native DOM event dispatching (triggering React/Vue bindings). Features `ap-filled-field` visual highlighting and a strict **1-click Undo** mechanism to revert all AI inputs instantly.
+- **1-Click ZIP Download & Distribution:** Built directly into the AstreWork workspace settings (`astrepilot-extension.zip`) alongside the bookmarklet option.
 
 ### 5. 🔒 Enterprise-Grade API Security & Multi-Tenant Isolation
 - **Pipeline Lockdown:** Complete session-based verification enforcing `CRON_SECRET` and `getServerSession` boundaries over expensive data sync and scrape pipeline triggers.
