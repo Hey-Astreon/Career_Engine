@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy, BrainCircuit, Puzzle, Bookmark, Download } from "lucide-react";
+import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy, BrainCircuit, Puzzle, Bookmark, Download, Sparkles } from "lucide-react";
 
 interface Stats {
   fills: number;
@@ -344,6 +344,28 @@ export default function AstrePilotCard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Test Simulation Quick Launch ─────────────────────────────────── */}
+      <div className="mx-6 my-4 p-4 rounded-xl border border-[var(--blue)]/30 bg-[var(--blue-soft)]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[var(--blue)] text-white flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-[12px] font-bold text-[var(--ink)]">AstrePilot Testing Simulation Sandbox</div>
+            <div className="text-[11px] text-[var(--muted)]">Test 1-click autofill on a live simulated company internship listing &amp; application form.</div>
+          </div>
+        </div>
+        <a
+          href="/simulate"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[var(--blue)] hover:bg-[var(--blue-light)] text-white text-[11px] font-bold transition-all shadow-xs flex-shrink-0"
+        >
+          <span>Open Simulation</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
