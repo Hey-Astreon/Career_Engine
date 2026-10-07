@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -29,7 +29,7 @@ import {
   Info
 } from "lucide-react";
 
-export default function SimulationApplyPage() {
+function SimulationApplyContent() {
   const searchParams = useSearchParams();
   const companyId = searchParams.get("company") || "novasphere";
 
@@ -717,3 +717,18 @@ export default function SimulationApplyPage() {
     </div>
   );
 }
+
+export default function SimulationApplyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--muted)] text-[13px]">
+          Loading application form...
+        </div>
+      }
+    >
+      <SimulationApplyContent />
+    </Suspense>
+  );
+}
+

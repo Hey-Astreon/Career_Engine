@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -28,7 +28,7 @@ import {
   Globe
 } from "lucide-react";
 
-export default function SimulationJobPage() {
+function SimulationJobContent() {
   const searchParams = useSearchParams();
   const initialId = searchParams.get("company") || "novasphere";
 
@@ -483,3 +483,18 @@ export default function SimulationJobPage() {
     </div>
   );
 }
+
+export default function SimulationJobPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--muted)] text-[13px]">
+          Loading simulation...
+        </div>
+      }
+    >
+      <SimulationJobContent />
+    </Suspense>
+  );
+}
+
