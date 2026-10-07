@@ -1,7 +1,7 @@
 /**
  * AstrePilot Background Service Worker (Manifest V3)
  * ----------------------------------------------------
- * - Manages keyboard shortcuts (Ctrl+Shift+A)
+ * - Manages keyboard shortcuts (Alt+Shift+A)
  * - Detects ATS portals on tab navigation and displays an "ATS" badge
  * - Synchronizes configuration between popup and content scripts
  */

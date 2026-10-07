@@ -222,7 +222,7 @@ function SimulationApplyContent() {
           <div className="p-3 rounded-xl bg-[var(--surface-muted)] border border-[var(--line)] text-[12px] text-[var(--muted)] flex items-start gap-2.5">
             <Info className="w-4 h-4 text-[var(--blue)] flex-shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              This form contains realistic ATS fields (matching Greenhouse, Lever, Ashby, and Workday selectors). Test AstrePilot by pressing <kbd className="px-1.5 py-0.5 rounded bg-[var(--surface)] border border-[var(--line)] font-mono text-[10px] text-[var(--ink)] font-bold">Ctrl+Shift+A</kbd> or using the Chrome Extension icon.
+              This form contains realistic ATS fields (matching Greenhouse, Lever, Ashby, and Workday selectors). Test AstrePilot by pressing <kbd className="px-1.5 py-0.5 rounded bg-[var(--surface)] border border-[var(--line)] font-mono text-[10px] text-[var(--ink)] font-bold">Alt+Shift+A</kbd> or using the Chrome Extension icon.
             </p>
           </div>
         </div>
@@ -636,7 +636,7 @@ function SimulationApplyContent() {
                 </span>
               </div>
               <div className="text-[10px] text-[var(--muted)]">
-                Press <kbd className="font-mono text-[var(--ink)] font-bold">Ctrl+Shift+A</kbd> or click the AstrePilot Chrome extension icon
+                Press <kbd className="font-mono text-[var(--ink)] font-bold">Alt+Shift+A</kbd> or click the AstrePilot Chrome extension icon
               </div>
             </div>
           </div>

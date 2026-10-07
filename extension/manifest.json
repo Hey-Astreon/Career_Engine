@@ -41,8 +41,8 @@
   "commands": {
     "toggle_astrepilot": {
       "suggested_key": {
-        "default": "Ctrl+Shift+A",
-        "mac": "Command+Shift+A"
+        "default": "Alt+Shift+A",
+        "mac": "Alt+Shift+A"
       },
       "description": "Launch or Toggle AstrePilot HUD"
     }

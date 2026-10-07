@@ -194,8 +194,8 @@ export default function AstrePilotCard() {
                   },
                   {
                     n: "4",
-                    title: "Autofill with 1 click or Ctrl+Shift+A",
-                    desc: "On any job application (Greenhouse, Lever, Workday, etc.), click the AstrePilot icon or press Ctrl+Shift+A!",
+                    title: "Autofill with 1 click or Alt+Shift+A",
+                    desc: "On any job application (Greenhouse, Lever, Workday, etc.), click the AstrePilot icon or press Alt+Shift+A!",
                   },
                 ]
               : [

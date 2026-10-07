@@ -36,6 +36,19 @@
     return true;
   });
 
+  /* ── IN-PAGE KEYBOARD SHORTCUT LISTENER ────────────────────────────── */
+  // Listens for Alt+Shift+A or Alt+A in-page to toggle HUD instantly
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && (e.key === 'a' || e.key === 'A')) {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || Boolean(document.activeElement?.isContentEditable);
+      if (e.shiftKey || !isInput) {
+        e.preventDefault();
+        toggleAstrePilotHUD();
+      }
+    }
+  });
+
   /* ── HELPERS ──────────────────────────────────────────────────────── */
   function el(tag, attrs, children) {
     const e = document.createElement(tag);
