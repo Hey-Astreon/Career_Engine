@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ProfileData, useProfileStore } from "@/store/useProfileStore";
 import { X, Save, Sparkles, Loader2, CheckCircle2, User, Globe, Mail, Phone, MapPin } from "lucide-react";
 
@@ -45,7 +46,17 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
     }
   }, [activeProfile, isOpen]);
 
-  if (!isOpen) return null;
+  // Lock page scroll while the modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || typeof document === "undefined") return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,9 +89,11 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
     }
   };
 
-  return (
+  // Portal to <body>: the topbar uses backdrop-filter, which would otherwise
+  // become the containing block for this fixed overlay and clip it.
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center overflow-y-auto py-7 px-4"
+      className="fixed inset-0 z-[100] flex flex-col items-center overflow-y-auto py-7 px-4"
       style={{ background: "rgba(15,23,42,.48)", backdropFilter: "blur(5px)" }}
       role="dialog"
       aria-modal="true"
@@ -269,6 +282,7 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
