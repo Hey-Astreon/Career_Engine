@@ -80,7 +80,7 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
 
   return (
     <div className="ce-drawer-backdrop" role="dialog" aria-modal="true" aria-label="Edit Profile">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-2xl">
+      <div className="relative w-full max-w-lg overflow-y-auto max-h-[90dvh] rounded-xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
           <div className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--blue-soft)] text-[var(--blue)]">
