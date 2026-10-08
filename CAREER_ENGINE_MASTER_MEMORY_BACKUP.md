@@ -499,3 +499,12 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / RCMS / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
+
+
+## Codebase Cleanup & Junk Removal (Latest)
+- **Removed Obsolete Scripts:** \launch.bat\, \merge_duplicate_users.mjs\, \migrate_profile_v2.mjs\, \migrate_profile_v2.sql\, \migrate_turso.mjs\.
+- **Removed Legacy Scraping Engine:** \src/lib/scrapers/\ directory (replaced by \src/lib/providers/\).
+- **Removed Compatibility Layer:** \src/lib/compat.ts\.
+- **Removed Legacy Patches:** \scripts/dev-patches/\.
+- **Cleaned Dependencies:** Removed unused dependencies like \@tanstack/react-query\, \playwright\, \zod\, etc.
+- **Housekeeping:** Moved \cleanup_test_users.mjs\ to the \scripts/\ directory.
