@@ -8,17 +8,22 @@
 (function () {
   'use strict';
 
-  // Prevent multiple injections
-  if (window.__ASTREPILOT_INJECTED__) return;
+  // Prevent multiple injections: tear down any previous instance (listeners + HUD)
+  if (window.__ASTREPILOT_CLEANUP__) {
+    try { window.__ASTREPILOT_CLEANUP__(); } catch (e) {}
+  }
   window.__ASTREPILOT_INJECTED__ = true;
 
   let activeHud = null;
   let detectedFields = [];
   let userProfile = null;
   let activeSession = null;
+  let mountPromise = null; // set while the HUD is initialising (prevents double mounts)
+  let isFilling = false;  // re-entrancy guard for runAutofill
 
-  /* ── MESSAGE LISTENER ─────────────────────────────────────────────── */
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  /* -- MESSAGE LISTENER -- */
+  // All responses are synchronous, so the channel is not kept open.
+  const messageListener = (request, sender, sendResponse) => {
     if (request.action === 'TOGGLE_HUD') {
       toggleAstrePilotHUD();
       sendResponse({ status: 'toggled' });
@@ -26,30 +31,52 @@
       const fields = scanFields();
       sendResponse({ count: fields.length, fields: fields.map(f => ({ type: f.type, id: f.id })) });
     } else if (request.action === 'AUTOFILL') {
-      if (!activeHud) toggleAstrePilotHUD();
-      setTimeout(() => {
-        const btn = document.getElementById('ap-autofill');
-        if (btn) btn.click();
-      }, 500);
+      // Wait for the HUD to finish loading profile + scan instead of guessing a delay
+      (async () => {
+        if (!activeHud) await toggleAstrePilotHUD();
+        else if (mountPromise) await mountPromise;
+        await runAutofill();
+      })();
       sendResponse({ status: 'autofilling' });
     }
-    return true;
-  });
+    return false;
+  };
+  chrome.runtime.onMessage.addListener(messageListener);
+  window.__ASTREPILOT_CLEANUP__ = () => {
+    chrome.runtime.onMessage.removeListener(messageListener);
+    if (activeHud) { try { activeHud.destroy(); } catch (e) {} activeHud = null; }
+  };
 
-  /* ── IN-PAGE KEYBOARD SHORTCUT LISTENER ────────────────────────────── */
-  // Listens for Alt+Shift+A or Alt+A in-page to toggle HUD instantly
-  window.addEventListener('keydown', (e) => {
-    if (e.altKey && (e.key === 'a' || e.key === 'A')) {
-      const tag = document.activeElement ? document.activeElement.tagName : '';
-      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || Boolean(document.activeElement?.isContentEditable);
-      if (e.shiftKey || !isInput) {
-        e.preventDefault();
-        toggleAstrePilotHUD();
-      }
+  /* -- IN-PAGE KEYBOARD SHORTCUT LISTENER -- */
+  // Shortcut: Alt+Shift+A (primary), Alt+A when not in a text field (secondary)
+  // Note: On Windows, Alt+Shift may be consumed by IME/language switcher.
+  // The extension command in manifest.json also triggers this via background.js -> TOGGLE_HUD message.
+  const keydownListener = (e) => {
+    const tag = document.activeElement ? document.activeElement.tagName : '';
+    const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || Boolean(document.activeElement && document.activeElement.isContentEditable);
+    // Alt+Shift+A — works regardless of focus
+    if (e.altKey && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleAstrePilotHUD();
+      return;
     }
-  });
+    // Alt+A — only when not focused inside a text field
+    if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && (e.key === 'a' || e.key === 'A') && !isEditable) {
+      e.preventDefault();
+      toggleAstrePilotHUD();
+      return;
+    }
+  };
+  window.addEventListener('keydown', keydownListener);
 
-  /* ── HELPERS ──────────────────────────────────────────────────────── */
+  const oldCleanup = window.__ASTREPILOT_CLEANUP__;
+  window.__ASTREPILOT_CLEANUP__ = () => {
+    if (oldCleanup) try { oldCleanup(); } catch(e) {}
+    window.removeEventListener('keydown', keydownListener);
+  };
+
+  /* -- HELPERS -- */
   function el(tag, attrs, children) {
     const e = document.createElement(tag);
     Object.entries(attrs || {}).forEach(([k, v]) => {
@@ -80,14 +107,14 @@
       { 'Authorization': 'Bearer ' + config.token },
       opts.headers || {}
     );
-    if (!opts.method || opts.method === 'POST' || opts.method === 'PUT') {
+    if (opts.body && !headers['Content-Type']) {
       headers['Content-Type'] = 'application/json';
     }
     const cleanOrigin = config.origin.replace(/\/$/, '');
     return fetch(cleanOrigin + '/api/autopilot' + path, { ...opts, headers });
   }
 
-  /* ── FIELD CLASSIFIER ─────────────────────────────────────────────── */
+  /* -- FIELD CLASSIFIER -- */
   const FIELD_PATTERNS = [
     { type: 'FIRST_NAME',   kw: ['first_name', 'firstname', 'fname', 'given_name', 'first-name', 'first name', 'givenname'] },
     { type: 'LAST_NAME',    kw: ['last_name', 'lastname', 'lname', 'family_name', 'surname', 'last-name', 'last name', 'familyname'] },
@@ -120,24 +147,21 @@
     return [ariaLabel, labelText.toLowerCase(), placeholder].join(' ').replace(/\s+/g, ' ');
   }
 
+  // Short keywords that appear inside unrelated words ("excellent", "electricity", "advisable")
+  // must match on word boundaries; longer, specific keywords keep substring matching.
+  const BOUNDARY_KW = new Set(['cell', 'city', 'visa']);
+  function kwMatch(signal, kw) {
+    if (!BOUNDARY_KW.has(kw)) return signal.includes(kw);
+    return new RegExp('(^|[^a-z])' + kw + '($|[^a-z])').test(signal);
+  }
+
   function classifyField(input) {
     const attrSignal = [
       (input.getAttribute('name') || '').toLowerCase(),
       (input.getAttribute('id') || '').toLowerCase(),
     ].join(' ');
 
-    const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
-    let labelEl = input.labels && input.labels[0];
-    let labelText = '';
-    if (labelEl) {
-      for (let n = 0; n < labelEl.childNodes.length; n++) {
-        if (labelEl.childNodes[n].nodeType === 3) labelText += labelEl.childNodes[n].textContent;
-      }
-      if (!labelText) labelText = labelEl.textContent;
-    }
-    labelText = labelText.toLowerCase();
-    const placeholder = (input.placeholder || '').toLowerCase();
-    const labelSignal = [ariaLabel, labelText, placeholder].join(' ');
+    const labelSignal = getLabelText(input);
 
     const parentEl = input.parentElement;
     const contextSignal = parentEl ? ((parentEl.getAttribute('class') || '') + ' ' + (parentEl.id || '')).toLowerCase() : '';
@@ -146,9 +170,9 @@
     FIELD_PATTERNS.forEach(p => {
       let score = 0;
       p.kw.forEach(k => {
-        if (attrSignal.includes(k)) score += 10;
-        if (labelSignal.includes(k)) score += 3;
-        if (contextSignal.includes(k)) score += 1;
+        if (kwMatch(attrSignal, k)) score += 10;
+        if (kwMatch(labelSignal, k)) score += 3;
+        if (kwMatch(contextSignal, k)) score += 1;
       });
       if (score > best.score) best = { type: p.type, score };
     });
@@ -194,10 +218,13 @@
     return results;
   }
 
-  /* ── REACT / VUE NATIVE INPUT DISPATCHER ───────────────────────────── */
+
+  /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
   function setNativeValue(el, value) {
     if (el.tagName === 'INPUT' && el.type === 'radio') {
-      const radios = document.querySelectorAll(`input[type="radio"][name="${el.name}"]`);
+      const radios = el.name
+        ? document.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
+        : [el];
       let target = null;
       const valLower = String(value).toLowerCase();
       for (let i = 0; i < radios.length; i++) {
@@ -206,8 +233,7 @@
         if (rVal === valLower || labelText.includes(valLower) ||
            (valLower === 'yes' && (rVal === 'true' || rVal === '1')) ||
            (valLower === 'no' && (rVal === 'false' || rVal === '0'))) {
-          target = radios[i];
-          break;
+          target = radios[i]; break;
         }
       }
       if (target) {
@@ -228,8 +254,7 @@
         if (oVal === valLower || oText.includes(valLower) ||
            (valLower === 'yes' && (oVal === 'true' || oVal === '1')) ||
            (valLower === 'no' && (oVal === 'false' || oVal === '0'))) {
-          targetOpt = opt;
-          break;
+          targetOpt = opt; break;
         }
       }
       if (targetOpt) {
@@ -244,55 +269,12 @@
       ? window.HTMLTextAreaElement.prototype
       : window.HTMLInputElement.prototype;
     const setter = Object.getOwnPropertyDescriptor(proto, 'value');
-    if (setter && setter.set) {
-      setter.set.call(el, value);
-    } else {
-      el.value = value;
-    }
+    if (setter && setter.set) { setter.set.call(el, value); } else { el.value = value; }
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  /* ── MATRIX DECODING ANIMATION ───────────────────────────────────── */
-  const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@._-+#$';
-  function decodeFill(inputEl, targetValue, onUpdate) {
-    if (inputEl.tagName === 'SELECT' || (inputEl.tagName === 'INPUT' && inputEl.type === 'radio')) {
-      return new Promise(resolve => {
-        setNativeValue(inputEl, targetValue);
-        if (onUpdate) onUpdate(targetValue);
-        resolve();
-      });
-    }
-
-    return new Promise(resolve => {
-      let iteration = 0;
-      const length = String(targetValue).length;
-      const strValue = String(targetValue);
-      const interval = setInterval(() => {
-        const display = strValue.split('').map((char, i) => {
-          if (char === ' ' || char === '\n') return char;
-          if (i < Math.floor(iteration)) return char;
-          return CHARSET[Math.floor(Math.random() * CHARSET.length)];
-        }).join('');
-        setNativeValue(inputEl, display);
-        if (onUpdate) onUpdate(display);
-        iteration += length > 100 ? 1.5 : 0.6;
-        if (iteration >= length) {
-          setNativeValue(inputEl, targetValue);
-          if (onUpdate) onUpdate(targetValue);
-          clearInterval(interval);
-          resolve();
-        }
-      }, 28);
-    });
-  }
-
-  /* ── TYPE ICONS & LABELS ─────────────────────────────────────────── */
-  const TYPE_ICONS = {
-    FIRST_NAME: '👤', LAST_NAME: '👤', FULL_NAME: '👤', EMAIL: '✉', PHONE: '📞',
-    LOCATION: '📍', LINKEDIN: '🔗', GITHUB: '🐙', PORTFOLIO: '🌐', TITLE: '💼',
-    COVER_LETTER: '📝', SUMMARY: '📄', WORK_AUTH: '✅', VISA: '🛂', SALARY: '💰', SCREENING: '❓',
-  };
+  /* -- TYPE LABELS -- */
   const TYPE_LABELS = {
     FIRST_NAME: 'First Name', LAST_NAME: 'Last Name', FULL_NAME: 'Full Name',
     EMAIL: 'Email Address', PHONE: 'Phone Number', LOCATION: 'Location',
@@ -301,45 +283,46 @@
     WORK_AUTH: 'Work Authorization', VISA: 'Visa Sponsorship', SALARY: 'Salary', SCREENING: 'Screening Q',
   };
 
-  /* ── RESOLVE VALUES ──────────────────────────────────────────────── */
+  /* -- RESOLVE PREVIEW -- */
   function resolvePreview(field, profile, session) {
     switch (field.type) {
-      case 'FIRST_NAME':  return profile.firstName  || null;
-      case 'LAST_NAME':   return profile.lastName   || null;
-      case 'FULL_NAME':   return profile.fullName   || null;
-      case 'EMAIL':       return profile.email      || null;
-      case 'PHONE':       return profile.phone      || null;
-      case 'LOCATION':    return profile.location   || null;
-      case 'LINKEDIN':    return profile.linkedinUrl || null;
-      case 'GITHUB':      return profile.githubUrl  || null;
-      case 'PORTFOLIO':   return profile.portfolioUrl || null;
-      case 'TITLE':       return session ? session.jobTitle : (profile.title || null);
-      case 'SUMMARY':     return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
-      case 'SALARY':      return session ? (session.salaryRange || null) : (profile.salaryRange || null);
-      case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
-      case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
+      case 'FIRST_NAME':   return profile.firstName || null;
+      case 'LAST_NAME':    return profile.lastName || null;
+      case 'FULL_NAME':    return profile.fullName || null;
+      case 'EMAIL':        return profile.email || null;
+      case 'PHONE':        return profile.phone || null;
+      case 'LOCATION':     return profile.location || null;
+      case 'LINKEDIN':     return profile.linkedinUrl || null;
+      case 'GITHUB':       return profile.githubUrl || null;
+      case 'PORTFOLIO':    return profile.portfolioUrl || null;
+      case 'TITLE':        return session ? session.jobTitle : (profile.title || null);
+      case 'SUMMARY':      return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
+      case 'SALARY':       return session ? (session.salaryRange || null) : (profile.salaryRange || null);
+      case 'WORK_AUTH':    return profile.workAuthorized ? 'Yes' : 'No';
+      case 'VISA':         return profile.requiresVisa ? 'Yes' : 'No';
       case 'COVER_LETTER': return null;
-      case 'SCREENING':   return null;
+      case 'SCREENING':    return null;
       default: return null;
     }
   }
 
+  /* -- RESOLVE VALUE (async, calls AI for COVER_LETTER/SCREENING) -- */
   async function resolveValue(field, profile, session) {
     switch (field.type) {
-      case 'FIRST_NAME':    return profile.firstName;
-      case 'LAST_NAME':     return profile.lastName;
-      case 'FULL_NAME':     return profile.fullName;
-      case 'EMAIL':         return profile.email;
-      case 'PHONE':         return profile.phone;
-      case 'LOCATION':      return profile.location;
-      case 'LINKEDIN':      return profile.linkedinUrl;
-      case 'GITHUB':        return profile.githubUrl;
-      case 'PORTFOLIO':     return profile.portfolioUrl;
-      case 'TITLE':         return session ? session.jobTitle : profile.title;
-      case 'SUMMARY':       return session ? session.tailoredSummary : profile.professionalSummary;
-      case 'WORK_AUTH':     return profile.workAuthorized ? 'Yes' : 'No';
-      case 'VISA':          return profile.requiresVisa ? 'Yes' : 'No';
-      case 'SALARY':        return session ? session.salaryRange : (profile.salaryRange || null);
+      case 'FIRST_NAME':  return profile.firstName;
+      case 'LAST_NAME':   return profile.lastName;
+      case 'FULL_NAME':   return profile.fullName;
+      case 'EMAIL':       return profile.email;
+      case 'PHONE':       return profile.phone;
+      case 'LOCATION':    return profile.location;
+      case 'LINKEDIN':    return profile.linkedinUrl;
+      case 'GITHUB':      return profile.githubUrl;
+      case 'PORTFOLIO':   return profile.portfolioUrl;
+      case 'TITLE':       return session ? session.jobTitle : profile.title;
+      case 'SUMMARY':     return session ? session.tailoredSummary : profile.professionalSummary;
+      case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
+      case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
+      case 'SALARY':      return session ? session.salaryRange : (profile.salaryRange || null);
       case 'COVER_LETTER':
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
@@ -350,91 +333,66 @@
           const res = await apFetch('/answer', {
             method: 'POST',
             body: JSON.stringify({
-              question,
-              company,
-              jobTitle,
-              context: session ? `JOB DESCRIPTION:\n${session.jdText}\n\nTAILORED PROFILE:\n${session.tailoredSummary}` : profile._context,
+              question, company, jobTitle,
+              context: session ? 'JOB DESCRIPTION:\n' + (session.jdText || '') + '\n\nTAILORED PROFILE:\n' + (session.tailoredSummary || '') : profile._context,
             }),
           });
           if (!res.ok) return null;
           const data = await res.json();
           return data.answer || null;
-        } catch (e) {
-          return null;
-        }
+        } catch (e) { return null; }
       }
       default: return null;
     }
   }
 
-  /* ── HUD BUILDER ──────────────────────────────────────────────────── */
+  /* -- HUD ORCHESTRATOR (delegates to AstrePilotHUD Shadow DOM module) -- */
   async function toggleAstrePilotHUD() {
+    // Guard: wait for hud-ui.js to initialize (loads before content.js per manifest order)
+    if (typeof window.AstrePilotHUD === 'undefined') {
+      await new Promise(r => setTimeout(r, 200));
+      if (typeof window.AstrePilotHUD === 'undefined') {
+        console.warn('[AstrePilot] hud-ui.js failed to load.');
+        return;
+      }
+    }
+    // A mount is in flight: ignore extra toggles (prevents duplicate HUDs)
+    if (mountPromise) return mountPromise;
+
+    // If HUD is already open -> toggle collapse
     if (activeHud) {
-      closeHUD();
+      if (activeHud.isCollapsed) { activeHud.expand(); } else { activeHud.collapse(); }
       return;
     }
 
+    mountPromise = mountHud().finally(() => { mountPromise = null; });
+    return mountPromise;
+  }
+
+  async function mountHud() {
     const config = await getStoredConfig();
     if (!config.token) {
-      alert('AstrePilot: No connection token found. Click the AstrePilot extension icon in your browser toolbar to connect to AstreWork.');
+      activeHud = AstrePilotHUD.mount({ onClose: () => { activeHud = null; } });
+      activeHud.setState('not-connected');
       return;
     }
 
-    const hud = el('div', { id: 'ap-hud' });
-    const header = el('div', { id: 'ap-header' }, [
-      el('div', { id: 'ap-logo' }, ['AW']),
-      el('div', { id: 'ap-title' }, ['AstrePilot']),
-      el('span', { id: 'ap-tag' }, ['EXTENSION']),
-      el('button', { id: 'ap-close', title: 'Close' }, ['×']),
-    ]);
-    const statusSection = el('div', { id: 'ap-status' }, [
-      el('div', { id: 'ap-status-row' }, [
-        el('div', { id: 'ap-dot' }),
-        el('div', { id: 'ap-status-text' }, ['Initialising…']),
-      ]),
-      el('div', { id: 'ap-bar-track' }, [el('div', { id: 'ap-bar-fill' })]),
-    ]);
-    const list = el('div', { id: 'ap-list' });
-    const footer = el('div', { id: 'ap-footer' }, [
-      el('div', { id: 'ap-count', className: 'ap-count-idle' }, ['Ready']),
-      el('button', { id: 'ap-action-btn' }, ['Close']),
-    ]);
-
-    hud.appendChild(header);
-    hud.appendChild(statusSection);
-    hud.appendChild(list);
-    hud.appendChild(footer);
-    document.body.appendChild(hud);
-    activeHud = hud;
-
-    // Draggable
-    let dx = 0, dy = 0, startX = 0, startY = 0;
-    header.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      header.classList.add('ap-dragging');
-      startX = e.clientX - dx;
-      startY = e.clientY - dy;
-      function move(e) {
-        dx = e.clientX - startX;
-        dy = e.clientY - startY;
-        hud.style.transform = `translate(${dx}px, ${dy}px)`;
+    // Mount HUD immediately in connecting state so user gets visual feedback
+    activeHud = AstrePilotHUD.mount({
+      onAutofill: runAutofill,
+      onUndo: runUndo,
+      onClose: () => {
+        if (detectedFields) {
+          detectedFields.forEach(f => f.element.classList.remove('ap-field-active', 'ap-field-done'));
+        }
+        activeHud = null;
       }
-      function up() {
-        header.classList.remove('ap-dragging');
-        document.removeEventListener('mousemove', move);
-        document.removeEventListener('mouseup', up);
-      }
-      document.addEventListener('mousemove', move);
-      document.addEventListener('mouseup', up);
     });
+    activeHud.setState('connecting');
 
-    document.getElementById('ap-close').addEventListener('click', closeHUD);
-
-    // Fetch Profile & Session
-    setStatus('Connecting to AstreWork…', 'loading');
     try {
       const profileRes = await apFetch('/profile');
-      if (!profileRes.ok) throw new Error('Failed to load profile');
+      if (!profileRes.ok) throw new Error('profile-failed');
       userProfile = await profileRes.json();
 
       const sessionRes = await apFetch('/session');
@@ -443,187 +401,137 @@
         activeSession = sData.session;
       }
     } catch (err) {
-      setStatus('Could not connect. Check token.', 'error');
+      if (activeHud) activeHud.setState('not-connected');
       return;
     }
+    if (!activeHud) return; // user closed the HUD while loading
 
-    if (activeSession) {
-      const tag = document.getElementById('ap-tag');
-      tag.textContent = 'PRIMED: ' + (activeSession.company || 'JOB').toUpperCase();
-      tag.style.background = 'rgba(34,197,94,0.12)';
-      tag.style.color = '#4ade80';
-      tag.style.borderColor = 'rgba(34,197,94,0.2)';
-    }
+    activeHud.setIdentity({
+      fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
+      title: userProfile.title || 'Candidate',
+      primedCompany: activeSession ? activeSession.company : null
+    });
 
-    // Scan
-    setStatus('Scanning page…', 'loading');
+    activeHud.setState('scanning');
     detectedFields = scanFields();
 
     if (detectedFields.length === 0) {
-      setStatus('No fillable fields found.', 'error');
+      activeHud.setState('no-fields');
       return;
     }
 
-    const rowEls = {};
-    const previews = detectedFields.map(f => {
+    const hudFields = detectedFields.map(f => {
       const isAI = f.type === 'COVER_LETTER' || f.type === 'SCREENING';
       const isSession = (f.type === 'TITLE' || f.type === 'SUMMARY' || f.type === 'SALARY') && !!activeSession;
+      const preview = resolvePreview(f, userProfile, activeSession);
       return {
-        field: f,
-        value: resolvePreview(f, userProfile, activeSession),
-        source: isAI ? 'ai' : (isSession ? 'session' : 'profile')
+        id: f.id,
+        type: f.type.toLowerCase().replace(/_/g, ''),
+        label: TYPE_LABELS[f.type] || f.type,
+        preview: isAI ? 'AI-generated on fill' : (preview || '-'),
+        source: isAI ? 'ai' : (isSession ? 'session' : 'profile'),
+        status: ''
       };
     });
 
-    const aiCount = previews.filter(p => p.source === 'ai').length;
-    const dataCount = previews.filter(p => p.value).length;
-
-    list.innerHTML = '';
-    previews.forEach(p => {
-      const f = p.field;
-      const row = el('div', { className: 'ap-row', id: 'ap-row-' + f.id });
-      const icon = el('div', { className: 'ap-icon' }, [TYPE_ICONS[f.type] || '·']);
-      const label = el('div', { className: 'ap-row-label ap-label-active' }, [TYPE_LABELS[f.type] || f.type]);
-      const badge = el('div', {
-        className: 'ap-badge ' + (p.source === 'ai' ? 'ap-badge-ai' : (p.source === 'session' ? 'ap-badge-session' : 'ap-badge-profile'))
-      }, [p.source === 'ai' ? 'AI' : (p.source === 'session' ? 'Session' : 'Profile')]);
-      const valueEl = el('div', {
-        className: p.source === 'ai' ? 'ap-row-value ap-value-ai' : 'ap-row-value'
-      }, [p.source === 'ai' ? '✦ AI answer' : (p.value ? p.value.slice(0, 18) : '—')]);
-      const statusEl = el('div', { className: 'ap-pending' }, ['○']);
-
-      row.appendChild(icon);
-      row.appendChild(label);
-      row.appendChild(badge);
-      row.appendChild(valueEl);
-      row.appendChild(statusEl);
-      list.appendChild(row);
-
-      rowEls[f.id] = { row, label, value: valueEl, status: statusEl };
-    });
-
-    setStatus(`Ready — ${detectedFields.length} fields detected`, 'done');
-    const countEl = document.getElementById('ap-count');
-    countEl.textContent = `${dataCount} instant${aiCount > 0 ? `, ${aiCount} AI` : ''}`;
-
-    const autofillBtn = el('button', { id: 'ap-autofill' }, ['⚡ Autofill']);
-    footer.insertBefore(autofillBtn, document.getElementById('ap-action-btn'));
-
-    // Autofill Action
-    let fillStarted = false;
-    autofillBtn.addEventListener('click', async () => {
-      if (fillStarted) return;
-      fillStarted = true;
-
-      autofillBtn.disabled = true;
-      autofillBtn.textContent = 'Filling…';
-      setStatus(`Filling ${detectedFields.length} fields…`, 'loading');
-
-      let filled = 0;
-      let hadAI = false;
-
-      for (let i = 0; i < detectedFields.length; i++) {
-        const f = detectedFields[i];
-        const r = rowEls[f.id];
-        if (r) {
-          r.row.className = 'ap-row ap-row-active';
-          r.status.className = 'ap-spin';
-          r.status.textContent = '';
-        }
-
-        if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') hadAI = true;
-
-        const val = await resolveValue(f, userProfile, activeSession);
-        const skipped = !val || String(val).trim() === '';
-
-        if (!skipped) {
-          await decodeFill(f.element, val, (curr) => {
-            if (r) r.value.textContent = curr.slice(0, 18);
-          });
-          f.element.classList.add('ap-filled-field');
-          filled++;
-        }
-
-        if (r) {
-          r.row.className = 'ap-row';
-          r.status.className = skipped ? 'ap-skip' : 'ap-check';
-          r.status.textContent = skipped ? '—' : '✓';
-          r.value.textContent = skipped ? '' : String(val).slice(0, 18);
-        }
-
-        const pct = Math.round(((i + 1) / detectedFields.length) * 100);
-        document.getElementById('ap-bar-fill').style.width = pct + '%';
-        countEl.textContent = `${filled} / ${detectedFields.length} fields filled`;
-
-        await new Promise(res => setTimeout(res, 100));
-      }
-
-      // Log Autofill Event
-      try {
-        const titleMatch = document.title.match(/(.+?)\s*[|\-–—]\s*(.+)/);
-        await apFetch('/log', {
-          method: 'POST',
-          body: JSON.stringify({
-            siteUrl: window.location.href,
-            company: activeSession?.company || (titleMatch ? titleMatch[2].trim() : ''),
-            jobTitle: activeSession?.jobTitle || (titleMatch ? titleMatch[1].trim() : ''),
-            fieldsTotal: detectedFields.length,
-            fieldsFilled: filled,
-            hasAiAnswers: hadAI,
-          })
-        });
-      } catch (e) { /* silent */ }
-
-      const timeSaved = Math.round(filled * 1.5);
-      setStatus(`✦ ${filled} / ${detectedFields.length} filled • Saved ~${timeSaved}m`, 'done');
-      document.getElementById('ap-bar-fill').classList.add('ap-bar-done');
-      autofillBtn.style.display = 'none';
-
-      const actionBtn = document.getElementById('ap-action-btn');
-      actionBtn.textContent = '↺ Undo';
-      actionBtn.style.color = '#ef4444';
-      actionBtn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
-    });
-
-    document.getElementById('ap-action-btn').addEventListener('click', function () {
-      if (this.textContent === '↺ Undo') {
-        detectedFields.forEach(f => {
-          if (f.originalValue !== undefined) {
-            if (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox')) {
-              f.element.checked = f.originalValue;
-            } else {
-              f.element.value = f.originalValue;
-            }
-            f.element.dispatchEvent(new Event('input', { bubbles: true }));
-            f.element.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        });
-      }
-      closeHUD();
-    });
+    activeHud.setFields(hudFields);
+    activeHud.setProgress(0, detectedFields.length);
+    activeHud.setState('ready');
   }
 
-  function setStatus(text, state) {
-    const el = document.getElementById('ap-status-text');
-    if (el) el.textContent = text;
-    const dot = document.getElementById('ap-dot');
-    if (!dot) return;
-    if (state === 'done') {
-      dot.className = 'ap-dot ap-done';
-    } else if (state === 'error') {
-      dot.className = 'ap-dot ap-error';
-    } else {
-      dot.className = 'ap-dot';
+  async function runAutofill() {
+    const hud = activeHud;
+    if (!hud || isFilling || !detectedFields || !detectedFields.length) return;
+    isFilling = true;
+    try {
+      await fillAllFields(hud);
+    } finally {
+      isFilling = false;
     }
   }
 
-  function closeHUD() {
-    if (detectedFields && detectedFields.length) {
-      detectedFields.forEach(f => f.element.classList.remove('ap-filled-field'));
+  async function fillAllFields(hud) {
+    hud.setState('filling');
+    let filled = 0;
+    let hadAI = false;
+
+    for (let i = 0; i < detectedFields.length; i++) {
+      if (activeHud !== hud) return; // HUD was closed/replaced mid-run
+      const f = detectedFields[i];
+      hud.markRow(f.id, 'active');
+
+      if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') hadAI = true;
+
+      const val = await resolveValue(f, userProfile, activeSession);
+      const skipped = !val || String(val).trim() === '';
+
+      if (!skipped) {
+        if (f.element.tagName === 'SELECT' || (f.element.tagName === 'INPUT' && f.element.type === 'radio')) {
+          setNativeValue(f.element, val);
+        } else {
+          AstrePilotHUD.highlight(f.element);
+          await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v) => setNativeValue(el, v));
+        }
+        filled++;
+      }
+
+      hud.markRow(f.id, skipped ? 'skipped' : 'done', skipped ? '-' : String(val).slice(0, 30));
+      hud.setProgress(filled, detectedFields.length);
+      await new Promise(r => setTimeout(r, 80));
     }
+
+    try {
+      const titleMatch = document.title.match(/(.+?)\s*[|\-]\s*(.+)/);
+      await apFetch('/log', {
+        method: 'POST',
+        body: JSON.stringify({
+          siteUrl: window.location.href,
+          company: (activeSession && activeSession.company) || (titleMatch ? titleMatch[2].trim() : ''),
+          jobTitle: (activeSession && activeSession.jobTitle) || (titleMatch ? titleMatch[1].trim() : ''),
+          fieldsTotal: detectedFields.length,
+          fieldsFilled: filled,
+          hasAiAnswers: hadAI,
+        })
+      });
+    } catch (e) { /* silent */ }
+
+    if (activeHud !== hud) return;
+    hud.setState('done');
+    // Auto-collapse to pill after 4 seconds
+    setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, 4000);
+  }
+
+  function runUndo() {
+    if (!detectedFields) return;
+    detectedFields.forEach(f => {
+      if (f.originalValue !== undefined) {
+        if (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox')) {
+          f.element.checked = f.originalValue;
+        } else {
+          f.element.value = f.originalValue;
+        }
+        f.element.dispatchEvent(new Event('input', { bubbles: true }));
+        f.element.dispatchEvent(new Event('change', { bubbles: true }));
+        f.element.classList.remove('ap-field-active', 'ap-field-done');
+      }
+    });
     if (activeHud) {
-      activeHud.remove();
-      activeHud = null;
+      const hudFields = detectedFields.map(f => {
+        const isAI = f.type === 'COVER_LETTER' || f.type === 'SCREENING';
+        const preview = resolvePreview(f, userProfile, activeSession);
+        return {
+          id: f.id,
+          type: f.type.toLowerCase().replace(/_/g, ''),
+          label: TYPE_LABELS[f.type] || f.type,
+          preview: isAI ? 'AI-generated on fill' : (preview || '-'),
+          source: isAI ? 'ai' : 'profile',
+          status: ''
+        };
+      });
+      activeHud.setFields(hudFields);
+      activeHud.setProgress(0, detectedFields.length);
+      activeHud.setState('ready');
+      activeHud.expand();
     }
   }
 })();

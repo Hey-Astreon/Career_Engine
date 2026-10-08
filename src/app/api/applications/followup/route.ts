@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const { applicationId } = await req.json();
 
     if (!applicationId) {
@@ -17,7 +24,8 @@ export async function POST(req: Request) {
       include: { profile: true, jobPosting: true },
     });
 
-    if (!application) {
+    // Non-owners get the same response as a missing application
+    if (!application || application.profile.userId !== session.user.id) {
       return NextResponse.json(
         { success: false, error: "Application not found" },
         { status: 404 }

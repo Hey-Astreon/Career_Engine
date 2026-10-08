@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const [syncStates, providerJobs] = await Promise.all([
       db.providerSyncState.findMany({ orderBy: { providerKey: "asc" } }),
       db.jobPosting.groupBy({ by: ["platform", "isExpired"], _count: { _all: true } }),

@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeResumeDiff } from "@/lib/resumeDiff";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
 
@@ -14,11 +21,16 @@ export async function POST(req: Request) {
     }
 
     const [variantA, variantB] = await Promise.all([
-      db.resumeVariant.findUnique({ where: { id: variantIdA } }),
-      db.resumeVariant.findUnique({ where: { id: variantIdB } }),
+      db.resumeVariant.findUnique({ where: { id: variantIdA }, include: { profile: { select: { userId: true } } } }),
+      db.resumeVariant.findUnique({ where: { id: variantIdB }, include: { profile: { select: { userId: true } } } }),
     ]);
 
-    if (!variantA || !variantB) {
+    // Non-owners get the same response as a missing variant
+    if (
+      !variantA || !variantB ||
+      variantA.profile.userId !== session.user.id ||
+      variantB.profile.userId !== session.user.id
+    ) {
       return NextResponse.json({ success: false, error: "One or both variants not found" }, { status: 404 });
     }
 

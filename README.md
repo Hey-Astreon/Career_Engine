@@ -50,8 +50,8 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
     - **Quick Apply Toolkit:** Integrated tailored PDF card inside `QuickApplyDrawer` with dynamic variant pre-selection, instant download, and preview.
 
 ### 4. 🚀 AstrePilot (Autonomous Form Autofill & AI Injector)
-- **Native Chrome Extension (Manifest V3):** Packaged browser extension featuring a glassmorphic action popup UI, background service worker, automatic ATS portal detection badge (`boards.greenhouse.io`, `jobs.lever.co`, `myworkdayjobs.com`, `ashbyhq.com`, etc.), and global keyboard shortcut (`Ctrl+Shift+A`).
-- **Glassmorphic Injected HUD:** Draggable overlay UI deployed directly onto external ATS portals with real-time field classification, profile previews, and matrix decoding animations.
+- **Native Chrome Extension (Manifest V3):** Packaged browser extension featuring a clean light glass action popup, background service worker, automatic ATS portal detection badge (`boards.greenhouse.io`, `jobs.lever.co`, `myworkdayjobs.com`, `ashbyhq.com`, etc.), and global keyboard shortcut (`Alt+Shift+A`).
+- **Shadow DOM HUD:** Draggable, collapsible overlay (full card ↔ pill) rendered in a closed Shadow DOM so host-page CSS cannot interfere. Shows real-time field classification and profile previews, with a working Settings shortcut to the AstreWork settings page. All dynamic text is HTML-escaped before rendering.
 - **Zero-Hallucination AI Screening:** Automatically intercepts unknown `<textarea>` screening questions and queries the AstreWork multi-LLM backend (`/api/autopilot/answer`) to generate contextually accurate, non-hallucinated answers on the fly based on the active session's tailored resume.
 - **Safety First (Undo & Highlight):** Safely injects values using native DOM event dispatching (triggering React/Vue bindings). Features `ap-filled-field` visual highlighting and a strict **1-click Undo** mechanism to revert all AI inputs instantly.
 - **1-Click ZIP Download & Distribution:** Built directly into the AstreWork workspace settings (`astrepilot-extension.zip`) alongside the bookmarklet option.
@@ -59,6 +59,8 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 ### 5. 🔒 Enterprise-Grade API Security & Multi-Tenant Isolation
 - **Pipeline Lockdown:** Complete session-based verification enforcing `CRON_SECRET` and `getServerSession` boundaries over expensive data sync and scrape pipeline triggers.
 - **Strict Data Isolation:** All resume matching, kit generation, application tracking, and AI reasoning endpoints enforce strict `userId` alignment, eliminating cross-tenant spoofing and data leaks.
+- **Ownership Checks (IDOR-safe):** Resume variant read/update/compare and follow-up draft routes require a session **and** verify the record belongs to the caller; non-owners receive `404` so IDs cannot be probed. Scheduler history and source health require login.
+- **Safe Maintenance Scripts:** `cleanup_test_users.mjs` is a dry run by default and only deletes with `--confirm`.
   - **Resume Variants Sidebar:** Dual-tab workspace ("Locked PDFs" vs "Saved Drafts") with 1-click preview and download for all official disk variants.
   - **Complete Application Kit / Resume Builder:** Header modal providing full catalog inspection and instant downloads.
 
@@ -186,6 +188,8 @@ Career_Engine/
 │   │   │   ├── ai/                         # Multi-LLM router, scorer, ATS validator, drafter
 │   │   │   └── scheduler.ts                # DiscoveryScheduler singleton engine
 │   │   └── store/                          # Zustand candidate context store
+│   ├── extension/                          # AstrePilot MV3 extension (popup, HUD, background worker)
+│   ├── scripts/dev-patches/                # Archived one-off patch scripts (not shipped)
 │   └── prisma/                             # Database schema & candidate seed data
 ├── 2_Ayushi_Raj/                            # Ayushi Raj Master Profile & Document Vault
 │   └── 14_final_documents/                 # Locked tailored PDF resume variants

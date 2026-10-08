@@ -37,6 +37,15 @@ export async function POST(req: Request) {
     if (!siteUrl || fieldsTotal == null || fieldsFilled == null) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: CORS });
     }
+    if (
+      !Number.isInteger(fieldsTotal) ||
+      !Number.isInteger(fieldsFilled) ||
+      fieldsTotal < 0 ||
+      fieldsFilled < 0 ||
+      fieldsFilled > fieldsTotal
+    ) {
+      return NextResponse.json({ error: "Invalid field counts" }, { status: 400, headers: CORS });
+    }
 
     let profile = await db.profile.findFirst({
       where: { userId },
@@ -87,14 +96,22 @@ export async function GET(req: Request) {
       return NextResponse.json({ stats: { fills: 0, fields: 0, hoursSaved: 0 }, history: [] }, { headers: CORS });
     }
 
-    const fills = await db.autopilotFill.findMany({
-      where: { profileId: profile.id },
-      orderBy: { filledAt: "desc" },
-      take: 50,
-    });
+    // History is capped for display, but stats must cover ALL fills.
+    const [fills, totals] = await Promise.all([
+      db.autopilotFill.findMany({
+        where: { profileId: profile.id },
+        orderBy: { filledAt: "desc" },
+        take: 50,
+      }),
+      db.autopilotFill.aggregate({
+        where: { profileId: profile.id },
+        _count: { _all: true },
+        _sum: { fieldsFilled: true },
+      }),
+    ]);
 
-    const totalFills = fills.length;
-    const totalFields = fills.reduce((sum, f) => sum + f.fieldsFilled, 0);
+    const totalFills = totals._count._all;
+    const totalFields = totals._sum.fieldsFilled ?? 0;
     // Each field fill saves ~1.5 min (avg job form takes 12-15 min, ~10 fields)
     const hoursSaved = Math.round((totalFields * 1.5) / 60 * 10) / 10;
 

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstrePilot HUD Preview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #e2e8f0;
+            padding: 40px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .controls {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        h1 { margin: 0; font-size: 20px; }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        button:hover {
+            background: #f1f5f9;
+        }
+
+        .hostile-styles {
+            all: revert !important;
+            font: 20px "Comic Sans MS", cursive !important;
+            color: red !important;
+            background: yellow !important;
+        }
+
+        /* Mock host page input field to test highlight */
+        .mock-input-container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .mock-input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+        }
+
+        /* The host page CSS that MUST live outside the shadow DOM */
+        .ap-field-active  { box-shadow: 0 0 0 3px rgba(29,95,209,.28) !important; transition: box-shadow .3s cubic-bezier(.32,.72,0,1) !important; }
+        .ap-field-done    { box-shadow: 0 0 0 3px rgba(19,135,92,.22) !important; transition: box-shadow .6s ease !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="controls" id="control-panel">
+        <h1>HUD Dev Preview</h1>
+        <div>Cycle through the states to see how the UI reacts:</div>
+        
+        <div class="btn-group">
+            <button onclick="setTheme('light')">Light Theme</button>
+            <button onclick="setTheme('dark')">Dark Theme</button>
+            <button onclick="toggleHostileCSS()">Toggle Hostile Host CSS</button>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="setState('connecting')">State: Connecting</button>
+            <button onclick="setState('not-connected')">State: Not Connected</button>
+            <button onclick="setState('no-profile')">State: No Profile</button>
+            <button onclick="setState('no-fields')">State: No Fields</button>
+            <button onclick="setState('ready')">State: Ready</button>
+            <button onclick="setState('done')">State: Done</button>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="hud.collapse()">Collapse to Pill</button>
+            <button onclick="hud.expand()">Expand HUD</button>
+        </div>
+        
+        <div class="btn-group">
+            <button onclick="simulateAutofill()" style="background:#1d5fd1; color:white; border-color:#1d5fd1;">Simulate Autofill</button>
+            <button onclick="simulateReset()">Reset Autofill</button>
+        </div>
+    </div>
+
+    <div class="mock-input-container">
+        <label>Host Page Input Field (Test animation/highlight)</label>
+        <input type="text" class="mock-input" id="test-input" placeholder="Value will be typed here...">
+    </div>
+
+    <!-- Load the UI Script -->
+    <script src="../hud-ui.js"></script>
+    <script>
+        // Mock data
+        const profile = {
+            fullName: "Roushan Kumar",
+            title: "Full-Stack Engineer",
+            primedCompany: "NovaSphere AI"
+        };
+
+        const fields = [
+            { id: 1, type: "firstname", label: "First Name", preview: "Roushan", source: "profile", status: "" },
+            { id: 2, type: "lastname", label: "Last Name", preview: "Kumar", source: "profile", status: "" },
+            { id: 3, type: "email", label: "Email Address", preview: "playboxstation460@gmail.com", source: "profile", status: "" },
+            { id: 4, type: "coverletter", label: "Cover Letter", preview: "Written for this role on fill...", source: "ai", status: "" }
+        ];
+
+        // Fetch the local CSS file and mount
+        fetch('../hud.shadow.css')
+            .then(res => res.text())
+            .then(css => {
+                window.hud = AstrePilotHUD.mount({
+                    css: css,
+                    onAutofill: simulateAutofill,
+                    onUndo: simulateReset,
+                    onClose: () => alert('Close clicked')
+                });
+                
+                hud.setIdentity(profile);
+                hud.setFields(JSON.parse(JSON.stringify(fields)));
+                hud.setState('ready');
+            });
+
+        function setState(state) {
+            hud.setState(state);
+            if (state === 'ready' || state === 'done') {
+                hud.setIdentity(profile);
+                hud.setFields(JSON.parse(JSON.stringify(fields)));
+                if (state === 'done') {
+                    fields.forEach(f => hud.markRow(f.id, 'done', f.preview));
+                }
+            } else {
+                hud.setIdentity(null);
+                hud.setFields([]);
+            }
+            hud.expand();
+        }
+
+        function setTheme(theme) {
+            // Force media query override for preview purposes via JS injection on shadow root
+            const root = document.getElementById('astrepilot-root').shadowRoot;
+            let style = root.getElementById('theme-override');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'theme-override';
+                root.appendChild(style);
+            }
+            
+            if (theme === 'dark') {
+                style.textContent = `
+                    :host {
+                        --ap-bg: rgba(15, 23, 42, 0.85) !important;
+                        --ap-bg-solid: #0f172a !important;
+                        --ap-surface: rgba(255, 255, 255, 0.05) !important;
+                        --ap-surface-hover: rgba(255, 255, 255, 0.08) !important;
+                        --ap-ink: #f8fafc !important;
+                        --ap-ink-2: #94a3b8 !important;
+                        --ap-ink-3: #64748b !important;
+                        --ap-line: rgba(255, 255, 255, 0.1) !important;
+                        --ap-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5), 0 0 0 1px rgba(255,255,255,0.05) !important;
+                        --ap-shadow-hover: 0 25px 35px -5px rgb(0 0 0 / 0.6), 0 10px 15px -6px rgb(0 0 0 / 0.5), 0 0 0 1px rgba(255,255,255,0.08) !important;
+                    }
+                `;
+                document.body.style.background = '#0f172a';
+                document.getElementById('control-panel').style.background = '#1e293b';
+                document.getElementById('control-panel').style.color = '#f8fafc';
+                document.querySelector('.mock-input-container').style.background = '#1e293b';
+                document.querySelector('.mock-input-container').style.color = '#f8fafc';
+            } else {
+                style.textContent = '';
+                document.body.style.background = '#e2e8f0';
+                document.getElementById('control-panel').style.background = 'white';
+                document.getElementById('control-panel').style.color = 'black';
+                document.querySelector('.mock-input-container').style.background = 'white';
+                document.querySelector('.mock-input-container').style.color = 'black';
+            }
+        }
+
+        function toggleHostileCSS() {
+            document.body.classList.toggle('hostile-styles');
+        }
+
+        async function simulateAutofill() {
+            hud.expand();
+            hud.setState('filling');
+            const input = document.getElementById('test-input');
+            input.value = '';
+            
+            for (let i = 0; i < fields.length; i++) {
+                const f = fields[i];
+                hud.markRow(f.id, 'active');
+                
+                if (i === 3) {
+                    AstrePilotHUD.highlight(input);
+                    await AstrePilotHUD.fillAnimated(input, "Dear Hiring Manager, I am writing to apply for the position...", 
+                        (el, val) => el.value = val);
+                } else {
+                    await new Promise(r => setTimeout(r, 400));
+                }
+                
+                hud.markRow(f.id, 'done');
+                hud.setProgress(i + 1, fields.length);
+            }
+            
+            hud.setState('done');
+            
+            // Auto collapse after 4s
+            setTimeout(() => {
+                if (hud.state === 'done' && !hud.isCollapsed) {
+                    hud.collapse();
+                }
+            }, 4000);
+        }
+
+        function simulateReset() {
+            const input = document.getElementById('test-input');
+            input.value = '';
+            input.className = 'mock-input';
+            hud.expand();
+            hud.setFields(JSON.parse(JSON.stringify(fields)));
+            hud.setState('ready');
+        }
+    </script>
+</body>
+</html>

@@ -450,6 +450,16 @@ npm run dev
   - **3. Global Keyboard Shortcut:** Configured `Ctrl+Shift+A` (or `Command+Shift+A` on Mac) to toggle and launch the glassmorphic HUD on any web page without clicking browser UI.
   - **4. Glassmorphic Action Popup:** Dark mode glassmorphic UI displaying candidate identity, connection status, primed role/session tags, live autofill stats, 1-click token auto-detection from open AstreWork tabs, and direct fill actions.
   - **5. 1-Click ZIP Packaging & Workspace Integration:** Automated compression generating `public/downloads/astrepilot-extension.zip`. Enhanced `AstrePilotCard` with tabbed mode selector ("Chrome Extension (Recommended)" vs "Browser Bookmarklet") and 1-click ZIP download.
+- [x] **Phase 21: AstrePilot HUD Refactor & Shadow DOM Isolation**
+  - **1. Architecture Migration:** Decoupled UI rendering logic from `content.js` into `hud-ui.js` utilizing Web Components (`ShadowRoot`). This guarantees zero CSS bleed-in or bleed-out on host web pages.
+  - **2. Dynamic UI Redesign:** Rebuilt HUD aesthetics aligning with AstreWork branding (`#1d5fd1` primary blue, `#7c3aed` AI violet). Engineered a dynamic Draggable Pill Mode (`AstrePilotHUD.mount()`) maintaining screen estate efficiency.
+  - **3. Enhanced Script Injection Orchestration:** Refactored `popup.js` and `background.js` to ensure deterministic execution order (`hud-ui.js` → `hud.shadow.css` → `content.js`), eliminating startup race conditions.
+  - **4. Keyboard Accessibility:** Implemented robust event listeners for `Alt+Shift+A` and `Alt+A` to instantly toggle the HUD visibility globally across candidate sessions.
+  - **5. Extension Reload Resilience & Injection Guard Patch:** Resolved the "Launch button not working" issue caused by orphaned content script contexts and multiple injection guard locking (`window.__ASTREPILOT_INJECTED__`). Implemented `window.__ASTREPILOT_CLEANUP__` to safely tear down old `message` and `keydown` listeners before registering new ones, ensuring flawless recovery on extension reloads without duplicating event handlers.
+  - **6. Secure CSS Injection via CSP Bypass:** Upgraded `hud-ui.js` CSS fetching mechanism to avoid zero-dimension/invisible HUDs on strict Content Security Policy (CSP) websites (e.g., GitHub, Twitter). Shadow DOM CSS is now securely requested via `chrome.runtime.sendMessage({ action: 'GET_SHADOW_CSS' })`, passing the stylesheet directly from the background service worker to perfectly bypass `connect-src` restrictions.
+  - **7. Butter-Smooth CSS Transitions:** Fixed the "Full UI to Pill" animation jank by removing the `position: absolute` layout toggle on collapse. Replaced it with a transparent, click-through bounding box (`pointer-events: none`) enabling pure GPU-accelerated compositing (`transform` and `opacity`) for 60fps transitions without reflows.
+  - **9. HUD Settings Button Fix:** Fixed an issue where clicking the settings gear icon in the injected HUD did nothing. Added a message listener in `background.js` for `OPEN_OPTIONS` to properly route the user to their AstreWork settings page (`/settings`).
+  - **8. Premium Apple/Google Glass UI Redesign:** Elevated the clean light theme to a top-tier premium aesthetic. Introduced sophisticated glassmorphism with delicate mesh gradients, highly refined drop shadows (`0 12px 32px`), physical lighting simulations via white inner borders (`inset 0 1px 0`), organic rounded shapes (`16px`/`20px` radii), and tactile hover micro-interactions to maximize user trust without using neon or "crypto" styles.
 
 ### Current System Health Status
 - **Production Status:** LIVE on Vercel at `https://astrework.vercel.app`.
@@ -462,6 +472,25 @@ npm run dev
 - **Build Status:** Next.js 16 (Turbopack) production build compiles with 0 errors in CI/CD.
 - **Git Sync:** Branch `main` tracked and synchronized with `https://github.com/Hey-Astreon/Career_Engine.git`.
 
+### Extension Audit & Fix Log (Oct 2026)
+Audit of `extension/` + `/api/autopilot` routes. Root cause of most bugs: features were patched in by one-off scripts and written without guarding async gaps or untrusted text.
+- **XSS in HUD:** profile/company/AI text went into `innerHTML` unescaped. Fixed with `esc()` in `hud-ui.js`. RULE: any external string in a template literal must pass through `esc()`.
+- **Duplicate HUDs:** re-injection cleanup only removed listeners, and rapid toggles raced before `activeHud` was set. Fixed: cleanup destroys the HUD; `mountPromise` lock in `content.js`.
+- **Autofill silent failure:** the fixed 800ms timer was replaced by awaiting `mountPromise`. `isFilling` guard prevents double runs.
+- **Wrong-field matching:** `cell`/`city`/`visa` now match on word boundaries (`kwMatch`).
+- **Radio selector:** `CSS.escape(el.name)`. **apFetch:** Content-Type only when a body exists.
+- **Message channels:** removed unconditional `return true` (content + `OPEN_OPTIONS`).
+- **Stats bug:** `/api/autopilot/log` GET now aggregates all fills (was capped at 50); POST validates integer counts.
+- **Hygiene:** ATS pattern `careers` tightened; `hud.css` removed from web-accessible resources; 9 patch scripts moved to `scripts/dev-patches/`; content.js normalized to LF.
+- **Known, deferred:** API uses `Access-Control-Allow-Origin: *` with content-script fetches; safer design is proxying through `background.js`.
+### API Authorization Hardening (Oct 2026)
+Found by scanning every `route.ts` for session/token checks. Root cause: routes were written for a single-user dev flow and trusted any ID in the request (IDOR).
+- `resume/variants/[id]` (GET/PATCH), `resume/variants/compare`, `applications/followup` now require login AND ownership (`profile.userId === session.user.id`); non-owners get 404 so IDs can't be probed.
+- `scheduler/history` and `sources/health` now require login; `limit` clamped to 1-100.
+- `cleanup_test_users.mjs` is dry-run by default (`--confirm` to delete), prints the target DB, isolates per-user failures.
+- Removed stub `next.config.mjs` (real config is `next.config.ts`).
+- RULE: every new API route must check the session and verify the resource belongs to the user.
+- Still open: `resume/download` has hardcoded `x:/Career_Engine` paths (breaks on Vercel); loose root scripts should move to `scripts/`.
 ### Immediate Next Steps & Future Roadmap
 1. **End-to-End Application Dispatch Pipeline:** Link "Dispatch / Apply" directly to the `/applications` Kanban board with automated 5-day follow-up reminder alerts.
 2. **STAR Story & Technical Interview Kit Explorer:** Surface the extensive STAR libraries and project interview kits from `08_star_story_library/` and `09_project_interview_kits/` in a dedicated interview assistant.

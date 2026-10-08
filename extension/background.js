@@ -20,7 +20,8 @@ const ATS_URL_PATTERNS = [
   'indeed.com',
   'icims.com',
   'job-apply',
-  'careers'
+  '/careers/',
+  '/careers?'
 ];
 
 function isAtsUrl(url) {
@@ -57,7 +58,29 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-// 3. Initialize default settings on install
+// 3. Message Listener for CSP bypass & HUD Actions
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'GET_SHADOW_CSS') {
+    fetch(chrome.runtime.getURL('hud.shadow.css'))
+      .then(r => r.text())
+      .then(css => sendResponse({ css }))
+      .catch(err => {
+        console.error('[AstrePilot Background] CSS Fetch Error:', err);
+        sendResponse({ css: null });
+      });
+    return true; // Keep message channel open for async response
+  }
+  
+  if (request.type === 'OPEN_OPTIONS') {
+    chrome.storage.sync.get(['astrepilot_origin'], (res) => {
+      const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
+      chrome.tabs.create({ url: origin + '/settings' });
+    });
+    return false; // no response is sent, so do not keep the channel open
+  }
+});
+
+// 4. Initialize default settings on install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get(['astrepilot_origin'], (res) => {
     if (!res.astrepilot_origin) {

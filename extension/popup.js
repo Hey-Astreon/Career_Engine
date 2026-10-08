@@ -66,6 +66,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  /**
+   * Ensures hud-ui.js + content.js are injected into the tab,
+   * then sends the given action message.
+   * This handles both:
+   *  - New tabs that never had the content script
+   *  - Tabs that were open before the extension was reloaded
+   */
+  async function sendToTab(tabId, action) {
+    try {
+      // Try sending directly first (content script already running)
+      await chrome.tabs.sendMessage(tabId, { action });
+    } catch (e) {
+      // Content script not active — inject everything in order
+      try {
+        await chrome.scripting.executeScript({ target: { tabId }, files: ['hud-ui.js'] });
+        await chrome.scripting.insertCSS({ target: { tabId }, files: ['hud.css'] });
+        await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+        // Wait a tick for scripts to initialise, then send message
+        await new Promise(r => setTimeout(r, 400));
+        await chrome.tabs.sendMessage(tabId, { action }).catch(() => {});
+      } catch (injectErr) {
+        console.error('[AstrePilot Popup] Injection failed:', injectErr);
+        if (injectErr.message.includes('Cannot access')) {
+          alert('AstrePilot cannot be launched on this specific browser page. Please navigate to a standard web page or job application first.');
+        }
+      }
+    }
+  }
+
   async function initialize() {
     showView(viewLoading);
     const { token, origin } = await getStoredConfig();
@@ -146,13 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnLaunchHud.addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab && tab.id) {
-      chrome.tabs.sendMessage(tab.id, { action: 'TOGGLE_HUD' }).catch(() => {
-        // If content script wasn't active, inject it
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        });
-      });
+      await sendToTab(tab.id, 'TOGGLE_HUD');
       window.close();
     }
   });
@@ -161,12 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnAutofillDirect.addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab && tab.id) {
-      chrome.tabs.sendMessage(tab.id, { action: 'AUTOFILL' }).catch(() => {
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        });
-      });
+      await sendToTab(tab.id, 'AUTOFILL');
       window.close();
     }
   });
