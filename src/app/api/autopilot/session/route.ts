@@ -12,7 +12,7 @@ const CORS = {
 
 export async function GET(req: Request) {
   try {
-    let userId: string | undefined;
+    let userId: string | null | undefined;
 
     // 1. Try NextAuth (Web App)
     const sessionAuth = await getServerSession(authOptions);
