@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +12,17 @@ const CORS = {
 
 export async function GET(req: Request) {
   try {
-    const userId = verifyAutopilotToken(extractBearerToken(req.headers.get("authorization")) ?? "");
+    let userId: string | undefined;
+
+    // 1. Try NextAuth (Web App)
+    const sessionAuth = await getServerSession(authOptions);
+    if (sessionAuth?.user?.id) {
+      userId = sessionAuth.user.id;
+    } else {
+      // 2. Try Bearer Token (Extension)
+      userId = verifyAutopilotToken(extractBearerToken(req.headers.get("authorization")) ?? "");
+    }
+
     if (!userId) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401, headers: CORS });
     }
