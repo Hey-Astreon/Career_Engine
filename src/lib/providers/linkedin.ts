@@ -10,6 +10,7 @@ import {
   isStrictlyRemoteDeveloperRole,
   parseRemoteScope,
   determineOpportunitySignals,
+  sanitizeRoleTitle,
 } from "./normalize";
 
 export class LinkedInProvider implements JobSourceProvider {
@@ -47,7 +48,7 @@ export class LinkedInProvider implements JobSourceProvider {
           const $ = cheerio.load(res.data);
           $("li").each((_, element) => {
             discoveredCount++;
-            const title = $(element).find(".base-search-card__title").text().trim();
+            const title = sanitizeRoleTitle($(element).find(".base-search-card__title").text());
             const companyName = $(element).find(".base-search-card__subtitle").text().trim();
             const rawLocation = $(element).find(".job-search-card__location").text().trim();
             const link = $(element).find("a.base-card__full-link").attr("href");

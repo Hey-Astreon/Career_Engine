@@ -38,6 +38,10 @@
         await runAutofill();
       })();
       sendResponse({ status: 'autofilling' });
+    } else if (request.action === 'EXTRACT_PAGE') {
+      sendResponse(extractPageContent());
+    } else if (request.action === 'CLICK_APPLY') {
+      sendResponse({ success: findAndClickApplyButton() });
     }
     return false;
   };
@@ -111,7 +115,68 @@
       headers['Content-Type'] = 'application/json';
     }
     const cleanOrigin = config.origin.replace(/\/$/, '');
-    return fetch(cleanOrigin + '/api/autopilot' + path, { ...opts, headers });
+    const url = cleanOrigin + '/api/autopilot' + path;
+
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({
+        type: 'PROXY_FETCH',
+        url: url,
+        options: {
+          method: opts.method || 'GET',
+          headers: headers,
+          body: opts.body
+        }
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          return reject(new Error(chrome.runtime.lastError.message));
+        }
+        if (!response || response.error) {
+          return resolve({
+            ok: false,
+            status: (response && response.status) ? response.status : 500,
+            json: async () => ({ error: (response && response.error) ? response.error : 'Network error' })
+          });
+        }
+        resolve({
+          ok: response.ok,
+          status: response.status,
+          json: async () => response.data
+        });
+      });
+    });
+  }
+
+  function extractPageContent() {
+    const clone = document.body.cloneNode(true);
+    const removeSelectors = ['nav', 'footer', 'header', 'script', 'style', 'noscript', 'iframe', 'svg', 'img'];
+    removeSelectors.forEach(s => {
+      const els = clone.querySelectorAll(s);
+      for (let i = 0; i < els.length; i++) els[i].remove();
+    });
+    
+    // textContent is safer on disconnected nodes than innerText
+    let text = clone.textContent || '';
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    return {
+      pageText: text,
+      pageUrl: window.location.href,
+      pageTitle: document.title
+    };
+  }
+
+  function findAndClickApplyButton() {
+    const keywords = /^(apply|apply now|apply for this job|apply online|easy apply)$/i;
+    const elements = document.querySelectorAll('a, button, [role="button"]');
+    for (let i = 0; i < elements.length; i++) {
+      if (keywords.test(elements[i].innerText.trim())) {
+        try { chrome.runtime.sendMessage({ type: 'NOTIFY_CLICK_APPLY' }); } catch(e) {}
+        sessionStorage.setItem('ap_auto_open', 'true');
+        elements[i].click();
+        return true;
+      }
+    }
+    return false;
   }
 
   /* -- FIELD CLASSIFIER -- */
@@ -381,6 +446,9 @@
     activeHud = AstrePilotHUD.mount({
       onAutofill: runAutofill,
       onUndo: runUndo,
+      onExtract: runExtract,
+      onExtractJD: runExtractJD,
+      onDownloadResume: runDownloadResume,
       onClose: () => {
         if (detectedFields) {
           detectedFields.forEach(f => f.element.classList.remove('ap-field-active', 'ap-field-done'));
@@ -447,6 +515,92 @@
       await fillAllFields(hud);
     } finally {
       isFilling = false;
+    }
+  }
+
+  async function runExtractJD() {
+    const hud = activeHud;
+    if (!hud) return;
+    
+    hud.setState('extracting', { step: 'Reading page content...' });
+    try {
+      const data = extractPageContent();
+      const safeText = data.pageText.slice(0, 30000);
+      
+      hud.setState('extracting', { step: 'Analyzing job requirements...' });
+      const res = await apFetch('/extract', {
+        method: 'POST',
+        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl })
+      });
+      
+      if (res.ok) {
+        const extracted = await res.json();
+        if (extracted.success) {
+           hud.setState('extracting', { step: 'Opening AstreWork...' });
+           setTimeout(() => {
+             if (activeHud === hud) {
+               hud.setState('done');
+               chrome.runtime.sendMessage({ type: 'OPEN_CUSTOM_JD' });
+               setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, 1500);
+             }
+           }, 1000);
+           return;
+        } else {
+           hud.setState('error', { msg: extracted.error || 'Failed to extract data.' });
+           return;
+        }
+      } else {
+        hud.setState('error', { msg: 'Server error: ' + res.status });
+        return;
+      }
+    } catch (e) {
+      console.error('[AstrePilot] Extract JD failed:', e);
+      hud.setState('error', { msg: e.message || 'Network error occurred.' });
+    }
+  }
+
+  function runDownloadResume() {
+    chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
+  }
+
+  async function runExtract() {
+    const hud = activeHud;
+    if (!hud) return;
+    
+    hud.setState('extracting', { step: 'Reading page content...' });
+    try {
+      const data = extractPageContent();
+      const safeText = data.pageText.slice(0, 30000);
+      
+      hud.setState('extracting', { step: 'Analyzing job requirements...' });
+      const res = await apFetch('/extract', {
+        method: 'POST',
+        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl })
+      });
+      
+      if (res.ok) {
+        const extracted = await res.json();
+        if (extracted.success) {
+           hud.setState('extracting', { step: 'Locating Apply button...' });
+           setTimeout(() => {
+             const success = findAndClickApplyButton();
+             if (activeHud === hud) {
+               hud.setState('done');
+               if (!success && !hud.isCollapsed) hud.collapse();
+             }
+           }, 1500);
+           return;
+        } else {
+           hud.setState('error', { msg: extracted.error || 'Failed to extract data.' });
+           return;
+        }
+      } else {
+        hud.setState('error', { msg: 'Server error: ' + res.status });
+        return;
+      }
+    } catch (e) {
+      console.error('[AstrePilot] Extraction failed:', e);
+      hud.setState('error', { msg: e.message || 'Network error occurred.' });
     }
   }
 
@@ -533,5 +687,13 @@
       activeHud.setState('ready');
       activeHud.expand();
     }
+  }
+
+  // Auto-launch if we just clicked an apply button and stayed on the same domain
+  if (sessionStorage.getItem('ap_auto_open') === 'true') {
+    sessionStorage.removeItem('ap_auto_open');
+    setTimeout(() => {
+      toggleAstrePilotHUD();
+    }, 1000);
   }
 })();

@@ -10,6 +10,7 @@ import {
   isStrictlyRemoteDeveloperRole,
   parseRemoteScope,
   determineOpportunitySignals,
+  sanitizeRoleTitle,
 } from "./normalize";
 
 interface Micro1JobItem {
@@ -49,7 +50,7 @@ export class Micro1Provider implements JobSourceProvider {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           },
-          timeout: this.timeoutMs,
+          timeout: 8000,
         }
       );
 
@@ -57,7 +58,7 @@ export class Micro1Provider implements JobSourceProvider {
 
       for (const item of items) {
         discoveredCount++;
-        const title = item.job_name?.trim() || "";
+        const title = sanitizeRoleTitle(item.job_name || "");
         const rawCompany = item.company_name?.trim() || "micro1";
         const skillsText = Array.isArray(item.skills) ? item.skills.join(", ") : "";
         const location = "Remote (Worldwide)";

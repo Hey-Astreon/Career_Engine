@@ -30,9 +30,29 @@ function isAtsUrl(url) {
   return ATS_URL_PATTERNS.some(pattern => lower.includes(pattern));
 }
 
+let lastApplyClickTime = 0;
+
 // 1. Detect ATS on page navigation & set badge
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
+    if (Date.now() - lastApplyClickTime < 5000) {
+      lastApplyClickTime = 0; // Consume the event
+      // Wait slightly to ensure page and content scripts are fully ready
+      setTimeout(() => {
+        chrome.tabs.sendMessage(tabId, { action: 'TOGGLE_HUD' }).catch(() => {
+          // Fallback: Auto-inject if not already present
+          chrome.scripting.executeScript({ target: { tabId }, files: ['hud-ui.js'] }).then(() => {
+            chrome.scripting.insertCSS({ target: { tabId }, files: ['hud.css'] });
+            chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }).then(() => {
+              setTimeout(() => {
+                chrome.tabs.sendMessage(tabId, { action: 'TOGGLE_HUD' }).catch(() => {});
+              }, 500);
+            });
+          }).catch(err => console.error(err));
+        });
+      }, 500);
+    }
+
     if (isAtsUrl(tab.url)) {
       chrome.action.setBadgeText({ text: 'ATS', tabId });
       chrome.action.setBadgeBackgroundColor({ color: '#2563eb', tabId });
@@ -60,6 +80,11 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 // 3. Message Listener for CSP bypass & HUD Actions
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'NOTIFY_CLICK_APPLY') {
+    lastApplyClickTime = Date.now();
+    return false;
+  }
+
   if (request.action === 'GET_SHADOW_CSS') {
     fetch(chrome.runtime.getURL('hud.shadow.css'))
       .then(r => r.text())
@@ -77,6 +102,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.tabs.create({ url: origin + '/settings' });
     });
     return false; // no response is sent, so do not keep the channel open
+  }
+
+  if (request.type === 'OPEN_CUSTOM_JD') {
+    chrome.storage.sync.get(['astrepilot_origin'], (res) => {
+      const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
+      chrome.tabs.create({ url: origin + '/resume-builder?mode=custom&loadSession=true' });
+    });
+    return false;
+  }
+
+  if (request.type === 'DOWNLOAD_RESUME') {
+    chrome.storage.sync.get(['astrepilot_origin'], (res) => {
+      const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
+      const url = origin + '/api/resume/download?slug=roushan&variant=Roushan_Kumar_Resume_Tier1_ATS.pdf&view=attachment';
+      chrome.tabs.create({ url, active: false });
+    });
+    return false;
+  }
+
+  if (request.type === 'PROXY_FETCH') {
+    fetch(request.url, request.options)
+      .then(async res => {
+        const data = await res.json().catch(() => null);
+        sendResponse({
+          ok: res.ok,
+          status: res.status,
+          data: data
+        });
+      })
+      .catch(err => {
+        sendResponse({
+          error: err.message || 'Fetch failed',
+          status: 500
+        });
+      });
+    return true; // Keep channel open for async response
   }
 });
 

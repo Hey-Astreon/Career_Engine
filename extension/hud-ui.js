@@ -21,7 +21,9 @@ window.AstrePilotHUD = (function () {
     link: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
     briefcase: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
     text: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="8" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>`,
-    circle: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>`
+    circle: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>`,
+    scan: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><path d="M20 7V4h-3"></path><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
+    download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
   };
 
   const TYPE_LABELS = {
@@ -131,6 +133,8 @@ window.AstrePilotHUD = (function () {
           AstrePilot
         </div>
         <div class="hud-actions">
+          <button class="icon-btn action-extract-jd" title="Extract JD to AstreWork" aria-label="Extract JD">${ICONS.scan}</button>
+          <button class="icon-btn action-download-resume" title="Download Resume" aria-label="Download Resume">${ICONS.download}</button>
           <button class="icon-btn action-settings" title="Settings" aria-label="Settings">${ICONS.settings}</button>
           <button class="icon-btn action-collapse" title="Collapse (Esc)" aria-label="Collapse">${ICONS.minimize}</button>
           <button class="icon-btn action-close" title="Close" aria-label="Close">${ICONS.close}</button>
@@ -193,11 +197,20 @@ window.AstrePilotHUD = (function () {
         else if (btn.classList.contains('action-settings')) {
           safeSendMessage({ type: "OPEN_OPTIONS" });
         }
+        else if (btn.classList.contains('action-extract-jd')) {
+          if (this.options.onExtractJD) this.options.onExtractJD();
+        }
+        else if (btn.classList.contains('action-download-resume')) {
+          if (this.options.onDownloadResume) this.options.onDownloadResume();
+        }
         else if (btn.classList.contains('action-fill')) {
           if (this.options.onAutofill) this.options.onAutofill();
         }
         else if (btn.classList.contains('action-undo')) {
           if (this.options.onUndo) this.options.onUndo();
+        }
+        else if (btn.classList.contains('action-extract')) {
+          if (this.options.onExtract) this.options.onExtract();
         }
       });
 
@@ -284,6 +297,7 @@ window.AstrePilotHUD = (function () {
 
     setState(state, meta = {}) {
       this.state = state;
+      this.meta = meta;
       this._renderBody();
     }
 
@@ -344,8 +358,11 @@ window.AstrePilotHUD = (function () {
     }
 
     _renderBody() {
-      if (['not-connected', 'no-profile', 'no-fields'].includes(this.state)) {
+      if (['not-connected', 'no-profile', 'no-fields', 'extracting', 'error'].includes(this.state)) {
         let msg = '', sub = '', btn = '';
+        let iconHtml = ICONS.emptyGhost;
+        let isError = false;
+
         if (this.state === 'not-connected') {
            msg = 'Not connected';
            sub = 'Please log in to AstreWork to continue.';
@@ -355,17 +372,32 @@ window.AstrePilotHUD = (function () {
            sub = 'Set up your AstreWork profile first.';
            btn = 'Open AstreWork';
         } else if (this.state === 'no-fields') {
-           msg = 'No form fields found';
-           sub = 'AstrePilot could not find any supported fields here.';
-           btn = 'Close';
+           msg = 'Job Posting Detected';
+           sub = 'AstrePilot can read this page and prime the brain.';
+           btn = 'Apply This Role';
+        } else if (this.state === 'extracting') {
+           msg = 'Extracting Details...';
+           sub = (this.meta && this.meta.step) ? this.meta.step : 'Scanning the document using AI...';
+           btn = 'Extracting...';
+           iconHtml = '<div class="pulse"></div>';
+        } else if (this.state === 'error') {
+           msg = 'Action Failed';
+           sub = (this.meta && this.meta.msg) ? this.meta.msg : 'Something went wrong.';
+           btn = 'Dismiss';
+           isError = true;
+           iconHtml = ICONS.close;
         }
+
+        const btnClass = this.state === 'no-fields' ? 'btn-primary action-extract' :
+                         (this.state === 'error' ? 'btn-secondary action-close' :
+                         (this.state === 'extracting' ? 'btn-secondary action-close' : 'btn-primary action-settings'));
 
         this.body.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">${ICONS.emptyGhost}</div>
+            <div class="empty-icon ${isError ? 'error-icon' : ''}">${iconHtml}</div>
             <div style="font-weight: 600">${msg}</div>
             <div class="empty-text">${sub}</div>
-            <button class="${this.state==='no-fields' ? 'btn-secondary action-close' : 'btn-primary action-settings'}">${btn}</button>
+            <button class="${btnClass}" ${this.state === 'extracting' ? 'disabled' : ''}>${btn}</button>
           </div>
         `;
         return;

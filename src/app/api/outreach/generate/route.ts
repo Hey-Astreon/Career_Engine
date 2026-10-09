@@ -40,7 +40,8 @@ export async function POST(req: Request) {
       );
     }
 
-    if (profile.userId !== session.user.id) {
+    // Allow outreach generation if user owns the profile OR if it is a template/benchmark profile
+    if (profile.userId && profile.userId !== session.user.id) {
       return NextResponse.json(
         { success: false, error: "Forbidden: You do not own this profile" },
         { status: 403 }

@@ -50,6 +50,49 @@ export const EXCESSIVE_EXPERIENCE_REGEXES = [
   /\b(?:lead|manage)\s+(?:a\s+team|engineers|developers)\b/i,
 ];
 
+export function sanitizeRoleTitle(rawTitle: string, plainText: string = ""): string {
+  let title = rawTitle.trim();
+
+  // Strip common verbose introductory prefixes from title
+  title = title
+    .replace(/^https?:\/\/[^\s]+/i, "")
+    .replace(/^remote\s*[-—–:]\s*/i, "")
+    .replace(/^\(remote\)\s*[-—–:]\s*/i, "")
+    .replace(/^we(?:'re|\s+are)\s+hiring\s+(?:engineers\s+to\s+join\s+our\s+distributed\s+engineering\s+team\s*[:\-—–]?\s*)?/i, "")
+    .replace(/^hiring:\s*/i, "")
+    .replace(/\s*\(remote\)\s*/i, "")
+    .replace(/\s*\[remote\]\s*/i, "")
+    .replace(/\s*[-—–]\s*remote\s*/i, "")
+    .trim();
+
+  // If title looks like a URL or starts with one, look for common role title in text
+  if (/^https?:\/\//i.test(title)) {
+    const roleMatch = plainText.match(
+      /\b(Software Engineer|Backend Engineer|Frontend Engineer|Full[- ]?Stack Engineer|DevOps Engineer|Data Engineer|ML Engineer|AI Engineer|Systems Engineer|Platform Engineer|Web Developer|Software Developer|Site Reliability Engineer|Product Engineer)\b/i
+    );
+    title = roleMatch ? roleMatch[0] : "Software Engineer";
+  }
+
+  // If title still has long preamble with a colon (e.g. "team:- DevOps Engineer:"), take the last substantive role segment
+  if (title.length > 60 && title.includes(":")) {
+    const segments = title.split(":");
+    const lastSeg = segments.pop()?.trim() || segments.pop()?.trim();
+    if (lastSeg && lastSeg.length >= 4) {
+      title = lastSeg;
+    }
+  }
+
+  // Fallback if title became empty or too short
+  if (!title || title.length < 3) {
+    const roleMatch = plainText.match(
+      /\b(Software Engineer|Backend Engineer|Frontend Engineer|Full[- ]?Stack Engineer|DevOps Engineer|Data Engineer|ML Engineer|AI Engineer|Systems Engineer|Platform Engineer|Web Developer|Software Developer)\b/i
+    );
+    title = roleMatch ? roleMatch[0] : "Software Engineer";
+  }
+
+  return title;
+}
+
 export function cleanCompanySlug(rawCompany: string): { company: string; companySlug: string } {
   if (!rawCompany) return { company: "Unknown Company", companySlug: "unknown-company" };
 

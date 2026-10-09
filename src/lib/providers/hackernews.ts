@@ -10,7 +10,33 @@ import {
   isStrictlyRemoteDeveloperRole,
   parseRemoteScope,
   determineOpportunitySignals,
+  sanitizeRoleTitle,
 } from "./normalize";
+
+function sanitizeHnRoleAndCompany(
+  rawCompany: string,
+  rawTitle: string,
+  plainText: string,
+  headerLine: string
+): { company: string; roleTitle: string } {
+  let company = rawCompany.trim();
+
+  // If company looks like a URL, extract domain name
+  if (/^https?:\/\//i.test(company)) {
+    try {
+      const parsedUrl = new URL(company);
+      const host = parsedUrl.hostname.replace(/^www\./i, "");
+      const hostBase = host.split(".")[0];
+      company = hostBase.charAt(0).toUpperCase() + hostBase.slice(1);
+    } catch {
+      company = "HN Startup";
+    }
+  }
+
+  const title = sanitizeRoleTitle(rawTitle, headerLine + " " + plainText);
+
+  return { company, roleTitle: title };
+}
 
 export class HackerNewsProvider implements JobSourceProvider {
   name = "Hacker News (Who is Hiring)";
@@ -74,16 +100,24 @@ export class HackerNewsProvider implements JobSourceProvider {
             const headerLine = lines[0];
             const parts = headerLine.split("|").map((p) => p.trim());
 
-            let companyName = parts[0] || "HN Hiring Startup";
-            let roleTitle = parts.length > 1 ? parts[1] : parts[0];
+            let rawCompanyName = parts[0] || "HN Hiring Startup";
+            let rawRoleTitle = parts.length > 1 ? parts[1] : parts[0];
             const locationStr = parts.length > 2 ? parts[2] : "Remote";
 
             // If header line wasn't pipe-separated, extract company and title from text
             if (parts.length === 1) {
               const words = headerLine.split(" ");
-              companyName = words.slice(0, 2).join(" ");
-              roleTitle = headerLine;
+              rawCompanyName = words.slice(0, 2).join(" ");
+              rawRoleTitle = headerLine;
             }
+
+            const { company: cleanComp, roleTitle } = sanitizeHnRoleAndCompany(
+              rawCompanyName,
+              rawRoleTitle,
+              plainText,
+              headerLine
+            );
+            const companyName = cleanComp;
 
             // Extract apply URL from comment HTML if available
             let applyUrl = `https://news.ycombinator.com/item?id=${comment.id}`;

@@ -23,9 +23,12 @@ interface SchedulerStatusState {
   nextRunAt: string | null;
 }
 
+let cachedSchedulerStatus: SchedulerStatusState | null = null;
+let lastSchedulerFetchTime = 0;
+
 export function Sidebar() {
   const pathname = usePathname();
-  const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatusState | null>(null);
+  const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatusState | null>(() => cachedSchedulerStatus);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -34,13 +37,19 @@ export function Sidebar() {
         if (!res.ok) return;
         const data = await res.json();
         if (data.success) {
+          cachedSchedulerStatus = data.status;
+          lastSchedulerFetchTime = Date.now();
           setSchedulerStatus(data.status);
         }
       } catch {
         // Graceful silence if server is compiling or offline
       }
     };
-    fetchStatus();
+
+    if (!cachedSchedulerStatus || Date.now() - lastSchedulerFetchTime > 30000) {
+      fetchStatus();
+    }
+
     const interval = setInterval(fetchStatus, 60000);
     return () => clearInterval(interval);
   }, []);

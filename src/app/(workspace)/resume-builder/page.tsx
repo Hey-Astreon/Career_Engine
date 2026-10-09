@@ -166,6 +166,51 @@ export default function ResumeBuilderPage() {
     void loadJobs();
   }, []);
 
+  // Auto-load AstrePilot session if requested via URL
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("loadSession") === "true" && params.get("mode") === "custom") {
+      setCustomMode(true);
+      async function loadSession() {
+        try {
+          const res = await fetch("/api/autopilot/session");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.session) {
+              setCustomTitle(data.session.jobTitle || "");
+              setCustomCompany(data.session.company || "");
+              setCustomDesc(data.session.jdText || "");
+              
+              // Automatically trigger optimization after state updates
+              setTimeout(() => {
+                const payload = {
+                  profileSlug: activeProfileSlug || "roushan",
+                  customJobTitle: data.session.jobTitle,
+                  customJobCompany: data.session.company,
+                  customJobDescription: data.session.jdText
+                };
+                setIsOptimizing(true);
+                fetch("/api/resume/optimize", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload)
+                }).then(r => r.json()).then(resData => {
+                  if (resData.success && resData.resume) {
+                    setResumeData(resData.resume);
+                  }
+                }).finally(() => setIsOptimizing(false));
+              }, 500);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load active session:", err);
+        }
+      }
+      void loadSession();
+    }
+  }, [activeProfileSlug]);
+
   // Helper to generate instant high-converting outreach fallback
   const generateOutreachFallback = (
     candidateName: string,

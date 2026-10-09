@@ -22,7 +22,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, applications: [] });
     }
 
-    if (profile.userId !== session.user.id) {
+    // Allow reading applications if user owns the profile OR if it is a template/benchmark profile
+    if (profile.userId && profile.userId !== session.user.id) {
       return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
     }
 
@@ -95,7 +96,8 @@ export async function POST(req: Request) {
       );
     }
 
-    if (profile.userId !== session.user.id) {
+    // Allow creating application if user owns the profile OR if it is a template/benchmark profile
+    if (profile.userId && profile.userId !== session.user.id) {
       return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
     }
 

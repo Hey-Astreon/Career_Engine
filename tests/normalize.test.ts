@@ -22,6 +22,7 @@ import {
   cleanCompanySlug,
   isOlderThanMaxPostingAge,
   MAX_POSTING_AGE_DAYS,
+  sanitizeRoleTitle,
 } from "@/lib/providers/normalize";
 
 // ─── isStrictlyRemoteDeveloperRole ───────────────────────────────────────────
@@ -406,5 +407,40 @@ describe("cleanCompanySlug", () => {
   it("handles multi-word companies", () => {
     const { companySlug } = cleanCompanySlug("Hacker News Hiring");
     expect(companySlug).toBe("hacker-news-hiring");
+  });
+});
+
+// ─── sanitizeRoleTitle ────────────────────────────────────────────────────────
+
+describe("sanitizeRoleTitle", () => {
+  it("removes Remote prefix", () => {
+    expect(sanitizeRoleTitle("Remote - Software Engineer")).toBe("Software Engineer");
+    expect(sanitizeRoleTitle("Remote: Backend Developer")).toBe("Backend Developer");
+    expect(sanitizeRoleTitle("(Remote) Frontend Engineer")).toBe("Frontend Engineer");
+    expect(sanitizeRoleTitle("Remote — Full Stack Developer")).toBe("Full Stack Developer");
+  });
+
+  it("removes Hiring prefix", () => {
+    expect(sanitizeRoleTitle("Hiring: Data Engineer")).toBe("Data Engineer");
+    expect(sanitizeRoleTitle("We're hiring engineers to join our distributed engineering team: DevOps Engineer")).toBe("DevOps Engineer");
+  });
+
+  it("removes URLs at the start", () => {
+    expect(sanitizeRoleTitle("https://jobs.lever.co/company Software Engineer")).toBe("Software Engineer");
+  });
+
+  it("extracts role from plain text if title is a URL", () => {
+    expect(sanitizeRoleTitle("https://jobs.lever.co/company/1234", "We are looking for a Senior Backend Engineer to join us")).toBe("Backend Engineer");
+  });
+
+  it("takes the last segment if title is too long and contains a colon", () => {
+    const longTitle = "ACME Corporation is hiring engineers to join our distributed engineering team: DevOps Engineer";
+    expect(sanitizeRoleTitle(longTitle)).toBe("DevOps Engineer");
+  });
+
+  it("removes [Remote] tags anywhere", () => {
+    expect(sanitizeRoleTitle("Software Engineer [Remote]")).toBe("Software Engineer");
+    expect(sanitizeRoleTitle("Software Engineer (Remote)")).toBe("Software Engineer");
+    expect(sanitizeRoleTitle("Software Engineer - Remote")).toBe("Software Engineer");
   });
 });

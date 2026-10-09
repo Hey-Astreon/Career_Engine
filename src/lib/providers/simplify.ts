@@ -9,6 +9,7 @@ import {
   isStrictlyRemoteDeveloperRole,
   parseRemoteScope,
   determineOpportunitySignals,
+  sanitizeRoleTitle,
 } from "./normalize";
 
 interface SimplifyListing {
@@ -27,7 +28,7 @@ interface SimplifyEndpointResult {
   telemetry: ProviderEndpointTelemetry;
 }
 
-const ENDPOINT_TIMEOUT_MS = 6_000;
+const ENDPOINT_TIMEOUT_MS = 3_500;
 const MAX_ATTEMPTS = 2;
 const BASE_RETRY_DELAY_MS = 300;
 const MAX_RETRY_AFTER_MS = 3_500;
@@ -151,7 +152,7 @@ export class SimplifyProvider implements JobSourceProvider {
             if (item.active === false) continue;
 
             discoveredCount++;
-            const titleRaw = item.title || "";
+            const titleRaw = sanitizeRoleTitle(item.title || "");
             const companyRaw = item.company_name || "Simplify Tech";
             const discoveryUrl = item.url || item.company_url || "https://simplify.jobs";
 

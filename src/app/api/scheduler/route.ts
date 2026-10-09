@@ -28,7 +28,14 @@ export async function GET(req: Request) {
     }
 
     const status = discoveryScheduler.getStatus();
-    return NextResponse.json({ success: true, status });
+    return NextResponse.json(
+      { success: true, status },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=15, stale-while-revalidate=30",
+        },
+      }
+    );
   } catch (error) {
     console.error("Scheduler GET error:", error);
     return NextResponse.json({ success: false, error: "Failed to get scheduler status" }, { status: 500 });
