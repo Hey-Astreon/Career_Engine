@@ -27,6 +27,14 @@ interface FormData {
   githubUrl: string;
   portfolioUrl: string;
   primarySkills: string[];
+  noticePeriod: string;
+  willingnessToRelocate: boolean;
+  highestEducation: string;
+  gender: string;
+  pronouns: string;
+  streetAddress: string;
+  apartment: string;
+  zipCode: string;
 }
 
 const CAREER_LABELS: Record<NonNullable<CareerStage>, { label: string; desc: string; emoji: string }> = {
@@ -61,6 +69,8 @@ export default function OnboardingWizard() {
     salaryRange: "", workAuthorized: true, requiresVisa: false,
     phone: "", linkedinUrl: "", githubUrl: "", portfolioUrl: "",
     primarySkills: [],
+    noticePeriod: "", willingnessToRelocate: false, highestEducation: "",
+    gender: "", pronouns: "", streetAddress: "", apartment: "", zipCode: "",
   });
 
   const set = (key: keyof FormData, value: FormData[keyof FormData]) =>
@@ -96,6 +106,13 @@ export default function OnboardingWizard() {
         yearsOfExperience:c.yearsOfExperience ? String(c.yearsOfExperience) : p.yearsOfExperience,
         workType:         c.workType        || p.workType,
         primarySkills:    c.primarySkills   || p.primarySkills,
+        noticePeriod:     c.noticePeriod    || p.noticePeriod,
+        highestEducation: c.highestEducation|| p.highestEducation,
+        gender:           c.gender          || p.gender,
+        pronouns:         c.pronouns        || p.pronouns,
+        streetAddress:    h.streetAddress   || p.streetAddress,
+        apartment:        h.apartment       || p.apartment,
+        zipCode:          h.zipCode         || p.zipCode,
       }));
       setStep(2);
     } catch { setExtractError("Extraction failed. Please retry or skip."); }
@@ -230,6 +247,14 @@ export default function OnboardingWizard() {
                 )
               }
             </div>
+            <div className="mt-6 pt-6 border-t border-black/[0.04]">
+              <h3 className="text-[14px] font-semibold text-[#1d1d1f] mb-3">Detailed Address (For Applications)</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={lc}>Street Address</label><input className={ic} value={formData.streetAddress} onChange={(e) => set("streetAddress", e.target.value)} placeholder="123 Main St" /></div>
+                <div><label className={lc}>Apt / Suite</label><input className={ic} value={formData.apartment} onChange={(e) => set("apartment", e.target.value)} placeholder="Apt 4B" /></div>
+                <div><label className={lc}>ZIP / Postal Code</label><input className={ic} value={formData.zipCode} onChange={(e) => set("zipCode", e.target.value)} placeholder="94105" /></div>
+              </div>
+            </div>
             <NavBar onBack={() => setStep(1)} onNext={() => setStep(3)} nextDisabled={!formData.fullName || !formData.targetHeadline} />
           </motion.div>
         )}
@@ -269,6 +294,26 @@ export default function OnboardingWizard() {
                   </div>
                 ))}
               </div>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div><label className={lc}>Notice Period</label><input className={ic} value={formData.noticePeriod} onChange={(e) => set("noticePeriod", e.target.value)} placeholder="e.g. Immediate, 2 Weeks" /></div>
+                <div>
+                  <label className={lc}>Highest Education</label>
+                  <select className={ic} value={formData.highestEducation} onChange={(e) => set("highestEducation", e.target.value)}>
+                    <option value="">Select...</option>
+                    <option value="High School">High School</option>
+                    <option value="Bachelors">Bachelor&apos;s Degree</option>
+                    <option value="Masters">Master&apos;s Degree</option>
+                    <option value="PhD">PhD</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between bg-[#f5f5f7] rounded-2xl p-4">
+                <div><p className="text-[14px] font-medium text-[#1d1d1f]">Willing to relocate?</p></div>
+                <button onClick={() => set("willingnessToRelocate", !formData.willingnessToRelocate)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${formData.willingnessToRelocate ? "bg-[#34c759]" : "bg-[#d2d2d7]"}`}>
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${formData.willingnessToRelocate ? "left-6" : "left-0.5"}`} />
+                </button>
+              </div>
             </div>
             <NavBar onBack={() => setStep(2)} onNext={() => setStep(4)} />
           </motion.div>
@@ -283,6 +328,22 @@ export default function OnboardingWizard() {
               <div><label className={lc}>LinkedIn URL</label><input className={ic} value={formData.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourname" /></div>
               <div><label className={lc}>GitHub URL</label><input className={ic} value={formData.githubUrl} onChange={(e) => set("githubUrl", e.target.value)} placeholder="https://github.com/yourusername" /></div>
               <div><label className={lc}>Portfolio / Website</label><input className={ic} value={formData.portfolioUrl} onChange={(e) => set("portfolioUrl", e.target.value)} placeholder="https://yoursite.me" /></div>
+            </div>
+            <div className="mt-6 pt-6 border-t border-black/[0.04]">
+              <h3 className="text-[14px] font-semibold text-[#1d1d1f] mb-3">Demographics (Optional)</h3>
+              <p className="text-[#86868b] text-[13px] mb-4">Helps AstrePilot auto-fill EEOC and demographic questions.</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={lc}>Gender</label>
+                  <select className={ic} value={formData.gender} onChange={(e) => set("gender", e.target.value)}>
+                    <option value="">Prefer not to say</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Non-binary">Non-binary</option>
+                  </select>
+                </div>
+                <div><label className={lc}>Pronouns</label><input className={ic} value={formData.pronouns} onChange={(e) => set("pronouns", e.target.value)} placeholder="e.g. He/Him, She/Her" /></div>
+              </div>
             </div>
             <NavBar onBack={() => setStep(3)} onNext={() => setStep(5)} />
           </motion.div>

@@ -138,6 +138,20 @@ model Profile {
   targetCountries    String?
   primarySkills      String?
 
+  // Logistics & Availability
+  noticePeriod       String?
+  willingnessToRelocate Boolean @default(false)
+  highestEducation   String?
+
+  // Standard Demographic / EEOC Questions
+  gender             String?
+  pronouns           String?
+  
+  // Detailed Location
+  streetAddress      String?
+  apartment          String?
+  zipCode            String?
+
   projects       Project[]
   virtualExps    VirtualExperience[]
   applications   Application[]

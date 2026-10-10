@@ -25,6 +25,7 @@ export async function GET(req: Request) {
     // Locally, it uses the auto-downloaded Chromium.
     const browser = await puppeteer.launch({
       headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
     });
 
@@ -76,7 +77,7 @@ export async function GET(req: Request) {
     const company = session?.company?.replace(/[^a-zA-Z0-9]/g, "_") || "Company";
     const filename = `${candidateName}_Resume_${company}.pdf`;
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as any, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,

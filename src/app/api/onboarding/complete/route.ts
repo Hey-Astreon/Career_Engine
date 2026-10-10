@@ -25,6 +25,10 @@ export async function POST(req: Request) {
       // New AstrePilot brain fields
       careerStage, yearsOfExperience, workType, salaryRange,
       workAuthorized, requiresVisa, targetCountries, primarySkills,
+      // Demographics and Logistics
+      noticePeriod, willingnessToRelocate, highestEducation,
+      gender, pronouns,
+      streetAddress, apartment, zipCode,
     } = body;
 
     if (!fullName || !targetHeadline) {
@@ -52,6 +56,14 @@ export async function POST(req: Request) {
       requiresVisa: requiresVisa === true,
       targetCountries: targetCountries ? JSON.stringify(targetCountries) : null,
       primarySkills: primarySkills ? JSON.stringify(primarySkills) : null,
+      noticePeriod: noticePeriod || null,
+      willingnessToRelocate: willingnessToRelocate === true,
+      highestEducation: highestEducation || null,
+      gender: gender || null,
+      pronouns: pronouns || null,
+      streetAddress: streetAddress || null,
+      apartment: apartment || null,
+      zipCode: zipCode || null,
     };
 
     const existingProfile = await db.profile.findUnique({

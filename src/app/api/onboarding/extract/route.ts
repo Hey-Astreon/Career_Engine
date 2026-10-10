@@ -55,6 +55,9 @@ OUTPUT (strict JSON, no markdown):
     "fullName": "string or null",
     "targetHeadline": "string or null",
     "location": "string or null",
+    "streetAddress": "string or null",
+    "apartment": "string or null",
+    "zipCode": "string or null",
     "phone": "string or null",
     "email": "string or null",
     "portfolioUrl": "string or null",
@@ -67,7 +70,11 @@ OUTPUT (strict JSON, no markdown):
     "primarySkills": ["skill1", "skill2"] or [],
     "workType": "remote|hybrid|onsite or null",
     "salaryRange": "string or null",
-    "workAuthorized": true
+    "workAuthorized": true,
+    "noticePeriod": "string or null",
+    "highestEducation": "string or null",
+    "gender": "Male|Female|Non-binary or null",
+    "pronouns": "string or null"
   }
 }`;
 

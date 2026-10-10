@@ -58,8 +58,12 @@ Respond ONLY with a valid JSON object in the following format:
     
     let extractedData;
     try {
-      // The router might have already cleaned the JSON block
-      const cleaned = response.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+      let cleaned = response.text;
+      const jsonStart = cleaned.indexOf("{");
+      const jsonEnd = cleaned.lastIndexOf("}");
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+      }
       extractedData = JSON.parse(cleaned);
     } catch (e) {
       console.error("Failed to parse LLM extraction response:", response.text);

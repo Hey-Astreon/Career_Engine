@@ -133,11 +133,11 @@ window.AstrePilotHUD = (function () {
           AstrePilot
         </div>
         <div class="hud-actions">
-          <button class="icon-btn action-extract-jd" title="Extract JD to AstreWork" aria-label="Extract JD">${ICONS.scan}</button>
-          <button class="icon-btn action-download-resume" title="Download Resume" aria-label="Download Resume">${ICONS.download}</button>
-          <button class="icon-btn action-settings" title="Settings" aria-label="Settings">${ICONS.settings}</button>
-          <button class="icon-btn action-collapse" title="Collapse (Esc)" aria-label="Collapse">${ICONS.minimize}</button>
-          <button class="icon-btn action-close" title="Close" aria-label="Close">${ICONS.close}</button>
+          <button type="button" class="icon-btn action-extract-jd" title="Extract JD to AstreWork" aria-label="Extract JD">${ICONS.scan}</button>
+          <button type="button" class="icon-btn action-download-resume" title="Download Resume" aria-label="Download Resume">${ICONS.download}</button>
+          <button type="button" class="icon-btn action-settings" title="Settings" aria-label="Settings">${ICONS.settings}</button>
+          <button type="button" class="icon-btn action-collapse" title="Collapse (Esc)" aria-label="Collapse">${ICONS.minimize}</button>
+          <button type="button" class="icon-btn action-close" title="Close" aria-label="Close">${ICONS.close}</button>
         </div>
       `;
 
@@ -192,6 +192,9 @@ window.AstrePilotHUD = (function () {
           return;
         }
         
+        e.preventDefault();
+        e.stopPropagation();
+
         if (btn.classList.contains('action-close')) this.destroy();
         else if (btn.classList.contains('action-collapse')) this.collapse();
         else if (btn.classList.contains('action-settings')) {
@@ -397,7 +400,7 @@ window.AstrePilotHUD = (function () {
             <div class="empty-icon ${isError ? 'error-icon' : ''}">${iconHtml}</div>
             <div style="font-weight: 600">${msg}</div>
             <div class="empty-text">${sub}</div>
-            <button class="${btnClass}" ${this.state === 'extracting' ? 'disabled' : ''}>${btn}</button>
+            <button type="button" class="${btnClass}" ${this.state === 'extracting' ? 'disabled' : ''}>${btn}</button>
           </div>
         `;
         return;

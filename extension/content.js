@@ -196,6 +196,14 @@
     { type: 'WORK_AUTH',    kw: ['work_auth', 'work_authorization', 'authorized to work', 'legally authorized'] },
     { type: 'VISA',         kw: ['visa', 'sponsorship', 'require sponsorship'] },
     { type: 'SALARY',       kw: ['salary', 'expected_salary', 'desired_salary', 'salary_expectation', 'compensation'] },
+    { type: 'NOTICE_PERIOD',kw: ['notice_period', 'notice period', 'availability', 'start date', 'how soon'] },
+    { type: 'RELOCATE',     kw: ['relocate', 'willing to relocate', 'relocation'] },
+    { type: 'EDUCATION',    kw: ['highest_education', 'highest education', 'degree', 'education level'] },
+    { type: 'GENDER',       kw: ['gender', 'sex', 'identify as'] },
+    { type: 'PRONOUNS',     kw: ['pronouns', 'preferred pronouns'] },
+    { type: 'ADDRESS',      kw: ['street_address', 'street address', 'address line 1'] },
+    { type: 'APT',          kw: ['apartment', 'suite', 'apt', 'address line 2'] },
+    { type: 'ZIP',          kw: ['zip', 'zip_code', 'zip code', 'postal code', 'postal_code'] },
   ];
 
   function getLabelText(input) {
@@ -249,17 +257,17 @@
 
   function scanFields() {
     const inputs = document.querySelectorAll(
-      'input[type=text], input[type=email], input[type=tel], input[type=url],\
-       input[type=number], input[type=radio], input:not([type]), textarea, select'
+      'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="radio"], input[type="checkbox"], input:not([type]), textarea, select'
     );
     const results = [];
     const seenTypes = {};
 
     inputs.forEach(inp => {
       const rect = inp.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) return;
+      const isCheckOrRadio = inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox');
+      if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio) return;
       const computed = window.getComputedStyle(inp);
-      if (computed.display === 'none' || computed.visibility === 'hidden') return;
+      if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio) return;
 
       const type = classifyField(inp);
       if (!type) return;
@@ -346,6 +354,8 @@
     LINKEDIN: 'LinkedIn URL', GITHUB: 'GitHub URL', PORTFOLIO: 'Portfolio URL',
     TITLE: 'Job Title', COVER_LETTER: 'Cover Letter', SUMMARY: 'Summary',
     WORK_AUTH: 'Work Authorization', VISA: 'Visa Sponsorship', SALARY: 'Salary', SCREENING: 'Screening Q',
+    NOTICE_PERIOD: 'Notice Period', RELOCATE: 'Relocate', EDUCATION: 'Highest Education',
+    GENDER: 'Gender', PRONOUNS: 'Pronouns', ADDRESS: 'Street Address', APT: 'Apartment/Suite', ZIP: 'ZIP Code',
   };
 
   /* -- RESOLVE PREVIEW -- */
@@ -363,6 +373,14 @@
       case 'TITLE':        return session ? session.jobTitle : (profile.title || null);
       case 'SUMMARY':      return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
       case 'SALARY':       return session ? (session.salaryRange || null) : (profile.salaryRange || null);
+      case 'NOTICE_PERIOD':return profile.noticePeriod || null;
+      case 'RELOCATE':     return profile.willingnessToRelocate ? 'Yes' : 'No';
+      case 'EDUCATION':    return profile.highestEducation || null;
+      case 'GENDER':       return profile.gender || null;
+      case 'PRONOUNS':     return profile.pronouns || null;
+      case 'ADDRESS':      return profile.streetAddress || null;
+      case 'APT':          return profile.apartment || null;
+      case 'ZIP':          return profile.zipCode || null;
       case 'WORK_AUTH':    return profile.workAuthorized ? 'Yes' : 'No';
       case 'VISA':         return profile.requiresVisa ? 'Yes' : 'No';
       case 'COVER_LETTER': return null;
@@ -388,6 +406,14 @@
       case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
       case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
       case 'SALARY':      return session ? session.salaryRange : (profile.salaryRange || null);
+      case 'NOTICE_PERIOD':return profile.noticePeriod;
+      case 'RELOCATE':    return profile.willingnessToRelocate ? 'Yes' : 'No';
+      case 'EDUCATION':   return profile.highestEducation;
+      case 'GENDER':      return profile.gender;
+      case 'PRONOUNS':    return profile.pronouns;
+      case 'ADDRESS':     return profile.streetAddress;
+      case 'APT':         return profile.apartment;
+      case 'ZIP':         return profile.zipCode;
       case 'COVER_LETTER':
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
