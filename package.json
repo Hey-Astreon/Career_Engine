@@ -17,7 +17,6 @@
     "@libsql/client": "^0.18.0",
     "@prisma/adapter-libsql": "^7.10.0",
     "@prisma/client": "^7.9.1",
-    "@sparticuz/chromium-min": "^153.0.0",
     "axios": "^1.19.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",
@@ -27,7 +26,7 @@
     "next-auth": "^4.24.15",
     "nodemailer": "^7.0.13",
     "pdf-parse": "^2.4.5",
-    "puppeteer-core": "^25.13.0",
+    "puppeteer": "^25.13.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zustand": "^5.0.14"
