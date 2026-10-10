@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  astrepilot:
+    # IMPORTANT: Replace 'hey-astreon' with your exact GitHub username (in lowercase)
+    image: ghcr.io/hey-astreon/career_engine:latest
+    container_name: astrepilot_web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # If your GitHub repo is private, you must log in on the server via `docker login ghcr.io -u <user> -p <token>` 
+      # and mount your config file here so Watchtower has permission to pull updates:
+      # - ~/.docker/config.json:/config.json:ro
+    command: --interval 60 --cleanup
