@@ -536,12 +536,38 @@
       if (res.ok) {
         const extracted = await res.json();
         if (extracted.success) {
-           hud.setState('extracting', { step: 'Opening AstreWork...' });
-           setTimeout(() => {
+           hud.setState('extracting', { step: 'Finalizing Extraction...' });
+           setTimeout(async () => {
              if (activeHud === hud) {
+               try {
+                 const sessionRes = await apFetch('/session');
+                 if (sessionRes.ok) {
+                   const sData = await sessionRes.json();
+                   activeSession = sData.session;
+                   activeHud.setIdentity({
+                     fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
+                     title: userProfile.title || 'Candidate',
+                     primedCompany: activeSession ? activeSession.company : null
+                   });
+                   const hudFields = detectedFields.map(f => {
+                     const isAI = f.type === 'COVER_LETTER' || f.type === 'SCREENING';
+                     const isSession = (f.type === 'TITLE' || f.type === 'SUMMARY' || f.type === 'SALARY') && !!activeSession;
+                     const preview = resolvePreview(f, userProfile, activeSession);
+                     return {
+                       id: f.id,
+                       type: f.type.toLowerCase().replace(/_/g, ''),
+                       label: TYPE_LABELS[f.type] || f.type,
+                       preview: isAI ? 'AI-generated on fill' : (preview || '-'),
+                       source: isAI ? 'ai' : (isSession ? 'session' : 'profile'),
+                       status: ''
+                     };
+                   });
+                   activeHud.setFields(hudFields);
+                 }
+               } catch (e) {}
+
                hud.setState('done');
-               chrome.runtime.sendMessage({ type: 'OPEN_CUSTOM_JD' });
-               setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, 1500);
+               setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, 2500);
              }
            }, 1000);
            return;
