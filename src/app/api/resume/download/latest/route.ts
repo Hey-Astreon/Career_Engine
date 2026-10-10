@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { verifyAutopilotToken } from "@/lib/autopilot/tokenUtils";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium-min";
 import { db } from "@/lib/db";
+
+// Allow execution to take up to 30 seconds (Vercel max for Hobby)
+export const maxDuration = 30;
 
 export async function GET(req: Request) {
   try {
@@ -17,70 +21,83 @@ export async function GET(req: Request) {
       return new NextResponse("Invalid or expired token", { status: 401 });
     }
 
-    // Launch headless browser
+    const isDev = process.env.NODE_ENV === "development";
+    let executablePath = "";
+    let args = chromium.args;
+
+    if (isDev) {
+      // Use local MS Edge in development on Windows
+      executablePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+      args = ["--no-sandbox", "--disable-setuid-sandbox"];
+    } else {
+      // Use Sparticuz Chromium in production (Vercel)
+      executablePath = await chromium.executablePath(
+        "https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar"
+      );
+    }
+
+    // Launch headless browser using puppeteer-core
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
 
     // Intercept requests to inject the Bearer token for auth
     await page.setRequestInterception(true);
-    page.on('request', (request) => {
+    page.on("request", (request) => {
       const headers = request.headers();
-      // Only inject for API routes to avoid leaking
-      if (request.url().includes('/api/')) {
-        headers['authorization'] = `Bearer ${token}`;
+      if (request.url().includes("/api/")) {
+        headers["authorization"] = `Bearer ${token}`;
       }
       request.continue({ headers });
     });
 
-    // Emulate screen to avoid print media quirks if any, though we want print layout
-    await page.emulateMediaType('print');
+    // Emulate print media
+    await page.emulateMediaType("print");
 
-    // Get the base URL (useful for absolute URLs in Puppeteer)
     const protocol = req.headers.get("x-forwarded-proto") || "http";
     const host = req.headers.get("host") || "localhost:3000";
     const baseUrl = `${protocol}://${host}`;
 
     // Navigate to the resume builder in headless mode
-    // mode=custom&loadSession=true will trigger the auto-fetch of the session and optimization
     await page.goto(`${baseUrl}/resume-builder?mode=custom&loadSession=true&headless=true`, {
-      waitUntil: 'networkidle0',
-      timeout: 30000
+      waitUntil: "networkidle0",
+      timeout: 30000,
     });
 
-    // Generate the PDF
-    // We wait an extra second to ensure React finishes any last-minute DOM updates after network idle
+    // Wait an extra second for React to finish rendering
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      format: "A4",
       printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 }
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
     });
 
     await browser.close();
 
-    // Grab company name for the filename
     const profile = await db.profile.findFirst({ where: { userId } });
-    const session = profile ? await db.autopilotSession.findFirst({
-      where: { profileId: profile.id },
-      orderBy: { createdAt: "desc" }
-    }) : null;
-    
+    const session = profile
+      ? await db.autopilotSession.findFirst({
+          where: { profileId: profile.id },
+          orderBy: { createdAt: "desc" },
+        })
+      : null;
+
     const candidateName = profile?.fullName?.replace(/[^a-zA-Z0-9]/g, "_") || "Candidate";
     const company = session?.company?.replace(/[^a-zA-Z0-9]/g, "_") || "Company";
     const filename = `${candidateName}_Resume_${company}.pdf`;
 
     return new NextResponse(pdfBuffer, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`
-      }
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
     });
-
   } catch (error) {
     console.error("PDF generation failed:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
