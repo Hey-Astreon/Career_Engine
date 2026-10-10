@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { verifyAutopilotToken } from "@/lib/autopilot/tokenUtils";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium-min";
 import { db } from "@/lib/db";
 
-// Allow execution to take up to 30 seconds (if hosted on environments that read this)
+// Allow execution to take up to 30 seconds (Vercel max for Hobby)
 export const maxDuration = 30;
 
 export async function GET(req: Request) {
@@ -20,12 +21,27 @@ export async function GET(req: Request) {
       return new NextResponse("Invalid or expired token", { status: 401 });
     }
 
-    // Launch headless browser using standard puppeteer.
-    // In Docker, it uses the system chromium via ENV variable.
-    // Locally, it uses the auto-downloaded Chromium.
+    const isDev = process.env.NODE_ENV === "development";
+    let executablePath = "";
+    let args = chromium.args;
+
+    if (isDev) {
+      // Use local MS Edge in development on Windows
+      executablePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+      args = ["--no-sandbox", "--disable-setuid-sandbox"];
+    } else {
+      // Use Sparticuz Chromium in production (Vercel)
+      executablePath = await chromium.executablePath(
+        "https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar"
+      );
+    }
+
+    // Launch headless browser using puppeteer-core
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
