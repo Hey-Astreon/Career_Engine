@@ -115,8 +115,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'DOWNLOAD_RESUME') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
       const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
-      const url = origin + '/api/resume/download?slug=roushan&variant=Roushan_Kumar_Resume_Tier1_ATS.pdf&view=attachment';
-      chrome.tabs.create({ url, active: false });
+      const url = origin + '/resume-builder?mode=custom&loadSession=true&autoPrint=true';
+      chrome.tabs.create({ url, active: true });
     });
     return false;
   }

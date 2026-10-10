@@ -68,7 +68,7 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
     return {
       header: {
         fullName: "AYUSHI RAJ",
-        targetHeadline: "AI-Powered Full Stack Software Engineer | Backend & Systems Specialist",
+        targetHeadline: "AI-Powered Full Stack Software Developer | Backend & Systems Specialist",
         location: "Bihar, India",
         phone: "+91-8709852305",
         email: "ayushi29507@gmail.com",
@@ -171,7 +171,7 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
         period: "Expected July 2028",
         coursework: "Data Structures & Algorithms (DSA) • Database Management Systems (DBMS) • Operating Systems (OS) • Computer Networks • Object-Oriented Programming (OOP)",
       },
-      targetRole: "Full Stack Software Engineer",
+      targetRole: "Full Stack Software Developer",
       targetCompany: "Global Remote",
       atsScore: 92,
       matchedKeywords: ["TypeScript", "React", "Node.js", "REST APIs", "PostgreSQL", "FastAPI"],
@@ -184,7 +184,7 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
   return {
     header: {
       fullName: "ROUSHAN KUMAR",
-      targetHeadline: "Systems Engineer | Backend Architect | AI Developer Tools Specialist",
+      targetHeadline: "Systems Developer | Backend Architect | AI Developer Tools Specialist",
       location: "Patna, Bihar, India",
       phone: "+91-9431483512",
       email: "roushanraut404@gmail.com",
@@ -287,7 +287,7 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
       period: "Expected July 2028",
       coursework: "Data Structures & Algorithms (DSA) • Database Management Systems (DBMS) • Operating Systems (OS) • Computer Networks • Object-Oriented Programming (OOP)",
     },
-    targetRole: "Systems & Backend Software Engineer",
+    targetRole: "Systems & Backend Software Developer",
     targetCompany: "Global Remote",
     atsScore: 94,
     matchedKeywords: ["C#", "Java", "Python", "FastAPI", "PostgreSQL", "REST APIs", "Docker"],
@@ -766,7 +766,7 @@ export const RESUME_STARTER_PRESETS: ResumePreset[] = [
         linkedinUrl: "https://linkedin.com/in/yourhandle",
       },
       summary:
-        "Results-oriented Software Engineer specializing in [Core Domain] with experience developing [Type of Applications / APIs]. Proficient in [Language 1], [Language 2], [Framework], and [Database], with a track record of optimizing systems for performance, scalability, and high reliability.",
+        "Results-oriented Software Developer specializing in [Core Domain] with experience developing [Type of Applications / APIs]. Proficient in [Language 1], [Language 2], [Framework], and [Database], with a track record of optimizing systems for performance, scalability, and high reliability.",
       skills: [
         {
           categoryName: "Backend & Systems",

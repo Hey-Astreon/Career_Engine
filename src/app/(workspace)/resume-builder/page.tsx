@@ -191,15 +191,32 @@ export default function ResumeBuilderPage() {
                   customJobDescription: data.session.jdText
                 };
                 setIsOptimizing(true);
-                fetch("/api/resume/optimize", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload)
-                }).then(r => r.json()).then(resData => {
-                  if (resData.success && resData.resume) {
-                    setResumeData(resData.resume);
-                  }
-                }).finally(() => setIsOptimizing(false));
+                  fetch("/api/resume/optimize", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                  }).then(r => r.json()).then(resData => {
+                    if (resData.success && resData.resume) {
+                      setResumeData(resData.resume);
+                      
+                      if (params.get("autoPrint") === "true") {
+                        setTimeout(() => {
+                          const candidate = resData.resume.header.fullName || "Candidate";
+                          const company = resData.resume.targetCompany || "Company";
+                          const targetFilename = `${candidate.replace(/[^a-zA-Z0-9]/g, "_")}_Resume_${company.replace(/[^a-zA-Z0-9]/g, "_")}`;
+                          const originalTitle = document.title;
+                          
+                          document.title = targetFilename;
+                          window.print();
+                          
+                          setTimeout(() => {
+                            document.title = originalTitle;
+                            window.close();
+                          }, 500);
+                        }, 1000);
+                      }
+                    }
+                  }).finally(() => setIsOptimizing(false));
               }, 500);
             }
           }
