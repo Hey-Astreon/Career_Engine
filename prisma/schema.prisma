@@ -479,6 +479,9 @@ model AutopilotSession {
   keySkills       String   @default("[]") // JSON array
   salaryRange     String?
   workType        String?
+  astraShieldLegit Boolean  @default(true)
+  astraShieldScore Int      @default(100)
+  astraShieldReason String?
   createdAt       DateTime @default(now())
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)

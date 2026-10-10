@@ -49,7 +49,10 @@ Respond ONLY with a valid JSON object in the following format:
   "company": "Company Name (or null if not found)",
   "jobTitle": "Job Title (or null if not found)",
   "description": "The full text of the job description, responsibilities, and requirements. Exclude unrelated website navigation text. (or null if not found)",
-  "keySkills": ["skill1", "skill2"]
+  "keySkills": ["skill1", "skill2"],
+  "astraShieldLegit": boolean,
+  "astraShieldScore": number, // 0-100. 100 is completely safe. Lower score if suspicious, MLM, scam, or asking for money.
+  "astraShieldReason": "Short explanation of the trust score."
 }`;
 
     const userPrompt = `Page URL: ${pageUrl || 'unknown'}\n\nPage Text:\n${truncatedText}`;
@@ -89,6 +92,9 @@ Respond ONLY with a valid JSON object in the following format:
         jdText: extractedData.description || "",
         tailoredSummary,
         keySkills: JSON.stringify(extractedData.keySkills || []),
+        astraShieldLegit: extractedData.astraShieldLegit !== undefined ? extractedData.astraShieldLegit : true,
+        astraShieldScore: extractedData.astraShieldScore !== undefined ? extractedData.astraShieldScore : 100,
+        astraShieldReason: extractedData.astraShieldReason || "Verified safe.",
       }
     });
 
@@ -97,7 +103,12 @@ Respond ONLY with a valid JSON object in the following format:
         success: true,
         company: extractedData.company,
         jobTitle: extractedData.jobTitle,
-        session: session.id
+        session: session.id,
+        astraShield: {
+          isLegit: session.astraShieldLegit,
+          score: session.astraShieldScore,
+          reason: session.astraShieldReason
+        }
       },
       { headers: CORS }
     );

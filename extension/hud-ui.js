@@ -23,7 +23,9 @@ window.AstrePilotHUD = (function () {
     text: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="8" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>`,
     circle: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>`,
     scan: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><path d="M20 7V4h-3"></path><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
-    download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
+    download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
+    warn: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+    shield: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`
   };
 
   const TYPE_LABELS = {
@@ -76,6 +78,7 @@ window.AstrePilotHUD = (function () {
       this.isCollapsed = false;
       this.isDragging = false;
       this.dragOffset = { x: 0, y: 0 };
+      this.astraShield = null;
 
       // Restore position if possible
       try {
@@ -304,6 +307,11 @@ window.AstrePilotHUD = (function () {
       this._renderBody();
     }
 
+    setAstraShield(data) {
+      this.astraShield = data;
+      this._renderBody();
+    }
+
     setIdentity(profile) {
       this.profile = profile;
       this._renderBody();
@@ -422,6 +430,25 @@ window.AstrePilotHUD = (function () {
               <div class="identity-name">${esc(this.profile.fullName)}</div>
               <div class="identity-role">${esc(role)}</div>
               ${primedHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      // AstraShield Indicator
+      if (this.astraShield) {
+        const isSafe = this.astraShield.isLegit && this.astraShield.score >= 80;
+        const isWarn = this.astraShield.score >= 40 && this.astraShield.score < 80;
+        const shieldColor = isSafe ? 'var(--ap-success, #34d399)' : (isWarn ? 'var(--ap-warning, #fbbf24)' : 'var(--ap-error, #f87171)');
+        const shieldIcon = isSafe ? ICONS.shield : (isWarn ? ICONS.warn : ICONS.close);
+        const shieldLabel = isSafe ? 'Verified Legit' : (isWarn ? 'Caution' : 'Potential Scam');
+        
+        html += `
+          <div style="margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid ${shieldColor}; border-radius: 8px; display: flex; align-items: flex-start; gap: 8px;">
+            <div style="color: ${shieldColor}; margin-top: 2px;">${shieldIcon}</div>
+            <div>
+              <div style="font-weight: 600; font-size: 13px; color: ${shieldColor};">AstraShield: ${shieldLabel} (${this.astraShield.score}/100)</div>
+              <div style="font-size: 11px; color: var(--ap-text-muted, #9ca3af); margin-top: 4px; line-height: 1.3;">${esc(this.astraShield.reason)}</div>
             </div>
           </div>
         `;

@@ -562,6 +562,9 @@
       if (res.ok) {
         const extracted = await res.json();
         if (extracted.success) {
+           if (extracted.astraShield && hud.setAstraShield) {
+             hud.setAstraShield(extracted.astraShield);
+           }
            hud.setState('extracting', { step: 'Finalizing Extraction...' });
            setTimeout(async () => {
              if (activeHud === hud) {
@@ -593,7 +596,11 @@
                } catch (e) {}
 
                hud.setState('done');
-               setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, 2500);
+               let collapseDelay = 2500;
+               if (extracted.astraShield) {
+                 collapseDelay = extracted.astraShield.score < 80 ? 12000 : 5000;
+               }
+               setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, collapseDelay);
              }
            }, 1000);
            return;
