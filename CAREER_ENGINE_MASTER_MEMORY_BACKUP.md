@@ -478,6 +478,12 @@ npm run dev
   - **3. Caddy Reverse Proxy & Auto-HTTPS:** Containerized Caddy (`caddy:alpine`) with persistent volume storage for TLS state. Automatically solved ACME `tls-alpn-01` challenges with Let's Encrypt, issuing valid SSL certificates for both `astrework.app` and `www.astrework.app`. Enabled automatic 308 Permanent Redirect from HTTP to HTTPS and native HTTP/3 QUIC support.
   - **4. OAuth Provider Realignment:** Updated Google Cloud Platform and GitHub OAuth applications with authorized redirect URIs `https://astrework.app/api/auth/callback/google` and `https://astrework.app/api/auth/callback/github`, enabling seamless one-click production logins.
 
+- [x] **Phase 25: Complete Vercel Legacy Purge & Authoritative Domain Unification (`astrework.app`)**
+  - **1. Zero-Remnant Vercel Purge:** Permanently deleted legacy `vercel.json`. Purged obsolete `VERCEL_PROJECT_PRODUCTION_URL` checks and comments from `src/lib/siteConfig.ts`, `src/lib/auth.ts`, and `src/app/api/auth/[...nextauth]/route.ts`.
+  - **2. Cron Header Hardening:** Removed legacy `x-vercel-cron` header dependencies and log references from `src/app/api/scheduler/route.ts`, standardizing discovery cron execution exclusively on cryptographic `CRON_SECRET` tokens.
+  - **3. Authoritative Domain Consolidation:** Unified all fallbacks across `siteConfig.ts`, NextAuth handlers, `bookmarklet.ts`, `AstrePilotCard.tsx`, `extension/background.js`, `extension/popup.html`, and `README.md` to `https://astrework.app`.
+  - **4. Total Cloud Independence:** The application is now 100% liberated from Vercel serverless constraints, bundle ceilings (50MB), and execution timeouts, operating entirely on dedicated Oracle Cloud Always-Free ARM Ampere hardware with Caddy reverse proxy and autonomous Watchtower CD.
+
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
 - **Dedicated Cloud Server:** 4 ARM64 OCPUs, 24 GB RAM, 4 Gbps Network Bandwidth, 46.6 GB Boot Volume (Oracle Always-Free).
