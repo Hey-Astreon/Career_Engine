@@ -151,8 +151,8 @@ AstreWork is officially live in production at **[https://astrework.app](https://
 - **CD Automation:** GitHub Actions ARM64 buildx to GHCR + Watchtower auto-updating containers every 60s
 - **Live Production URL:** [https://astrework.app](https://astrework.app)
 
-### 2. Configure Environment Variables in Vercel
-In your Vercel Project Settings → **Environment Variables**, paste the following keys:
+### 2. Configure Production Environment Variables (`.env`)
+In your production `.env` file on the Oracle Cloud server, configure the following keys:
 
 | Variable | Description |
 | :--- | :--- |
@@ -163,7 +163,7 @@ In your Vercel Project Settings → **Environment Variables**, paste the followi
 | `CEREBRAS_API_KEY` | Cerebras fast fallback API key |
 | `NVIDIA_NIM_API_KEY` | NVIDIA NIM Llama 3.3 reasoning key |
 | `NEXTAUTH_SECRET` | NextAuth session encryption secret |
-| `NEXTAUTH_URL` | Production deployment URL (e.g. `https://your-app.vercel.app`) |
+| `NEXTAUTH_URL` | Production deployment URL (`https://astrework.app`) |
 
 ### 3. Synchronize Cloud Database Anytime
 Whenever new opportunities or candidate updates are made locally, sync them to Turso Cloud in one command:
