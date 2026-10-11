@@ -20,50 +20,51 @@ export async function GET(req: Request) {
       return new NextResponse("Invalid or expired token", { status: 401 });
     }
 
-    // Launch headless browser using standard puppeteer.
-    // In Docker, it uses the system chromium via ENV variable.
-    // Locally, it uses the auto-downloaded Chromium.
+    let pdfBuffer: Buffer;
     const browser = await puppeteer.launch({
       headless: true,
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
     });
 
-    const page = await browser.newPage();
+    try {
+      const page = await browser.newPage();
 
-    // Intercept requests to inject the Bearer token for auth
-    await page.setRequestInterception(true);
-    page.on("request", (request) => {
-      const headers = request.headers();
-      if (request.url().includes("/api/")) {
-        headers["authorization"] = `Bearer ${token}`;
-      }
-      request.continue({ headers });
-    });
+      // Intercept requests to inject the Bearer token for auth
+      await page.setRequestInterception(true);
+      page.on("request", (request) => {
+        const headers = request.headers();
+        if (request.url().includes("/api/")) {
+          headers["authorization"] = `Bearer ${token}`;
+        }
+        request.continue({ headers });
+      });
 
-    // Emulate print media
-    await page.emulateMediaType("print");
+      // Emulate print media
+      await page.emulateMediaType("print");
 
-    const protocol = req.headers.get("x-forwarded-proto") || "http";
-    const host = req.headers.get("host") || "localhost:3000";
-    const baseUrl = `${protocol}://${host}`;
+      const protocol = req.headers.get("x-forwarded-proto") || "http";
+      const host = req.headers.get("host") || "localhost:3000";
+      const baseUrl = `${protocol}://${host}`;
 
-    // Navigate to the resume builder in headless mode
-    await page.goto(`${baseUrl}/resume-builder?mode=custom&loadSession=true&headless=true`, {
-      waitUntil: "networkidle0",
-      timeout: 30000,
-    });
+      // Navigate to the resume builder in headless mode
+      await page.goto(`${baseUrl}/resume-builder?mode=custom&loadSession=true&headless=true`, {
+        waitUntil: "networkidle0",
+        timeout: 30000,
+      });
 
-    // Wait an extra second for React to finish rendering
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Wait an extra second for React to finish rendering
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    });
-
-    await browser.close();
+      const rawPdf = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      });
+      pdfBuffer = Buffer.from(rawPdf);
+    } finally {
+      await browser.close().catch(() => {});
+    }
 
     const profile = await db.profile.findFirst({ where: { userId } });
     const session = profile

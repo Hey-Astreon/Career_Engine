@@ -115,11 +115,6 @@ export async function POST() {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const mixedJobs = await cache.getOrSet("feed:active:v1", 300, async () => {
       const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
       const rawActive = await db.jobPosting.findMany({

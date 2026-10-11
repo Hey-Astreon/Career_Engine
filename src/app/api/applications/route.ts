@@ -7,9 +7,7 @@ import { ApplicationStatus } from "@prisma/client";
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const currentUserId = session?.user?.id || null;
 
     const { searchParams } = new URL(req.url);
     const profileSlug = searchParams.get("profileSlug") || "roushan";
@@ -23,7 +21,7 @@ export async function GET(req: Request) {
     }
 
     // Allow reading applications if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== session.user.id) {
+    if (profile.userId && profile.userId !== currentUserId) {
       return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
     }
 

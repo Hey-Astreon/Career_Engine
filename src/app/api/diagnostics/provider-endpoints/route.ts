@@ -6,11 +6,6 @@ import { clampHistoryDays, PROVIDER_FAILURE_ALERT_THRESHOLD_PERCENT, summarizeDa
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const days = clampHistoryDays(searchParams.get("days"));
     const providerKey = searchParams.get("provider")?.trim().toUpperCase() || undefined;

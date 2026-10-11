@@ -21,14 +21,14 @@ function resolveResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar", f
     return publicPath.replace(/\\/g, "/");
   }
 
-  const primaryPath = `x:/Career_Engine/${candidateFolder}/14_final_documents/${fileName}`;
-  if (fs.existsSync(primaryPath)) {
-    return primaryPath;
-  }
-
   const relativePath = path.resolve(process.cwd(), "..", candidateFolder, "14_final_documents", fileName);
   if (fs.existsSync(relativePath)) {
     return relativePath.replace(/\\/g, "/");
+  }
+
+  const directRelativePath = path.resolve(process.cwd(), "..", candidateFolder, fileName);
+  if (fs.existsSync(directRelativePath)) {
+    return directRelativePath.replace(/\\/g, "/");
   }
 
   return publicPath.replace(/\\/g, "/");

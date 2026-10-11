@@ -10,9 +10,7 @@ export async function POST(req: Request) {
   const startTime = Date.now();
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const currentUserId = session?.user?.id || null;
 
     const { profileSlug, jobPostingId, forceRefresh } = await req.json();
 
@@ -40,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     // Allow evaluation if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== session.user.id) {
+    if (profile.userId && profile.userId !== currentUserId) {
       return NextResponse.json(
         { success: false, error: "Forbidden: You do not own this profile" },
         { status: 403 }

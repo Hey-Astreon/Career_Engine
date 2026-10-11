@@ -6,11 +6,6 @@ import { cache } from "@/lib/cache/redis";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const formattedStates = await cache.getOrSet("health:sources:v1", 60, async () => {
       const [syncStates, providerJobs] = await Promise.all([
         db.providerSyncState.findMany({ orderBy: { providerKey: "asc" } }),
