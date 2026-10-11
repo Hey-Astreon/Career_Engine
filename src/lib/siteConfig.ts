@@ -1,6 +1,6 @@
 /**
  * Centralized Site Configuration & SEO Metadata for AstreWork
- * Guarantees correct domain resolution across Vercel production, preview, and local environments.
+ * Guarantees correct domain resolution across production, staging, and local environments.
  */
 
 function resolveBaseUrl(): string {
@@ -9,12 +9,7 @@ function resolveBaseUrl(): string {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
   }
 
-  // 2. Vercel production URL automatically exposed by Vercel
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`;
-  }
-
-  // 3. NextAuth URL if valid and NOT legacy or localhost
+  // 2. NextAuth URL if valid and NOT legacy or localhost
   if (
     process.env.NEXTAUTH_URL &&
     !process.env.NEXTAUTH_URL.includes("career-engine") &&
@@ -23,7 +18,7 @@ function resolveBaseUrl(): string {
     return process.env.NEXTAUTH_URL.replace(/\/$/, "");
   }
 
-  // 4. Default authoritative production domain
+  // 3. Default authoritative production domain
   return "https://astrework.app";
 }
 

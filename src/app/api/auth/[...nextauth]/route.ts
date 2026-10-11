@@ -6,9 +6,7 @@ if (
   !process.env.NEXTAUTH_URL ||
   process.env.NEXTAUTH_URL.includes("career-engine")
 ) {
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  } else if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production") {
     process.env.NEXTAUTH_URL = "https://astrework.app";
   }
 }

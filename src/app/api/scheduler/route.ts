@@ -6,18 +6,14 @@ import { discoveryScheduler } from "@/lib/scheduler";
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get("authorization");
-    const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}` || req.headers.get("x-vercel-cron") !== null;
+    const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
     if (isCron) {
-      if (req.headers.get("x-vercel-cron") && process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        console.warn("Unauthorized cron attempt");
-        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-      }
-      console.log("[Scheduler] Executing scheduled discovery run via Vercel Cron");
+      console.log("[Scheduler] Executing scheduled discovery run");
       await discoveryScheduler.executeRun("SCHEDULED");
       return NextResponse.json({
         success: true,
-        message: "Vercel Cron scheduled run completed",
+        message: "Scheduled discovery run completed",
         status: discoveryScheduler.getStatus(),
       });
     }
