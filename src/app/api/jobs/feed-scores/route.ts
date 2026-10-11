@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeBatchFeedScores, CachedScoreItem } from "@/lib/ai/batchScorer";
+import { cache } from "@/lib/cache/redis";
 
 const MAX_BATCH_SIZE = 150;
 
@@ -98,8 +99,24 @@ export async function POST(req: Request) {
 
     const dbQueryStartTime = Date.now();
 
-    // 4. Bulk DB Queries (High Performance: 2 Queries Total)
-    const [jobs, cachedScoresList] = await Promise.all([
+    // 4. Check Redis Cache for Match Scores (Sub-1ms Lookups)
+    const redisKeys = cappedJobIds.map((id) => `match:${profile.id}:${id}`);
+    const redisResults = await cache.mget<CachedScoreItem>(redisKeys);
+
+    const cachedScoresMap = new Map<string, CachedScoreItem>();
+    const missingScoreJobIds: string[] = [];
+
+    cappedJobIds.forEach((jobId, idx) => {
+      const item = redisResults[idx];
+      if (item) {
+        cachedScoresMap.set(jobId, item);
+      } else {
+        missingScoreJobIds.push(jobId);
+      }
+    });
+
+    // Bulk DB Queries: Only query MatchScores for missing IDs
+    const [jobs, dbScoresList] = await Promise.all([
       db.jobPosting.findMany({
         where: { id: { in: cappedJobIds } },
         select: {
@@ -112,34 +129,45 @@ export async function POST(req: Request) {
           platform: true,
         },
       }),
-      db.matchScore.findMany({
-        where: {
-          profileId: profile.id,
-          jobPostingId: { in: cappedJobIds },
-        },
-        select: {
-          jobPostingId: true,
-          score: true,
-          hardSkills: true,
-          missingSkills: true,
-          reasoning: true,
-        },
-      }),
+      missingScoreJobIds.length > 0
+        ? db.matchScore.findMany({
+            where: {
+              profileId: profile.id,
+              jobPostingId: { in: missingScoreJobIds },
+            },
+            select: {
+              jobPostingId: true,
+              score: true,
+              hardSkills: true,
+              missingSkills: true,
+              reasoning: true,
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
     const dbTimeMs = Date.now() - dbQueryStartTime;
 
-    // Create lookup map for cached scores
-    const cachedScoresMap = new Map<string, CachedScoreItem>();
-    for (const item of cachedScoresList) {
-      if (item.jobPostingId) {
-        cachedScoresMap.set(item.jobPostingId, {
-          score: item.score,
-          hardSkills: item.hardSkills,
-          missingSkills: item.missingSkills,
-          reasoning: item.reasoning,
-        });
+    // Seed Redis cache with any scores found in DB
+    if (dbScoresList.length > 0) {
+      const itemsToCache: { key: string; value: CachedScoreItem; ttlSeconds: number }[] = [];
+      for (const item of dbScoresList) {
+        if (item.jobPostingId) {
+          const scoreItem: CachedScoreItem = {
+            score: item.score,
+            hardSkills: item.hardSkills,
+            missingSkills: item.missingSkills,
+            reasoning: item.reasoning,
+          };
+          cachedScoresMap.set(item.jobPostingId, scoreItem);
+          itemsToCache.push({
+            key: `match:${profile.id}:${item.jobPostingId}`,
+            value: scoreItem,
+            ttlSeconds: 86400, // 24 hours
+          });
+        }
       }
+      cache.mset(itemsToCache).catch(() => {});
     }
 
     // 5. Construct Isolated Candidate Context

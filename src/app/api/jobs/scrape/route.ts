@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { runAllProviders, ingestNormalizedJobs } from "@/lib/providers/registry";
 import { parseRemoteScope, MAX_POSTING_AGE_DAYS } from "@/lib/providers/normalize";
 import { buildProviderEndpointRunInserts } from "@/lib/providerEndpointTelemetry";
+import { cache } from "@/lib/cache/redis";
 
 function interleavePlatforms<T extends { platform: string }>(jobsList: T[]): T[] {
   const groups: Record<string, T[]> = {};
@@ -79,6 +80,11 @@ export async function POST() {
 
     const mixedJobs = interleavePlatforms(populatedActive);
 
+    // Invalidate and refresh active feed cache
+    await cache.delPattern("feed:*");
+    await cache.del("health:sources:v1");
+    await cache.set("feed:active:v1", mixedJobs, 300);
+
     return NextResponse.json({
       success: true,
       scrapeRunId,
@@ -114,27 +120,29 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
-    const rawActive = await db.jobPosting.findMany({
-      where: {
-        isExpired: false,
-        OR: [
-          { postedAt: { gte: twentyOneDaysAgo } },
-          { postedAt: null, createdAt: { gte: twentyOneDaysAgo } },
-        ],
-      },
-      orderBy: [{ postedAt: "desc" }, { createdAt: "desc" }],
-    });
+    const mixedJobs = await cache.getOrSet("feed:active:v1", 300, async () => {
+      const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
+      const rawActive = await db.jobPosting.findMany({
+        where: {
+          isExpired: false,
+          OR: [
+            { postedAt: { gte: twentyOneDaysAgo } },
+            { postedAt: null, createdAt: { gte: twentyOneDaysAgo } },
+          ],
+        },
+        orderBy: [{ postedAt: "desc" }, { createdAt: "desc" }],
+      });
 
-    const populatedActive = rawActive.map((j) => {
-      let scope = j.remoteScope;
-      if (!scope || scope === "UNKNOWN") {
-        scope = parseRemoteScope(j.location || "", j.rawDescription || "");
-      }
-      return { ...j, remoteScope: scope };
-    });
+      const populatedActive = rawActive.map((j) => {
+        let scope = j.remoteScope;
+        if (!scope || scope === "UNKNOWN") {
+          scope = parseRemoteScope(j.location || "", j.rawDescription || "");
+        }
+        return { ...j, remoteScope: scope };
+      });
 
-    const mixedJobs = interleavePlatforms(populatedActive);
+      return interleavePlatforms(populatedActive);
+    });
 
     return NextResponse.json({ success: true, jobs: mixedJobs });
   } catch (error) {

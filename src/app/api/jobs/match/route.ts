@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeCompositeMatchScore } from "@/lib/ai/scorer";
 import { selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
+import { cache } from "@/lib/cache/redis";
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -46,8 +47,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cache Check: If forceRefresh is false, look up cached match in DB
+    const cacheKey = `match:${profile.id}:${job.id}`;
+
+    // Cache Check: If forceRefresh is false, look up cached match in Redis then DB
     if (!forceRefresh) {
+      const cachedRedis = await cache.get<{ score: number; hardSkills: string[]; missingSkills: string[]; reasoning: string }>(cacheKey);
+      if (cachedRedis) {
+        return NextResponse.json({
+          success: true,
+          matchScore: {
+            score: cachedRedis.score,
+            hardSkills: cachedRedis.hardSkills,
+            missingSkills: cachedRedis.missingSkills,
+            reasoning: cachedRedis.reasoning,
+            cached: true,
+            latencyMs: Date.now() - startTime,
+          },
+        });
+      }
+
       const cachedRecord = await db.matchScore.findUnique({
         where: {
           profileId_jobPostingId: {
@@ -58,18 +76,29 @@ export async function POST(req: Request) {
       });
 
       if (cachedRecord) {
+        const hardSkills = JSON.parse(cachedRecord.hardSkills || "[]");
+        const missingSkills = JSON.parse(cachedRecord.missingSkills || "[]");
+        await cache.set(cacheKey, {
+          score: cachedRecord.score,
+          hardSkills,
+          missingSkills,
+          reasoning: cachedRecord.reasoning,
+        }, 86400);
+
         return NextResponse.json({
           success: true,
           matchScore: {
             score: cachedRecord.score,
-            hardSkills: JSON.parse(cachedRecord.hardSkills || "[]"),
-            missingSkills: JSON.parse(cachedRecord.missingSkills || "[]"),
+            hardSkills,
+            missingSkills,
             reasoning: cachedRecord.reasoning,
             cached: true,
             latencyMs: Date.now() - startTime,
           },
         });
       }
+    } else {
+      await cache.del(cacheKey);
     }
 
     // Execute 4-Layer Match Pipeline
@@ -131,6 +160,14 @@ export async function POST(req: Request) {
       job.company,
       job.platform
     );
+
+    // Seed Redis cache with newly evaluated score
+    await cache.set(cacheKey, {
+      score: matchRecord.score,
+      hardSkills: result.hardSkills,
+      missingSkills: result.missingSkills,
+      reasoning: result.reasoning,
+    }, 86400);
 
     return NextResponse.json({
       success: true,
