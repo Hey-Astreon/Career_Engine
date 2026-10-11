@@ -193,6 +193,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="google-site-verification" content="DBE7LKgr6629Xr788PYMUHHMsP1273JDlxVNAEKoS0I" />
         <script
+          dangerouslySetInnerHTML={{
+            __html: `if(typeof window!=="undefined"&&window.location.hostname.endsWith("vercel.app")){window.location.replace("https://astrework.app"+window.location.pathname+window.location.search);}`,
+          }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />

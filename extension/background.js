@@ -98,7 +98,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.type === 'OPEN_OPTIONS') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      const origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      let origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      if (origin.includes('vercel.app')) {
+        origin = 'https://astrework.app';
+        chrome.storage.sync.set({ astrepilot_origin: origin });
+      }
       chrome.tabs.create({ url: origin + '/settings' });
     });
     return false; // no response is sent, so do not keep the channel open
@@ -106,7 +110,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'OPEN_CUSTOM_JD') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      const origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      let origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      if (origin.includes('vercel.app')) {
+        origin = 'https://astrework.app';
+        chrome.storage.sync.set({ astrepilot_origin: origin });
+      }
       chrome.tabs.create({ url: origin + '/resume-builder?mode=custom&loadSession=true' });
     });
     return false;
@@ -114,7 +122,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'DOWNLOAD_RESUME') {
     chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token'], (res) => {
-      const origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      let origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      if (origin.includes('vercel.app')) {
+        origin = 'https://astrework.app';
+        chrome.storage.sync.set({ astrepilot_origin: origin });
+      }
       const token = res.astrepilot_token || '';
       const url = origin + '/api/resume/download/latest?token=' + token;
       chrome.tabs.create({ url, active: false });
@@ -145,7 +157,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // 4. Initialize default settings on install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-    if (!res.astrepilot_origin) {
+    if (!res.astrepilot_origin || res.astrepilot_origin.includes('vercel.app')) {
       chrome.storage.sync.set({
         astrepilot_origin: 'https://astrework.app'
       });

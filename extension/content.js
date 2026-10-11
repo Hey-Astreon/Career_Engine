@@ -97,9 +97,14 @@
   async function getStoredConfig() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin'], (res) => {
+        let origin = (res.astrepilot_origin || 'https://astrework.app').trim();
+        if (!origin || origin.includes('vercel.app')) {
+          origin = 'https://astrework.app';
+          chrome.storage.sync.set({ astrepilot_origin: origin });
+        }
         resolve({
           token: res.astrepilot_token || null,
-          origin: res.astrepilot_origin || 'https://astrework.app'
+          origin
         });
       });
     });
