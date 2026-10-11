@@ -99,7 +99,7 @@
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin'], (res) => {
         resolve({
           token: res.astrepilot_token || null,
-          origin: res.astrepilot_origin || 'https://astrework.vercel.app'
+          origin: res.astrepilot_origin || 'https://astrework.app'
         });
       });
     });

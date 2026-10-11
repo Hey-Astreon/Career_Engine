@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin'], (res) => {
         resolve({
           token: res.astrepilot_token || null,
-          origin: res.astrepilot_origin || 'https://astrework.vercel.app'
+          origin: res.astrepilot_origin || 'https://astrework.app'
         });
       });
     });
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const tabs = await chrome.tabs.query({});
       const origin = inputOrigin.value.trim().replace(/\/$/, '');
-      const astreTab = tabs.find(t => t.url && (t.url.startsWith(origin) || t.url.includes('localhost:3000') || t.url.includes('astrework.vercel.app')));
+      const astreTab = tabs.find(t => t.url && (t.url.startsWith(origin) || t.url.includes('astrework.app') || t.url.includes('localhost:3000')));
 
       if (!astreTab) {
         alert(`No open AstreWork tab found at ${origin}. Please open AstreWork in a tab and sign in.`);
