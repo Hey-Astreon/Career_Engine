@@ -8,6 +8,8 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -21,6 +23,8 @@ services:
     image: containrrr/watchtower
     container_name: watchtower
     restart: always
+    environment:
+      - DOCKER_API_VERSION=1.45
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # If your GitHub repo is private, you must log in on the server via `docker login ghcr.io -u <user> -p <token>` 
