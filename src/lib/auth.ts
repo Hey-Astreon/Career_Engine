@@ -16,7 +16,7 @@ if (
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   } else if (process.env.NODE_ENV === "production") {
-    process.env.NEXTAUTH_URL = "https://astrework.vercel.app";
+    process.env.NEXTAUTH_URL = "https://astrework.app";
   }
 }
 if (

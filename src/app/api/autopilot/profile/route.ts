@@ -31,7 +31,7 @@ export async function GET(req: Request) {
 
     if (!profile) {
       return NextResponse.json(
-        { error: "Profile not found. Please complete onboarding at astrework.vercel.app/onboard" },
+        { error: "Profile not found. Please complete onboarding at astrework.app/onboard" },
         { status: 404, headers: CORS }
       );
     }

@@ -98,7 +98,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.type === 'OPEN_OPTIONS') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
+      const origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       chrome.tabs.create({ url: origin + '/settings' });
     });
     return false; // no response is sent, so do not keep the channel open
@@ -106,7 +106,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'OPEN_CUSTOM_JD') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
+      const origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       chrome.tabs.create({ url: origin + '/resume-builder?mode=custom&loadSession=true' });
     });
     return false;
@@ -114,7 +114,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'DOWNLOAD_RESUME') {
     chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token'], (res) => {
-      const origin = (res.astrepilot_origin || 'https://astrework.vercel.app').replace(/\/$/, '');
+      const origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       const token = res.astrepilot_token || '';
       const url = origin + '/api/resume/download/latest?token=' + token;
       chrome.tabs.create({ url, active: false });
@@ -147,7 +147,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get(['astrepilot_origin'], (res) => {
     if (!res.astrepilot_origin) {
       chrome.storage.sync.set({
-        astrepilot_origin: 'https://astrework.vercel.app'
+        astrepilot_origin: 'https://astrework.app'
       });
     }
   });

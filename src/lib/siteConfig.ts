@@ -24,7 +24,7 @@ function resolveBaseUrl(): string {
   }
 
   // 4. Default authoritative production domain
-  return "https://astrework.vercel.app";
+  return "https://astrework.app";
 }
 
 export const SITE_URL = resolveBaseUrl();

@@ -752,7 +752,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
  * Build the complete bookmarklet javascript: href for a given token.
  * The token is substituted into the script and the whole thing is URI-encoded.
  */
-export function buildBookmarkletHref(token: string, origin: string = "https://astrework.vercel.app"): string {
+export function buildBookmarkletHref(token: string, origin: string = "https://astrework.app"): string {
   const cleanOrigin = origin.replace(/\/$/, "");
   const minified = BOOKMARKLET_SCRIPT
     .replace("__AP_TOKEN__", token)

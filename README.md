@@ -7,13 +7,13 @@
 [![React 19](https://img.shields.io/badge/React-19.0.0-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9%20(Strict)-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma 7](https://img.shields.io/badge/Prisma-7%20(LibSQL)-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](https://astrework.vercel.app/api/sources/health)
+[![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](https://astrework.app/api/sources/health)
 [![Job Sync Engine](https://img.shields.io/badge/Job%20Sync-100%25%20PASSING-brightgreen?style=for-the-badge&logo=githubactions)](https://github.com/Hey-Astreon/Career_Engine/actions/workflows/job-sync.yml)
-[![Live Production](https://img.shields.io/badge/Live%20Production-astrework.vercel.app-success?style=for-the-badge&logo=vercel)](https://astrework.vercel.app)
+[![Live Production](https://img.shields.io/badge/Live%20Production-astrework.app-success?style=for-the-badge)](https://astrework.app)
 
 **AstreWork** is an autonomous, high-density AI Career Operating System engineered to streamline remote job discovery, multi-signal deduplication, deep 2-stage fit scoring, tailored application kit generation, and background auto-sync scheduling.
 
-🌐 **Live Production Deployment:** [https://astrework.vercel.app](https://astrework.vercel.app)
+🌐 **Live Production Deployment:** [https://astrework.app](https://astrework.app)
 
 </div>
 
@@ -140,16 +140,16 @@ npm run build
 
 ---
 
-## ☁️ Production Deployment on Vercel (LIVE)
+## ☁️ Autonomous Production Deployment (LIVE)
 
-AstreWork is officially live in production on Vercel at **[https://astrework.vercel.app](https://astrework.vercel.app)** with serverless LibSQL (Turso Cloud), bundled candidate PDF assets, and automated daily background sync crons.
+AstreWork is officially live in production at **[https://astrework.app](https://astrework.app)** running on Oracle Cloud Always-Free ARM Ampere A1 (4 OCPUs, 24 GB RAM) with Caddy reverse proxy (automated Let's Encrypt SSL/TLS & HTTP/3), Turso LibSQL Cloud, and automated Watchtower continuous deployment.
 
-### 1. Import Repository on Vercel
-Connected to GitHub repository `Hey-Astreon/Career_Engine` (`main` branch):
-- **Framework Preset:** Next.js
-- **Root Directory:** `./` (default)
-- **Build Command:** `prisma generate && next build` (defined in `vercel.json` and `package.json`)
-- **Live Production URL:** [https://astrework.vercel.app](https://astrework.vercel.app)
+### 1. Production Architecture
+- **Dedicated Hardware:** Oracle Cloud `VM.Standard.A1.Flex` (4 ARM64 OCPUs, 24 GB RAM in Mumbai `ap-mumbai-1`)
+- **Reverse Proxy & SSL:** Caddy (`caddy:alpine`) with automatic HTTPS & TLS-ALPN-01 certificate renewals
+- **Container Mesh:** Docker Engine 29.9.0 & Compose v5.6.0 (`docker-compose.prod.yml`)
+- **CD Automation:** GitHub Actions ARM64 buildx to GHCR + Watchtower auto-updating containers every 60s
+- **Live Production URL:** [https://astrework.app](https://astrework.app)
 
 ### 2. Configure Environment Variables in Vercel
 In your Vercel Project Settings → **Environment Variables**, paste the following keys:
