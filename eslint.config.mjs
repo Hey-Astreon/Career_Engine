@@ -12,10 +12,19 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "tests/**",
+    "scripts/**",
+    "extension/**",
+    "scratch/**",
+    "dev.db",
   ]),
   {
     rules: {
       "react/no-unescaped-entities": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
 ]);

@@ -26,7 +26,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS });
     }
 
-    let profile = await db.profile.findFirst({
+    const profile = await db.profile.findFirst({
       where: { userId: session.user.id },
       select: { id: true },
     });

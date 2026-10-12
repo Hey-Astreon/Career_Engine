@@ -271,7 +271,7 @@ export async function ingestNormalizedJobs(
   maxToIngest: number = 80
 ): Promise<{ insertedCount: number; updatedCount: number }> {
   let insertedCount = 0;
-  let updatedCount = 0;
+  const updatedCount = 0;
 
   // Ensure ProviderSyncState rows exist for all provider keys in this batch before JobOccurrence upserts
   const providerKeys = Array.from(new Set(jobs.map((j) => j.providerKey)));
