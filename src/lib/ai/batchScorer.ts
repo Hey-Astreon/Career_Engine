@@ -3,6 +3,7 @@ import {
   evaluateHardEligibility,
   extractSkills,
 } from "./scorer";
+import { EarlyCareerTier, determineEarlyCareerTier } from "../providers/normalize";
 import { evaluateTrust, type TrustVerdict, type TrustTier } from "./astreShield";
 
 export type FeedScoreType = "BASE_MATCH" | "FINAL_MATCH" | "INELIGIBLE" | "SHIELD_BLOCKED";
@@ -145,7 +146,14 @@ export function computeBatchFeedScores(
 
     // Compute deterministic signals inline without repeating extractSkills
     const matched = jobSkills.filter((s) => candidateSkills.some((cs) => cs.toLowerCase() === s.toLowerCase()));
-    const skillOverlapScore = jobSkills.length > 0 ? Math.round((matched.length / jobSkills.length) * 100) : 50;
+    let skillOverlapScore = jobSkills.length > 0 ? Math.round((matched.length / jobSkills.length) * 100) : 50;
+
+    const careerTier = determineEarlyCareerTier(job.title, job.rawDescription);
+    const isEarlyCareer = careerTier === EarlyCareerTier.TIER_1_INTERNSHIP || careerTier === EarlyCareerTier.TIER_2_ZERO_EXPERIENCE;
+    if (isEarlyCareer && matched.length >= 2) {
+      // For early career & internships, knowing 2+ foundational technologies demonstrates high skill alignment
+      skillOverlapScore = Math.max(skillOverlapScore, 75);
+    }
 
     const lowerTitle = job.title.toLowerCase();
     const lowerCandTitle = candidate.title.toLowerCase();
@@ -159,6 +167,8 @@ export function computeBatchFeedScores(
       (lowerTitle.includes("full stack") && lowerCandTitle.includes("full stack"))
     ) {
       titleCategoryScore = 100;
+    } else if (lowerTitle.includes("intern") || lowerTitle.includes("internship")) {
+      titleCategoryScore = 85;
     } else if (lowerTitle.includes("software") || lowerTitle.includes("engineer") || lowerTitle.includes("developer")) {
       titleCategoryScore = 80;
     }
@@ -175,9 +185,9 @@ export function computeBatchFeedScores(
 
     let sourceQualityScore = 80;
     const pKey = (job.platform || "DIRECT_PORTAL").toUpperCase();
-    if (["GREENHOUSE", "LEVER", "ASHBY", "WORKABLE", "SMARTRECRUITERS", "RECRUITEE"].includes(pKey)) {
+    if (["GREENHOUSE", "LEVER", "ASHBY", "SIMPLIFY", "WORKABLE", "SMARTRECRUITERS", "RECRUITEE"].includes(pKey)) {
       sourceQualityScore = 100;
-    } else if (pKey === "HIMALAYAS" || pKey === "REMOTIVE") {
+    } else if (["HIMALAYAS", "REMOTIVE", "LINKEDIN", "JOBICY", "BUILTIN"].includes(pKey)) {
       sourceQualityScore = 90;
     }
 

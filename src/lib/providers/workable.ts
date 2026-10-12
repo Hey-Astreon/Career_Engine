@@ -44,14 +44,15 @@ export class WorkableProvider implements JobSourceProvider {
             const rawContent = cleanHtmlText(item.description || item.requirements || "");
             const jobUrl = item.shortlink || item.url || `https://apply.workable.com/${board.slug}/j/${item.shortcode}/`;
 
-            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent)) {
+            const postedAt = item.published ? new Date(item.published) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent, validPostedAt)) {
               companyRejected++;
               continue;
             }
 
             const { company, companySlug: normSlug } = cleanCompanySlug(board.slug);
-            const postedAt = item.published ? new Date(item.published) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
             const remoteScope = parseRemoteScope(location, rawContent);
             const opportunitySignals = determineOpportunitySignals({

@@ -496,8 +496,122 @@ export function determineOpportunitySignals(job: {
   return signals;
 }
 
-export const MAX_POSTING_AGE_DAYS = 21;
+export const MAX_POSTING_AGE_DAYS = 7;
 export const MAX_POSTING_AGE_MS = MAX_POSTING_AGE_DAYS * 24 * 60 * 60 * 1000;
+export const PROBATION_MAX_AGE_DAYS = 2; // 48-hour probation for jobs without explicit timestamps
+
+export enum EarlyCareerTier {
+  TIER_1_INTERNSHIP = "TIER_1_INTERNSHIP",
+  TIER_2_ZERO_EXPERIENCE = "TIER_2_ZERO_EXPERIENCE",
+  TIER_3_ZERO_TO_ONE_YEAR = "TIER_3_ZERO_TO_ONE_YEAR",
+  TIER_4_EARLY_CAREER = "TIER_4_EARLY_CAREER",
+  INELIGIBLE = "INELIGIBLE",
+}
+
+export function determineEarlyCareerTier(
+  title: string,
+  description: string = ""
+): EarlyCareerTier {
+  const lowerTitle = title.toLowerCase();
+  const lowerDesc = description.toLowerCase();
+  const full = `${lowerTitle} ${lowerDesc}`;
+
+  // 1. Exclude Senior / Staff / Lead / SDE II+ / Engineer 4
+  if (
+    lowerTitle.includes("senior") ||
+    lowerTitle.includes("sr.") ||
+    /\bsr\b/.test(lowerTitle) ||
+    lowerTitle.includes("staff") ||
+    lowerTitle.includes("principal") ||
+    /\blead\b/.test(lowerTitle) ||
+    lowerTitle.includes("manager") ||
+    lowerTitle.includes("director") ||
+    lowerTitle.includes("head of") ||
+    /\b(?:sde|swe|engineer|developer)\s*(?:[2-9]|ii|iii|iv|v)\b/i.test(lowerTitle) ||
+    /\b(?:level|lvl|grade)\s*(?:[2-9]|ii|iii|iv|v)\b/i.test(lowerTitle) ||
+    /\b(?:engineer|developer)\s+[2-9]\b/i.test(lowerTitle)
+  ) {
+    return EarlyCareerTier.INELIGIBLE;
+  }
+
+  // Tier 1: Remote Internship (Evaluated before description seniority signals so mentoring mentions like 'collaborate with senior engineers' don't reject internships)
+  if (
+    /\b(intern|internship|co-op|coop|apprentice|apprenticeship|trainee|fellow|fellowship|student developer)\b/i.test(lowerTitle) ||
+    /\b(internship|co-op|coop|apprentice|apprenticeship)\b/i.test(lowerDesc)
+  ) {
+    return EarlyCareerTier.TIER_1_INTERNSHIP;
+  }
+
+  // Reject >= 3 years explicit requirements and excessive experience for non-internship roles
+  if (
+    EXCESSIVE_EXPERIENCE_REGEXES.some((rx) => rx.test(full)) ||
+    /\b(?:[3-9]|\d{2,})\s*\+\s*(?:years?|yrs?)\b/i.test(full) ||
+    /\b(?:[3-9]|\d{2,})\s*(?:-|–|to)\s*(?:[4-9]|\d{2,})\s*(?:years?|yrs?)\b/i.test(full) ||
+    /\b(?:at least|minimum of|minimum|required)\s*(?:[3-9]|\d{2,})\s*(?:years?|yrs?)\b/i.test(full) ||
+    SENIOR_DESC_SIGNALS.some((sig) => full.includes(sig))
+  ) {
+    return EarlyCareerTier.INELIGIBLE;
+  }
+
+  // Tier 2: 0 Prior Experience / Student-Friendly / Freshers
+  if (
+    /\b(0\s*(?:-|to)\s*0|no prior experience|no experience required|zero experience|fresher|freshers|fresh graduate|recent graduate|graduate software engineer|entry[ -]?level)\b/i.test(lowerTitle) ||
+    /\b(no prior experience required|no experience required|0 years of experience|zero years of experience|open to students|no professional experience required)\b/i.test(lowerDesc)
+  ) {
+    return EarlyCareerTier.TIER_2_ZERO_EXPERIENCE;
+  }
+
+  // Tier 3: 0-1 Year Experience
+  if (
+    /\b(?:0\s*-\s*1|0\s*to\s*1|0-1|1)\s*(?:years?|yrs?)\b/i.test(full) ||
+    /\b(junior|associate)\b/i.test(lowerTitle)
+  ) {
+    return EarlyCareerTier.TIER_3_ZERO_TO_ONE_YEAR;
+  }
+
+  // Tier 4: General Early Career (1-3 years or entry developer)
+  if (
+    /\b(?:1\s*-\s*2|1\s*to\s*2|1\s*-\s*3|1\s*to\s*3|2)\s*(?:years?|yrs?)\b/i.test(full) ||
+    lowerDesc.includes("entry-level") || lowerDesc.includes("entry level") ||
+    lowerDesc.includes("early career")
+  ) {
+    return EarlyCareerTier.TIER_4_EARLY_CAREER;
+  }
+
+  return EarlyCareerTier.TIER_4_EARLY_CAREER;
+}
+
+export function calculateEarlyBirdScore(
+  tier: EarlyCareerTier,
+  postedAt: Date | string | null | undefined,
+  nowMs: number = Date.now()
+): number {
+  let baseWeight = 0;
+  if (tier === EarlyCareerTier.TIER_1_INTERNSHIP) baseWeight = 1000;
+  else if (tier === EarlyCareerTier.TIER_2_ZERO_EXPERIENCE) baseWeight = 750;
+  else if (tier === EarlyCareerTier.TIER_3_ZERO_TO_ONE_YEAR) baseWeight = 500;
+  else if (tier === EarlyCareerTier.TIER_4_EARLY_CAREER) baseWeight = 250;
+  else return 0;
+
+  if (!postedAt) {
+    // 48h probation fallback: 1.0x
+    return baseWeight;
+  }
+
+  const postedDate = postedAt instanceof Date ? postedAt : new Date(postedAt);
+  const postedMs = postedDate.getTime();
+  if (isNaN(postedMs)) return baseWeight;
+
+  const ageMs = Math.max(0, nowMs - postedMs);
+  const ageHours = ageMs / 3600000;
+
+  if (ageHours <= 24) return Math.round(baseWeight * 3.0);
+  if (ageHours <= 48) return Math.round(baseWeight * 2.0);
+  if (ageHours <= 96) return Math.round(baseWeight * 1.2);
+  if (ageHours <= 168) return Math.round(baseWeight * 0.8);
+
+  return 0; // > 7 days is stale
+}
 
 export function isOlderThanMaxPostingAge(
   postedAt: Date | string | number | null | undefined,
@@ -544,7 +658,7 @@ export function isStrictlyRemoteDeveloperRole(
     return false;
   }
 
-  // 4. Exclude Senior / Staff / Principal / Lead by TITLE
+  // 4. Exclude Senior / Staff / Principal / Lead and numbered levels (SDE II, SDE 3, Engineer 4) by TITLE
   if (
     lowerTitle.includes("senior") ||
     lowerTitle.includes("sr.") ||
@@ -554,7 +668,10 @@ export function isStrictlyRemoteDeveloperRole(
     /\blead\b/.test(lowerTitle) ||
     lowerTitle.includes("manager") ||
     lowerTitle.includes("director") ||
-    lowerTitle.includes("head of")
+    lowerTitle.includes("head of") ||
+    /\b(?:sde|swe|engineer|developer)\s*(?:[2-9]|ii|iii|iv|v)\b/i.test(lowerTitle) ||
+    /\b(?:level|lvl|grade)\s*(?:[2-9]|ii|iii|iv|v)\b/i.test(lowerTitle) ||
+    /\b(?:engineer|developer)\s+[2-9]\b/i.test(lowerTitle)
   ) {
     return false;
   }
@@ -569,10 +686,11 @@ export function isStrictlyRemoteDeveloperRole(
     }
   }
 
-  // 6. Strict 21-day ceiling: Discard jobs posted more than 21 days (3 weeks) ago
+  // 6. Strict 7-day ceiling: Discard jobs posted more than 7 days ago
   if (postedAt && isOlderThanMaxPostingAge(postedAt, MAX_POSTING_AGE_DAYS)) {
     return false;
   }
 
   return true;
 }
+

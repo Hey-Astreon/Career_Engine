@@ -43,14 +43,15 @@ export class LeverProvider implements JobSourceProvider {
             const rawContent = cleanHtmlText(item.descriptionPlain || item.description || "");
             const jobUrl = item.hostedUrl || item.applyUrl;
 
-            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent)) {
+            const postedAt = item.createdAt ? new Date(item.createdAt) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent, validPostedAt)) {
               companyRejected++;
               continue;
             }
 
             const { company, companySlug: normSlug } = cleanCompanySlug(board.slug);
-            const postedAt = item.createdAt ? new Date(item.createdAt) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
             const remoteScope = parseRemoteScope(location, rawContent);
             const opportunitySignals = determineOpportunitySignals({

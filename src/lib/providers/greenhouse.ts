@@ -43,15 +43,16 @@ export class GreenhouseProvider implements JobSourceProvider {
             const rawContent = cleanHtmlText(item.content || "");
             const jobUrl = item.absolute_url;
 
-            if (!isStrictlyRemoteDeveloperRole(title, locationName, rawContent)) {
+            const postedAtRaw = item.first_published || item.updated_at || null;
+            const postedAt = postedAtRaw ? new Date(postedAtRaw) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+            if (!isStrictlyRemoteDeveloperRole(title, locationName, rawContent, validPostedAt)) {
               companyRejected++;
               continue;
             }
 
             const { company, companySlug: normSlug } = cleanCompanySlug(board.slug);
-            const postedAtRaw = item.first_published || null;
-            const postedAt = postedAtRaw ? new Date(postedAtRaw) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
             const remoteScope = parseRemoteScope(locationName, rawContent);
             const opportunitySignals = determineOpportunitySignals({

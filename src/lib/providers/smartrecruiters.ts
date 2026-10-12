@@ -44,14 +44,15 @@ export class SmartRecruitersProvider implements JobSourceProvider {
             const rawContent = cleanHtmlText(item.jobAd?.sections?.jobDescription?.text || "");
             const jobUrl = `https://jobs.smartrecruiters.com/${board.slug}/${item.id}`;
 
-            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent)) {
+            const postedAt = item.releasedDate ? new Date(item.releasedDate) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent, validPostedAt)) {
               companyRejected++;
               continue;
             }
 
             const { company, companySlug: normSlug } = cleanCompanySlug(board.slug);
-            const postedAt = item.releasedDate ? new Date(item.releasedDate) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
             const remoteScope = parseRemoteScope(location, rawContent);
             const opportunitySignals = determineOpportunitySignals({

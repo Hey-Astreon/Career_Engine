@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { generateAtsAutoFillUrl } from "@/lib/deepLinkEngine";
+import { isInternshipRole } from "@/lib/jobPresentation";
 
 interface JobItem {
   id: string;
@@ -31,6 +32,7 @@ interface JobItem {
   location: string;
   platform: string;
   url: string;
+  rawDescription?: string;
 }
 
 interface QuickApplyDrawerProps {
@@ -56,30 +58,21 @@ export function QuickApplyDrawer({ isOpen, onClose, job }: QuickApplyDrawerProps
   useEffect(() => {
     async function loadVariants() {
       try {
-        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug || "roushan"}`);
+        const params = new URLSearchParams({
+          profileSlug: activeProfileSlug || "roushan",
+          jobTitle: job?.title || "",
+          company: job?.company || "",
+          platform: job?.platform || "",
+        });
+        const res = await fetch(`/api/resume/variants?${params.toString()}`);
         const data = await res.json();
         if (data.success && Array.isArray(data.officialVariants)) {
           setOfficialVariants(data.officialVariants);
-          // Smart preselection based on job title
-          const title = (job?.title || "").toLowerCase();
-          let best = data.officialVariants[0]?.fileName;
-          if (/ai|ml|llm|genai/i.test(title)) {
-            const aiVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("AI_") || v.fileName.includes("AI_Product"));
-            if (aiVar) best = aiVar.fileName;
-          } else if (/python/i.test(title)) {
-            const pyVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Python"));
-            if (pyVar) best = pyVar.fileName;
-          } else if (/backend|system|api|c#|\.net/i.test(title)) {
-            const beVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Backend"));
-            if (beVar) best = beVar.fileName;
-          } else if (/full\s*stack/i.test(title)) {
-            const fsVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Full_Stack"));
-            if (fsVar) best = fsVar.fileName;
-          } else if (/product/i.test(title)) {
-            const prodVar = data.officialVariants.find((v: OfficialVariantItem) => v.fileName.includes("Product"));
-            if (prodVar) best = prodVar.fileName;
+          if (data.recommendedVariant?.fileName) {
+            setSelectedVariant(data.recommendedVariant.fileName);
+          } else {
+            setSelectedVariant(data.officialVariants[0]?.fileName || "");
           }
-          setSelectedVariant(best || data.officialVariants[0]?.fileName || "");
         }
       } catch (err) {
         console.error(err);
@@ -110,13 +103,31 @@ export function QuickApplyDrawer({ isOpen, onClose, job }: QuickApplyDrawerProps
   const { autoFillUrl, isSupported } = generateAtsAutoFillUrl(job.url, job.platform, activeProfile);
 
   // Dynamic tailored cover letter
-  const defaultCoverLetter = `Dear Hiring Team at ${job.company},
+  const isIntern = isInternshipRole(job.title, job.rawDescription || "");
+  const leadProject = activeProfile?.projects?.[0];
+  const projectProof = leadProject
+    ? `Recently, I designed and built ${leadProject.title} (${leadProject.techStack}), emphasizing clean architecture, modular code, and high performance.`
+    : `Recently, I have engineered modern full-stack web applications and robust APIs with high test coverage and clean architectural modularity.`;
 
-I am writing to express my strong enthusiasm for the ${job.title} role. With a robust background in building scalable, resilient software, I specialize in engineering high-performance systems and clean APIs.
+  const coverLetter = isIntern
+    ? `Dear Hiring Team at ${job.company},
 
-Recently, I engineered ${activeProfile?.projects[0]?.title || "distributed microservices and cloud infrastructure"}, focusing on strict reliability, architectural modularity, and rapid delivery. My technical experience directly matches the scope of responsibilities outlined for the ${job.title} position at ${job.company}.
+I am excited to submit my application for the ${job.title} position. As an aspiring software engineer with hands-on project experience, I am eager to contribute high-impact solutions to your team while learning rapidly from your engineering organization.
 
-I would welcome the opportunity to discuss how my skill set can contribute to your engineering objectives. Thank you for your time and consideration.
+${projectProof} My practical experience with modern development practices and core technologies directly matches the responsibilities outlined for this internship at ${job.company}.
+
+I am passionate about collaborating on challenging technical problems and would welcome the opportunity to discuss how I can add immediate value to your engineering sprints this session. Thank you for your time and consideration.
+
+Sincerely,
+${candidateName}
+${candidateEmail} | ${candidatePhone}`
+    : `Dear Hiring Team at ${job.company},
+
+I am writing to express my strong enthusiasm for the ${job.title} role at ${job.company}. With a proven foundation in software engineering, I specialize in building scalable, resilient applications and robust APIs.
+
+${projectProof} My technical experience directly matches the scope of responsibilities outlined for the ${job.title} position.
+
+I would welcome the opportunity to discuss how my technical skills and work ethic can contribute to your engineering objectives. Thank you for your time and consideration.
 
 Sincerely,
 ${candidateName}
@@ -277,11 +288,16 @@ ${candidateEmail} | ${candidatePhone}`;
         {/* Tailored Cover Letter Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--muted)]">
-              Tailored Cover Letter
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                Tailored Cover Letter
+              </span>
+              <span className={`ce-chip !text-[8px] !min-h-4 !px-1.5 ${isIntern ? "ce-chip-green" : "ce-chip-blue"}`}>
+                {isIntern ? "🎓 Student / Internship Tailored" : "💼 Production Ready"}
+              </span>
+            </div>
             <button
-              onClick={() => copyToClipboard(defaultCoverLetter, "coverLetter")}
+              onClick={() => copyToClipboard(coverLetter, "coverLetter")}
               className="ce-button-secondary !min-h-7 !px-2.5 !text-[10px]"
             >
               {copiedField === "coverLetter" ? (
@@ -298,7 +314,7 @@ ${candidateEmail} | ${candidatePhone}`;
             </button>
           </div>
           <div className="rounded-lg border border-[var(--line)] bg-white p-3.5 text-[11px] font-mono leading-relaxed text-[var(--ink-soft)] whitespace-pre-line max-h-48 overflow-y-auto">
-            {defaultCoverLetter}
+            {coverLetter}
           </div>
         </div>
 

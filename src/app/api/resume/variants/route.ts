@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getAllResumeVariants } from "@/lib/resumeVariantSelector";
+import { getAllResumeVariants, selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
 
 const MAX_VARIANTS = 20;
 
@@ -15,6 +15,10 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const profileSlug = searchParams.get("profileSlug");
+    const jobTitle = searchParams.get("jobTitle");
+    const jobDescription = searchParams.get("jobDescription") || "";
+    const company = searchParams.get("company") || "";
+    const platform = searchParams.get("platform") || "";
 
     if (!profileSlug) {
       return NextResponse.json({ success: false, error: "profileSlug required" }, { status: 400 });
@@ -47,8 +51,11 @@ export async function GET(req: Request) {
     });
 
     const officialVariants = getAllResumeVariants(profileSlug);
+    const recommendedVariant = jobTitle
+      ? selectRecommendedResumeVariant(profileSlug, jobTitle, jobDescription, company, platform)
+      : null;
 
-    return NextResponse.json({ success: true, variants, officialVariants });
+    return NextResponse.json({ success: true, variants, officialVariants, recommendedVariant });
   } catch (error) {
     console.error("GET variants error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch variants" }, { status: 500 });

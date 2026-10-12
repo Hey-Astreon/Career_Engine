@@ -64,14 +64,15 @@ export class ArcDevProvider implements JobSourceProvider {
               const jobPath = item.urlString ? `https://arc.dev/remote-jobs/${item.urlString}` : targetUrl;
               const canonicalAppUrl = jobPath;
 
-              if (!isStrictlyRemoteDeveloperRole(title, location, `${title} at ${companyName}`)) {
+              const postedAt = item.postedAt ? new Date(item.postedAt * 1000) : null;
+              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+              if (!isStrictlyRemoteDeveloperRole(title, location, `${title} at ${companyName}`, validPostedAt)) {
                 rejectedCount++;
                 continue;
               }
 
               const { company, companySlug } = cleanCompanySlug(companyName);
-              const postedAt = item.postedAt ? new Date(item.postedAt * 1000) : null;
-              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
               const remoteScope = parseRemoteScope(location, title);
               const opportunitySignals = determineOpportunitySignals({
                 postedAt: validPostedAt,

@@ -42,14 +42,15 @@ export class RemotiveProvider implements JobSourceProvider {
           const rawDesc = cleanHtmlText(item.description || "");
           const discoveryUrl = item.url || `https://remotive.com/remote-jobs/${item.id}`;
 
-          if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc)) {
+          const postedAt = item.publication_date ? new Date(item.publication_date) : null;
+          const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+          if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc, validPostedAt)) {
             rejectedCount++;
             continue;
           }
 
           const { company, companySlug } = cleanCompanySlug(companyName);
-          const postedAt = item.publication_date ? new Date(item.publication_date) : null;
-          const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
           const remoteScope = parseRemoteScope(location, rawDesc);
           const opportunitySignals = determineOpportunitySignals({
             postedAt: validPostedAt,

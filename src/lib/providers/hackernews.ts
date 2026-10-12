@@ -137,15 +137,16 @@ export class HackerNewsProvider implements JobSourceProvider {
               applyUrl = links[0];
             }
 
+            const postedAt = comment.created_at ? new Date(comment.created_at) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
             // Strict Candidate Filtering (0-3 Yrs Remote Developer)
-            if (!isStrictlyRemoteDeveloperRole(roleTitle, locationStr, plainText)) {
+            if (!isStrictlyRemoteDeveloperRole(roleTitle, locationStr, plainText, validPostedAt)) {
               rejectedCount++;
               continue;
             }
 
             const { company, companySlug } = cleanCompanySlug(companyName);
-            const postedAt = comment.created_at ? new Date(comment.created_at) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
             const remoteScope = parseRemoteScope(locationStr, plainText);
             const opportunitySignals = determineOpportunitySignals({
               postedAt: validPostedAt,

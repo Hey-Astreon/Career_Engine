@@ -3,10 +3,11 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { cache } from "@/lib/cache/redis";
+import { ACTIVE_PROVIDERS } from "@/lib/providers/registry";
 
 export async function GET() {
   try {
-    const formattedStates = await cache.getOrSet("health:sources:v1", 60, async () => {
+    const formattedStates = await cache.getOrSet("health:sources:v2", 60, async () => {
       const [syncStates, providerJobs] = await Promise.all([
         db.providerSyncState.findMany({ orderBy: { providerKey: "asc" } }),
         db.jobPosting.groupBy({ by: ["platform", "isExpired"], _count: { _all: true } }),
@@ -20,7 +21,9 @@ export async function GET() {
         jobCounts.set(row.platform, current);
       }
 
-      return syncStates.map((state) => ({
+      const activeProviderKeys = new Set(ACTIVE_PROVIDERS.map((p) => p.name.toUpperCase()));
+
+      const mapState = (state: (typeof syncStates)[number]) => ({
         provider: state.providerKey,
         status: state.status,
         lastSyncAttemptAt: state.lastSyncAttemptAt ? state.lastSyncAttemptAt.toISOString() : null,
@@ -31,12 +34,26 @@ export async function GET() {
         totalJobsSeen: state.totalJobsSeen,
         activeJobs: jobCounts.get(state.providerKey)?.activeJobs ?? 0,
         staleJobs: jobCounts.get(state.providerKey)?.staleJobs ?? 0,
-      }));
+      });
+
+      const activeStates = syncStates
+        .filter((state) => activeProviderKeys.has(state.providerKey.toUpperCase()))
+        .map(mapState);
+
+      const archivedStates = syncStates
+        .filter((state) => !activeProviderKeys.has(state.providerKey.toUpperCase()))
+        .map(mapState);
+
+      return {
+        sources: activeStates,
+        archivedSources: archivedStates,
+      };
     });
 
     return NextResponse.json({
       success: true,
-      sources: formattedStates,
+      sources: formattedStates.sources,
+      archivedSources: formattedStates.archivedSources,
     });
   } catch (error) {
     console.error("Error fetching source health:", error);
@@ -46,3 +63,4 @@ export async function GET() {
     );
   }
 }
+

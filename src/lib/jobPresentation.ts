@@ -33,7 +33,7 @@ export function determineExperienceLevel(title: string, description: string = ""
 
 export type ExperienceRangeYears = 1 | 2 | 3;
 export type ExperienceFilter = ExperienceRangeYears | "ANY";
-export type PostingWindowFilter = 7 | 14 | 21 | "ANY";
+export type PostingWindowFilter = 1 | 3 | 7 | "ANY";
 export type RemoteRoleView = "ALL" | "JOBS" | "INTERNSHIPS";
 
 /** Start with the full active source inventory; all narrowing controls are explicit and opt-in. */
@@ -161,19 +161,97 @@ export function formatRemoteScopeLabel(remoteScope?: string | null, location?: s
   return location || "Remote scope unavailable";
 }
 
+export function getEarlyCareerTierPresentation(title: string, description: string = ""): {
+  tierNumber: 1 | 2 | 3 | 4;
+  label: string;
+} {
+  const full = `${title} ${description}`.toLowerCase();
+  if (isInternshipRole(title, description)) {
+    return { tierNumber: 1, label: "Tier 1: Internship" };
+  }
+  if (/\b(0\s*(?:-|to)\s*0|no prior experience|no experience required|zero experience|fresher|freshers|entry[ -]?level)\b/i.test(full)) {
+    return { tierNumber: 2, label: "Tier 2: 0-Exp Entry" };
+  }
+  if (/\b(?:0\s*-\s*1|0\s*to\s*1|0-1|1)\s*(?:years?|yrs?)\b/i.test(full) || /\b(junior|associate)\b/i.test(title.toLowerCase())) {
+    return { tierNumber: 3, label: "Tier 3: 0–1 Yr Junior" };
+  }
+  return { tierNumber: 4, label: "Early Career" };
+}
+
+export function getFreshnessBadgeInfo(
+  postedAtStr?: string | null,
+  fallbackDateStr?: string | null,
+  currentMs: number = Date.now()
+): { label: string; isUltraFresh: boolean; isHot: boolean } {
+  const candidate = postedAtStr ? { value: postedAtStr, label: "Posted" } : fallbackDateStr ? { value: fallbackDateStr, label: "First seen" } : null;
+  if (!candidate) return { label: "Date unavailable", isUltraFresh: false, isHot: false };
+  const timestamp = new Date(candidate.value).getTime();
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return { label: "Date unavailable", isUltraFresh: false, isHot: false };
+
+  const diffHours = Math.max(0, currentMs - timestamp) / 3600000;
+  if (diffHours <= 24) {
+    const hours = Math.max(1, Math.floor(diffHours));
+    return {
+      label: hours <= 1 ? "⚡ Just now" : `⚡ ${hours}h ago`,
+      isUltraFresh: true,
+      isHot: true,
+    };
+  }
+  const days = Math.floor(diffHours / 24);
+  if (days <= 2) {
+    return {
+      label: `🔥 ${days}d ago`,
+      isUltraFresh: false,
+      isHot: true,
+    };
+  }
+  return {
+    label: `${days}d ago`,
+    isUltraFresh: false,
+    isHot: false,
+  };
+}
+
 export type JobSortCriteria =
+  | "EARLY_BIRD"
   | "RECENT"
   | "MATCH_SCORE"
   | "COMPANY_ASC"
   | "TITLE_ASC"
   | "OLDEST";
 
-export function sortCareerJobs<T extends { id: string; title: string; company: string; postedAt?: string | null; firstSeenAt?: string | null; createdAt?: string | null }>(
+export function sortCareerJobs<T extends { id: string; title: string; company: string; postedAt?: string | null; firstSeenAt?: string | null; createdAt?: string | null; rawDescription?: string | null }>(
   jobs: readonly T[],
   criteria: JobSortCriteria,
   scoresMap?: Record<string, { score: number; eligible?: boolean }>
 ): T[] {
   return [...jobs].sort((a, b) => {
+    if (criteria === "EARLY_BIRD") {
+      const isInternA = isInternshipRole(a.title, a.rawDescription || "");
+      const isInternB = isInternshipRole(b.title, b.rawDescription || "");
+      const fullA = `${a.title} ${a.rawDescription || ""}`.toLowerCase();
+      const fullB = `${b.title} ${b.rawDescription || ""}`.toLowerCase();
+      const isZeroExpA = /\b(0\s*(?:-|to)\s*0|no prior experience|no experience required|zero experience|fresher|freshers|entry[ -]?level)\b/i.test(fullA);
+      const isZeroExpB = /\b(0\s*(?:-|to)\s*0|no prior experience|no experience required|zero experience|fresher|freshers|entry[ -]?level)\b/i.test(fullB);
+
+      const baseA = isInternA ? 1000 : isZeroExpA ? 750 : 500;
+      const baseB = isInternB ? 1000 : isZeroExpB ? 750 : 500;
+
+      const timeA = a.postedAt ? new Date(a.postedAt).getTime() : (a.firstSeenAt ? new Date(a.firstSeenAt).getTime() : 0);
+      const timeB = b.postedAt ? new Date(b.postedAt).getTime() : (b.firstSeenAt ? new Date(b.firstSeenAt).getTime() : 0);
+      const now = Date.now();
+      const ageHoursA = timeA ? Math.max(0, now - timeA) / 3600000 : 999;
+      const ageHoursB = timeB ? Math.max(0, now - timeB) / 3600000 : 999;
+
+      const multA = ageHoursA <= 24 ? 3.0 : ageHoursA <= 48 ? 2.0 : ageHoursA <= 96 ? 1.2 : 0.8;
+      const multB = ageHoursB <= 24 ? 3.0 : ageHoursB <= 48 ? 2.0 : ageHoursB <= 96 ? 1.2 : 0.8;
+
+      const scoreA = Math.round(baseA * multA);
+      const scoreB = Math.round(baseB * multB);
+
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return timeB - timeA;
+    }
     if (criteria === "RECENT") {
       const timeA = a.postedAt ? new Date(a.postedAt).getTime() : (a.firstSeenAt ? new Date(a.firstSeenAt).getTime() : 0);
       const timeB = b.postedAt ? new Date(b.postedAt).getTime() : (b.firstSeenAt ? new Date(b.firstSeenAt).getTime() : 0);

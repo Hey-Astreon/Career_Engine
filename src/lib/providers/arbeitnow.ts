@@ -66,14 +66,15 @@ export class ArbeitnowProvider implements JobSourceProvider {
         const location = item.location || "Remote";
         const rawDesc = (item.description || "").replace(/<[^>]*>?/gm, " ").trim();
 
-        if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc)) {
+        const postedAt = item.created_at ? new Date(item.created_at * 1000) : null;
+        const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+        if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc, validPostedAt)) {
           jobsRejected++;
           continue;
         }
 
         const companySlug = company.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const postedAt = item.created_at ? new Date(item.created_at * 1000) : null;
-        const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
         const remoteScope = parseRemoteScope(location, rawDesc);
         const opportunitySignals = determineOpportunitySignals({

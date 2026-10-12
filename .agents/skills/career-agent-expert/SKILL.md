@@ -44,16 +44,18 @@ description: >-
 
 ---
 
-## 📡 3. Discovery Scraper Pipeline (17+ Ingestion Providers)
+## 📡 3. Discovery Scraper Pipeline (7 Active High-Yield Providers + 12 Archived)
 
 Located in `src/lib/providers/`:
-Greenhouse, Ashby, Lever, Workable, SmartRecruiters, Recruitee, Himalayas, Remotive, Arbeitnow, RemoteOK, Jobicy, Simplify, Arc.dev, BuiltIn, LinkedIn, Hacker News Hiring, and micro1.
+- **Active Discovery (100% Healthy):** LinkedIn, Simplify (Internship & New Grad streams), Himalayas, Jobicy, BuiltIn, Hacker News Hiring, and Ashby.
+- **Archived (Zero-Yield Quarantined):** Greenhouse, Lever, Workable, SmartRecruiters, Recruitee, Remotive, Arbeitnow, RemoteOK, micro1, Arc.dev, HiringCafe, and WeWorkRemotely.
 
 ### Ingestion & Provenance Architecture
-- **`Opportunity`**: Canonical deduplicated job entity.
+- **`Opportunity`**: Canonical deduplicated job entity (0 duplicate tuples in Turso).
 - **`JobOccurrence`**: Source-specific provenance instance tracking providerKey, sourceJobId, discoveryUrl, applicationUrl, and freshness.
-- **`ProviderSyncState`**: Health state (`HEALTHY`, `DEGRADED`, `FAILING`), failure counts, total jobs seen.
+- **`ProviderSyncState`**: Health state (`HEALTHY`), failure counts, total jobs seen.
 - **`ProviderEndpointRun`**: Observability table recording latency, status codes, and error logs per scrape run.
+- **`In-Memory Mutex`**: `tupleLocks` map in `registry.ts` preventing concurrent insertion race conditions.
 
 ---
 

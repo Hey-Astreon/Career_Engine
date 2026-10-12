@@ -33,7 +33,7 @@ function remoteListing(id: string): Listing {
     title: "Software Engineer Intern",
     company_name: "Example Co",
     active: true,
-    date_posted: 1_725_000_000,
+    date_posted: Math.floor(Date.now() / 1000) - 3600,
     url: `https://example.com/jobs/${id}`,
     locations: ["Remote"],
   };

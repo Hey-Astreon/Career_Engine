@@ -43,14 +43,15 @@ export class RecruiteeProvider implements JobSourceProvider {
             const rawContent = cleanHtmlText(item.description || item.requirements || "");
             const jobUrl = item.careers_url || `https://${board.slug}.recruitee.com/o/${item.slug}`;
 
-            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent)) {
+            const postedAt = item.created_at ? new Date(item.created_at) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+            if (!isStrictlyRemoteDeveloperRole(title, location, rawContent, validPostedAt)) {
               companyRejected++;
               continue;
             }
 
             const { company, companySlug: normSlug } = cleanCompanySlug(board.slug);
-            const postedAt = item.created_at ? new Date(item.created_at) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
             const remoteScope = parseRemoteScope(location, rawContent);
             const opportunitySignals = determineOpportunitySignals({

@@ -68,14 +68,15 @@ export class RemoteOKProvider implements JobSourceProvider {
         const rawDesc = cleanHtmlText(item.description || "");
         const jobUrl = item.apply_url || item.url || `https://remoteok.com/remote-jobs/${item.id}`;
 
-        if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc)) {
+        const postedAtRaw = item.date ? new Date(item.date) : item.epoch ? new Date(item.epoch * 1000) : null;
+        const validPostedAt = postedAtRaw && !isNaN(postedAtRaw.getTime()) ? postedAtRaw : null;
+
+        if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc, validPostedAt)) {
           jobsRejected++;
           continue;
         }
 
         const { company, companySlug } = cleanCompanySlug(rawCompany);
-        const postedAtRaw = item.date ? new Date(item.date) : item.epoch ? new Date(item.epoch * 1000) : null;
-        const validPostedAt = postedAtRaw && !isNaN(postedAtRaw.getTime()) ? postedAtRaw : null;
 
         const remoteScope = parseRemoteScope(location, rawDesc);
         const opportunitySignals = determineOpportunitySignals({

@@ -66,14 +66,15 @@ export class Micro1Provider implements JobSourceProvider {
           `${title}. Required skills: ${skillsText}. Listed on Micro1 AI Remote Platform.`
         );
 
-        if (!title || !isStrictlyRemoteDeveloperRole(title, location, rawDesc)) {
+        const postedAtRaw = item.date_posted ? new Date(item.date_posted) : null;
+        const validPostedAt = postedAtRaw && !isNaN(postedAtRaw.getTime()) ? postedAtRaw : null;
+
+        if (!title || !isStrictlyRemoteDeveloperRole(title, location, rawDesc, validPostedAt)) {
           rejectedCount++;
           continue;
         }
 
         const { company, companySlug } = cleanCompanySlug(rawCompany);
-        const postedAtRaw = item.date_posted ? new Date(item.date_posted) : null;
-        const validPostedAt = postedAtRaw && !isNaN(postedAtRaw.getTime()) ? postedAtRaw : null;
         const appUrl =
           item.apply_url ||
           (item.job_id ? `https://jobs.micro1.ai/post/${item.job_id}` : "https://www.micro1.ai/jobs");

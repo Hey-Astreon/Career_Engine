@@ -48,7 +48,7 @@ export default function OutreachPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [tone, setTone] = useState<"direct" | "enthusiastic" | "executive">("direct");
+  const [tone, setTone] = useState<"intern_referral" | "new_grad" | "direct" | "executive">("intern_referral");
 
   const [outreachData, setOutreachData] = useState<OutreachData | null>(null);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
@@ -238,30 +238,38 @@ export default function OutreachPage() {
                   )}
 
                   {/* Tone Switcher */}
-                  <div className="flex items-center rounded-md border border-[var(--line)] bg-[var(--surface-muted)] p-0.5 text-[10px] font-bold">
+                  <div className="flex flex-wrap items-center rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] p-0.5 text-[10px] font-bold gap-0.5">
                     <button
-                      onClick={() => setTone("direct")}
-                      className={`px-2 py-1 rounded transition-colors ${
-                        tone === "direct" ? "bg-white text-[var(--ink)] shadow-xs" : "text-[var(--muted)]"
+                      onClick={() => setTone("intern_referral")}
+                      className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                        tone === "intern_referral" ? "bg-white text-[var(--blue)] shadow-xs" : "text-[var(--muted)] hover:text-[var(--ink)]"
                       }`}
                     >
-                      Direct
+                      🎓 Intern 2026
                     </button>
                     <button
-                      onClick={() => setTone("enthusiastic")}
-                      className={`px-2 py-1 rounded transition-colors ${
-                        tone === "enthusiastic" ? "bg-white text-[var(--ink)] shadow-xs" : "text-[var(--muted)]"
+                      onClick={() => setTone("new_grad")}
+                      className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                        tone === "new_grad" ? "bg-white text-[var(--ink)] shadow-xs" : "text-[var(--muted)] hover:text-[var(--ink)]"
                       }`}
                     >
-                      Warm
+                      ⚡ New Grad
+                    </button>
+                    <button
+                      onClick={() => setTone("direct")}
+                      className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                        tone === "direct" ? "bg-white text-[var(--ink)] shadow-xs" : "text-[var(--muted)] hover:text-[var(--ink)]"
+                      }`}
+                    >
+                      🛠️ Direct
                     </button>
                     <button
                       onClick={() => setTone("executive")}
-                      className={`px-2 py-1 rounded transition-colors ${
-                        tone === "executive" ? "bg-white text-[var(--ink)] shadow-xs" : "text-[var(--muted)]"
+                      className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                        tone === "executive" ? "bg-white text-[var(--ink)] shadow-xs" : "text-[var(--muted)] hover:text-[var(--ink)]"
                       }`}
                     >
-                      Executive
+                      👔 Executive
                     </button>
                   </div>
                 </div>
@@ -279,6 +287,22 @@ export default function OutreachPage() {
                 </div>
               ) : outreachData ? (
                 <div className="mt-5 space-y-5">
+                  {tone === "intern_referral" && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-50/70 border border-blue-200/70 text-xs text-blue-800">
+                      <Sparkles className="w-4 h-4 text-[var(--blue)] shrink-0" />
+                      <span>
+                        <strong>Student / Intern 2026 Strategy:</strong> Pitch emphasizes your coursework, rapid execution capacity, and hands-on project proof to secure internship interviews.
+                      </span>
+                    </div>
+                  )}
+                  {tone === "new_grad" && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/70 text-xs text-emerald-800">
+                      <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        <strong>Early-Career / New Grad Strategy:</strong> Pitch focuses on zero-ramp-up time, production-ready code habits, and immediate engineering throughput.
+                      </span>
+                    </div>
+                  )}
                   {/* Card 1: Cold Email */}
                   <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 shadow-xs space-y-3">
                     <div className="flex items-center justify-between">

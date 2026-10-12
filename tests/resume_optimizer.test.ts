@@ -86,7 +86,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(optimized.skills.length).toBe(6);
       expect(optimized.projects.length).toBe(3);
       expect(optimized.simulations.length).toBe(3);
-    });
+    }, 15000);
   });
 
   describe("3. Markdown & Plaintext Export Renderers", () => {

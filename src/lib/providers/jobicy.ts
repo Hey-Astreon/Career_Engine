@@ -49,14 +49,15 @@ export class JobicyProvider implements JobSourceProvider {
               const discoveryUrl = item.url || item.jobUrl || "https://jobicy.com";
               const canonicalAppUrl = discoveryUrl;
 
-              if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc)) {
+              const postedAt = item.pubDate ? new Date(item.pubDate) : null;
+              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+              if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc, validPostedAt)) {
                 rejectedCount++;
                 continue;
               }
 
               const { company, companySlug } = cleanCompanySlug(companyName);
-              const postedAt = item.pubDate ? new Date(item.pubDate) : null;
-              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
               const remoteScope = parseRemoteScope(location, rawDesc);
               const opportunitySignals = determineOpportunitySignals({
                 postedAt: validPostedAt,

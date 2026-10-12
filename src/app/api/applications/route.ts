@@ -123,6 +123,18 @@ export async function POST(req: Request) {
       targetJobId = job.id;
     }
 
+    // Resolve canonical opportunityId if targetJobId belongs to a tracked opportunity
+    let resolvedOpportunityId: string | undefined = undefined;
+    if (targetJobId) {
+      const occurrence = await db.jobOccurrence.findFirst({
+        where: { sourceJobId: targetJobId },
+        select: { opportunityId: true },
+      });
+      if (occurrence?.opportunityId) {
+        resolvedOpportunityId = occurrence.opportunityId;
+      }
+    }
+
     // Find existing application for this profile and job
     const existing = await db.application.findFirst({
       where: {
@@ -138,18 +150,20 @@ export async function POST(req: Request) {
         data: {
           status: ApplicationStatus.APPLIED,
           appliedAt: new Date(),
+          ...(resolvedOpportunityId && !existing.opportunityId ? { opportunityId: resolvedOpportunityId } : {}),
         },
-        include: { jobPosting: true },
+        include: { jobPosting: true, opportunity: true },
       });
     } else {
       app = await db.application.create({
         data: {
           profileId: profile.id,
           jobPostingId: targetJobId,
+          opportunityId: resolvedOpportunityId,
           status: ApplicationStatus.APPLIED,
           appliedAt: new Date(),
         },
-        include: { jobPosting: true },
+        include: { jobPosting: true, opportunity: true },
       });
     }
 

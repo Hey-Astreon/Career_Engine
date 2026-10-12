@@ -56,14 +56,15 @@ export class HimalayasProvider implements JobSourceProvider {
               const discoveryUrl = item.applicationLink || item.url || `https://himalayas.app/jobs/${item.slug}`;
               const canonicalAppUrl = item.applicationLink || discoveryUrl;
 
-              if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc)) {
+              const postedAt = item.pubDate ? new Date(item.pubDate * 1000) : null;
+              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+              if (!isStrictlyRemoteDeveloperRole(title, location, rawDesc, validPostedAt)) {
                 rejectedCount++;
                 continue;
               }
 
               const { company, companySlug } = cleanCompanySlug(companyName);
-              const postedAt = item.pubDate ? new Date(item.pubDate * 1000) : null;
-              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
               const remoteScope = parseRemoteScope(location, rawDesc);
               const opportunitySignals = determineOpportunitySignals({
                 postedAt: validPostedAt,

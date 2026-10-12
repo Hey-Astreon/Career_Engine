@@ -1,50 +1,27 @@
 import { db } from "@/lib/db";
-import { SyncStatus, PlatformSource } from "@prisma/client";
+import { SyncStatus, PlatformSource, RemoteScope } from "@prisma/client";
 import { JobSourceProvider, NormalizedJob, ProviderResult } from "./types";
-import { GreenhouseProvider } from "./greenhouse";
 import { AshbyProvider } from "./ashby";
 import { HimalayasProvider } from "./himalayas";
 import { LinkedInProvider } from "./linkedin";
 import { HackerNewsProvider } from "./hackernews";
-import { WeWorkRemotelyProvider } from "./weworkremotely";
 import { JobicyProvider } from "./jobicy";
-import { RemoteOKProvider } from "./remoteok";
-import { Micro1Provider } from "./micro1";
 import { SimplifyProvider } from "./simplify";
-import { ArcDevProvider } from "./arcdev";
 import { BuiltInProvider } from "./builtin";
-import { ArbeitnowProvider } from "./arbeitnow";
-import { RemotiveProvider } from "./remotive";
-import { LeverProvider } from "./lever";
-import { RecruiteeProvider } from "./recruitee";
-import { SmartRecruitersProvider } from "./smartrecruiters";
-import { WorkableProvider } from "./workable";
-import { HiringCafeProvider } from "./hiringcafe";
 import { generateUrlHash, computeDeduplicationKey, isDirectAtsUrl } from "./dedup";
-import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS } from "./normalize";
+import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS, EarlyCareerTier, determineEarlyCareerTier, calculateEarlyBirdScore } from "./normalize";
 import { isValidHttpUrl } from "@/lib/urlValidator";
 import { logProviderDiagnostics } from "./diagnostic";
+import { extractSkills } from "@/lib/ai/scorer";
 
 export const ACTIVE_PROVIDERS: JobSourceProvider[] = [
-  new GreenhouseProvider(),
-  new AshbyProvider(),
-  new SimplifyProvider(),
-  new ArcDevProvider(),
-  new BuiltInProvider(),
-  new HimalayasProvider(),
-  new HackerNewsProvider(),
   new LinkedInProvider(),
-  new WeWorkRemotelyProvider(),
+  new SimplifyProvider(),
+  new HimalayasProvider(),
   new JobicyProvider(),
-  new Micro1Provider(),
-  new RemoteOKProvider(),
-  new ArbeitnowProvider(),
-  new RemotiveProvider(),
-  new LeverProvider(),
-  new RecruiteeProvider(),
-  new SmartRecruitersProvider(),
-  new WorkableProvider(),
-  new HiringCafeProvider(),
+  new BuiltInProvider(),
+  new HackerNewsProvider(),
+  new AshbyProvider(),
 ];
 
 export interface ProviderRunOptions {
@@ -256,11 +233,24 @@ export async function evaluateJobFreshness(providerKey: string): Promise<{
     },
   });
 
-  // 5. Hard 21-day ceiling: Expire any job posted more than 21 days (3 weeks) ago
-  const twentyOneDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
+  // 5. Hard 7-day ceiling: Expire any job posted more than 7 days ago
+  const sevenDaysAgo = new Date(Date.now() - MAX_POSTING_AGE_DAYS * 86400000);
   await db.jobPosting.updateMany({
     where: {
-      postedAt: { lt: twentyOneDaysAgo },
+      postedAt: { lt: sevenDaysAgo },
+      isExpired: false,
+    },
+    data: {
+      isExpired: true,
+    },
+  });
+
+  // 6. 3-day probation ceiling: Expire jobs with no source timestamp after 3 days
+  const threeDaysAgo = new Date(Date.now() - 3 * 86400000);
+  await db.jobPosting.updateMany({
+    where: {
+      postedAt: null,
+      createdAt: { lt: threeDaysAgo },
       isExpired: false,
     },
     data: {
@@ -313,14 +303,98 @@ export async function ingestNormalizedJobs(
     return true;
   });
 
-  // Sort freshest first
+  // Sort by Early Bird Discovery Score: Tier (Internship > 0-Exp > 0-1 Exp) x Freshness Multiplier
+  const now = Date.now();
   validJobs.sort((a, b) => {
+    const tierA = determineEarlyCareerTier(a.title, a.rawDescription || "");
+    const tierB = determineEarlyCareerTier(b.title, b.rawDescription || "");
+    const scoreA = calculateEarlyBirdScore(tierA, a.postedAt, now);
+    const scoreB = calculateEarlyBirdScore(tierB, b.postedAt, now);
+    if (scoreB !== scoreA) return scoreB - scoreA;
     const timeA = a.postedAt ? a.postedAt.getTime() : 0;
     const timeB = b.postedAt ? b.postedAt.getTime() : 0;
     return timeB - timeA;
   });
 
   const targetJobs = maxToIngest > 0 ? validJobs.slice(0, maxToIngest) : validJobs;
+
+  // Mutex map for concurrent (companySlug, title, location) tuple resolution
+  const tupleLocks = new Map<string, Promise<string>>();
+
+  const resolveOpportunityId = async (
+    job: NormalizedJob,
+    resolvedRemoteScope: RemoteScope
+  ): Promise<string> => {
+    const tupleKey = `${job.companySlug}:::${job.title.toLowerCase().trim()}:::${job.location.toLowerCase().trim()}`;
+    const existingLock = tupleLocks.get(tupleKey);
+    if (existingLock) {
+      return existingLock;
+    }
+
+    const lockPromise = (async () => {
+      const existingOpp = await db.opportunity.findFirst({
+        where: {
+          companySlug: job.companySlug,
+          title: job.title,
+          location: job.location,
+        },
+      });
+
+      if (existingOpp) {
+        const oppId = existingOpp.id;
+        const upgradeDirectUrl = isDirectAtsUrl(job.canonicalAppUrl) && !isDirectAtsUrl(existingOpp.canonicalAppUrl);
+        const upgradeDescription = job.hasFullText && !existingOpp.hasFullText;
+        const upgradePostedAt = !existingOpp.postedAt && job.postedAt;
+
+        await db.opportunity.update({
+          where: { id: oppId },
+          data: {
+            lastSeenAt: new Date(),
+            isExpired: false,
+            remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : existingOpp.remoteScope,
+            opportunitySignals: JSON.stringify(job.opportunitySignals || []),
+            ...(upgradePostedAt ? { postedAt: job.postedAt } : {}),
+            ...(upgradeDirectUrl ? { canonicalAppUrl: job.canonicalAppUrl } : {}),
+            ...(upgradeDescription
+              ? {
+                  rawDescription: job.rawDescription,
+                  hasFullText: true,
+                  technologies: JSON.stringify(extractSkills(job.title + " " + (job.rawDescription || ""))),
+                }
+              : {}),
+          },
+        });
+        return oppId;
+      } else {
+        const newOpp = await db.opportunity.create({
+          data: {
+            company: job.company,
+            companySlug: job.companySlug,
+            title: job.title,
+            category: job.category || "Software Developer",
+            jobType: job.jobType || "Remote Full-Time",
+            experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
+            location: job.location,
+            isRemote: job.isRemote,
+            remoteRegion: job.remoteRegion || "Worldwide",
+            remoteScope: resolvedRemoteScope,
+            opportunitySignals: JSON.stringify(job.opportunitySignals || []),
+            technologies: JSON.stringify(extractSkills(job.title + " " + (job.rawDescription || ""))),
+            canonicalAppUrl: job.canonicalAppUrl || job.discoveryUrl,
+            rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
+            hasFullText: job.hasFullText,
+            postedAt: job.postedAt,
+            lastSeenAt: new Date(),
+            isExpired: false,
+          },
+        });
+        return newOpp.id;
+      }
+    })();
+
+    tupleLocks.set(tupleKey, lockPromise);
+    return lockPromise;
+  };
 
   // Concurrently process in batches of 20 to optimize LibSQL roundtrips
   const BATCH_SIZE = 20;
@@ -336,46 +410,36 @@ export async function ingestNormalizedJobs(
 
         // 1. Ingest into JobPosting model for backward compatibility
         try {
-          const existingJobPosting = await db.jobPosting.findUnique({
+          const res = await db.jobPosting.upsert({
             where: { urlHash },
+            create: {
+              urlHash,
+              url: job.canonicalAppUrl || job.discoveryUrl,
+              company: job.company,
+              title: job.title,
+              category: job.category || "Software Developer",
+              jobType: job.jobType || "Remote Full-Time",
+              experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
+              platform: job.providerKey,
+              location: job.location,
+              isRemote: job.isRemote,
+              remoteScope: resolvedRemoteScope,
+              opportunitySignals: JSON.stringify(job.opportunitySignals || []),
+              postedAt: job.postedAt,
+              rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
+              hasFullText: job.hasFullText,
+              lastSeenAt: new Date(),
+              isExpired: false,
+            },
+            update: {
+              lastSeenAt: new Date(),
+              isExpired: false,
+              ...(job.rawDescription ? { rawDescription: job.rawDescription } : {}),
+              hasFullText: job.hasFullText,
+              ...(resolvedRemoteScope !== "UNKNOWN" ? { remoteScope: resolvedRemoteScope } : {}),
+            },
           });
-
-          if (existingJobPosting) {
-            await db.jobPosting.update({
-              where: { id: existingJobPosting.id },
-              data: {
-                lastSeenAt: new Date(),
-                isExpired: false,
-                rawDescription: job.rawDescription || existingJobPosting.rawDescription,
-                hasFullText: job.hasFullText,
-                remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : (existingJobPosting.remoteScope || "UNKNOWN"),
-              },
-            });
-            updatedCount++;
-          } else {
-            await db.jobPosting.create({
-              data: {
-                urlHash,
-                url: job.canonicalAppUrl || job.discoveryUrl,
-                company: job.company,
-                title: job.title,
-                category: job.category || "Software Developer",
-                jobType: job.jobType || "Remote Full-Time",
-                experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
-                platform: job.providerKey,
-                location: job.location,
-                isRemote: job.isRemote,
-                remoteScope: resolvedRemoteScope,
-                opportunitySignals: JSON.stringify(job.opportunitySignals || []),
-                postedAt: job.postedAt,
-                rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
-                hasFullText: job.hasFullText,
-                lastSeenAt: new Date(),
-                isExpired: false,
-              },
-            });
-            insertedCount++;
-          }
+          insertedCount++;
         } catch (err) {
           console.warn(`[JobPosting Ingestion Warning] Failed for ${job.title}:`, (err as Error).message);
         }
@@ -383,58 +447,7 @@ export async function ingestNormalizedJobs(
         // 2. Ingest into Opportunity & JobOccurrence model (Canonical Deduplication Architecture)
         try {
           const dedupKey = computeDeduplicationKey(job);
-
-          const existingOpp = await db.opportunity.findFirst({
-            where: {
-              companySlug: job.companySlug,
-              title: job.title,
-              location: job.location,
-            },
-          });
-
-          let oppId: string;
-          if (existingOpp) {
-            oppId = existingOpp.id;
-            const upgradeDirectUrl = isDirectAtsUrl(job.canonicalAppUrl) && !isDirectAtsUrl(existingOpp.canonicalAppUrl);
-            const upgradeDescription = job.hasFullText && !existingOpp.hasFullText;
-            const upgradePostedAt = !existingOpp.postedAt && job.postedAt;
-
-            await db.opportunity.update({
-              where: { id: oppId },
-              data: {
-                lastSeenAt: new Date(),
-                isExpired: false,
-                remoteScope: resolvedRemoteScope !== "UNKNOWN" ? resolvedRemoteScope : existingOpp.remoteScope,
-                opportunitySignals: JSON.stringify(job.opportunitySignals || []),
-                ...(upgradePostedAt ? { postedAt: job.postedAt } : {}),
-                ...(upgradeDirectUrl ? { canonicalAppUrl: job.canonicalAppUrl } : {}),
-                ...(upgradeDescription ? { rawDescription: job.rawDescription, hasFullText: true } : {}),
-              },
-            });
-          } else {
-            const newOpp = await db.opportunity.create({
-              data: {
-                company: job.company,
-                companySlug: job.companySlug,
-                title: job.title,
-                category: job.category || "Software Developer",
-                jobType: job.jobType || "Remote Full-Time",
-                experienceLevel: job.experienceLevel || "0-3 Years (Entry/Junior)",
-                location: job.location,
-                isRemote: job.isRemote,
-                remoteRegion: job.remoteRegion || "Worldwide",
-                remoteScope: resolvedRemoteScope,
-                opportunitySignals: JSON.stringify(job.opportunitySignals || []),
-                canonicalAppUrl: job.canonicalAppUrl || job.discoveryUrl,
-                rawDescription: job.rawDescription || `${job.title} at ${job.company}`,
-                hasFullText: job.hasFullText,
-                postedAt: job.postedAt,
-                lastSeenAt: new Date(),
-                isExpired: false,
-              },
-            });
-            oppId = newOpp.id;
-          }
+          const oppId = await resolveOpportunityId(job, resolvedRemoteScope);
 
           // Record source occurrence for provenance
           const occurrenceKey = job.sourceJobId || dedupKey;

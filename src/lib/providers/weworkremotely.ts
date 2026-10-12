@@ -72,14 +72,15 @@ export class WeWorkRemotelyProvider implements JobSourceProvider {
           title = parts.slice(1).join(":").trim();
         }
 
-        if (!isStrictlyRemoteDeveloperRole(title, "Worldwide", rawDesc)) {
+        const postedAt = rawPubDate ? new Date(rawPubDate) : null;
+        const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+        if (!isStrictlyRemoteDeveloperRole(title, "Worldwide", rawDesc, validPostedAt)) {
           jobsRejected++;
           continue;
         }
 
         const companySlug = company.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const postedAt = rawPubDate ? new Date(rawPubDate) : null;
-        const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
         const remoteScope = parseRemoteScope("Worldwide", rawDesc);
         const opportunitySignals = determineOpportunitySignals({

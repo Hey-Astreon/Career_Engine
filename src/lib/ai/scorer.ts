@@ -1,5 +1,5 @@
 import { queryMultiProviderLLM } from "./router";
-import { EXCESSIVE_EXPERIENCE_REGEXES } from "../providers/normalize";
+import { EXCESSIVE_EXPERIENCE_REGEXES, EarlyCareerTier, determineEarlyCareerTier } from "../providers/normalize";
 
 export interface CandidateContext {
   fullName: string;
@@ -175,7 +175,7 @@ export function evaluateHardEligibility(
     return { eligible: false, reason: `Ineligible: "${jobTitle}" is an operational support or sales role.` };
   }
 
-  // 3. Obvious Seniority Mismatch (Senior / Staff / Lead / Manager / Principal / Director)
+  // 3. Obvious Seniority Mismatch (Senior / Staff / Lead / Manager / Principal / Director / SDE II+ / Level 2+)
   const lowerTitle = jobTitle.toLowerCase();
   if (
     lowerTitle.includes("senior") ||
@@ -186,7 +186,10 @@ export function evaluateHardEligibility(
     lowerTitle.includes("tech lead") ||
     lowerTitle.includes("lead engineer") ||
     lowerTitle.includes("manager") ||
-    lowerTitle.includes("director")
+    lowerTitle.includes("director") ||
+    /\b(?:sde|swe|engineer|developer)\s*(?:[2-9]|ii|iii|iv|v)\b/i.test(lowerTitle) ||
+    /\b(?:level|lvl|grade)\s*(?:[2-9]|ii|iii|iv|v)\b/i.test(lowerTitle) ||
+    /\b(?:engineer|developer)\s+[2-9]\b/i.test(lowerTitle)
   ) {
     return { eligible: false, reason: "Ineligible: Seniority mismatch (Senior/Staff/Lead role)." };
   }
@@ -199,8 +202,11 @@ export function evaluateHardEligibility(
     }
   }
 
-  // 5. Excessive Experience Requirement Check (3+ years / 4+ years / senior mentorship)
-  if (jobDescription) {
+  // 5. Excessive Experience Requirement Check (waived for Tier 1 Internships)
+  const careerTier = determineEarlyCareerTier(jobTitle, jobDescription);
+  const isInternship = careerTier === EarlyCareerTier.TIER_1_INTERNSHIP;
+
+  if (jobDescription && !isInternship) {
     const lowerDesc = jobDescription.toLowerCase();
     if (EXCESSIVE_EXPERIENCE_REGEXES.some((rx) => rx.test(lowerDesc))) {
       return { eligible: false, reason: "Ineligible: Experience mismatch (Requires 3+ years / mid-to-senior experience)." };
@@ -229,9 +235,16 @@ export function calculateDeterministicSignals(
   const candidateSkills = extractSkills(candidateFullText);
   const jobSkills = extractSkills(jobTitle + " " + jobDescription);
 
+  const careerTier = determineEarlyCareerTier(jobTitle, jobDescription);
+  const isEarlyCareer = careerTier === EarlyCareerTier.TIER_1_INTERNSHIP || careerTier === EarlyCareerTier.TIER_2_ZERO_EXPERIENCE;
+
   // 1. Skill Overlap Score (0-100)
   const matched = jobSkills.filter((s) => candidateSkills.some((cs) => cs.toLowerCase() === s.toLowerCase()));
-  const skillOverlapScore = jobSkills.length > 0 ? Math.round((matched.length / jobSkills.length) * 100) : 50;
+  let skillOverlapScore = jobSkills.length > 0 ? Math.round((matched.length / jobSkills.length) * 100) : 50;
+  if (isEarlyCareer && matched.length >= 2) {
+    // For early career & internships, knowing 2+ foundational technologies demonstrates high skill alignment
+    skillOverlapScore = Math.max(skillOverlapScore, 75);
+  }
 
   // 2. Title Category Score (0-100)
   const lowerTitle = jobTitle.toLowerCase();
@@ -246,6 +259,8 @@ export function calculateDeterministicSignals(
     (lowerTitle.includes("full stack") && lowerCandTitle.includes("full stack"))
   ) {
     titleCategoryScore = 100;
+  } else if (lowerTitle.includes("intern") || lowerTitle.includes("internship")) {
+    titleCategoryScore = 85;
   } else if (lowerTitle.includes("software") || lowerTitle.includes("engineer") || lowerTitle.includes("developer")) {
     titleCategoryScore = 80;
   }
@@ -263,9 +278,10 @@ export function calculateDeterministicSignals(
 
   // 4. Source Quality Score (0-100)
   let sourceQualityScore = 80;
-  if (["GREENHOUSE", "LEVER", "ASHBY", "WORKABLE", "SMARTRECRUITERS", "RECRUITEE"].includes(providerKey.toUpperCase())) {
+  const pKey = providerKey.toUpperCase();
+  if (["GREENHOUSE", "LEVER", "ASHBY", "SIMPLIFY", "WORKABLE", "SMARTRECRUITERS", "RECRUITEE"].includes(pKey)) {
     sourceQualityScore = 100;
-  } else if (providerKey.toUpperCase() === "HIMALAYAS" || providerKey.toUpperCase() === "REMOTIVE") {
+  } else if (["HIMALAYAS", "REMOTIVE", "LINKEDIN", "JOBICY", "BUILTIN"].includes(pKey)) {
     sourceQualityScore = 90;
   }
 

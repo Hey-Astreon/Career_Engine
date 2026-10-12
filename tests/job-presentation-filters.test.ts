@@ -80,9 +80,17 @@ describe("job presentation hero filters", () => {
     const companySorted = sortCareerJobs(sampleJobs, "COMPANY_ASC");
     expect(companySorted.map((j) => j.company)).toEqual(["Alpha Labs", "Beta Inc", "Zeta Corp"]);
 
-    // TITLE_ASC
-    const titleSorted = sortCareerJobs(sampleJobs, "TITLE_ASC");
-    expect(titleSorted.map((j) => j.title)).toEqual(["Backend Engineer", "Full Stack Engineer", "React Developer"]);
+    // EARLY_BIRD (Internship > 0-Exp > 0-1 Exp with freshness multiplier)
+    const tieredJobs = [
+      { id: "10", title: "Junior Backend Engineer", company: "Company A", postedAt: new Date(Date.now() - 5 * 3600000).toISOString() },
+      { id: "20", title: "Software Engineer Intern", company: "Company B", postedAt: new Date(Date.now() - 20 * 3600000).toISOString() },
+      { id: "30", title: "Entry Level Developer", company: "Company C", postedAt: new Date(Date.now() - 2 * 3600000).toISOString() },
+    ];
+    // Tier 1 Internship (20): 1000 * 3 = 3000
+    // Tier 2 Entry Level (30): 750 * 3 = 2250
+    // Tier 3 Junior (10): 500 * 3 = 1500
+    const earlyBird = sortCareerJobs(tieredJobs, "EARLY_BIRD");
+    expect(earlyBird.map((j) => j.id)).toEqual(["20", "30", "10"]);
   });
 });
 

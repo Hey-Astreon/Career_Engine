@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useProfileStore } from "@/store/useProfileStore";
-import { Activity, AlertTriangle, ArrowUpDown, ArrowUpRight, BarChart3, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Database, ExternalLink, FileText, Gauge, Grid2X2, LayoutList, MapPin, RefreshCw, Search, ServerCog, ShieldAlert, ShieldCheck, ShieldX, SlidersHorizontal, Sparkles, Target, TimerReset, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowUpDown, ArrowUpRight, BarChart3, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Copy, Database, ExternalLink, FileText, Gauge, Grid2X2, LayoutList, MapPin, RefreshCw, Search, ServerCog, ShieldAlert, ShieldCheck, ShieldX, SlidersHorizontal, Sparkles, Target, TimerReset, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_HERO_FILTERS, determineCategory, determineExperienceLevel, formatRemoteScopeLabel, matchesCareerSearch, matchesExperienceFilter, matchesPostingWindowFilter, matchesRemoteRoleView, paginateCareerFeed, sortCareerJobs, type ExperienceFilter, type JobSortCriteria, type PostingWindowFilter, type RemoteRoleView } from "@/lib/jobPresentation";
+import { DEFAULT_HERO_FILTERS, determineCategory, determineExperienceLevel, formatRemoteScopeLabel, getFreshnessBadgeInfo, getEarlyCareerTierPresentation, isInternshipRole, matchesCareerSearch, matchesExperienceFilter, matchesPostingWindowFilter, matchesRemoteRoleView, paginateCareerFeed, sortCareerJobs, type ExperienceFilter, type JobSortCriteria, type PostingWindowFilter, type RemoteRoleView } from "@/lib/jobPresentation";
 import { FormattedJobDescription } from "@/components/FormattedJobDescription";
 import { calculateRejectionRate, sortProviderHealth, summarizeProviderHealth, type ProviderHealthSnapshot } from "@/lib/dashboardStats";
 import { ProviderHealthReport } from "@/components/ProviderHealthReport";
@@ -74,7 +74,7 @@ function ShieldBadge({ score }: { score?: FeedScoreInfo }) {
 export default function Home() {
   const { activeProfile, activeProfileSlug } = useProfileStore();
   const [jobs, setJobs] = useState<JobItem[]>([]); const [scoresMap, setScoresMap] = useState<Record<string, FeedScoreInfo>>({});
-  const [sourceHealth, setSourceHealth] = useState<ProviderHealthSnapshot[]>([]); const [lastRun, setLastRun] = useState<ScrapeRunSummary | null>(null); const [endpointDiagnostics, setEndpointDiagnostics] = useState<EndpointDiagnostics | null>(null); const [isEndpointDiagnosticsLoading, setIsEndpointDiagnosticsLoading] = useState(true); const [isDatePolicyOpen, setIsDatePolicyOpen] = useState(false); const [searchTerm, setSearchTerm] = useState(""); const [selectedCategory, setSelectedCategory] = useState("ALL"); const [selectedPlatform, setSelectedPlatform] = useState("ALL"); const [minMatchScore, setMinMatchScore] = useState<"ALL" | "80" | "70" | "50">("ALL"); const [sortBy, setSortBy] = useState<JobSortCriteria>("RECENT"); const [experienceRange, setExperienceRange] = useState<ExperienceFilter>(DEFAULT_HERO_FILTERS.experienceRange); const [maximumPostedDays, setMaximumPostedDays] = useState<PostingWindowFilter>(DEFAULT_HERO_FILTERS.maximumPostedDays); const [remoteRoleView, setRemoteRoleView] = useState<RemoteRoleView>(DEFAULT_HERO_FILTERS.remoteRoleView);
+  const [sourceHealth, setSourceHealth] = useState<ProviderHealthSnapshot[]>([]); const [lastRun, setLastRun] = useState<ScrapeRunSummary | null>(null); const [endpointDiagnostics, setEndpointDiagnostics] = useState<EndpointDiagnostics | null>(null); const [isEndpointDiagnosticsLoading, setIsEndpointDiagnosticsLoading] = useState(true); const [isDatePolicyOpen, setIsDatePolicyOpen] = useState(false); const [searchTerm, setSearchTerm] = useState(""); const [selectedCategory, setSelectedCategory] = useState("ALL"); const [selectedPlatform, setSelectedPlatform] = useState("ALL"); const [minMatchScore, setMinMatchScore] = useState<"ALL" | "80" | "70" | "50">("ALL"); const [sortBy, setSortBy] = useState<JobSortCriteria>("EARLY_BIRD"); const [experienceRange, setExperienceRange] = useState<ExperienceFilter>(DEFAULT_HERO_FILTERS.experienceRange); const [maximumPostedDays, setMaximumPostedDays] = useState<PostingWindowFilter>(DEFAULT_HERO_FILTERS.maximumPostedDays); const [remoteRoleView, setRemoteRoleView] = useState<RemoteRoleView>(DEFAULT_HERO_FILTERS.remoteRoleView);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list"); const [drawerJob, setDrawerJob] = useState<JobItem | null>(null); const [quickApplyJob, setQuickApplyJob] = useState<JobItem | null>(null); const [isScraping, setIsScraping] = useState(false); const [isLoadingJobs, setIsLoadingJobs] = useState(true); const [nowTick, setNowTick] = useState(() => Date.now()); const [feedPage, setFeedPage] = useState(1); const [hideShieldFlagged, setHideShieldFlagged] = useState(false);
 
   useEffect(() => { const timer = setInterval(() => setNowTick(Date.now()), 30000); return () => clearInterval(timer); }, []);
@@ -147,7 +147,9 @@ export default function Home() {
   const feedPagination = useMemo(() => paginateCareerFeed(filteredJobs, feedPage, 50), [filteredJobs, feedPage]);
   const visibleJobs = feedPagination.items;
   const scoredEligible = Object.values(scoresMap).filter((score) => score.eligible && score.score >= 70).length; const sources = new Set(eligibleJobs.map((job) => job.platform)).size; const healthSummary = useMemo(() => summarizeProviderHealth(sourceHealth), [sourceHealth]); const healthRows = useMemo(() => sortProviderHealth(sourceHealth), [sourceHealth]); const rejectionRate = lastRun ? calculateRejectionRate(lastRun.totalDiscovered, lastRun.totalRejected) : null; const policyScanned = lastRun ? lastRun.totalDiscovered : null; const policyRemoved = lastRun ? lastRun.totalRejected : null;
-  const resetFilters = () => { setSearchTerm(""); setSelectedCategory("ALL"); setSelectedPlatform("ALL"); setMinMatchScore("ALL"); setSortBy("RECENT"); setExperienceRange(DEFAULT_HERO_FILTERS.experienceRange); setMaximumPostedDays(DEFAULT_HERO_FILTERS.maximumPostedDays); setRemoteRoleView(DEFAULT_HERO_FILTERS.remoteRoleView); setFeedPage(1); setHideShieldFlagged(false); };
+  const internshipCount = useMemo(() => eligibleJobs.filter((j) => isInternshipRole(j.title, j.rawDescription)).length, [eligibleJobs]);
+  const internshipPercentage = eligibleJobs.length > 0 ? Math.round((internshipCount / eligibleJobs.length) * 100) : 0;
+  const resetFilters = () => { setSearchTerm(""); setSelectedCategory("ALL"); setSelectedPlatform("ALL"); setMinMatchScore("ALL"); setSortBy("EARLY_BIRD"); setExperienceRange(DEFAULT_HERO_FILTERS.experienceRange); setMaximumPostedDays(DEFAULT_HERO_FILTERS.maximumPostedDays); setRemoteRoleView(DEFAULT_HERO_FILTERS.remoteRoleView); setFeedPage(1); setHideShieldFlagged(false); };
 
   return <div className="ce-dashboard-flow">
     {schedulerStatus?.isRunning && (
@@ -166,7 +168,7 @@ export default function Home() {
         </span>
       </div>
     )}
-    <section className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"><div className="max-w-3xl"><div className="ce-page-eyebrow">Live opportunity intelligence <span className="mx-2 text-[var(--line-strong)]">/</span> provider feed active</div><h1 className="ce-page-title">Verified remote roles,<br />built for your next move.</h1><p className="ce-page-copy">The feed starts with every active role returned by your provider pipeline. Use these optional filters when you want to narrow by experience, posting age, or role type.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Experience range</span><select value={experienceRange} onChange={(event) => setExperienceRange(event.target.value === "ANY" ? "ANY" : Number(event.target.value) as ExperienceFilter)} className="ce-field w-full px-3"><option value="ANY">All experience levels</option><option value={1}>0–1 years</option><option value={2}>0–2 years</option><option value={3}>0–3 years</option></select></label><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Maximum days posted</span><select value={maximumPostedDays} onChange={(event) => setMaximumPostedDays(event.target.value === "ANY" ? "ANY" : Number(event.target.value) as PostingWindowFilter)} className="ce-field w-full px-3"><option value="ANY">Any posting date</option><option value={7}>Under 1 week</option><option value={14}>Under 2 weeks</option><option value={21}>Under 3 weeks</option></select></label><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Remote opportunities</span><select value={remoteRoleView} onChange={(event) => setRemoteRoleView(event.target.value as RemoteRoleView)} className="ce-field w-full px-3"><option value="ALL">Jobs & internships</option><option value="JOBS">Remote jobs only</option><option value="INTERNSHIPS">Remote internships only</option></select></label></div></div><div className="flex flex-wrap gap-2">
+    <section className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"><div className="max-w-3xl"><div className="ce-page-eyebrow">Live opportunity intelligence <span className="mx-2 text-[var(--line-strong)]">/</span> provider feed active</div><h1 className="ce-page-title">Verified remote roles,<br />built for your next move.</h1><p className="ce-page-copy">The feed starts with every active role returned by your provider pipeline. Use these optional filters when you want to narrow by experience, posting age, or role type.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Experience range</span><select value={experienceRange} onChange={(event) => setExperienceRange(event.target.value === "ANY" ? "ANY" : Number(event.target.value) as ExperienceFilter)} className="ce-field w-full px-3"><option value="ANY">All experience levels</option><option value={1}>0–1 years</option><option value={2}>0–2 years</option><option value={3}>0–3 years</option></select></label><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Maximum days posted</span><select value={maximumPostedDays} onChange={(event) => setMaximumPostedDays(event.target.value === "ANY" ? "ANY" : Number(event.target.value) as PostingWindowFilter)} className="ce-field w-full px-3"><option value="ANY">Any date (Max 7 days)</option><option value={1}>⚡ Past 24 hours</option><option value={3}>🔥 Past 3 days</option><option value={7}>📅 Past week (7 days)</option></select></label><label className="min-w-0"><span className="mb-2 block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Remote opportunities</span><select value={remoteRoleView} onChange={(event) => setRemoteRoleView(event.target.value as RemoteRoleView)} className="ce-field w-full px-3"><option value="ALL">Jobs & internships</option><option value="JOBS">Remote jobs only</option><option value="INTERNSHIPS">Remote internships only</option></select></label></div></div><div className="flex flex-wrap gap-2">
       <Link href="/settings" className="ce-button-secondary">
         <ShieldCheck className="h-3.5 w-3.5" />
         Alert Settings
@@ -177,7 +179,7 @@ export default function Home() {
       </button>
       <button onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")} className="ce-button-secondary" aria-label="Change job result view">{viewMode === "list" ? <Grid2X2 className="h-3.5 w-3.5" /> : <LayoutList className="h-3.5 w-3.5" />}{viewMode === "list" ? "Card view" : "List view"}</button><button onClick={handleTriggerScrape} disabled={isScraping} className="ce-button-primary disabled:opacity-60"><RefreshCw className={`h-3.5 w-3.5 ${isScraping ? "animate-spin" : ""}`} />{isScraping ? "Refreshing sources" : "Refresh discovery"}</button></div></section>
 
-    <section id="overview" className="mt-11"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="ce-page-eyebrow">Overview</div><h2 className="mt-2 text-[22px] font-bold tracking-[-.045em] text-[var(--ink)]">Live discovery position</h2></div><span className={`ce-chip ${healthSummary.issueCount ? "ce-chip-red" : "ce-chip-green"}`}><Activity className="h-3 w-3" />{healthSummary.total ? `${healthSummary.healthy}/${healthSummary.total} SOURCES HEALTHY` : "LOADING SOURCE HEALTH"}</span></div><div className="mt-5 grid grid-cols-2 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)] lg:grid-cols-4"><Metric icon={<Database className="h-4 w-4" />} label="Stored active" value={eligibleJobs.length.toString()} note="provider inventory" /><Metric icon={<ServerCog className="h-4 w-4" />} label="Providers healthy" value={healthSummary.total ? `${healthSummary.healthy}/${healthSummary.total}` : "—"} note={healthSummary.issueCount ? `${healthSummary.issueCount} need attention` : "live source checks"} blue /><Metric icon={<Gauge className="h-4 w-4" />} label="Ready under policy" value={policyEligibleJobs.length.toString()} note="current date and experience rules" /><Metric icon={<TimerReset className="h-4 w-4" />} label="Last-run rejection" value={rejectionRate === null ? "—" : `${rejectionRate}%`} note={lastRun ? `${lastRun.newJobsInserted} inserted · ${lastRun.jobsUpdated} updated` : "refresh to measure"} blue /></div></section>
+    <section id="overview" className="mt-11"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="ce-page-eyebrow">Overview</div><h2 className="mt-2 text-[22px] font-bold tracking-[-.045em] text-[var(--ink)]">Live discovery position</h2></div><div className="flex items-center gap-2"><span className="ce-chip ce-chip-blue" title={`${internshipCount} of ${eligibleJobs.length} active roles are internships`}>🎓 {internshipPercentage}% INTERNSHIP CONCENTRATION</span><span className={`ce-chip ${healthSummary.issueCount ? "ce-chip-red" : "ce-chip-green"}`}><Activity className="h-3 w-3" />{healthSummary.total ? `${healthSummary.healthy}/${healthSummary.total} SOURCES HEALTHY` : "LOADING SOURCE HEALTH"}</span></div></div><div className="mt-5 grid grid-cols-2 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)] lg:grid-cols-4"><Metric icon={<Database className="h-4 w-4" />} label="Stored active" value={eligibleJobs.length.toString()} note="provider inventory" /><Metric icon={<ServerCog className="h-4 w-4" />} label="Providers healthy" value={healthSummary.total ? `${healthSummary.healthy}/${healthSummary.total}` : "—"} note={healthSummary.issueCount ? `${healthSummary.issueCount} need attention` : "live source checks"} blue /><Metric icon={<Gauge className="h-4 w-4" />} label="Ready under policy" value={policyEligibleJobs.length.toString()} note="current date and experience rules" /><Metric icon={<TimerReset className="h-4 w-4" />} label="Last-run rejection" value={rejectionRate === null ? "—" : `${rejectionRate}%`} note={lastRun ? `${lastRun.newJobsInserted} inserted · ${lastRun.jobsUpdated} updated` : "refresh to measure"} blue /></div></section>
 
     <section id="discovery-rules" className="ce-surface mt-7 p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="ce-page-eyebrow">Discovery policy</div><h2 className="mt-2 text-[26px] font-bold tracking-[-.05em] text-[var(--ink)]">Guardrails that protect your time.</h2><p className="mt-2 max-w-3xl text-[12px] leading-6 text-[var(--muted)]">Before a role reaches your review list, we check that it is worth your attention—not simply another result to scroll past.</p></div><span className="ce-chip ce-chip-green"><Activity className="h-3 w-3" />ACTIVE POLICY</span></div><div className="mt-6 grid overflow-hidden rounded-lg border border-[var(--line)] sm:grid-cols-2 lg:grid-cols-4"><PolicyRule label="Remote only" /><PolicyRule label={`Posted within ${maximumPostedDays} days`} onInfo={() => setIsDatePolicyOpen((open) => !open)} infoOpen={isDatePolicyOpen} /><PolicyRule label={`0–${experienceRange} years experience`} /><PolicyRule label="Global search coverage" /></div>{isDatePolicyOpen ? <div role="status" className="mt-3 flex items-start gap-3 border border-[var(--blue)] bg-[var(--blue-soft)] px-4 py-3 text-[11px] leading-5 text-[var(--ink)]"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--blue)] text-[10px] font-bold text-white">i</span><span><b>When a source does not provide a reliable posting date:</b> the role is excluded from the selected time window. We do not invent a publication date; use the source page to confirm timing before you apply.</span></div> : null}<div className="mt-6 grid gap-5 border-t border-[var(--line)] pt-5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end"><PolicyMetric value={policyScanned === null ? "—" : policyScanned.toLocaleString()} label={policyScanned === null ? "refresh to measure records scanned" : "records checked in the latest refresh"} /><PolicyMetric value={policyRemoved === null ? "—" : policyRemoved.toLocaleString()} label={policyRemoved === null ? "refresh to measure roles removed" : "removed before your review list"} /><PolicyMetric value={policyEligibleJobs.length.toLocaleString()} label="opportunities ready under this policy" /><a href="#provider-health-report" onClick={() => document.getElementById("provider-health-report")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="group flex items-center gap-2 pb-1 text-[11px] font-semibold text-[var(--blue)]">Review source coverage <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></a></div></section>
 
@@ -188,7 +190,63 @@ export default function Home() {
     {lastRun?.providers.length ? <ProviderStageTable providers={lastRun.providers} completedAt={lastRun.completedAt} /> : null}
 
     <section className="ce-surface mt-7 p-5 sm:p-7"><div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end"><div><div className="ce-page-eyebrow">Discovery feed</div><h2 className="mt-2 text-[22px] font-bold tracking-[-.045em] text-[var(--ink)]">Remote opportunities from your provider pipeline</h2><p className="mt-2 max-w-2xl text-[12px] leading-6 text-[var(--muted)]">The workspace shows only roles that match your current discovery policy. Stored provider inventory remains available in Overview for operational context.</p></div><div className="ce-chip ce-chip-green"><CheckCircle2 className="h-3 w-3" /> {policyEligibleJobs.length} READY TO REVIEW</div></div>
-      <div className="mt-6 grid grid-cols-1 gap-2 border-y border-[var(--line)] py-3 sm:grid-cols-2 lg:grid-cols-[minmax(200px,1fr)_160px_160px_140px_165px_auto]"><label className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]" /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search role, company, or skill" className="ce-field pl-9 pr-3" /></label><select value={selectedPlatform} onChange={(event) => setSelectedPlatform(event.target.value)} className="ce-field px-3" aria-label="Filter by source"><option value="ALL">All sources ({policyEligibleJobs.length})</option>{Object.keys(platformCounts).sort().map((platform) => <option key={platform} value={platform}>{platform} ({platformCounts[platform]})</option>)}</select><select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="ce-field px-3" aria-label="Filter by category"><option value="ALL">All role categories</option><option>React Developer</option><option>Backend Developer</option><option>Frontend Developer</option><option>Full Stack Developer</option><option>Python Developer</option><option>AI / ML Engineer</option></select><select value={minMatchScore} onChange={(event) => setMinMatchScore(event.target.value as typeof minMatchScore)} className="ce-field px-3" aria-label="Filter by match score"><option value="ALL">Any match score</option><option value="80">80+ match score</option><option value="70">70+ match score</option><option value="50">50+ match score</option></select><select value={sortBy} onChange={(event) => { setSortBy(event.target.value as JobSortCriteria); setFeedPage(1); }} className="ce-field px-3" aria-label="Sort roles"><option value="RECENT">⚡ Recently posted</option><option value="MATCH_SCORE">🎯 Highest match score</option><option value="COMPANY_ASC">🏢 Company (A–Z)</option><option value="TITLE_ASC">💼 Role title (A–Z)</option><option value="OLDEST">⏳ Oldest posted</option></select><button onClick={() => setHideShieldFlagged((v) => !v)} className={`ce-button-secondary !px-3 ${hideShieldFlagged ? "!border-[var(--green)] !text-[var(--green)]" : ""}`} title={hideShieldFlagged ? "Showing only Shield-safe roles — click to show all" : "Hide roles flagged by AstreShield"} aria-pressed={hideShieldFlagged}><ShieldCheck className="h-3.5 w-3.5" />{hideShieldFlagged ? "Shield ON" : "Shield"}</button>{(searchTerm || selectedPlatform !== "ALL" || selectedCategory !== "ALL" || minMatchScore !== "ALL" || sortBy !== "RECENT" || hideShieldFlagged) && <button onClick={resetFilters} className="ce-button-quiet"><X className="h-3.5 w-3.5" />Reset</button>}</div>
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--muted)] mr-1">Quick Filters:</span>
+        <button
+          type="button"
+          onClick={() => {
+            setRemoteRoleView(remoteRoleView === "INTERNSHIPS" ? "ALL" : "INTERNSHIPS");
+            setFeedPage(1);
+          }}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
+            remoteRoleView === "INTERNSHIPS"
+              ? "bg-[var(--blue)] text-white shadow-sm ring-2 ring-[var(--blue)]/30 font-semibold"
+              : "bg-[var(--surface-muted)] text-[var(--ink)] hover:bg-[var(--line)] border border-[var(--line)]"
+          }`}
+        >
+          🎓 Internships Only ({internshipCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMaximumPostedDays(maximumPostedDays === 1 ? "ANY" : 1);
+            setFeedPage(1);
+          }}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
+            maximumPostedDays === 1
+              ? "bg-[var(--blue)] text-white shadow-sm ring-2 ring-[var(--blue)]/30 font-semibold"
+              : "bg-[var(--surface-muted)] text-[var(--ink)] hover:bg-[var(--line)] border border-[var(--line)]"
+          }`}
+        >
+          ⚡ Fresh &lt; 24h
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMinMatchScore(minMatchScore === "80" ? "ALL" : "80");
+            setFeedPage(1);
+          }}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
+            minMatchScore === "80"
+              ? "bg-[var(--blue)] text-white shadow-sm ring-2 ring-[var(--blue)]/30 font-semibold"
+              : "bg-[var(--surface-muted)] text-[var(--ink)] hover:bg-[var(--line)] border border-[var(--line)]"
+          }`}
+        >
+          🎯 80%+ Match
+        </button>
+        <button
+          type="button"
+          onClick={resetFilters}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
+            remoteRoleView === "ALL" && maximumPostedDays === "ANY" && minMatchScore === "ALL" && selectedPlatform === "ALL" && selectedCategory === "ALL" && !searchTerm
+              ? "bg-[var(--surface-muted)] text-[var(--muted)] border border-[var(--line)] opacity-60"
+              : "bg-[var(--line)] text-[var(--ink)] hover:bg-[var(--line-strong)]"
+          }`}
+        >
+          🦅 All Roles ({eligibleJobs.length})
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-2 border-y border-[var(--line)] py-3 sm:grid-cols-2 lg:grid-cols-[minmax(200px,1fr)_160px_160px_140px_165px_auto]"><label className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]" /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search role, company, or skill" className="ce-field pl-9 pr-3" /></label><select value={selectedPlatform} onChange={(event) => setSelectedPlatform(event.target.value)} className="ce-field px-3" aria-label="Filter by source"><option value="ALL">All sources ({policyEligibleJobs.length})</option>{Object.keys(platformCounts).sort().map((platform) => <option key={platform} value={platform}>{platform} ({platformCounts[platform]})</option>)}</select><select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="ce-field px-3" aria-label="Filter by category"><option value="ALL">All role categories</option><option>React Developer</option><option>Backend Developer</option><option>Frontend Developer</option><option>Full Stack Developer</option><option>Python Developer</option><option>AI / ML Engineer</option></select><select value={minMatchScore} onChange={(event) => setMinMatchScore(event.target.value as typeof minMatchScore)} className="ce-field px-3" aria-label="Filter by match score"><option value="ALL">Any match score</option><option value="80">80+ match score</option><option value="70">70+ match score</option><option value="50">50+ match score</option></select><select value={sortBy} onChange={(event) => { setSortBy(event.target.value as JobSortCriteria); setFeedPage(1); }} className="ce-field px-3" aria-label="Sort roles"><option value="EARLY_BIRD">🦅 Early Bird (Intern & Fresh)</option><option value="RECENT">⚡ Recently posted</option><option value="MATCH_SCORE">🎯 Highest match score</option><option value="COMPANY_ASC">🏢 Company (A–Z)</option><option value="TITLE_ASC">💼 Role title (A–Z)</option><option value="OLDEST">⏳ Oldest posted</option></select><button onClick={() => setHideShieldFlagged((v) => !v)} className={`ce-button-secondary !px-3 ${hideShieldFlagged ? "!border-[var(--green)] !text-[var(--green)]" : ""}`} title={hideShieldFlagged ? "Showing only Shield-safe roles — click to show all" : "Hide roles flagged by AstreShield"} aria-pressed={hideShieldFlagged}><ShieldCheck className="h-3.5 w-3.5" />{hideShieldFlagged ? "Shield ON" : "Shield"}</button>{(searchTerm || selectedPlatform !== "ALL" || selectedCategory !== "ALL" || minMatchScore !== "ALL" || sortBy !== "EARLY_BIRD" || hideShieldFlagged) && <button onClick={resetFilters} className="ce-button-quiet"><X className="h-3.5 w-3.5" />Reset</button>}</div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[10px] text-[var(--muted)]"><span className="flex items-center gap-2"><SlidersHorizontal className="h-3.5 w-3.5 text-[var(--blue)]" />{filteredJobs.length} roles match active filters</span><span className="font-mono text-[9px] tracking-wide">CANDIDATE CONTEXT: {activeProfile?.fullName?.toUpperCase() || "LOADING"}</span></div>
       {isLoadingJobs ? <div className="grid min-h-64 place-items-center text-[11px] text-[var(--muted)]"><span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin text-[var(--blue)]" />Loading verified postings</span></div> : filteredJobs.length === 0 ? <div className="mt-5 grid min-h-56 place-items-center border-t border-[var(--line)] text-center"><div><Search className="mx-auto h-6 w-6 text-[var(--blue)]" /><b className="mt-3 block text-[13px] text-[var(--ink)]">No roles match the current filters</b><p className="mt-2 text-[11px] text-[var(--muted)]">Clear a filter or refresh the provider run to inspect new strict-eligible roles.</p></div></div> : <><div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3 text-[10px] text-[var(--muted)]"><span>Showing {feedPagination.startIndex + 1}–{feedPagination.endIndexExclusive} of {feedPagination.totalItems} roles</span><nav aria-label="Career feed pagination" className="flex items-center gap-2"><button type="button" onClick={() => setFeedPage(feedPagination.currentPage - 1)} disabled={feedPagination.currentPage === 1} className="ce-button-quiet disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous feed page"><ChevronLeft className="h-3.5 w-3.5" />Previous</button><span className="font-mono text-[9px] text-[var(--ink)]">PAGE {feedPagination.currentPage} / {feedPagination.totalPages}</span><button type="button" onClick={() => setFeedPage(feedPagination.currentPage + 1)} disabled={feedPagination.currentPage === feedPagination.totalPages} className="ce-button-quiet disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next feed page">Next<ChevronRight className="h-3.5 w-3.5" /></button></nav></div>{viewMode === "list" ? <div className="border-t border-[var(--line)]">{visibleJobs.map((job) => <RoleListRow key={job.id} job={job} score={scoresMap[job.id]} nowTick={nowTick} onOpen={() => setDrawerJob(job)} onQuickApply={() => setQuickApplyJob(job)} />)}</div> : <div className="grid grid-cols-1 gap-3 border-t border-[var(--line)] pt-4 md:grid-cols-2 xl:grid-cols-3">{visibleJobs.map((job) => <RoleCard key={job.id} job={job} score={scoresMap[job.id]} nowTick={nowTick} onOpen={() => setDrawerJob(job)} onQuickApply={() => setQuickApplyJob(job)} />)}</div>}</>}
     </section>
@@ -202,15 +260,204 @@ function PolicyRule({ label, onInfo, infoOpen }: { label: string; onInfo?: () =>
 function PolicyMetric({ value, label }: { value: string; label: string }) { return <div><strong className="block text-[25px] leading-none tracking-[-.055em] text-[var(--ink)]">{value}</strong><span className="mt-2 block font-mono text-[8px] uppercase tracking-[.08em] text-[var(--muted)]">{label}</span></div>; }
 function EndpointObservability({ data, loading }: { data: EndpointDiagnostics | null; loading: boolean }) { const trends = data?.daily ?? []; const maxLatency = Math.max(1, ...trends.map((trend) => trend.averageLatencyMs)); const alerts = data?.alerts ?? []; const threshold = data?.alertThreshold?.failureRatePercent ?? 10; return <section className="ce-surface mt-7 p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="ce-page-eyebrow">Endpoint observability</div><h2 className="mt-2 text-[22px] font-bold tracking-[-.045em] text-[var(--ink)]">Latency and failure-rate trends</h2><p className="mt-2 max-w-2xl text-[12px] leading-6 text-[var(--muted)]">Read-only endpoint telemetry from the last 24 hours. A provider enters the attention queue only when its aggregate endpoint failure rate is greater than {threshold}%.</p></div><span className={`ce-chip ${alerts.length ? "ce-chip-red" : "ce-chip-green"}`}><Activity className="h-3 w-3" />{loading ? "LOADING TELEMETRY" : alerts.length ? `${alerts.length} FAILURE ALERT${alerts.length === 1 ? "" : "S"}` : "NO FAILURE ALERTS"}</span></div>{alerts.length ? <div className="mt-5 border-y border-[var(--line)]">{alerts.map((alert) => <div key={alert.providerKey} className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] py-3 last:border-b-0"><span className="flex items-center gap-2 text-[11px] text-[var(--ink)]"><AlertTriangle className="h-4 w-4 text-[var(--red)]" /><b>{alert.providerKey}</b><span className="text-[var(--muted)]">{alert.failedRequests}/{alert.totalRequests} endpoint requests failed in 24h</span></span><span className="ce-chip ce-chip-red">{alert.failureRatePercent}% FAILURE RATE</span></div>)}</div> : null}<div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px]"><div className="border-y border-[var(--line)]">{loading ? <div className="grid min-h-36 place-items-center text-[11px] text-[var(--muted)]">Loading endpoint history.</div> : trends.length ? trends.map((trend) => <div key={`${trend.date}-${trend.providerKey}-${trend.endpointKey}`} className="grid gap-3 border-b border-[var(--line)] py-3 last:border-b-0 md:grid-cols-[minmax(180px,1fr)_minmax(160px,1fr)_90px]"><div><b className="block text-[11px] text-[var(--ink)]">{trend.providerKey}</b><span className="mt-1 block font-mono text-[8px] uppercase tracking-[.08em] text-[var(--muted)]">{trend.endpointKey.replaceAll("_", " ")} · {trend.date}</span></div><div className="space-y-2"><div className="flex items-center gap-2"><span className="w-12 font-mono text-[8px] uppercase text-[var(--muted)]">Latency</span><span className="h-1.5 min-w-0 flex-1 bg-[var(--surface-muted)]"><span className="block h-full bg-[var(--blue)]" style={{ width: `${Math.max(4, (trend.averageLatencyMs / maxLatency) * 100)}%` }} /></span><span className="w-14 text-right font-mono text-[9px] text-[var(--ink)]">{trend.averageLatencyMs}ms</span></div><div className="flex items-center gap-2"><span className="w-12 font-mono text-[8px] uppercase text-[var(--muted)]">Failure</span><span className="h-1.5 min-w-0 flex-1 bg-[var(--surface-muted)]"><span className={`block h-full ${trend.failureRatePercent > threshold ? "bg-[var(--red)]" : "bg-[var(--green)]"}`} style={{ width: `${Math.max(trend.failureRatePercent ? 4 : 0, Math.min(100, trend.failureRatePercent))}%` }} /></span><span className="w-14 text-right font-mono text-[9px] text-[var(--ink)]">{trend.failureRatePercent}%</span></div></div><span className="self-center text-[10px] text-[var(--muted)]">{trend.successfulRequests}/{trend.totalRequests} healthy</span></div>) : <div className="grid min-h-36 place-items-center text-[11px] text-[var(--muted)]">No endpoint history exists in this 24-hour window yet.</div>}</div><div className="border-y border-[var(--line)] py-4"><span className="block font-mono text-[8px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Window summary</span><strong className="mt-3 block text-[28px] tracking-[-.06em] text-[var(--ink)]">{data?.totalEndpointRuns ?? "—"}</strong><span className="mt-1 block text-[10px] text-[var(--muted)]">endpoint observations</span><div className="mt-5 border-t border-[var(--line)] pt-4 text-[10px] leading-5 text-[var(--muted)]">Threshold checks aggregate endpoint outcomes by provider over 24 hours. They are visible in this workspace and refresh after discovery runs.</div></div></div></section>; }
 function ProviderStageTable({ providers, completedAt }: { providers: ProviderRunSummary[]; completedAt: string }) { return <section className="ce-surface mt-7 p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="ce-page-eyebrow">Latest refresh diagnostics</div><h2 className="mt-2 text-[22px] font-bold tracking-[-.045em] text-[var(--ink)]">Provider stage outcomes</h2><p className="mt-2 max-w-2xl text-[12px] leading-6 text-[var(--muted)]">This table is the actual response from the most recent Refresh discovery run. Exact sub-stage counters are marked separately from legacy provider estimates; endpoint timing is shown when a provider supplies it.</p></div><span className="ce-chip"><Clock3 className="h-3 w-3" />{formatSyncTime(completedAt)}</span></div><div className="mt-6 overflow-x-auto border-y border-[var(--line)]"><div className="min-w-[850px]"><div className="grid grid-cols-[minmax(150px,1.3fr)_92px_80px_80px_80px_80px_90px_minmax(170px,1fr)] gap-3 border-b border-[var(--line)] py-3 font-mono text-[8px] font-bold uppercase tracking-[.08em] text-[var(--muted)]"><span>Provider</span><span>Status</span><span>Raw</span><span>Role gate</span><span>Invalid URL</span><span>Accepted</span><span>Counter mode</span><span>Error / endpoint timing</span></div>{providers.map((provider) => { const d = provider.diagnostics; const state = provider.success ? "SUCCESS" : "FAILED"; const endpointSummary = provider.endpointTelemetry?.map((endpoint) => `${endpoint.success ? "OK" : "FAIL"} ${endpoint.latencyMs}ms · ${endpoint.attempts} attempt${endpoint.attempts === 1 ? "" : "s"}`).join(" | "); const aggregate = provider.endpointTelemetrySummary ? `${provider.endpointTelemetrySummary.failureRatePercent}% failed · avg ${provider.endpointTelemetrySummary.averageLatencyMs}ms` : null; const issue = provider.error || [aggregate, endpointSummary].filter(Boolean).join(" | ") || `${provider.durationMs}ms`; return <div key={provider.provider} className="grid grid-cols-[minmax(150px,1.3fr)_92px_80px_80px_80px_80px_90px_minmax(170px,1fr)] gap-3 border-b border-[var(--line)] py-3 text-[10px] last:border-b-0"><b className="truncate text-[var(--ink)]">{provider.provider}</b><span className={`ce-chip w-fit ${provider.success ? "ce-chip-green" : "ce-chip-red"}`}>{state}</span><span>{d?.rawCandidates ?? provider.discovered}</span><span>{d?.roleGateRejected ?? "—"}</span><span>{d?.invalidUrl ?? "—"}</span><span>{d?.accepted ?? "—"}</span><span className="font-mono text-[8px] uppercase text-[var(--muted)]">{d ? (d.instrumented ? "Exact" : "Estimate") : "None"}</span><span title={issue} className="truncate text-[var(--muted)]">{issue}</span></div>; })}</div></div></section>; }
-function RoleListRow({ job, score, nowTick, onOpen, onQuickApply }: { job: JobItem; score?: FeedScoreInfo; nowTick: number; onOpen: () => void; onQuickApply?: () => void }) { const category = determineCategory(job.title, job.rawDescription); const isShieldBlocked = score?.trustTier === "RED"; return <div className={`group flex items-center justify-between border-b border-[var(--line)] px-2 py-3 transition-colors hover:bg-[var(--surface-muted)] ${isShieldBlocked ? "shield-blocked-card" : ""}`}><button onClick={onOpen} className="grid flex-1 grid-cols-[1fr_auto] gap-4 text-left sm:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]"><div className="flex min-w-0 items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded bg-[var(--blue-soft)] font-mono text-[10px] font-bold text-[var(--blue)]">{job.company.slice(0, 2).toUpperCase()}</span><span className="min-w-0"><b className="block truncate text-[12px] text-[var(--ink)]">{job.title}</b><small className="mt-1 block truncate text-[10px] text-[var(--muted)]">{job.company} · {job.platform}</small></span></div><span className="hidden sm:flex sm:items-center sm:gap-1.5"><ShieldBadge score={score} /><MatchBadge score={score} /></span><span className="hidden md:block"><span className="ce-chip">{category}</span></span><span className="hidden lg:block"><span className="ce-chip ce-chip-green">{formatRemoteScopeLabel(job.remoteScope, job.location)}</span></span><span className="flex items-center gap-2 font-mono text-[9px] text-[var(--muted)]"><Clock3 className="h-3 w-3" />{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}<ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></button>{onQuickApply && <button type="button" onClick={(e) => { e.stopPropagation(); onQuickApply(); }} className="ml-2 flex h-7 items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface)] px-2 text-[10px] font-semibold text-[var(--blue)] opacity-0 shadow-xs transition-all hover:border-[var(--blue)] hover:bg-[var(--blue-soft)] group-hover:opacity-100" title="Quick Apply Kit" aria-label={`Quick Apply Kit for ${job.title}`}><FileText className="h-3 w-3" /><span className="hidden sm:inline">Apply</span></button>}</div>; }
-function RoleCard({ job, score, nowTick, onOpen, onQuickApply }: { job: JobItem; score?: FeedScoreInfo; nowTick: number; onOpen: () => void; onQuickApply?: () => void }) { const description = cleanText(job.rawDescription); const isShieldBlocked = score?.trustTier === "RED"; return <div className={`group flex min-h-66 flex-col border p-4 text-left transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[var(--shadow)] ${isShieldBlocked ? "shield-blocked-card border-[var(--red-soft)] bg-[var(--surface)] hover:border-[var(--red)]" : "border-[var(--line)] bg-[var(--surface)] hover:border-[var(--blue)]"}`}><button onClick={onOpen} className="text-left w-full"><div className="flex items-start justify-between gap-3"><span className="ce-chip">{job.platform}</span><span className="flex items-center gap-1.5"><ShieldBadge score={score} /><MatchBadge score={score} /></span></div><b className="mt-4 block text-[14px] leading-5 tracking-[-.025em] text-[var(--ink)]">{job.title}</b><span className="mt-1 block text-[11px] text-[var(--muted)]">{job.company}</span><p className="mt-4 line-clamp-3 text-[11px] leading-5 text-[var(--muted)]">{description}</p><div className="mt-4 flex flex-wrap gap-1"><span className="ce-chip ce-chip-green"><MapPin className="h-3 w-3" />{formatRemoteScopeLabel(job.remoteScope, job.location)}</span><span className="ce-chip">{determineExperienceLevel(job.title, job.rawDescription)}</span></div></button><div className="mt-auto flex items-center justify-between border-t border-[var(--line)] pt-3"><span className="font-mono text-[9px] text-[var(--muted)]">{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span><div className="flex items-center gap-2">{onQuickApply && <button type="button" onClick={(e) => { e.stopPropagation(); onQuickApply(); }} className="flex items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface)] px-2 py-1 text-[9px] font-bold text-[var(--blue)] transition-colors hover:border-[var(--blue)] hover:bg-[var(--blue-soft)]" title="Quick Apply Kit"><FileText className="h-3 w-3" /> Apply</button>}<button onClick={onOpen} className="flex items-center gap-1 text-[10px] font-bold text-[var(--blue)]">Inspect <ArrowUpRight className="h-3 w-3" /></button></div></div></div>; }
-function JobDrawer({ job, score, nowTick, onClose, onGenerateKit, onOpenQuickApply }: { job: JobItem; score?: FeedScoreInfo; nowTick: number; onClose: () => void; onGenerateKit: () => void; onOpenQuickApply: () => void }) { const [description, setDescription] = useState(job.rawDescription); const [hasFullText, setHasFullText] = useState(Boolean(job.hasFullText)); const canFetchSourceText = ["WEWORKREMOTELY", "GREENHOUSE", "ASHBY"].includes(job.platform); const fetchSourceText = async () => { const response = await fetch(`/api/jobs/${job.id}/description`); const data = await response.json(); if (!response.ok || !data.success) throw new Error(data.error || "Unable to retrieve the source description."); setDescription(data.description); setHasFullText(true); }; return <div className="ce-drawer-backdrop" role="dialog" aria-modal="true" aria-label={`${job.title} job details`}><aside className="ce-drawer"><div className="flex items-start justify-between gap-4 border-b border-[var(--line)] pb-5"><div className="flex min-w-0 gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded bg-[var(--blue-soft)] font-mono text-[11px] font-bold text-[var(--blue)]">{job.company.slice(0,2).toUpperCase()}</span><div className="min-w-0"><span className="ce-page-eyebrow">{job.company} · {job.platform}</span><h2 className="mt-2 text-[25px] font-bold leading-7 tracking-[-.045em] text-[var(--ink)]">{job.title}</h2></div></div><button onClick={onClose} className="ce-button-quiet !min-h-8 !px-2" aria-label="Close job details"><X className="h-4 w-4" /></button></div><div className="grid gap-3 border-b border-[var(--line)] py-5 sm:grid-cols-3"><DrawerMetric label="Candidate fit" value={<MatchBadge score={score} />} /><DrawerMetric label="Posting age" value={<span>{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>} /><DrawerMetric label="Remote scope" value={<span className="text-[var(--green)]">{formatRemoteScopeLabel(job.remoteScope, job.location)}</span>} /></div><div className="grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_280px]"><section className="min-w-0"><div className="flex items-end justify-between gap-3"><div><div className="ce-page-eyebrow">Job description</div><h3 className="mt-2 text-[17px] font-bold tracking-[-.03em] text-[var(--ink)]">Responsibilities, requirements, and source text</h3></div><span className={`ce-chip ${hasFullText ? "ce-chip-green" : "ce-chip-red"}`}>{hasFullText ? "SOURCE TEXT AVAILABLE" : "LISTING SUMMARY"}</span></div><div className="mt-4"><FormattedJobDescription description={description} hasFullText={hasFullText} canFetchSourceText={canFetchSourceText} onFetchSourceText={fetchSourceText} /></div></section><aside className="space-y-4 border-t border-[var(--line)] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"><ShieldAuditPanel score={score} />{score && <section className="border border-[var(--line)] bg-[var(--surface-muted)] p-4"><div className="flex items-center justify-between"><b className="text-[12px] text-[var(--ink)]">Match evidence</b><span className="font-mono text-[8px] uppercase tracking-wider text-[var(--muted)]">{score.cached ? "Cached" : "Current"}</span></div>{score.scoreType === "INELIGIBLE" || score.scoreType === "SHIELD_BLOCKED" ? <p className="mt-3 text-[11px] leading-5 text-[var(--red)]">{score.rejectionReason || "The role failed a hard eligibility constraint."}</p> : <div className="mt-3 grid gap-3"><SkillGroup label="Matching skills" skills={score.hardSkills} green /><SkillGroup label="Skills to develop" skills={score.missingSkills} /></div>}</section>}<section className="border border-[var(--line)] p-4"><div className="ce-page-eyebrow">How to use this view</div><p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">Use Structured view to scan responsibilities and requirements. Use Original source text to review the readable source order. Copy source text for notes or application prep.</p></section></aside></div><div className="flex flex-wrap gap-2 border-t border-[var(--line)] pt-5"><a href={job.url} target="_blank" rel="noreferrer" className="ce-button-primary flex-1"><ExternalLink className="h-3.5 w-3.5" />Open original application</a><button onClick={onOpenQuickApply} className="ce-button-secondary"><FileText className="h-3.5 w-3.5 text-[var(--blue)]" />Quick Apply Kit</button><button onClick={onGenerateKit} className="ce-button-secondary"><Sparkles className="h-3.5 w-3.5" />Draft kit</button></div></aside></div>; }
+function RoleListRow({ job, score, nowTick, onOpen, onQuickApply }: { job: JobItem; score?: FeedScoreInfo; nowTick: number; onOpen: () => void; onQuickApply?: () => void }) {
+  const category = determineCategory(job.title, job.rawDescription);
+  const tier = getEarlyCareerTierPresentation(job.title, job.rawDescription);
+  const freshness = getFreshnessBadgeInfo(job.postedAt, job.firstSeenAt || job.createdAt, nowTick);
+  const isShieldBlocked = score?.trustTier === "RED";
+  return (
+    <div className={`group flex items-center justify-between border-b border-[var(--line)] px-2 py-3 transition-colors hover:bg-[var(--surface-muted)] ${isShieldBlocked ? "shield-blocked-card" : ""}`}>
+      <button onClick={onOpen} className="grid flex-1 grid-cols-[1fr_auto] gap-4 text-left sm:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto_auto]">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded bg-[var(--blue-soft)] font-mono text-[10px] font-bold text-[var(--blue)]">{job.company.slice(0, 2).toUpperCase()}</span>
+          <span className="min-w-0">
+            <b className="block truncate text-[12px] text-[var(--ink)]">{job.title}</b>
+            <small className="mt-1 block truncate text-[10px] text-[var(--muted)]">{job.company} · {job.platform}</small>
+          </span>
+        </div>
+        <span className="hidden sm:flex sm:items-center sm:gap-1.5"><ShieldBadge score={score} /><MatchBadge score={score} /></span>
+        <span className="hidden md:block"><span className={`ce-chip ${tier.tierNumber === 1 ? "ce-chip-green" : tier.tierNumber === 2 ? "ce-chip-blue" : ""}`}>{tier.label}</span></span>
+        <span className="hidden lg:block"><span className="ce-chip">{category}</span></span>
+        <span className="hidden xl:block"><span className="ce-chip ce-chip-green">{formatRemoteScopeLabel(job.remoteScope, job.location)}</span></span>
+        <span className="flex items-center gap-2 font-mono text-[9px] text-[var(--muted)]">
+          {freshness.isUltraFresh ? (
+            <span className="ce-chip ce-chip-green !min-h-4 !px-1.5 !text-[8px]">{freshness.label}</span>
+          ) : freshness.isHot ? (
+            <span className="ce-chip ce-chip-amber !min-h-4 !px-1.5 !text-[8px]">{freshness.label}</span>
+          ) : (
+            <span className="flex items-center gap-1"><Clock3 className="h-3 w-3" />{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>
+          )}
+          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </button>
+      {onQuickApply && (
+        <button type="button" onClick={(e) => { e.stopPropagation(); onQuickApply(); }} className="ml-2 flex h-7 items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface)] px-2 text-[10px] font-semibold text-[var(--blue)] opacity-0 shadow-xs transition-all hover:border-[var(--blue)] hover:bg-[var(--blue-soft)] group-hover:opacity-100" title="Quick Apply Kit" aria-label={`Quick Apply Kit for ${job.title}`}>
+          <FileText className="h-3 w-3" />
+          <span className="hidden sm:inline">Apply</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function RoleCard({ job, score, nowTick, onOpen, onQuickApply }: { job: JobItem; score?: FeedScoreInfo; nowTick: number; onOpen: () => void; onQuickApply?: () => void }) {
+  const description = cleanText(job.rawDescription);
+  const tier = getEarlyCareerTierPresentation(job.title, job.rawDescription);
+  const freshness = getFreshnessBadgeInfo(job.postedAt, job.firstSeenAt || job.createdAt, nowTick);
+  const isShieldBlocked = score?.trustTier === "RED";
+  return (
+    <div className={`group flex min-h-66 flex-col border p-4 text-left transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[var(--shadow)] ${isShieldBlocked ? "shield-blocked-card border-[var(--red-soft)] bg-[var(--surface)] hover:border-[var(--red)]" : "border-[var(--line)] bg-[var(--surface)] hover:border-[var(--blue)]"}`}>
+      <button onClick={onOpen} className="text-left w-full">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="ce-chip">{job.platform}</span>
+            <span className={`ce-chip ${tier.tierNumber === 1 ? "ce-chip-green" : tier.tierNumber === 2 ? "ce-chip-blue" : ""}`}>{tier.label}</span>
+          </div>
+          <span className="flex items-center gap-1.5"><ShieldBadge score={score} /><MatchBadge score={score} /></span>
+        </div>
+        <b className="mt-4 block text-[14px] leading-5 tracking-[-.025em] text-[var(--ink)]">{job.title}</b>
+        <span className="mt-1 block text-[11px] text-[var(--muted)]">{job.company}</span>
+        <p className="mt-4 line-clamp-3 text-[11px] leading-5 text-[var(--muted)]">{description}</p>
+        <div className="mt-4 flex flex-wrap gap-1">
+          <span className="ce-chip ce-chip-green"><MapPin className="h-3 w-3" />{formatRemoteScopeLabel(job.remoteScope, job.location)}</span>
+          <span className="ce-chip">{determineExperienceLevel(job.title, job.rawDescription)}</span>
+        </div>
+      </button>
+      <div className="mt-auto flex items-center justify-between border-t border-[var(--line)] pt-3">
+        {freshness.isUltraFresh ? (
+          <span className="ce-chip ce-chip-green !min-h-5 !px-2 !text-[9px]">{freshness.label}</span>
+        ) : freshness.isHot ? (
+          <span className="ce-chip ce-chip-amber !min-h-5 !px-2 !text-[9px]">{freshness.label}</span>
+        ) : (
+          <span className="font-mono text-[9px] text-[var(--muted)]">{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>
+        )}
+        <div className="flex items-center gap-2">
+          {onQuickApply && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onQuickApply(); }} className="flex items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface)] px-2 py-1 text-[9px] font-bold text-[var(--blue)] transition-colors hover:border-[var(--blue)] hover:bg-[var(--blue-soft)]" title="Quick Apply Kit">
+              <FileText className="h-3 w-3" /> Apply
+            </button>
+          )}
+          <button onClick={onOpen} className="flex items-center gap-1 text-[10px] font-bold text-[var(--blue)]">Inspect <ArrowUpRight className="h-3 w-3" /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JobDrawer({ job, score, nowTick, onClose, onGenerateKit, onOpenQuickApply }: { job: JobItem; score?: FeedScoreInfo; nowTick: number; onClose: () => void; onGenerateKit: () => void; onOpenQuickApply: () => void }) {
+  const [description, setDescription] = useState(job.rawDescription);
+  const [hasFullText, setHasFullText] = useState(Boolean(job.hasFullText));
+  const tier = getEarlyCareerTierPresentation(job.title, job.rawDescription);
+  const freshness = getFreshnessBadgeInfo(job.postedAt, job.firstSeenAt || job.createdAt, nowTick);
+  const canFetchSourceText = ["WEWORKREMOTELY", "GREENHOUSE", "ASHBY"].includes(job.platform);
+  const fetchSourceText = async () => {
+    const response = await fetch(`/api/jobs/${job.id}/description`);
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || "Unable to retrieve the source description.");
+    setDescription(data.description);
+    setHasFullText(true);
+  };
+  return (
+    <div className="ce-drawer-backdrop" role="dialog" aria-modal="true" aria-label={`${job.title} job details`}>
+      <aside className="ce-drawer">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] pb-5">
+          <div className="flex min-w-0 gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded bg-[var(--blue-soft)] font-mono text-[11px] font-bold text-[var(--blue)]">{job.company.slice(0,2).toUpperCase()}</span>
+            <div className="min-w-0">
+              <span className="ce-page-eyebrow">{job.company} · {job.platform}</span>
+              <h2 className="mt-2 text-[25px] font-bold leading-7 tracking-[-.045em] text-[var(--ink)]">{job.title}</h2>
+            </div>
+          </div>
+          <button onClick={onClose} className="ce-button-quiet !min-h-8 !px-2" aria-label="Close job details"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="grid gap-3 border-b border-[var(--line)] py-5 sm:grid-cols-4">
+          <DrawerMetric label="Candidate fit" value={<MatchBadge score={score} />} />
+          <DrawerMetric label="Priority Tier" value={<span className={`ce-chip ${tier.tierNumber === 1 ? "ce-chip-green" : tier.tierNumber === 2 ? "ce-chip-blue" : ""}`}>{tier.label}</span>} />
+          <DrawerMetric label="Freshness" value={freshness.isHot ? <span className={`ce-chip ${freshness.isUltraFresh ? "ce-chip-green" : "ce-chip-amber"}`}>{freshness.label}</span> : <span>{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>} />
+          <DrawerMetric label="Remote scope" value={<span className="text-[var(--green)]">{formatRemoteScopeLabel(job.remoteScope, job.location)}</span>} />
+        </div>
+        <div className="grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <section className="min-w-0">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <div className="ce-page-eyebrow">Job description</div>
+                <h3 className="mt-2 text-[17px] font-bold tracking-[-.03em] text-[var(--ink)]">Responsibilities, requirements, and source text</h3>
+              </div>
+              <span className={`ce-chip ${hasFullText ? "ce-chip-green" : "ce-chip-red"}`}>{hasFullText ? "SOURCE TEXT AVAILABLE" : "LISTING SUMMARY"}</span>
+            </div>
+            <div className="mt-4"><FormattedJobDescription description={description} hasFullText={hasFullText} canFetchSourceText={canFetchSourceText} onFetchSourceText={fetchSourceText} /></div>
+          </section>
+          <aside className="space-y-4 border-t border-[var(--line)] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+            <ShieldAuditPanel score={score} />
+            {score && (
+              <section className="border border-[var(--line)] bg-[var(--surface-muted)] p-4">
+                <div className="flex items-center justify-between">
+                  <b className="text-[12px] text-[var(--ink)]">Match evidence</b>
+                  <span className="font-mono text-[8px] uppercase tracking-wider text-[var(--muted)]">{score.cached ? "Cached" : "Current"}</span>
+                </div>
+                {score.scoreType === "INELIGIBLE" || score.scoreType === "SHIELD_BLOCKED" ? (
+                  <p className="mt-3 text-[11px] leading-5 text-[var(--red)]">{score.rejectionReason || "The role failed a hard eligibility constraint."}</p>
+                ) : (
+                  <div className="mt-3 grid gap-3">
+                    <SkillGroup label="Matching skills" skills={score.hardSkills} green />
+                    <SkillGroup label="Skills to develop" skills={score.missingSkills} />
+                    {score.hardSkills && score.hardSkills.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(score.hardSkills?.join(", ") || "");
+                        }}
+                        className="mt-1 w-full rounded border border-[var(--line)] bg-[var(--surface)] py-1.5 text-[10px] font-medium text-[var(--blue)] hover:bg-[var(--blue-soft)] transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copy skills for interview prep
+                      </button>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+            <section className="border border-[var(--line)] p-4">
+              <div className="ce-page-eyebrow">How to use this view</div>
+              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">Use Structured view to scan responsibilities and requirements. Use Original source text to review the readable source order. Copy source text for notes or application prep.</p>
+            </section>
+          </aside>
+        </div>
+        <div className="flex flex-wrap gap-2 border-t border-[var(--line)] pt-5">
+          <a href={job.url} target="_blank" rel="noreferrer" className="ce-button-primary flex-1"><ExternalLink className="h-3.5 w-3.5" />Open original application</a>
+          <button onClick={onOpenQuickApply} className="ce-button-secondary"><FileText className="h-3.5 w-3.5 text-[var(--blue)]" />Quick Apply Kit</button>
+          <button onClick={onGenerateKit} className="ce-button-secondary"><Sparkles className="h-3.5 w-3.5" />Draft kit</button>
+        </div>
+      </aside>
+    </div>
+  );
+}
 function DrawerMetric({ label, value }: { label: string; value: React.ReactNode }) { return <div><span className="block font-mono text-[8px] font-bold uppercase tracking-[.09em] text-[var(--muted)]">{label}</span><div className="mt-2 text-[10px] font-semibold leading-4 text-[var(--ink)]">{value}</div></div>; }
 function SkillGroup({ label, skills, green }: { label: string; skills?: string[]; green?: boolean }) { if (!skills?.length) return null; return <div><span className="font-mono text-[8px] font-bold uppercase tracking-[.09em] text-[var(--muted)]">{label}</span><div className="mt-2 flex flex-wrap gap-1">{skills.map((skill) => <span key={skill} className={`ce-chip ${green ? "ce-chip-green" : ""}`}>{skill}</span>)}</div></div>; }
 
-/** Full AstreShield audit breakdown — shown in JobDrawer sidebar for AMBER and RED jobs */
+/** Full AstreShield audit breakdown — shown in JobDrawer sidebar */
 function ShieldAuditPanel({ score }: { score?: FeedScoreInfo }) {
-  if (!score?.trustTier || score.trustTier === "GREEN") return null;
+  if (!score) return null;
+
+  if (!score.trustTier || score.trustTier === "GREEN") {
+    return (
+      <section className="rounded-lg border border-[var(--green)] bg-[var(--green-soft)] p-3 text-[11px] leading-5 text-[var(--ink)]" aria-label="AstreShield trust audit verified">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 font-bold text-[var(--green)]">
+            <ShieldCheck className="h-4 w-4" />
+            <span>AstreShield Verified</span>
+          </div>
+          <span className="ce-chip ce-chip-green !min-h-5 !px-2 !text-[9px]">
+            TRUST {score.trustScore ?? 100}/100
+          </span>
+        </div>
+        <p className="mt-1.5 text-[10px] text-[var(--muted)] leading-relaxed">
+          Direct ATS application portal verified. Legitimate company domain with zero malicious redirects or suspicious keyword patterns detected.
+        </p>
+      </section>
+    );
+  }
+
   const isRed = score.trustTier === "RED";
   const panelClass = `shield-panel ${isRed ? "shield-panel--red" : "shield-panel--amber"}`;
   const deductions = (score.trustFlags ?? []).filter((f) => f.impact < 0);

@@ -63,7 +63,7 @@ function shouldRetry(error: unknown): boolean {
 export class SimplifyProvider implements JobSourceProvider {
   name = "Simplify Jobs";
   providerKey = PlatformSource.SIMPLIFY;
-  timeoutMs = 12000;
+  timeoutMs = 15000;
 
   private async fetchEndpoint(endpointKey: string, endpoint: string): Promise<SimplifyEndpointResult> {
     const startedAt = Date.now();
@@ -122,9 +122,9 @@ export class SimplifyProvider implements JobSourceProvider {
     let rejectedCount = 0;
 
     const dataEndpoints = [
-      { key: "new_grad_positions", url: "https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json" },
       { key: "summer_2026_internships", url: "https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/.github/scripts/listings.json" },
       { key: "summer_2025_internships", url: "https://raw.githubusercontent.com/SimplifyJobs/Summer2025-Internships/dev/.github/scripts/listings.json" },
+      { key: "new_grad_positions", url: "https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json" },
     ];
 
     const endpointResults = await Promise.all(dataEndpoints.map(({ key, url }) => this.fetchEndpoint(key, url)));
@@ -166,15 +166,15 @@ export class SimplifyProvider implements JobSourceProvider {
             }
 
             const location = rawLocs ? (rawLocs.toLowerCase().includes("remote") ? rawLocs : `Remote (${rawLocs})`) : "Remote (Worldwide)";
+            const postedAt = item.date_posted ? new Date(item.date_posted * 1000) : null;
+            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
 
-            if (!isStrictlyRemoteDeveloperRole(titleRaw, location, `${titleRaw} at ${companyRaw}`)) {
+            if (!isStrictlyRemoteDeveloperRole(titleRaw, location, `${titleRaw} at ${companyRaw}`, validPostedAt)) {
               rejectedCount++;
               continue;
             }
 
             const { company, companySlug } = cleanCompanySlug(companyRaw);
-            const postedAt = item.date_posted ? new Date(item.date_posted * 1000) : null;
-            const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
             const remoteScope = parseRemoteScope(location, titleRaw);
             const opportunitySignals = determineOpportunitySignals({
               postedAt: validPostedAt,

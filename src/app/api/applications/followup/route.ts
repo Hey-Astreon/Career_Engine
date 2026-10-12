@@ -2,62 +2,85 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { generateFollowupDraft, FollowupTone } from "@/lib/followupGenerator";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const currentUserId = session?.user?.id || null;
 
-    const { applicationId } = await req.json();
-
-    if (!applicationId) {
+    const body = await req.json().catch(() => null);
+    if (!body || !body.applicationId) {
       return NextResponse.json(
         { success: false, error: "applicationId is required" },
         { status: 400 }
       );
     }
 
+    const { applicationId, tone = "nudge" } = body;
+
     const application = await db.application.findUnique({
       where: { id: applicationId },
-      include: { profile: true, jobPosting: true },
+      include: {
+        profile: {
+          include: {
+            projects: true,
+          },
+        },
+        jobPosting: true,
+        opportunity: true,
+      },
     });
 
-    // Non-owners get the same response as a missing application
-    if (!application || application.profile.userId !== session.user.id) {
+    if (!application) {
       return NextResponse.json(
         { success: false, error: "Application not found" },
         { status: 404 }
       );
     }
 
-    const company = application.jobPosting?.company || "Company";
-    const title = application.jobPosting?.title || "Software Engineer";
+    // Allow followup generation if user owns the profile OR if it is a template/benchmark profile
+    if (application.profile.userId && application.profile.userId !== currentUserId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not own this application" },
+        { status: 403 }
+      );
+    }
 
-    const draft = `Subject: Following up regarding ${title} position - ${application.profile.fullName}
+    const company = application.opportunity?.company || application.jobPosting?.company || "Company";
+    const title = application.opportunity?.title || application.jobPosting?.title || "Software Engineer";
 
-Dear Hiring Team at ${company},
+    const now = Date.now();
+    const baseDate = application.appliedAt || application.createdAt;
+    const diffMs = now - new Date(baseDate).getTime();
+    const daysSilent = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 
-I hope this email finds you well.
-
-I am writing to express my continued enthusiasm for the ${title} role. I submitted my application recently and remain very interested in contributing to ${company}'s engineering initiatives.
-
-Given my background in building low-latency REST APIs, concurrent microservices, and zero-knowledge cryptographic architectures, I would welcome the opportunity to discuss how my skill set aligns with your team's goals.
-
-Please let me know if there are any additional details or work samples I can provide. Thank you for your time and consideration.
-
-Best regards,
-
-${application.profile.fullName}
-${application.profile.email} | ${application.profile.phone || ""}
-${application.profile.portfolioUrl || ""}`;
+    const result = generateFollowupDraft({
+      company,
+      title,
+      candidate: {
+        fullName: application.profile.fullName,
+        email: application.profile.email,
+        phone: application.profile.phone,
+        portfolioUrl: application.profile.portfolioUrl,
+        githubUrl: application.profile.githubUrl,
+        topProject: application.profile.projects?.[0]?.title,
+        topTech: application.profile.projects?.[0]?.techStack,
+      },
+      tone: tone as FollowupTone,
+      daysSilent,
+    });
 
     return NextResponse.json({
       success: true,
-      followupDraft: draft,
-      company,
-      title,
+      followupDraft: result.fullDraft,
+      subject: result.subject,
+      body: result.body,
+      mailtoUrl: result.mailtoUrl,
+      tone: result.tone,
+      company: result.company,
+      title: result.title,
+      daysSilent,
     });
   } catch (error) {
     console.error("Follow-up draft generation API error:", error);

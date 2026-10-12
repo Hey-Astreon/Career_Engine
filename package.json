@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "vitest run",
     "d3-6": "npx ts-node -e \"import('./src/lib/providers/registry').then(m=>m.runAllProviders().then(()=>console.log('DONE')))\"",
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && node scripts/package-extension.js && next build",
     "start": "next start",
     "lint": "eslint",
     "db:sync:turso": "node scripts/sync-to-turso.mjs",

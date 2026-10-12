@@ -25,17 +25,18 @@ export class LinkedInProvider implements JobSourceProvider {
     let rejectedCount = 0;
 
     const queries = [
-      "software engineer",
       "software engineer intern",
       "developer intern",
-      "full stack developer",
-      "backend engineer",
-      "frontend developer",
+      "frontend intern",
+      "backend intern",
+      "web developer intern",
+      "entry level software engineer",
+      "junior software developer",
     ];
 
     for (const query of queries) {
       try {
-        const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${encodeURIComponent(query)}&location=Worldwide&f_WT=2&start=0`;
+        const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${encodeURIComponent(query)}&location=Worldwide&f_WT=2&f_TPR=r604800&f_E=1%2C2&start=0`;
         const res = await axios.get(url, {
           headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -76,14 +77,15 @@ export class LinkedInProvider implements JobSourceProvider {
                 ? (rawLocLower.includes("remote") ? rawLocation : `Remote (${rawLocation})`)
                 : "Remote (Worldwide)";
 
-              if (!isStrictlyRemoteDeveloperRole(title, location, title)) {
+              const postedAt = datetime ? new Date(datetime) : null;
+              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
+
+              if (!isStrictlyRemoteDeveloperRole(title, location, title, validPostedAt)) {
                 rejectedCount++;
                 return;
               }
 
               const { company, companySlug } = cleanCompanySlug(companyName);
-              const postedAt = datetime ? new Date(datetime) : null;
-              const validPostedAt = postedAt && !isNaN(postedAt.getTime()) ? postedAt : null;
               const remoteScope = parseRemoteScope(location, title);
               const opportunitySignals = determineOpportunitySignals({
                 postedAt: validPostedAt,

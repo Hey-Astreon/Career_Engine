@@ -23,6 +23,9 @@ import {
   isOlderThanMaxPostingAge,
   MAX_POSTING_AGE_DAYS,
   sanitizeRoleTitle,
+  EarlyCareerTier,
+  determineEarlyCareerTier,
+  calculateEarlyBirdScore,
 } from "@/lib/providers/normalize";
 
 // ─── isStrictlyRemoteDeveloperRole ───────────────────────────────────────────
@@ -219,29 +222,35 @@ describe("isStrictlyRemoteDeveloperRole – 0-3 year target cases", () => {
   });
 });
 
-describe("isStrictlyRemoteDeveloperRole – 21-day posting age ceiling", () => {
-  it("accepts jobs posted within 21 days (e.g. 5 days ago)", () => {
-    const fiveDaysAgo = new Date(Date.now() - 5 * 86400 * 1000);
-    expect(isOlderThanMaxPostingAge(fiveDaysAgo, 21)).toBe(false);
-    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", fiveDaysAgo)).toBe(true);
+describe("isStrictlyRemoteDeveloperRole – 7-day posting age ceiling", () => {
+  it("accepts jobs posted within 7 days (e.g. 2 days ago)", () => {
+    const twoDaysAgo = new Date(Date.now() - 2 * 86400 * 1000);
+    expect(isOlderThanMaxPostingAge(twoDaysAgo, 7)).toBe(false);
+    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", twoDaysAgo)).toBe(true);
   });
 
-  it("accepts jobs posted exactly 21 days ago", () => {
-    const twentyOneDaysAgo = new Date(Date.now() - 20.95 * 86400 * 1000);
-    expect(isOlderThanMaxPostingAge(twentyOneDaysAgo, 21)).toBe(false);
-    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", twentyOneDaysAgo)).toBe(true);
+  it("accepts jobs posted exactly under 7 days ago", () => {
+    const sixDaysAgo = new Date(Date.now() - 6.5 * 86400 * 1000);
+    expect(isOlderThanMaxPostingAge(sixDaysAgo, 7)).toBe(false);
+    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", sixDaysAgo)).toBe(true);
   });
 
-  it("rejects and discards jobs posted more than 21 days ago (e.g. 22 days ago)", () => {
-    const twentyTwoDaysAgo = new Date(Date.now() - 22 * 86400 * 1000);
-    expect(isOlderThanMaxPostingAge(twentyTwoDaysAgo, 21)).toBe(true);
-    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", twentyTwoDaysAgo)).toBe(false);
+  it("rejects and discards jobs posted more than 7 days ago (e.g. 8 days ago)", () => {
+    const eightDaysAgo = new Date(Date.now() - 8 * 86400 * 1000);
+    expect(isOlderThanMaxPostingAge(eightDaysAgo, 7)).toBe(true);
+    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", eightDaysAgo)).toBe(false);
   });
 
-  it("rejects jobs posted 60 days ago", () => {
-    const sixtyDaysAgo = new Date(Date.now() - 60 * 86400 * 1000);
-    expect(isOlderThanMaxPostingAge(sixtyDaysAgo, 21)).toBe(true);
-    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", sixtyDaysAgo)).toBe(false);
+  it("rejects jobs posted 21 days or 60 days ago", () => {
+    const twentyOneDaysAgo = new Date(Date.now() - 21 * 86400 * 1000);
+    expect(isOlderThanMaxPostingAge(twentyOneDaysAgo, 7)).toBe(true);
+    expect(isStrictlyRemoteDeveloperRole("Software Engineer", "Remote", "", twentyOneDaysAgo)).toBe(false);
+  });
+
+  it("rejects numbered seniority tiers like Engineer 4 or SDE II", () => {
+    expect(isStrictlyRemoteDeveloperRole("Full-stack Engineer 4", "Remote", "")).toBe(false);
+    expect(isStrictlyRemoteDeveloperRole("Software Dev Engineer II", "Remote", "")).toBe(false);
+    expect(isStrictlyRemoteDeveloperRole("Software Engineer 3", "Remote", "")).toBe(false);
   });
 });
 
@@ -444,3 +453,49 @@ describe("sanitizeRoleTitle", () => {
     expect(sanitizeRoleTitle("Software Engineer - Remote")).toBe("Software Engineer");
   });
 });
+
+// ─── EarlyCareerTier & calculateEarlyBirdScore ────────────────────────────────
+
+describe("determineEarlyCareerTier & calculateEarlyBirdScore", () => {
+  it("classifies Tier 1 Remote Internships", () => {
+    expect(determineEarlyCareerTier("Software Engineer Intern")).toBe(EarlyCareerTier.TIER_1_INTERNSHIP);
+    expect(determineEarlyCareerTier("Frontend Developer Co-op")).toBe(EarlyCareerTier.TIER_1_INTERNSHIP);
+    expect(determineEarlyCareerTier("Web Development Apprentice")).toBe(EarlyCareerTier.TIER_1_INTERNSHIP);
+  });
+
+  it("classifies Tier 2 0-Experience Entry Level", () => {
+    expect(determineEarlyCareerTier("Entry Level Software Engineer")).toBe(EarlyCareerTier.TIER_2_ZERO_EXPERIENCE);
+    expect(determineEarlyCareerTier("Junior Software Engineer", "No prior experience required.")).toBe(EarlyCareerTier.TIER_2_ZERO_EXPERIENCE);
+    expect(determineEarlyCareerTier("Fresher Software Developer")).toBe(EarlyCareerTier.TIER_2_ZERO_EXPERIENCE);
+  });
+
+  it("classifies Tier 3 0-1 Year Experience", () => {
+    expect(determineEarlyCareerTier("Junior Developer (0-1 Year)")).toBe(EarlyCareerTier.TIER_3_ZERO_TO_ONE_YEAR);
+    expect(determineEarlyCareerTier("Associate Software Engineer")).toBe(EarlyCareerTier.TIER_3_ZERO_TO_ONE_YEAR);
+  });
+
+  it("rejects Senior, Staff, Lead, SDE II+, and Engineer 4 as INELIGIBLE", () => {
+    expect(determineEarlyCareerTier("Senior Software Engineer")).toBe(EarlyCareerTier.INELIGIBLE);
+    expect(determineEarlyCareerTier("Software Dev Engineer II")).toBe(EarlyCareerTier.INELIGIBLE);
+    expect(determineEarlyCareerTier("Full-stack Engineer 4")).toBe(EarlyCareerTier.INELIGIBLE);
+    expect(determineEarlyCareerTier("Software Engineer", "Requires at least 5 years experience")).toBe(EarlyCareerTier.INELIGIBLE);
+  });
+
+  it("calculates Early Bird Score boosting fresh postings (<24h = 3.0x, 1-2d = 2.0x)", () => {
+    const now = Date.now();
+    const fourHoursAgo = new Date(now - 4 * 3600 * 1000);
+    const thirtyHoursAgo = new Date(now - 30 * 3600 * 1000);
+    const fiveDaysAgo = new Date(now - 5 * 86400 * 1000);
+    const eightDaysAgo = new Date(now - 8 * 86400 * 1000);
+
+    // Tier 1 (1000 base):
+    expect(calculateEarlyBirdScore(EarlyCareerTier.TIER_1_INTERNSHIP, fourHoursAgo, now)).toBe(3000); // 3x
+    expect(calculateEarlyBirdScore(EarlyCareerTier.TIER_1_INTERNSHIP, thirtyHoursAgo, now)).toBe(2000); // 2x
+    expect(calculateEarlyBirdScore(EarlyCareerTier.TIER_1_INTERNSHIP, fiveDaysAgo, now)).toBe(800); // 0.8x
+    expect(calculateEarlyBirdScore(EarlyCareerTier.TIER_1_INTERNSHIP, eightDaysAgo, now)).toBe(0); // stale
+
+    // Tier 2 (750 base):
+    expect(calculateEarlyBirdScore(EarlyCareerTier.TIER_2_ZERO_EXPERIENCE, fourHoursAgo, now)).toBe(2250); // 750 * 3 = 2250
+  });
+});
+

@@ -3,6 +3,11 @@ import { db } from "@/lib/db";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import {
+  generateDeterministicOutreach,
+  OutreachTone,
+} from "@/lib/outreachGenerator";
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -48,16 +53,36 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Fetch Job Posting
-    const job = await db.jobPosting.findUnique({
+    // 2. Fetch Job (support both JobPosting and Opportunity)
+    let company = "Company";
+    let title = "Software Engineer";
+    let category = "Engineering";
+    let rawDescription = "";
+
+    const jobPosting = await db.jobPosting.findUnique({
       where: { id: jobPostingId },
     });
 
-    if (!job) {
-      return NextResponse.json(
-        { success: false, error: "Job posting not found" },
-        { status: 404 }
-      );
+    if (jobPosting) {
+      company = jobPosting.company;
+      title = jobPosting.title;
+      category = jobPosting.category;
+      rawDescription = jobPosting.rawDescription;
+    } else {
+      const opportunity = await db.opportunity.findUnique({
+        where: { id: jobPostingId },
+      });
+      if (opportunity) {
+        company = opportunity.company;
+        title = opportunity.title;
+        category = opportunity.category;
+        rawDescription = opportunity.rawDescription;
+      } else {
+        return NextResponse.json(
+          { success: false, error: "Job posting not found" },
+          { status: 404 }
+        );
+      }
     }
 
     const candidateName = profile.fullName;
@@ -65,61 +90,45 @@ export async function POST(req: Request) {
     const topProject = profile.projects[0]?.title || "high-throughput cloud applications";
     const topProjectTech = profile.projects[0]?.techStack || "TypeScript, Next.js, and distributed services";
 
-    const recruiterSearchQuery = `${job.company} ${job.category || "Engineering"} Recruiter OR Hiring Manager`;
-    const recruiterSearchUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
-      recruiterSearchQuery
-    )}`;
+    const candidateContext = {
+      fullName: candidateName,
+      role: candidateRole,
+      email: profile.email,
+      phone: profile.phone,
+      portfolioUrl: profile.portfolioUrl,
+      githubUrl: profile.githubUrl,
+      linkedinUrl: profile.linkedinUrl,
+      topProject,
+      topProjectTech,
+    };
 
-    // Fallback deterministic templates (rock solid)
-    const fallbackColdEmailSubject = `Application for ${job.title} — ${candidateName}`;
-    const fallbackColdEmailBody = `Hi Team at ${job.company},
+    const jobContext = {
+      company,
+      title,
+      category,
+      rawDescription,
+    };
 
-I noticed your open ${job.title} position and wanted to reach out directly. 
-
-As a ${candidateRole}, I specialize in building performant, resilient systems with ${topProjectTech}. Recently, I engineered ${topProject}, focusing on scalable architecture, clean API contracts, and high availability.
-
-Given ${job.company}'s focus on innovation, I'm confident my background aligns well with the challenges your engineering team tackles.
-
-I would love to learn more about the team's roadmap. Could we connect for a brief 10-minute chat this week?
-
-Best regards,
-${candidateName}
-${profile.email} | ${profile.portfolioUrl || profile.githubUrl || ""}`;
-
-    const fallbackLinkedinNote = `Hi! I noticed the ${job.title} role at ${job.company}. I'm a ${candidateRole} specializing in ${topProjectTech}. Would love to connect and follow ${job.company}'s work! — ${candidateName}`.slice(0, 298);
-
-    const fallbackInMail = `Hi,
-
-I came across the ${job.title} opening at ${job.company} and was immediately drawn to the technical scope. 
-
-With deep hands-on experience in ${topProjectTech}, I recently developed ${topProject}. I have a proven track record of shipping production-grade code with high reliability.
-
-Are you the right person to speak with regarding this position, or could you point me toward the hiring lead? 
-
-Thanks for your time,
-${candidateName}
-${profile.linkedinUrl || ""}`;
-
-    const fallbackTalkingPoints = [
-      `Deep expertise in ${topProjectTech} directly relevant to ${job.company}`,
-      `Production experience delivering ${topProject}`,
-      `Immediate availability for remote full-time opportunities`,
-    ];
+    const deterministic = generateDeterministicOutreach({
+      job: jobContext,
+      candidate: candidateContext,
+      tone: tone as OutreachTone,
+    });
 
     // Try AI generation via multi-LLM router
     try {
-      const prompt = `You are an elite executive career strategist. Draft high-converting cold outreach materials for a candidate applying to a remote role.
+      const prompt = `You are an elite career outreach strategist. Draft high-converting cold outreach materials for a candidate applying to a remote role.
 
-Target Company: ${job.company}
-Target Role: ${job.title}
-Job Summary: ${job.rawDescription.slice(0, 900)}
+Target Company: ${company}
+Target Role: ${title}
+Job Summary: ${rawDescription.slice(0, 900)}
 
 Candidate Profile:
 Name: ${candidateName}
 Headline: ${candidateRole}
 Top Project: ${topProject} (${topProjectTech})
 Email: ${profile.email}
-Tone: ${tone}
+Tone: ${tone} (Options: intern_referral = Summer 2026 student internship/co-op inquiry; new_grad = entry-level fast-ramping engineer; direct = engineering proof; executive = senior architecture alignment)
 
 Return a valid JSON object strictly matching this schema:
 {
@@ -142,15 +151,16 @@ Return a valid JSON object strictly matching this schema:
         return NextResponse.json({
           success: true,
           data: {
-            company: job.company,
-            jobTitle: job.title,
-            recruiterSearchUrl,
-            recruiterSearchQuery,
-            coldEmailSubject: parsed.coldEmailSubject || fallbackColdEmailSubject,
-            coldEmailBody: parsed.coldEmailBody || fallbackColdEmailBody,
-            linkedinConnectionNote: (parsed.linkedinConnectionNote || fallbackLinkedinNote).slice(0, 300),
-            linkedinInMail: parsed.linkedinInMail || fallbackInMail,
-            keyTalkingPoints: parsed.keyTalkingPoints || fallbackTalkingPoints,
+            company,
+            jobTitle: title,
+            recruiterSearchUrl: deterministic.recruiterSearchUrl,
+            recruiterSearchQuery: deterministic.recruiterSearchQuery,
+            coldEmailSubject: parsed.coldEmailSubject || deterministic.coldEmailSubject,
+            coldEmailBody: parsed.coldEmailBody || deterministic.coldEmailBody,
+            linkedinConnectionNote: (parsed.linkedinConnectionNote || deterministic.linkedinConnectionNote).slice(0, 300),
+            linkedinInMail: parsed.linkedinInMail || deterministic.linkedinInMail,
+            keyTalkingPoints: parsed.keyTalkingPoints || deterministic.keyTalkingPoints,
+            tone,
           },
         });
       }
@@ -161,17 +171,7 @@ Return a valid JSON object strictly matching this schema:
     // Return deterministic result
     return NextResponse.json({
       success: true,
-      data: {
-        company: job.company,
-        jobTitle: job.title,
-        recruiterSearchUrl,
-        recruiterSearchQuery,
-        coldEmailSubject: fallbackColdEmailSubject,
-        coldEmailBody: fallbackColdEmailBody,
-        linkedinConnectionNote: fallbackLinkedinNote,
-        linkedinInMail: fallbackInMail,
-        keyTalkingPoints: fallbackTalkingPoints,
-      },
+      data: deterministic,
     });
   } catch (error) {
     console.error("Outreach generation error:", error);
