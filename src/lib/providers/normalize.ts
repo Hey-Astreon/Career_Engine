@@ -479,7 +479,7 @@ export function determineOpportunitySignals(job: {
   }
 
   // NICHE_SOURCE Signal Rule
-  const nicheSources = ["HN_HIRING", "WEWORKREMOTELY", "JOBICY", "ARBEITNOW", "HIMALAYAS", "YC_JOBS"];
+  const nicheSources = ["HN_HIRING", "WEWORKREMOTELY", "JOBICY", "ARBEITNOW", "HIMALAYAS", "YC_JOBS", "LFX_MENTORSHIP", "NODESK"];
   if (job.providerKey && nicheSources.includes(job.providerKey)) {
     signals.push("NICHE_SOURCE");
   }

@@ -526,6 +526,12 @@ npm run dev
   - **2. Outreach Studio UI (`/outreach`):** Added interactive tone buttons and strategic context banners for students and new grads. Authored `tests/outreach-generator.test.ts` (4/4 tests passing).
   - **3. Extension Build Automation:** Hooked `node scripts/package-extension.js` into `"build"` and added `"test": "vitest run"` in `package.json`, ensuring `public/downloads/astrepilot-extension.zip` is automatically packaged and fresh on every build.
 
+- [x] **Phase 34: Remote-Friendly Student Internship Platform Expansion (LFX Mentorship & NoDesk)**
+  - **1. Linux Foundation LFX Mentorship (`LFXMentorshipProvider`):** Implemented direct ingestion of CNCF/Linux Foundation paid remote open-source mentorship projects (`cncf/mentoring` GitHub raw markdown), extracting 70+ active engineering projects across Kubernetes, Antrea, Envoy Gateway, Cilium, and Harbor with automatic `EarlyCareerTier.TIER_1_INTERNSHIP` classification.
+  - **2. NoDesk Remote Internships (`NoDeskProvider`):** Implemented parsing of NoDesk's clean RSS XML feed (`https://nodesk.co/remote-jobs/index.xml`), extracting role titles, companies, canonical application links, and publication dates with strict developer and remote gating.
+  - **3. Schema & Normalization Alignment:** Added `LFX_MENTORSHIP` and `NODESK` to `enum PlatformSource` in `prisma/schema.prisma` and registered them as `NICHE_SOURCE` in `determineOpportunitySignals()`.
+  - **4. Test Suite & Diagnostics:** Authored `tests/lfx-provider.test.ts` (2/2 passing) and `tests/nodesk-provider.test.ts` (2/2 passing), achieving 100% pass rate across all 28 test suites (301/301 tests).
+
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
 - **Dedicated Cloud Server:** 4 ARM64 OCPUs, 24 GB RAM, 4 Gbps Network Bandwidth, 46.6 GB Boot Volume (Oracle Always-Free; ~22 GB idle memory).

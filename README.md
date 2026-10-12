@@ -21,11 +21,11 @@
 
 ## 🌟 Core System Pillars
 
-### 1. 🌐 19-Source Remote Discovery Pipeline (100% Operational)
-A resilient, concurrent scraping engine executing via `Promise.allSettled()` with bounded watchdog timeouts and failure isolation across 19 global tech platforms:
+### 1. 🌐 21-Source Remote Discovery Pipeline (100% Operational)
+A resilient, concurrent scraping engine executing via `Promise.allSettled()` with bounded watchdog timeouts and failure isolation across 21 global tech platforms:
 - **Direct ATS Portals:** Greenhouse, Ashby, Lever, Recruitee, SmartRecruiters, Workable
-- **Developer & Tech Communities:** HackerNews Who is Hiring, Simplify (New Grad & Internships), Arc.dev, BuiltIn, LinkedIn, Micro1
-- **Curated Remote Boards:** Himalayas, WeWorkRemotely, Jobicy, RemoteOK, Remotive, Arbeitnow, HiringCafe
+- **Developer, Open Source & Student Fellowships:** Linux Foundation LFX Mentorship (CNCF), Simplify (Summer Internships & New Grad), HackerNews Who is Hiring, Arc.dev, BuiltIn, LinkedIn, Micro1
+- **Curated Remote Boards:** NoDesk Remote, Himalayas, WeWorkRemotely, Jobicy, RemoteOK, Remotive, Arbeitnow, HiringCafe
 
 ### 2. 🎯 Match Studio & 2-Stage AI Scoring
 - **Stage 1 (Deterministic Fast Filter):** Evaluates experience bounds, posting recency, and keyword overlap in **< 10ms** across entire feeds.

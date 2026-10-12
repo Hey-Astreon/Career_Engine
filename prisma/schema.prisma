@@ -71,6 +71,8 @@ enum PlatformSource {
   ARC_DEV
   BUILTIN
   THEHUB
+  LFX_MENTORSHIP
+  NODESK
 }
 
 model ProviderSyncState {

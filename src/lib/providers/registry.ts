@@ -8,6 +8,8 @@ import { HackerNewsProvider } from "./hackernews";
 import { JobicyProvider } from "./jobicy";
 import { SimplifyProvider } from "./simplify";
 import { BuiltInProvider } from "./builtin";
+import { LFXMentorshipProvider } from "./lfx";
+import { NoDeskProvider } from "./nodesk";
 import { generateUrlHash, computeDeduplicationKey, isDirectAtsUrl } from "./dedup";
 import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS, EarlyCareerTier, determineEarlyCareerTier, calculateEarlyBirdScore } from "./normalize";
 import { isValidHttpUrl } from "@/lib/urlValidator";
@@ -22,6 +24,8 @@ export const ACTIVE_PROVIDERS: JobSourceProvider[] = [
   new BuiltInProvider(),
   new HackerNewsProvider(),
   new AshbyProvider(),
+  new LFXMentorshipProvider(),
+  new NoDeskProvider(),
 ];
 
 export interface ProviderRunOptions {
