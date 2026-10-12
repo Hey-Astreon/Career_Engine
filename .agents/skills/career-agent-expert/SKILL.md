@@ -63,9 +63,9 @@ Located in `src/lib/providers/`:
 
 Located in `src/lib/ai/router.ts`:
 1. **Tier 1 (Ultra-Speed): Groq API** — Model: `openai/gpt-oss-120b` (500+ tokens/sec).
-2. **Tier 2 (High-Capacity): NVIDIA NIM** — Model: `meta/llama-3.3-70b-instruct`.
-3. **Tier 3 (High-Throughput): Cerebras AI** — Model: `gpt-oss-120b`.
-4. **Tier 4 (Reliable Cloud): Google Gemini** — Model: `gemini-2.5-flash`.
+2. **Tier 2 (Reliable Cloud): Google Gemini** — Model: `gemini-3.8-flash` (Google Cloud GA, 1M context).
+3. **Tier 3 (High-Throughput): Cerebras AI** — Model: `qwen-3.8-27b` (wafer-scale engine).
+4. **Tier 4 (High-Capacity): NVIDIA NIM** — Model: `meta/llama-4-maverick` (Llama 4 series, vision + text).
 5. **Fallback:** Deterministic heuristic scoring engine if offline or rate-limited.
 
 ---

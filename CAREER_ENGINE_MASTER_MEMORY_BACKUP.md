@@ -136,11 +136,11 @@ Located in `src/lib/ai/router.ts`:
 
 ```mermaid
 graph TD
-    Req[AI Generation / Scoring Request] --> Groq[1. Groq Cloud - gpt-oss-120b / 500+ t/s]
-    Groq -- Error / Timeout 8s --> NIM[2. NVIDIA NIM - Llama 3.3 70B Instruct]
-    NIM -- Error / Timeout 10s --> Cerebras[3. Cerebras AI - gpt-oss-120b]
-    Cerebras -- Error / Timeout 8s --> Gemini[4. Google Gemini - gemini-2.5-flash]
-    Gemini -- Error / Timeout 10s --> Fallback[5. Deterministic Rule-Based Heuristic]
+    Req[AI Generation / Scoring Request] --> Groq[1. Groq Cloud - openai/gpt-oss-120b / 500+ t/s]
+    Groq -- Error / Timeout 8s --> Gemini[2. Google Gemini - gemini-3.8-flash]
+    Gemini -- Error / Timeout 10s --> Cerebras[3. Cerebras AI - qwen-3.8-27b]
+    Cerebras -- Error / Timeout 8s --> NIM[4. NVIDIA NIM - meta/llama-4-maverick]
+    NIM -- Error / Timeout 10s --> Fallback[5. Deterministic Rule-Based Heuristic]
 ```
 
 ### LLM Router Invariants
@@ -394,7 +394,7 @@ npm run dev
 - [x] **Phase 11: 4-Phase System Optimization & Integration (All 4 Steps Complete)**
   - **P1 - 19/19 Healthy Providers:** Hardened `HIRING_CAFE` with resilient Cloudflare 403 handling; expanded `Simplify` timeout to 25s for 10MB JSON datasets; registered all 19 providers in `ACTIVE_PROVIDERS` (`Greenhouse`, `Ashby`, `Simplify`, `ArcDev`, `BuiltIn`, `Himalayas`, `HackerNews`, `LinkedIn`, `WeWorkRemotely`, `Jobicy`, `Micro1`, `RemoteOK`, `Arbeitnow`, `Remotive`, `Lever`, `Recruitee`, `SmartRecruiters`, `Workable`, `HiringCafe`). Live telemetry confirmed 19/19 healthy.
   - **P2 - Candidate Profile Synchronization:** Fixed legacy path bugs in `resumeVariantSelector.ts` to dynamically resolve from active workspace directories (`x:/Career_Engine/2_Ayushi_Raj/14_final_documents/` and `x:/Career_Engine/3_Roushan_Kumar/14_final_documents/`). Verified native PDF ATS text extraction (78,000+ characters, `isParseable: true`).
-  - **P3 - Multi-LLM AI Router & Match Studio:** Re-architected priority cascade to Groq (`openai/gpt-oss-120b`, ~500t/s) and Google Cloud Native Gemini (`gemini-2.5-flash`), Cerebras, NVIDIA NIM, and deterministic fallback. Stage 2 scoring evaluates in <2s and caches in SQLite for 4ms retrieval.
+  - **P3 - Multi-LLM AI Router & Match Studio:** Re-architected priority cascade to Groq (`openai/gpt-oss-120b`, ~500t/s) and Google Cloud Native Gemini (`gemini-3.8-flash`), Cerebras (`qwen-3.8-27b`), NVIDIA NIM (`meta/llama-4-maverick`), and deterministic fallback. Stage 2 scoring evaluates in <2s and caches in SQLite for 4ms retrieval.
   - **P4 - Background Auto-Sync Scheduler & Alert Engine:** Global singleton `DiscoveryScheduler` manages 1-hour recurring auto-scrapes with execution locks (`isExecuting`). Auto-sync active banner and toggle controls wired cleanly to Dashboard and Sidebar.
 - [x] **Phase 12: 1-Click PDF Variant Downloader & Streamer API (Option 1 Complete)**
   - **Streaming & Download API (`/api/resume/download`):** Built high-performance route handler supporting inline preview (`view=inline`) and direct attachment download (`view=attachment`) with strict path traversal defenses (`path.basename()`). Seamlessly resolves locked candidate PDFs from disk (`x:/Career_Engine/2_Ayushi_Raj/14_final_documents/` and `x:/Career_Engine/3_Roushan_Kumar/14_final_documents/`).

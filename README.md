@@ -31,8 +31,8 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 - **Stage 1 (Deterministic Fast Filter):** Evaluates experience bounds, posting recency, and keyword overlap in **< 10ms** across entire feeds.
 - **Stage 2 (Deep Composite Evaluation):** Analyzes role alignment, technical stack depth, and seniority fit using an ultra-fast multi-provider LLM router:
   - **Primary:** Groq (`openai/gpt-oss-120b`, ~500 tokens/sec JSON evaluation).
-  - **Secondary:** Google Cloud Native Gemini (`gemini-2.5-flash`).
-  - **Fallbacks:** Cerebras (`gpt-oss-120b` / `qwen-3.8-27b`) & NVIDIA NIM (`meta/llama-3.2-11b-vision-instruct`).
+  - **Secondary:** Google Cloud Native Gemini (`gemini-3.8-flash`, 1M context GA).
+  - **Fallbacks:** Cerebras (`qwen-3.8-27b`) & NVIDIA NIM (`meta/llama-4-maverick`).
 - **Sub-5ms Caching:** Evaluated scores are persisted in LibSQL/SQLite for instant retrieval on subsequent visits.
 
 ### 3. 👤 Candidate Profile & Targeted Asset Synchronization
@@ -158,10 +158,10 @@ In your production `.env` file on the Oracle Cloud server, configure the followi
 | :--- | :--- |
 | `TURSO_DATABASE_URL` | Remote Turso LibSQL connection (`libsql://...`) |
 | `TURSO_AUTH_TOKEN` | Turso database JWT auth token |
-| `GROQ_API_KEY` | Primary LLM inference key (`gpt-oss-120b`, ~500 t/s) |
-| `GEMINI_API_KEY` | Google Cloud Gemini 2.5 Flash API key |
-| `CEREBRAS_API_KEY` | Cerebras fast fallback API key |
-| `NVIDIA_NIM_API_KEY` | NVIDIA NIM Llama 3.3 reasoning key |
+| `GROQ_API_KEY` | Primary LLM inference key (`openai/gpt-oss-120b`, ~500 t/s) |
+| `GEMINI_API_KEY` | Google Cloud Gemini 3.8 Flash API key (`gemini-3.8-flash`) |
+| `CEREBRAS_API_KEY` | Cerebras fast fallback API key (`qwen-3.8-27b`) |
+| `NVIDIA_NIM_API_KEY` | NVIDIA NIM enterprise reasoning key (`meta/llama-4-maverick`) |
 | `NEXTAUTH_SECRET` | NextAuth session encryption secret |
 | `NEXTAUTH_URL` | Production deployment URL (`https://astrework.app`) |
 
