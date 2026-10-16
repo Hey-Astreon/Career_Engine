@@ -10,6 +10,7 @@ import { SimplifyProvider } from "./simplify";
 import { BuiltInProvider } from "./builtin";
 import { LFXMentorshipProvider } from "./lfx";
 import { NoDeskProvider } from "./nodesk";
+import { InternListProvider } from "./internlist";
 import { generateUrlHash, computeDeduplicationKey, isDirectAtsUrl } from "./dedup";
 import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS, EarlyCareerTier, determineEarlyCareerTier, calculateEarlyBirdScore } from "./normalize";
 import { isValidHttpUrl } from "@/lib/urlValidator";
@@ -26,6 +27,7 @@ export const ACTIVE_PROVIDERS: JobSourceProvider[] = [
   new AshbyProvider(),
   new LFXMentorshipProvider(),
   new NoDeskProvider(),
+  new InternListProvider(),
 ];
 
 export interface ProviderRunOptions {

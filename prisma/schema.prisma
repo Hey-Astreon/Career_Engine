@@ -73,6 +73,7 @@ enum PlatformSource {
   THEHUB
   LFX_MENTORSHIP
   NODESK
+  INTERN_LIST
 }
 
 model ProviderSyncState {
