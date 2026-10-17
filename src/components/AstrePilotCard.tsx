@@ -219,7 +219,7 @@ export default function AstrePilotCard() {
                   <span className="flex items-center gap-1 font-semibold text-[var(--green)]">
                     <Check className="w-3 h-3" /> Manifest V3 Ready
                   </span>
-                  <span>Version 1.0.0</span>
+                  <span>Version 1.1.0</span>
                 </div>
 
                 <button
