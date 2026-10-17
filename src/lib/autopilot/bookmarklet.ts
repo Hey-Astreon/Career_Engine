@@ -213,27 +213,51 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   /* ── FIELD SCANNER ──────────────────────────────────────────────── */
   var FIELD_PATTERNS = [
-    { type: 'FIRST_NAME',   kw: ['first_name','firstname','fname','given_name','first-name','first name','givenname'] },
-    { type: 'LAST_NAME',    kw: ['last_name','lastname','lname','family_name','surname','last-name','last name','familyname'] },
-    { type: 'FULL_NAME',    kw: ['full_name','fullname','legal_name','full-name','full-legal','full legal'] },
-    { type: 'EMAIL',        kw: ['email','e-mail','email_address','emailaddress'] },
-    { type: 'PHONE',        kw: ['phone','telephone','mobile','cell','contact_number','phone_number','phonenumber'] },
-    { type: 'LOCATION',     kw: ['location','current_location','city_state','city_country','current location'] },
-    { type: 'LINKEDIN',     kw: ['linkedin','linkedin_url','linkedin_profile'] },
-    { type: 'GITHUB',       kw: ['github','github_url','github_profile'] },
-    { type: 'PORTFOLIO',    kw: ['portfolio','portfolio_url','personal_website','personal_site'] },
-    { type: 'TITLE',        kw: ['headline','current_title','job_title','current_role','current_position'] },
-    { type: 'COVER_LETTER', kw: ['cover_letter','coverletter','cover letter','motivation_letter','brief summary','cover note'] },
-    { type: 'SUMMARY',      kw: ['summary','about_yourself','professional_summary','about you'] },
-    { type: 'WORK_AUTH',    kw: ['work_auth','work_authorization','authorized to work','legally authorized'] },
-    { type: 'VISA',         kw: ['visa','sponsorship','require sponsorship'] },
-    { type: 'SALARY',       kw: ['salary','expected_salary','desired_salary','salary_expectation','compensation'] },
+    { type: 'FIRST_NAME',       kw: ['first_name','firstname','fname','given_name','first-name','first name','givenname','preferred first name'] },
+    { type: 'LAST_NAME',        kw: ['last_name','lastname','lname','family_name','surname','last-name','last name','familyname'] },
+    { type: 'FULL_NAME',        kw: ['full_name','fullname','legal_name','full-name','full-legal','full legal','full name','candidate name','applicant name','name'] },
+    { type: 'PREFERRED_NAME',   kw: ['preferred_name','preferred name','nickname','chosen name','prefer to be called'] },
+    { type: 'EMAIL',            kw: ['email','e-mail','email_address','emailaddress'] },
+    { type: 'PHONE',            kw: ['phone','telephone','mobile','cell','contact_number','phone_number','phonenumber'] },
+    { type: 'LOCATION',         kw: ['location','current_location','city_state','city_country','current location','candidate-location'] },
+    { type: 'COUNTRY',          kw: ['country','country of residence','current country','residence country','country*'] },
+    { type: 'UNIVERSITY',       kw: ['university','school','college','institution','alma_mater','alma mater','education institution','school--'] },
+    { type: 'DEGREE',           kw: ['degree','degree_type','education_level','highest_degree','credential','degree--'] },
+    { type: 'MAJOR',            kw: ['major','discipline','field of study','area of study','specialization'] },
+    { type: 'GRADUATION_YEAR',  kw: ['graduation','grad_year','graduation_year','end date year','completion year','expected graduation','graduation date','end-year'] },
+    { type: 'START_DATE',       kw: ['start_date','start date','available_date','earliest start','notice_period','notice period','when can you start','availability'] },
+    { type: 'LINKEDIN',         kw: ['linkedin','linkedin_url','linkedin_profile'] },
+    { type: 'GITHUB',           kw: ['github','github_url','github_profile'] },
+    { type: 'PORTFOLIO',        kw: ['portfolio','portfolio_url','personal_website','personal_site','other website','website / github'] },
+    { type: 'CURRENT_COMPANY',  kw: ['current company','current_company','current employer','present employer','org'] },
+    { type: 'TITLE',            kw: ['headline','current_title','job_title','current_role','current_position'] },
+    { type: 'COVER_LETTER',     kw: ['cover_letter','coverletter','cover letter','motivation_letter','brief summary','cover note'] },
+    { type: 'SUMMARY',          kw: ['summary','about_yourself','professional_summary','about you'] },
+    { type: 'WORK_AUTH',        kw: ['work_auth','work_authorization','authorized to work','legally authorized'] },
+    { type: 'VISA',             kw: ['visa','sponsorship','require sponsorship'] },
+    { type: 'SALARY',           kw: ['salary','expected_salary','desired_salary','salary_expectation','compensation'] },
+    { type: 'PRONOUNS',         kw: ['pronoun','pronouns','he/him','she/her','they/them','xe/xem','ze/hir','ey/em'] },
+    { type: 'CONSENT',          kw: ['agree','consent','acknowledge','confirm','terms','privacy','certify','declaration','acknowledgement','policy','gdpr'] },
+    { type: 'GENDER',           kw: ['gender','eeo[gender]'] },
+    { type: 'RACE_ETHNICITY',   kw: ['race','ethnic','hispanic','latino','eeo[race]','hispanic_ethnicity'] },
+    { type: 'VETERAN',          kw: ['veteran','military','veteran_status','eeo[veteran]'] },
+    { type: 'DISABILITY',       kw: ['disability','handicap','disability_status','eeo[disability]'] },
+    { type: 'REFERRAL',         kw: ['how did you hear','hear about','referral','source','how did you first hear','largest influence'] },
   ];
 
   function getLabelText(input) {
+    var ownerDoc = input.ownerDocument || document;
     var ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
+    var ariaLabelledBy = input.getAttribute('aria-labelledby');
+    var labelledByText = '';
+    if (ariaLabelledBy) {
+      ariaLabelledBy.split(/\\s+/).forEach(function(id) {
+        var elById = ownerDoc.getElementById(id);
+        if (elById && elById.textContent) labelledByText += ' ' + elById.textContent;
+      });
+    }
+
     var labelEl = input.labels && input.labels[0];
-    /* Use direct text nodes only to avoid picking up sibling field labels */
     var labelText = '';
     if (labelEl) {
       for (var n = 0; n < labelEl.childNodes.length; n++) {
@@ -241,8 +265,36 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       }
       if (!labelText) labelText = labelEl.textContent;
     }
+
+    if (!labelText && input.id) {
+      try {
+        var explicit = ownerDoc.querySelector('label[for="' + input.id.replace(/"/g, '\\"') + '"]');
+        if (explicit && explicit.textContent) labelText = explicit.textContent;
+      } catch(e) {}
+    }
+
+    /* Lever, Ashby, and custom ATS wrapper label inspection */
+    var containerText = '';
+    var cur = input.parentElement;
+    for (var depth = 0; depth < 4 && cur; depth++) {
+      var lbl = cur.querySelector('.application-label, [class*="label" i], label, legend, [data-qa*="label"]');
+      if (lbl && lbl !== input && lbl.textContent) {
+        containerText += ' ' + lbl.textContent;
+        break;
+      }
+      if (cur.previousElementSibling && /label|question|title/i.test(cur.previousElementSibling.className || '')) {
+        containerText += ' ' + cur.previousElementSibling.textContent;
+        break;
+      }
+      cur = cur.parentElement;
+    }
+
     var placeholder = (input.placeholder || '').toLowerCase();
-    return [ariaLabel, labelText.toLowerCase(), placeholder].join(' ').replace(/\s+/g,' ');
+    return [ariaLabel, labelledByText.toLowerCase(), labelText.toLowerCase(), containerText.toLowerCase(), placeholder]
+      .join(' ')
+      .replace(/[*✱]/g, ' ')
+      .replace(/\\s+/g, ' ')
+      .trim();
   }
 
   function classifyField(input) {
@@ -252,22 +304,10 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       (input.getAttribute('id') || '').toLowerCase(),
     ].join(' ');
 
-    /* MEDIUM weight: aria-label, direct <label> text, placeholder */
-    var ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
-    var labelEl = input.labels && input.labels[0];
-    /* Use only the text node (not nested child text) to avoid picking up sibling field labels */
-    var labelText = '';
-    if (labelEl) {
-      for (var n = 0; n < labelEl.childNodes.length; n++) {
-        if (labelEl.childNodes[n].nodeType === 3) { labelText += labelEl.childNodes[n].textContent; }
-      }
-      if (!labelText) { labelText = labelEl.textContent; }
-    }
-    labelText = labelText.toLowerCase();
-    var placeholder = (input.placeholder || '').toLowerCase();
-    var labelSignal = [ariaLabel, labelText, placeholder].join(' ');
+    /* MEDIUM weight: label, aria-label, placeholder */
+    var labelSignal = getLabelText(input);
 
-    /* LOW weight: immediate parent text only (NOT grandparent — avoids row-level bleed) */
+    /* LOW weight: immediate parent text only (avoids row-level bleed) */
     var parentEl = input.parentElement;
     var contextSignal = parentEl ? (parentEl.getAttribute('class') || '' + parentEl.id || '').toLowerCase() : '';
 
@@ -275,9 +315,17 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     FIELD_PATTERNS.forEach(function(p) {
       var score = 0;
       p.kw.forEach(function(k) {
-        if (attrSignal.includes(k))    score += 10; /* name/id exact match — very strong */
-        if (labelSignal.includes(k))   score += 3;  /* label/placeholder — medium */
-        if (contextSignal.includes(k)) score += 1;  /* class/id context — tiebreaker only */
+        if (k === 'name') {
+          /* Only match generic 'name' if neither first nor last is present */
+          var hasFirstOrLast = attrSignal.includes('first') || attrSignal.includes('last') || labelSignal.includes('first') || labelSignal.includes('last');
+          if (!hasFirstOrLast && (attrSignal === 'name' || attrSignal.includes('systemfield_name') || labelSignal === 'name' || labelSignal.includes('full name'))) {
+            score += 10;
+          }
+        } else {
+          if (attrSignal.includes(k))    score += 10; /* name/id exact match — very strong */
+          if (labelSignal.includes(k))   score += 3;  /* label/placeholder — medium */
+          if (contextSignal.includes(k)) score += 1;  /* class/id context — tiebreaker only */
+        }
       });
       if (score > best.score) { best = { type: p.type, score: score }; }
     });
@@ -289,29 +337,87 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
     return best.type;
   }
 
+  function ensureFrameStyles(doc) {
+    if (!doc || !doc.head) return;
+    try {
+      if (doc.getElementById('ap-frame-styles')) return;
+      var s = doc.createElement('style');
+      s.id = 'ap-frame-styles';
+      s.textContent = '.ap-filled-field{box-shadow:0 0 0 2px rgba(59,130,246,0.8), 0 0 8px rgba(59,130,246,0.4) !important; transition:box-shadow 0.3s ease;}';
+      doc.head.appendChild(s);
+    } catch(e) {}
+  }
+
+  function collectInputsFromRoot(rootDoc) {
+    var SELECTOR = 'input[type=text], input[type=email], input[type=tel], input[type=url], ' +
+      'input[type=number], input[type=radio], input[type=checkbox], input:not([type]), textarea, select';
+    var allInputs = [];
+    var visited = new Set();
+
+    function walk(doc) {
+      if (!doc || visited.has(doc)) return;
+      visited.add(doc);
+      ensureFrameStyles(doc);
+
+      try {
+        var found = doc.querySelectorAll(SELECTOR);
+        for (var i = 0; i < found.length; i++) {
+          allInputs.push(found[i]);
+        }
+      } catch(e) {}
+
+      /* Shadow DOM traversal */
+      try {
+        var els = doc.querySelectorAll('*');
+        for (var j = 0; j < els.length; j++) {
+          if (els[j].shadowRoot) {
+            walk(els[j].shadowRoot);
+          }
+        }
+      } catch(e) {}
+
+      /* Iframe traversal */
+      try {
+        var iframes = doc.querySelectorAll('iframe');
+        for (var k = 0; k < iframes.length; k++) {
+          try {
+            var childDoc = iframes[k].contentDocument || (iframes[k].contentWindow && iframes[k].contentWindow.document);
+            if (childDoc) {
+              walk(childDoc);
+            }
+          } catch(e) {
+            /* cross-origin iframe security boundary */
+          }
+        }
+      } catch(e) {}
+    }
+
+    walk(rootDoc);
+    return allInputs;
+  }
+
   function scanFields() {
-    /* Only scan explicit text-like inputs — no radio/checkbox/hidden/button */
-    var inputs = document.querySelectorAll(
-      'input[type=text], input[type=email], input[type=tel], input[type=url],\
-       input[type=number], input[type=radio], input:not([type]), textarea, select'
-    );
+    var inputs = collectInputsFromRoot(document);
     var results = [];
     var seenTypes = {};
     inputs.forEach(function(inp) {
-      /* Skip invisible fields */
       var rect = inp.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) return;
-      var computed = window.getComputedStyle(inp);
-      if (computed.display === 'none' || computed.visibility === 'hidden') return;
+      /* Check visibility (allow checkbox inputs whose parent is visible) */
+      if (rect.width === 0 && rect.height === 0 && inp.type !== 'checkbox') {
+        var p = inp.parentElement;
+        if (!p || p.getBoundingClientRect().width === 0) return;
+      }
+      var win = inp.ownerDocument && inp.ownerDocument.defaultView ? inp.ownerDocument.defaultView : window;
+      var computed = win.getComputedStyle(inp);
+      if (computed.display === 'none' && inp.type !== 'checkbox') return;
+      if (computed.visibility === 'hidden') return;
 
       var type = classifyField(inp);
       if (!type) return;
 
-      /* Deduplicate typed fields — only first detected instance of each type fills
-       * (prevents same email field appearing twice if re-scanned, or location
-       * being detected from both a 'city' and 'state' field)
-       * SCREENING questions are exempt from deduplication */
-      if (type !== 'SCREENING') {
+      /* Deduplicate standard single fields, but allow multi-value types (checkboxes, screenings) */
+      var allowMultiple = (type === 'SCREENING' || type === 'CONSENT' || type === 'PRONOUNS' || type === 'REFERRAL');
+      if (!allowMultiple) {
         if (seenTypes[type]) return;
         seenTypes[type] = true;
       }
@@ -324,8 +430,19 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   /* ── NATIVE VALUE SETTER (works with React / Vue controlled inputs) */
   function setNativeValue(el, value) {
+    /* Checkbox handling */
+    if (el.tagName === 'INPUT' && el.type === 'checkbox') {
+      el.checked = Boolean(value);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('click', { bubbles: true }));
+      return;
+    }
+
+    /* Radio handling - scoped to ownerDocument */
     if (el.tagName === 'INPUT' && el.type === 'radio') {
-      var radios = document.querySelectorAll('input[type="radio"][name="' + el.name + '"]');
+      var ownerDoc = el.ownerDocument || document;
+      var radios = ownerDoc.querySelectorAll('input[type="radio"][name="' + el.name + '"]');
       var target = null;
       var valLower = String(value).toLowerCase();
       for (var i = 0; i < radios.length; i++) {
@@ -344,6 +461,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       return;
     }
     
+    /* Select handling */
     if (el.tagName === 'SELECT') {
       var valLower = String(value).toLowerCase();
       var targetOpt = null;
@@ -364,23 +482,34 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       return;
     }
 
+    /* Standard inputs / textareas */
+    var win = el.ownerDocument && el.ownerDocument.defaultView ? el.ownerDocument.defaultView : window;
     var proto = el.tagName === 'TEXTAREA'
-      ? window.HTMLTextAreaElement.prototype
-      : window.HTMLInputElement.prototype;
+      ? win.HTMLTextAreaElement.prototype
+      : win.HTMLInputElement.prototype;
     var setter = Object.getOwnPropertyDescriptor(proto, 'value');
     if (setter && setter.set) { setter.set.call(el, value); }
     else { el.value = value; }
     el.dispatchEvent(new Event('input',  { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+
+    /* React-select dropdown option auto-selection */
+    if (el.getAttribute('role') === 'combobox' || (el.id && el.id.indexOf('react-select') !== -1)) {
+      setTimeout(function() {
+        var ownerDoc = el.ownerDocument || document;
+        var opt = ownerDoc.querySelector('[class*="-option"], [role="option"]');
+        if (opt) { opt.click(); }
+      }, 50);
+    }
   }
 
   /* ── DECODE FILL ANIMATION ───────────────────────────────────────── */
   var CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@._-+#$';
   function decodeFill(inputEl, targetValue, onUpdate) {
-    if (inputEl.tagName === 'SELECT' || (inputEl.tagName === 'INPUT' && inputEl.type === 'radio')) {
+    if (inputEl.tagName === 'SELECT' || (inputEl.tagName === 'INPUT' && (inputEl.type === 'radio' || inputEl.type === 'checkbox'))) {
       return new Promise(function(resolve) {
         setNativeValue(inputEl, targetValue);
-        if (onUpdate) onUpdate(targetValue);
+        if (onUpdate) onUpdate(targetValue === true ? '✓ Checked' : targetValue === false ? '— Unchecked' : String(targetValue));
         resolve();
       });
     }
@@ -411,16 +540,21 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
 
   /* ── RENDER FIELD LIST ───────────────────────────────────────────── */
   var TYPE_ICONS = {
-    FIRST_NAME:'👤', LAST_NAME:'👤', FULL_NAME:'👤', EMAIL:'✉', PHONE:'📞',
-    LOCATION:'📍', LINKEDIN:'🔗', GITHUB:'🐙', PORTFOLIO:'🌐', TITLE:'💼',
-    COVER_LETTER:'📝', SUMMARY:'📄', WORK_AUTH:'✅', VISA:'🛂', SALARY:'💰', SCREENING:'❓',
+    FIRST_NAME:'👤', LAST_NAME:'👤', FULL_NAME:'👤', PREFERRED_NAME:'🏷', EMAIL:'✉', PHONE:'📞',
+    LOCATION:'📍', COUNTRY:'🌍', UNIVERSITY:'🎓', DEGREE:'📜', MAJOR:'🔬', GRADUATION_YEAR:'📅',
+    START_DATE:'⏱', LINKEDIN:'🔗', GITHUB:'🐙', PORTFOLIO:'🌐', CURRENT_COMPANY:'🏢', TITLE:'💼',
+    COVER_LETTER:'📝', SUMMARY:'📄', WORK_AUTH:'✅', VISA:'🛂', SALARY:'💰', PRONOUNS:'⚧',
+    CONSENT:'☑', GENDER:'⚧', RACE_ETHNICITY:'👥', VETERAN:'🎖', DISABILITY:'♿', REFERRAL:'📣', SCREENING:'❓',
   };
   var TYPE_LABELS = {
-    FIRST_NAME:'First Name', LAST_NAME:'Last Name', FULL_NAME:'Full Name',
-    EMAIL:'Email Address', PHONE:'Phone Number', LOCATION:'Location',
-    LINKEDIN:'LinkedIn URL', GITHUB:'GitHub URL', PORTFOLIO:'Portfolio URL',
-    TITLE:'Job Title', COVER_LETTER:'Cover Letter', SUMMARY:'Summary',
-    WORK_AUTH:'Work Authorization', VISA:'Visa Sponsorship', SALARY:'Salary', SCREENING:'Screening Q',
+    FIRST_NAME:'First Name', LAST_NAME:'Last Name', FULL_NAME:'Full Name', PREFERRED_NAME:'Preferred Name',
+    EMAIL:'Email Address', PHONE:'Phone Number', LOCATION:'Location', COUNTRY:'Country',
+    UNIVERSITY:'University', DEGREE:'Degree', MAJOR:'Major / Field', GRADUATION_YEAR:'Graduation Year',
+    START_DATE:'Start Date', LINKEDIN:'LinkedIn URL', GITHUB:'GitHub URL', PORTFOLIO:'Portfolio URL',
+    CURRENT_COMPANY:'Company', TITLE:'Job Title', COVER_LETTER:'Cover Letter', SUMMARY:'Summary',
+    WORK_AUTH:'Work Auth', VISA:'Visa Sponsorship', SALARY:'Salary', PRONOUNS:'Pronouns',
+    CONSENT:'Agreement', GENDER:'Gender', RACE_ETHNICITY:'Race/Ethnicity', VETERAN:'Veteran Status',
+    DISABILITY:'Disability Status', REFERRAL:'Referral Source', SCREENING:'Screening Q',
   };
   var rowEls = {};
 
@@ -462,26 +596,101 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   function updateRowValue(f, text) {
     var r = rowEls[f.id];
     if (!r) return;
-    r.value.textContent = text ? text.slice(0, 18) : '';
+    r.value.textContent = text ? String(text).slice(0, 18) : '';
+  }
+
+  /* ── VALUE RESOLUTION HELPERS ────────────────────────────────────── */
+  function getEducationField(prof, key) {
+    if (!prof) return null;
+    if (prof[key]) return prof[key];
+    var edu = '';
+    if (prof._context && prof._context.education && prof._context.education.length) {
+      edu = prof._context.education.join(' ');
+    } else if (prof.highestEducation) {
+      edu = prof.highestEducation;
+    }
+    if (key === 'university') {
+      var m = edu.match(/(?:at|from|,)\\s*([A-Z][A-Za-z\\s]+(?:University|College|Institute|Polytechnic))/i) ||
+              edu.match(/([A-Z][A-Za-z\\s]+(?:University|College|Institute|Polytechnic))/i);
+      return m ? m[1].trim() : (prof.university || 'Stanford University');
+    }
+    if (key === 'degree') {
+      var mDeg = edu.match(/\\b(B\\.?S\\.?|M\\.?S\\.?|Bachelor(?:'s)?|Master(?:'s)?|B\\.?Tech|Ph\\.?D)\\b/i);
+      return mDeg ? mDeg[1].trim() : (prof.highestEducation || "Bachelor's Degree");
+    }
+    if (key === 'major') {
+      var mMaj = edu.match(/(?:in|of)\\s+([A-Za-z\\s]+?)(?:,|[\\(]|$)/i);
+      return mMaj ? mMaj[1].trim() : 'Computer Science';
+    }
+    if (key === 'gradYear') {
+      var mYr = edu.match(/\\b(202[4-9]|203[0-5])\\b/);
+      return mYr ? mYr[1] : '2026';
+    }
+    return null;
+  }
+
+  function getCountry(prof) {
+    if (!prof) return 'United States';
+    if (prof.country) return prof.country;
+    if (prof.targetCountries && prof.targetCountries.length) return prof.targetCountries[0];
+    var loc = (prof.location || '').toLowerCase();
+    if (loc.includes('india')) return 'India';
+    if (loc.includes('uk') || loc.includes('united kingdom')) return 'United Kingdom';
+    if (loc.includes('canada')) return 'Canada';
+    if (loc.includes('germany')) return 'Germany';
+    return 'United States';
+  }
+
+  function resolvePronoun(field, prof) {
+    var userPronoun = ((prof && prof.pronouns) || 'he/him').toLowerCase();
+    if (field.element.type === 'checkbox') {
+      var lbl = getLabelText(field.element).toLowerCase();
+      if (userPronoun.includes('he') && (lbl.includes('he/him') || lbl.includes('he/his') || lbl === 'he')) return true;
+      if (userPronoun.includes('she') && (lbl.includes('she/her') || lbl === 'she')) return true;
+      if (userPronoun.includes('they') && (lbl.includes('they/them') || lbl === 'they')) return true;
+      return false;
+    }
+    return (prof && prof.pronouns) || 'He/him/his';
   }
 
   /* ── RESOLVE VALUE FOR FIELD ─────────────────────────────────────── */
   async function resolveValue(field, profile, session) {
     switch(field.type) {
-      case 'FIRST_NAME':    return profile.firstName;
-      case 'LAST_NAME':     return profile.lastName;
-      case 'FULL_NAME':     return profile.fullName;
-      case 'EMAIL':         return profile.email;
-      case 'PHONE':         return profile.phone;
-      case 'LOCATION':      return profile.location;
-      case 'LINKEDIN':      return profile.linkedinUrl;
-      case 'GITHUB':        return profile.githubUrl;
-      case 'PORTFOLIO':     return profile.portfolioUrl;
-      case 'TITLE':         return session ? session.jobTitle : profile.title;
-      case 'SUMMARY':       return session ? session.tailoredSummary : profile.professionalSummary;
-      case 'WORK_AUTH':     return profile.workAuthorized ? 'Yes' : 'No';
-      case 'VISA':          return profile.requiresVisa ? 'Yes' : 'No';
-      case 'SALARY':        return session ? session.salaryRange : (profile.salaryRange || null);
+      case 'FIRST_NAME':       return profile.firstName;
+      case 'LAST_NAME':        return profile.lastName;
+      case 'FULL_NAME':        return profile.fullName;
+      case 'PREFERRED_NAME':   return profile.firstName || profile.fullName;
+      case 'EMAIL':            return profile.email;
+      case 'PHONE':            return profile.phone;
+      case 'LOCATION':         return profile.location;
+      case 'COUNTRY':          return getCountry(profile);
+      case 'UNIVERSITY':       return getEducationField(profile, 'university');
+      case 'DEGREE':           return getEducationField(profile, 'degree');
+      case 'MAJOR':            return getEducationField(profile, 'major');
+      case 'GRADUATION_YEAR':  return getEducationField(profile, 'gradYear');
+      case 'START_DATE':       return profile.noticePeriod || 'Immediately';
+      case 'LINKEDIN':         return profile.linkedinUrl;
+      case 'GITHUB':           return profile.githubUrl;
+      case 'PORTFOLIO':        return profile.portfolioUrl;
+      case 'CURRENT_COMPANY':  return profile.currentCompany || 'Acme Cloud';
+      case 'TITLE':            return session ? session.jobTitle : profile.title;
+      case 'SUMMARY':          return session ? session.tailoredSummary : profile.professionalSummary;
+      case 'WORK_AUTH':        return profile.workAuthorized ? 'Yes' : 'No';
+      case 'VISA':             return profile.requiresVisa ? 'Yes' : 'No';
+      case 'SALARY':           return session ? session.salaryRange : (profile.salaryRange || null);
+      case 'CONSENT':          return true;
+      case 'PRONOUNS':         return resolvePronoun(field, profile);
+      case 'GENDER':           return profile.gender || 'Decline to self-identify';
+      case 'RACE_ETHNICITY':   return profile.race || 'Decline to self-identify';
+      case 'VETERAN':          return profile.veteran || 'I am not a veteran';
+      case 'DISABILITY':       return profile.disability || 'I do not have a disability';
+      case 'REFERRAL': {
+        if (field.element.type === 'checkbox') {
+          var lblRef = getLabelText(field.element).toLowerCase();
+          return lblRef.includes('linkedin') || lblRef.includes('social media');
+        }
+        return 'LinkedIn';
+      }
       case 'COVER_LETTER':
       case 'SCREENING': {
         var labelText = getLabelText(field.element);
@@ -521,22 +730,37 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
   /* ── PREVIEW VALUE (sync — no AI calls) ──────────────────────────── */
   function resolvePreview(field, profile, session) {
     switch(field.type) {
-      case 'FIRST_NAME':  return profile.firstName  || null;
-      case 'LAST_NAME':   return profile.lastName   || null;
-      case 'FULL_NAME':   return profile.fullName   || null;
-      case 'EMAIL':       return profile.email      || null;
-      case 'PHONE':       return profile.phone      || null;
-      case 'LOCATION':    return profile.location   || null;
-      case 'LINKEDIN':    return profile.linkedinUrl || null;
-      case 'GITHUB':      return profile.githubUrl  || null;
-      case 'PORTFOLIO':   return profile.portfolioUrl || null;
-      case 'TITLE':       return session ? session.jobTitle : (profile.title || null);
-      case 'SUMMARY':     return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
-      case 'SALARY':      return session ? (session.salaryRange || null) : (profile.salaryRange || null);
-      case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
-      case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
-      case 'COVER_LETTER':return null; /* AI — filled at runtime */
-      case 'SCREENING':   return null; /* AI — filled at runtime */
+      case 'FIRST_NAME':       return profile.firstName  || null;
+      case 'LAST_NAME':        return profile.lastName   || null;
+      case 'FULL_NAME':        return profile.fullName   || null;
+      case 'PREFERRED_NAME':   return profile.firstName  || profile.fullName;
+      case 'EMAIL':            return profile.email      || null;
+      case 'PHONE':            return profile.phone      || null;
+      case 'LOCATION':         return profile.location   || null;
+      case 'COUNTRY':          return getCountry(profile);
+      case 'UNIVERSITY':       return getEducationField(profile, 'university');
+      case 'DEGREE':           return getEducationField(profile, 'degree');
+      case 'MAJOR':            return getEducationField(profile, 'major');
+      case 'GRADUATION_YEAR':  return getEducationField(profile, 'gradYear');
+      case 'START_DATE':       return profile.noticePeriod || 'Immediately';
+      case 'LINKEDIN':         return profile.linkedinUrl || null;
+      case 'GITHUB':           return profile.githubUrl  || null;
+      case 'PORTFOLIO':        return profile.portfolioUrl || null;
+      case 'CURRENT_COMPANY':  return profile.currentCompany || 'Acme Cloud';
+      case 'TITLE':            return session ? session.jobTitle : (profile.title || null);
+      case 'SUMMARY':          return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
+      case 'SALARY':           return session ? (session.salaryRange || null) : (profile.salaryRange || null);
+      case 'WORK_AUTH':        return profile.workAuthorized ? 'Yes' : 'No';
+      case 'VISA':             return profile.requiresVisa ? 'Yes' : 'No';
+      case 'CONSENT':          return '✓ Agree';
+      case 'PRONOUNS':         return resolvePronoun(field, profile) ? '✓ Checked' : '— Unchecked';
+      case 'GENDER':           return profile.gender || 'Decline to self-identify';
+      case 'RACE_ETHNICITY':   return profile.race || 'Decline to self-identify';
+      case 'VETERAN':          return profile.veteran || 'I am not a veteran';
+      case 'DISABILITY':       return profile.disability || 'I do not have a disability';
+      case 'REFERRAL':         return 'LinkedIn';
+      case 'COVER_LETTER':     return null;
+      case 'SCREENING':        return null;
       default: return null;
     }
   }
@@ -560,7 +784,7 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
         badge = el('div', { className: 'ap-badge ap-badge-profile' }, ['Profile']);
       }
       var valueEl = el('div', { className: src === 'ai' ? 'ap-row-value ap-value-ai' : 'ap-row-value' },
-        [src === 'ai' ? '✦ AI answer' : (p.value ? p.value.slice(0, 18) : '—')]);
+        [src === 'ai' ? '✦ AI answer' : (p.value ? String(p.value).slice(0, 18) : '—')]);
       var statusEl = el('div', { className: 'ap-pending' }, ['○']);
       row.appendChild(icon);
       row.appendChild(label);
@@ -674,21 +898,24 @@ const BOOKMARKLET_SCRIPT = `(async function AstrePilot() {
       if (isAI) { hadAI = true; }
 
       var value = await resolveValue(f, profile, session);
-      var skipped = !value || value.trim() === '';
+      var skipped = (value === null || value === undefined || (typeof value === 'string' && value.trim() === ''));
 
       if (!skipped) {
         var capturedF = f; /* capture current iteration value to avoid var-loop closure bug */
         await decodeFill(capturedF.element, value, function(v) { updateRowValue(capturedF, v); });
-        capturedF.element.classList.add('ap-filled-field');
-        filled++;
+        if (value !== false) {
+          capturedF.element.classList.add('ap-filled-field');
+          filled++;
+        }
       }
 
-      updateRowValue(f, skipped ? '' : value);
-      markDone(f, skipped);
+      var displayVal = (typeof value === 'boolean') ? (value ? '✓ Yes' : '— No') : (skipped ? '' : value);
+      updateRowValue(f, displayVal);
+      markDone(f, skipped || value === false);
       setProgress(filled, fields.length);
       setCount(filled, fields.length);
 
-      await new Promise(function(r) { setTimeout(r, 120); });
+      await new Promise(function(r) { setTimeout(r, 60); });
     }
 
     /* ── LOG ─────────────────────────────────────────────────────── */

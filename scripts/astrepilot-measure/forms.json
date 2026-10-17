@@ -1,0 +1,72 @@
+[
+  {
+    "id": "greenhouse-cloudflare",
+    "ats": "Greenhouse",
+    "company": "Cloudflare",
+    "role": "AI Security Research & Red Team Engineer",
+    "url": "https://boards.greenhouse.io/cloudflare/jobs/8097321"
+  },
+  {
+    "id": "greenhouse-gitlab",
+    "ats": "Greenhouse",
+    "company": "GitLab",
+    "role": "Backend Engineer (Python), AI Engineering: Agent Foundations",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
+  },
+  {
+    "id": "lever-zoox",
+    "ats": "Lever",
+    "company": "Zoox",
+    "role": "AV Safety Data Reporting Engineer",
+    "url": "https://jobs.lever.co/zoox/e36cc53e-5bd5-43b9-9a90-ec9b7c6abda9/apply"
+  },
+  {
+    "id": "lever-zoox-2",
+    "ats": "Lever",
+    "company": "Zoox",
+    "role": "Staff Software Engineer - Simulation Infrastructure",
+    "url": "https://jobs.lever.co/zoox/7980e9a3-99f3-4988-ae6d-355c9199d8fb/apply"
+  },
+  {
+    "id": "ashby-langchain",
+    "ats": "Ashby",
+    "company": "LangChain",
+    "role": "Senior Frontend Engineer, AI Observability & Evals Platform",
+    "url": "https://jobs.ashbyhq.com/langchain/afb91b9b-46d5-4c9d-aa84-a4f1a3f74263/application"
+  },
+  {
+    "id": "ashby-replit",
+    "ats": "Ashby",
+    "company": "Replit",
+    "role": "Design Engineer",
+    "url": "https://jobs.ashbyhq.com/replit/2f1de5f1-48c2-4104-a697-a51fe1620508/application"
+  },
+  {
+    "id": "workable-epignosis",
+    "ats": "Workable",
+    "company": "Epignosis",
+    "role": "Customer Support Engineer",
+    "url": "https://apply.workable.com/epignosis/j/A206DBCFFE/apply/"
+  },
+  {
+    "id": "workable-learnworlds",
+    "ats": "Workable",
+    "company": "LearnWorlds",
+    "role": "Account Executive (Remote, LATAM)",
+    "url": "https://apply.workable.com/learnworlds/j/ED3E988D35/apply/"
+  },
+  {
+    "id": "iframe-cockroachlabs",
+    "ats": "Company-Embedded Iframe (Greenhouse)",
+    "company": "Cockroach Labs",
+    "role": "Member of Technical Staff (Senior - Specialized Indexing)",
+    "url": "https://www.cockroachlabs.com/careers/job/?gh_jid=7422578"
+  },
+  {
+    "id": "iframe-cockroachlabs-security",
+    "ats": "Company-Embedded Iframe (Greenhouse)",
+    "company": "Cockroach Labs",
+    "role": "Sr. Corporate Security Engineer",
+    "url": "https://www.cockroachlabs.com/careers/job/?gh_jid=8156737"
+  }
+]

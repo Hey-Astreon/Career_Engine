@@ -14,8 +14,8 @@ export async function OPTIONS() {
 
 /**
  * GET /api/autopilot/profile
- * Returns the autofill payload for the bookmarklet.
- * Auth: Bearer token (from bookmarklet)
+ * Returns the autofill payload for AstrePilot.
+ * Auth: Bearer token (from AstrePilot Extension)
  */
 export async function GET(req: Request) {
   try {

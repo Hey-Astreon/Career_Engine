@@ -53,8 +53,7 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 - **Native Chrome Extension (Manifest V3):** Packaged browser extension featuring a clean light glass action popup, background service worker, automatic ATS portal detection badge (`boards.greenhouse.io`, `jobs.lever.co`, `myworkdayjobs.com`, `ashbyhq.com`, etc.), and global keyboard shortcut (`Alt+Shift+A`).
 - **Shadow DOM HUD:** Draggable, collapsible overlay (full card ↔ pill) rendered in a closed Shadow DOM so host-page CSS cannot interfere. Shows real-time field classification and profile previews, with a working Settings shortcut to the AstreWork settings page. All dynamic text is HTML-escaped before rendering.
 - **Zero-Hallucination AI Screening:** Automatically intercepts unknown `<textarea>` screening questions and queries the AstreWork multi-LLM backend (`/api/autopilot/answer`) to generate contextually accurate, non-hallucinated answers on the fly based on the active session's tailored resume.
-- **Safety First (Undo & Highlight):** Safely injects values using native DOM event dispatching (triggering React/Vue bindings). Features `ap-filled-field` visual highlighting and a strict **1-click Undo** mechanism to revert all AI inputs instantly.
-- **1-Click ZIP Download & Distribution:** Built directly into the AstreWork workspace settings (`astrepilot-extension.zip`) alongside the bookmarklet option.
+- **1-Click ZIP Download & Distribution:** Built directly into the AstreWork workspace settings (`astrepilot-extension.zip`) with instant token generation.
 
 ### 5. 🔒 Enterprise-Grade API Security & Multi-Tenant Isolation
 - **Pipeline Lockdown:** Complete session-based verification enforcing `CRON_SECRET` and `getServerSession` boundaries over expensive data sync and scrape pipeline triggers.

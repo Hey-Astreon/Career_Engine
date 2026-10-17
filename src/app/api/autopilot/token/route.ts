@@ -16,8 +16,8 @@ export async function OPTIONS() {
 
 /**
  * GET /api/autopilot/token
- * Generates a personal AstrePilot bookmarklet token for the signed-in user.
- * Returns the token + the ready-to-use bookmarklet href.
+ * Generates a personal AstrePilot extension token for the signed-in user.
+ * Returns the connection token for the Manifest V3 Chrome Extension.
  */
 export async function GET() {
   try {

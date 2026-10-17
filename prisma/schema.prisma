@@ -74,6 +74,7 @@ enum PlatformSource {
   LFX_MENTORSHIP
   NODESK
   INTERN_LIST
+  ASTRA
 }
 
 model ProviderSyncState {
