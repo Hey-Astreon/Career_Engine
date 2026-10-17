@@ -77,6 +77,13 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 - **Telemetry:** Real-time provider health dashboard tracking per-endpoint latency, error codes, and insertion yields.
 - **UI Integration:** Live pulse status indicators in the Sidebar and one-click "Enable Auto-Sync" / "Pause Sync" controls on the Dashboard.
 
+### 6. 🤖 Google Antigravity Autonomous Agent Core (`python_agents/`)
+Engineered with the official **Google Antigravity Python SDK (`google-antigravity`)**, running as high-autonomy background daemons:
+- **AI Screening Question Oracle API (`oracle_service.py`):** Multi-step reasoning agent synthesizing candidate profiles, technical architectures, and JD requirements into grounded 2-4 sentence form answers. Exposed via `/api/autopilot/oracle` with resilient fallback to internal multi-provider LLM.
+- **Self-Healing Scraper Daemon (`self_healer.py`):** Automatically detects scraper failures, parses broken response payloads, inspects live HTML DOM selectors, and drafts code patches for drifted job board schemas.
+- **Autonomous Headless Form Applier (`headless_applier.py`):** Playwright-powered autonomous form fill engine with human-in-the-loop review-only mode and full-page visual screenshot verification audits (`scratch/`).
+- **Deep Resume Tailorer & ATS Optimizer (`resume_tailorer.py`):** Generates high-impact STAR and Google X-Y-Z formula resume bullet points tailored to target job requirements.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -87,6 +94,7 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 | **Backend** | Next.js Server Components, API Route Handlers, Node.js v26 |
 | **Database & ORM**| LibSQL / SQLite (WAL mode), Prisma 7 (`@prisma/adapter-libsql`) |
 | **AI / LLM** | Groq API, Google Gemini 2.5 Flash, Cerebras, NVIDIA NIM |
+| **Autonomous Agents** | Google Antigravity Python SDK (`google-antigravity`), FastAPI, Playwright, Pydantic |
 | **State Management**| Zustand, React Context, SWR / Fetch |
 | **PDF & Document Parsing**| Native binary text extraction, PDF-Parse, Cheerio |
 
@@ -128,8 +136,31 @@ npm run dev
 ```
 Visit **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-### 5. Production Validation
+### 5. Launch Google Antigravity Agent Core
+The autonomous Python agents run in an isolated environment (`python_agents/.venv`) on Python 3.12+:
 ```bash
+# Setup Python virtualenv and install dependencies
+cd python_agents
+python -m venv .venv
+# Windows: .venv\Scripts\activate | Unix: source .venv/bin/activate
+pip install -r requirements.txt
+playwright install chromium
+cd ..
+
+# Start the Agent Gateway daemon (FastAPI on port 8000)
+npm run agent:gateway
+
+# Or trigger standalone autonomous agent tasks:
+npm run agent:heal ASTRA          # Diagnose/heal broken scraper selectors
+npm run agent:apply -- <URL>      # Run headless Playwright form applier (review-only)
+npm run agent:tailor              # Generate STAR/Google X-Y-Z tailored resume bullets
+```
+
+### 6. Production Validation & Testing
+```bash
+# Run unit & integration test suite (30 test files / 317 tests)
+npm test
+
 # Typecheck
 npx tsc --noEmit
 
@@ -187,6 +218,11 @@ Career_Engine/
 │   │   │   ├── ai/                         # Multi-LLM router, scorer, ATS validator, drafter
 │   │   │   └── scheduler.ts                # DiscoveryScheduler singleton engine
 │   │   └── store/                          # Zustand candidate context store
+│   ├── python_agents/                      # Google Antigravity Python Agent Core (SDK)
+│   │   ├── services/                       # Oracle, Self-Healer, Headless Applier, Resume Tailorer
+│   │   ├── config.py                       # Antigravity SDK Agent configurations
+│   │   ├── main.py                         # FastAPI Agent Gateway (:8000)
+│   │   └── requirements.txt                # Python SDK dependencies
 │   ├── extension/                          # AstrePilot MV3 extension (popup, HUD, background worker)
 │   ├── scripts/dev-patches/                # Archived one-off patch scripts (not shipped)
 │   └── prisma/                             # Database schema & candidate seed data

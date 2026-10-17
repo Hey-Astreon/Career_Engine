@@ -53,3 +53,9 @@ next-env.d.ts
 diagnostics_output.txt
 scratch/
 scripts/astrepilot-measure/output/
+
+# Python
+.venv/
+python_agents/.venv/
+__pycache__/
+*.pyc

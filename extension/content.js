@@ -426,13 +426,26 @@
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
         const jobTitle = session && session.jobTitle ? session.jobTitle : '';
         try {
-          const res = await apFetch('/answer', {
+          // Attempt high-reasoning Antigravity AI Oracle first
+          let res = await apFetch('/oracle', {
             method: 'POST',
             body: JSON.stringify({
-              question, company, jobTitle,
-              context: session ? 'JOB DESCRIPTION:\n' + (session.jdText || '') + '\n\nTAILORED PROFILE:\n' + (session.tailoredSummary || '') : profile._context,
+              question,
+              company,
+              jobTitle,
+              jobDescription: session ? session.jdText : undefined,
             }),
           });
+          // Fallback to standard answer endpoint if oracle is unavailable
+          if (!res.ok) {
+            res = await apFetch('/answer', {
+              method: 'POST',
+              body: JSON.stringify({
+                question, company, jobTitle,
+                context: session ? 'JOB DESCRIPTION:\n' + (session.jdText || '') + '\n\nTAILORED PROFILE:\n' + (session.tailoredSummary || '') : profile._context,
+              }),
+            });
+          }
           if (!res.ok) return null;
           const data = await res.json();
           return data.answer || null;
