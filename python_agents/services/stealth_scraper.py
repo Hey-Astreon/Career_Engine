@@ -100,30 +100,40 @@ async def harvest_wellfound_jobs(
 
             # DOM Scraping Fallback if GraphQL didn't yield
             if len(jobs) == 0:
-                card_elements = await page.query_selector_all("[data-test='JobCard'], div[class*='jobCard'], div[class*='styles_jobCard']")
-                for card in card_elements:
+                raw_links = await page.query_selector_all("a[href*='/jobs/']")
+                for link_el in raw_links:
                     if len(jobs) >= max_jobs:
                         break
                     try:
-                        title_el = await card.query_selector("a[class*='title'], h2, h3, [data-test='JobTitle']")
-                        company_el = await card.query_selector("a[class*='company'], [data-test='StartupName'], h4")
-                        link_el = await card.query_selector("a[href*='/jobs/'], a[href*='/company/']")
+                        href = await link_el.get_attribute("href")
+                        if not href or any(skip in href for skip in ["/signup", "/faq", "/login"]) or href.rstrip("/").endswith("/jobs"):
+                            continue
+                        
+                        raw_text = (await link_el.inner_text()).strip()
+                        if not raw_text or len(raw_text) < 3 or "open position" in raw_text.lower():
+                            continue
 
-                        title = (await title_el.inner_text()).strip() if title_el else None
-                        company = (await company_el.inner_text()).strip() if company_el else None
-                        link = (await link_el.get_attribute("href")) if link_el else None
+                        title = raw_text.split("\n")[0].strip()
 
-                        if link and link.startswith("/"):
-                            link = f"https://wellfound.com{link}"
+                        # Try resolving company name from parent context
+                        company = "Startup"
+                        parent = await link_el.evaluate_handle("el => el.closest('div[class*=\"styles_jobListing\"], div[class*=\"styles_company\"], li, tr') || el.parentElement")
+                        if parent:
+                            comp_el = await parent.query_selector("a[href*='/company/'], h4, span[class*='company']")
+                            if comp_el:
+                                comp_text = (await comp_el.inner_text()).strip()
+                                if comp_text:
+                                    company = comp_text.split("\n")[0].strip()
 
-                        if title and company:
-                            jobs.append({
-                                "title": title,
-                                "company": company,
-                                "location": "Remote",
-                                "url": link or target_url,
-                                "rawDescription": f"{title} at {company} (Wellfound).",
-                            })
+                        full_url = href if href.startswith("http") else f"https://wellfound.com{href}"
+
+                        jobs.append({
+                            "title": title,
+                            "company": company,
+                            "location": "Remote",
+                            "url": full_url,
+                            "rawDescription": f"{title} at {company}. Live startup role on Wellfound.",
+                        })
                     except Exception:
                         continue
 
@@ -201,35 +211,44 @@ async def harvest_jobright_jobs(
 
         page.on("response", handle_response)
 
-        target_url = "https://jobright.ai/jobs"
+        target_url = "https://jobright.ai/"
         print(f"[StealthScraper] Navigating to {target_url}...")
         try:
             await page.goto(target_url, wait_until="domcontentloaded", timeout=25000)
-            await asyncio.sleep(2.0)
+            await asyncio.sleep(3.0)
 
             # Fallback DOM scrape if API didn't populate
             if len(jobs) == 0:
-                card_elements = await page.query_selector_all("[class*='job-card'], [class*='JobCard'], div[role='article']")
-                for card in card_elements:
+                raw_links = await page.query_selector_all("a[href*='/jobs/info/'], a[href*='/job/']")
+                for link_el in raw_links:
                     if len(jobs) >= max_jobs:
                         break
                     try:
-                        title_el = await card.query_selector("h2, h3, a[class*='title']")
-                        company_el = await card.query_selector("p[class*='company'], span[class*='company'], strong")
-                        link_el = await card.query_selector("a[href*='/job/'], a[href*='http']")
+                        href = await link_el.get_attribute("href")
+                        text = (await link_el.inner_text()).strip()
+                        if not text or not href:
+                            continue
 
-                        title = (await title_el.inner_text()).strip() if title_el else None
-                        company = (await company_el.inner_text()).strip() if company_el else None
-                        link = (await link_el.get_attribute("href")) if link_el else None
+                        lines = [line.strip() for line in text.split("\n") if line.strip()]
+                        company = "Tech Startup"
+                        title = text
+                        if len(lines) >= 2:
+                            company = lines[0].split("•")[0].strip()
+                            title = lines[-1].strip()
+                        elif "•" in text:
+                            parts = text.split("•")
+                            company = parts[0].strip()
+                            title = parts[-1].strip()
 
-                        if title and company:
-                            jobs.append({
-                                "title": title,
-                                "company": company,
-                                "location": "Remote",
-                                "url": link or target_url,
-                                "rawDescription": f"{title} at {company} (Jobright AI).",
-                            })
+                        full_url = f"https://jobright.ai{href}" if href.startswith("/") else href
+
+                        jobs.append({
+                            "title": title,
+                            "company": company,
+                            "location": "Remote",
+                            "url": full_url,
+                            "rawDescription": f"{title} at {company}. Harvested from Jobright AI.",
+                        })
                     except Exception:
                         continue
 
