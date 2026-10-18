@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, CircleAlert, CircleCheck } from "lucide-react";
+import { Activity, ChevronRight, CircleAlert, CircleCheck, Loader2, Sparkles, Wrench } from "lucide-react";
 import { useState } from "react";
 import { calculateProviderReliability, type ProviderHealthSnapshot } from "@/lib/dashboardStats";
 
@@ -32,7 +32,39 @@ function statusTone(status: string) {
 // eslint-disable-next-line react-hooks/purity
 export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: ProviderHealthSnapshot[]; nowTick?: number }) {
   const [expandedProvider, setExpandedProvider] = useState<string | null>(null);
+  const [diagnosingProvider, setDiagnosingProvider] = useState<string | null>(null);
+  const [diagnosingAction, setDiagnosingAction] = useState<"diagnose" | "heal" | null>(null);
+  const [diagnosticResults, setDiagnosticResults] = useState<Record<string, any>>({});
+
   const reportRows = [...rows].sort((left, right) => left.provider.localeCompare(right.provider));
+
+  const handleRunDiagnostic = async (providerKey: string, action: "diagnose" | "heal" = "diagnose") => {
+    setDiagnosingProvider(providerKey);
+    setDiagnosingAction(action);
+    try {
+      const res = await fetch("/api/diagnostics/heal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: providerKey,
+          action,
+          dryRun: false,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setDiagnosticResults((prev) => ({
+          ...prev,
+          [providerKey]: { ...data.data, source: data.source, action: data.action },
+        }));
+      }
+    } catch (err) {
+      console.error("Diagnostic request failed:", err);
+    } finally {
+      setDiagnosingProvider(null);
+      setDiagnosingAction(null);
+    }
+  };
 
   return (
     <section id="provider-health-report" className="ce-surface mt-7 overflow-hidden">
@@ -126,25 +158,124 @@ export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: Pro
                 </button>
 
                 {expanded ? (
-                  <div className="grid gap-4 border-b border-[var(--line)] bg-[var(--surface-muted)] px-8 py-4 text-[10px] leading-5 text-[var(--muted)] md:grid-cols-4">
-                    <span>
-                      <b className="block text-[var(--ink)]">Latest attention</b>
-                      {attention}
-                    </span>
-                    <span>
-                      <b className="block text-[var(--ink)]">Raw jobs seen</b>
-                      {source.totalJobsSeen.toLocaleString()}
-                    </span>
-                    <span>
-                      <b className="block text-[var(--ink)]">Last attempted</b>
-                      {formatSyncTime(source.lastSyncAttemptAt, nowTick)} ({formatSync(source.lastSyncAttemptAt)})
-                    </span>
-                    <span>
-                      <b className="block text-[var(--ink)]">Reliability inputs</b>
-                      {reliability.statusPenalty}% status · {reliability.freshnessPenalty}% freshness · {reliability.failurePenalty}% failures
-                    </span>
+                  <div className="border-b border-[var(--line)] bg-[var(--surface-muted)] px-8 py-4 space-y-4">
+                    <div className="grid gap-4 text-[10px] leading-5 text-[var(--muted)] md:grid-cols-4">
+                      <span>
+                        <b className="block text-[var(--ink)]">Latest attention</b>
+                        {attention}
+                      </span>
+                      <span>
+                        <b className="block text-[var(--ink)]">Raw jobs seen</b>
+                        {source.totalJobsSeen.toLocaleString()}
+                      </span>
+                      <span>
+                        <b className="block text-[var(--ink)]">Last attempted</b>
+                        {formatSyncTime(source.lastSyncAttemptAt, nowTick)} ({formatSync(source.lastSyncAttemptAt)})
+                      </span>
+                      <span>
+                        <b className="block text-[var(--ink)]">Reliability inputs</b>
+                        {reliability.statusPenalty}% status · {reliability.freshnessPenalty}% freshness · {reliability.failurePenalty}% failures
+                      </span>
+                    </div>
+
+                    {/* Antigravity Self-Healer & Endpoint Diagnostic Bar */}
+                    <div className="border-t border-[var(--line)]/60 pt-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                            Antigravity Diagnostic Actions:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void handleRunDiagnostic(source.provider, "diagnose")}
+                            disabled={diagnosingProvider === source.provider}
+                            className="ce-button-secondary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            {diagnosingProvider === source.provider && diagnosingAction === "diagnose" ? (
+                              <Loader2 className="h-3 w-3 animate-spin text-[var(--blue)]" />
+                            ) : (
+                              <Activity className="h-3 w-3 text-[var(--blue)]" />
+                            )}
+                            Probe Live Endpoint
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleRunDiagnostic(source.provider, "heal")}
+                            disabled={diagnosingProvider === source.provider}
+                            className="ce-button-primary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            {diagnosingProvider === source.provider && diagnosingAction === "heal" ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Wrench className="h-3 w-3" />
+                            )}
+                            Heal with Antigravity
+                          </button>
+                        </div>
+
+                        {diagnosticResults[source.provider]?.source && (
+                          <span className="font-mono text-[8px] text-[var(--muted)] uppercase tracking-wider">
+                            Engine: {diagnosticResults[source.provider].source === "antigravity-agent" ? "Antigravity Agent Core" : "Local Diagnostic Probe"}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Diagnostic Result Card */}
+                      {diagnosticResults[source.provider] && (
+                        <div className="mt-3 rounded border border-[var(--line)] bg-white/90 p-3 text-[10px]">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] pb-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`ce-chip !min-h-5 !px-2 text-[8px] font-bold ${
+                                  diagnosticResults[source.provider].healthy !== false
+                                    ? "ce-chip-green"
+                                    : "ce-chip-red"
+                                }`}
+                              >
+                                {diagnosticResults[source.provider].status || (diagnosticResults[source.provider].healthy !== false ? "HEALTHY" : "DEGRADED")}
+                              </span>
+                              {diagnosticResults[source.provider].statusCode ? (
+                                <span className="font-mono text-[9px] text-[var(--muted)]">
+                                  HTTP {diagnosticResults[source.provider].statusCode}
+                                </span>
+                              ) : null}
+                              {diagnosticResults[source.provider].latencyMs ? (
+                                <span className="font-mono text-[9px] text-[var(--muted)]">
+                                  · {diagnosticResults[source.provider].latencyMs}ms latency
+                                </span>
+                              ) : null}
+                            </div>
+                            <span className="text-[9px] text-[var(--muted)] font-mono">
+                              Verified Just Now
+                            </span>
+                          </div>
+
+                          <p className="mt-2 text-[11px] leading-relaxed text-[var(--ink)]">
+                            {diagnosticResults[source.provider].message ||
+                              (diagnosticResults[source.provider].healthy !== false
+                                ? "Endpoint is responding normally with valid schema."
+                                : "Endpoint latency or structure requires attention.")}
+                          </p>
+
+                          {Array.isArray(diagnosticResults[source.provider].changes) &&
+                            diagnosticResults[source.provider].changes.length > 0 && (
+                              <div className="mt-2 space-y-1 rounded bg-[var(--surface-muted)] p-2">
+                                <b className="block text-[9px] font-bold uppercase text-[var(--muted)]">
+                                  Patches Generated:
+                                </b>
+                                {diagnosticResults[source.provider].changes.map((c: string, i: number) => (
+                                  <div key={i} className="font-mono text-[9px] text-[var(--green)]">
+                                    ✓ {c}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : null}
+
               </div>
             );
           })}
