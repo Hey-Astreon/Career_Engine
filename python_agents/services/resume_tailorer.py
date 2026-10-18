@@ -4,9 +4,17 @@ Deep Resume Tailorer & ATS Optimizer — Antigravity Agent Core
 Rewrites candidate bullet points and aligns technical keywords to target job descriptions.
 """
 
+import os
 import sys
 import asyncio
+from pathlib import Path
 from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv
+
+# Automatically load environment variables from project root .env
+_env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path)
+
 from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
 
 TAILOR_SYSTEM_INSTRUCTIONS = """You are the Senior Staff ATS Resume Optimizer for Career Engine.
@@ -64,6 +72,7 @@ Summary: [1 sentence summary of improvements]
     config = LocalAgentConfig(
         system_instructions=TAILOR_SYSTEM_INSTRUCTIONS,
         capabilities=CapabilitiesConfig(),
+        api_key=os.environ.get("GEMINI_API_KEY"),
     )
 
     tokens = []

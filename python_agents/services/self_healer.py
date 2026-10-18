@@ -4,10 +4,18 @@ Self-Healing Scraper Service — Antigravity Agent Code Resilience
 Monitors provider health and autonomously patches broken selectors using the Antigravity Agent.
 """
 
+import os
 import sys
 import asyncio
 import httpx
+from pathlib import Path
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+# Automatically load environment variables from project root .env
+_env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path)
+
 from google.antigravity import Agent, CapabilitiesConfig, LocalAgentConfig
 from python_agents.config import HEALER_SYSTEM_INSTRUCTIONS
 
@@ -78,6 +86,7 @@ Instructions:
     config = LocalAgentConfig(
         system_instructions=HEALER_SYSTEM_INSTRUCTIONS,
         capabilities=CapabilitiesConfig(),
+        api_key=os.environ.get("GEMINI_API_KEY"),
     )
 
     thoughts = []

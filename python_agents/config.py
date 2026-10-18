@@ -4,6 +4,14 @@ Career Engine — Antigravity Agent Core Configuration
 Centralizes agent system instructions, capabilities policies, and runtime options.
 """
 
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Automatically load environment variables from project root .env
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path)
+
 from google.antigravity import (
     LocalAgentConfig,
     CapabilitiesConfig,
@@ -45,6 +53,7 @@ def get_oracle_agent_config() -> LocalAgentConfig:
     return LocalAgentConfig(
         system_instructions=ORACLE_SYSTEM_INSTRUCTIONS,
         capabilities=CapabilitiesConfig(),  # Safe read-only defaults
+        api_key=os.environ.get("GEMINI_API_KEY"),
     )
 
 def get_healer_agent_config() -> LocalAgentConfig:
@@ -52,4 +61,5 @@ def get_healer_agent_config() -> LocalAgentConfig:
     return LocalAgentConfig(
         system_instructions=HEALER_SYSTEM_INSTRUCTIONS,
         capabilities=CapabilitiesConfig(),
+        api_key=os.environ.get("GEMINI_API_KEY"),
     )
