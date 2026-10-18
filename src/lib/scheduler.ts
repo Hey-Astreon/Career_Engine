@@ -301,7 +301,7 @@ export const discoveryScheduler = globalForScheduler.discoveryScheduler || new D
 if (process.env.NODE_ENV !== "production") globalForScheduler.discoveryScheduler = discoveryScheduler;
 
 // Boot auto-start for VPS / Docker environments
-if (process.env.AUTO_START_SCHEDULER === "true" || (process.env.NODE_ENV === "production" && !process.env.VERCEL)) {
+if (process.env.AUTO_START_SCHEDULER === "true" || process.env.NODE_ENV === "production") {
   discoveryScheduler.start();
 }
 

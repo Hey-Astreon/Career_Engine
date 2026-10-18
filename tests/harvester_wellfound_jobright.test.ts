@@ -36,6 +36,30 @@ describe("Wellfound & Jobright Harvester Normalization", () => {
     expect(["Fresher / Entry Level (0-1 Yr)", "Junior (1-3 Yrs)"]).toContain(exp);
   });
 
+  it("admits general developer roles defaulting to 0-3 Years (Entry/Junior) in earlyCareerLevels", () => {
+    const rawRole = {
+      title: "Full Stack Engineer (TypeScript/React)",
+      company: "Modern Startup",
+      location: "Remote",
+      rawDescription: "Build cutting-edge user interfaces and microservices.",
+    };
+
+    const title = sanitizeRoleTitle(rawRole.title);
+    const isDev = isStrictlyRemoteDeveloperRole(title, rawRole.location, rawRole.rawDescription);
+    const exp = determineExperienceLevel(title, rawRole.rawDescription);
+
+    expect(isDev).toBe(true);
+    expect(exp).toBe("0-3 Years (Entry/Junior)");
+
+    const earlyCareerLevels = [
+      "Internship",
+      "Fresher / Entry Level (0-1 Yr)",
+      "Junior (1-3 Yrs)",
+      "0-3 Years (Entry/Junior)",
+    ];
+    expect(earlyCareerLevels).toContain(exp);
+  });
+
   it("rejects non-developer or senior roles", () => {
     const seniorRole = {
       title: "Staff Principal Architect (10+ YOE)",

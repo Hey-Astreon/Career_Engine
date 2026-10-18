@@ -15,8 +15,7 @@
     "agent:gateway": "python_agents/.venv/Scripts/uvicorn python_agents.main:app --port 8000 --reload",
     "agent:heal": "python_agents/.venv/Scripts/python -m python_agents.services.self_healer",
     "agent:apply": "python_agents/.venv/Scripts/python -m python_agents.services.headless_applier",
-    "agent:tailor": "python_agents/.venv/Scripts/python -m python_agents.services.resume_tailorer",
-    "deploy:agent:heroku": "node scripts/deploy-agent-heroku.mjs"
+    "agent:tailor": "python_agents/.venv/Scripts/python -m python_agents.services.resume_tailorer"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

@@ -7,6 +7,7 @@ import sys
 import os
 import asyncio
 import time
+import re
 from typing import Dict, Any, Optional
 from playwright.async_api import async_playwright
 
