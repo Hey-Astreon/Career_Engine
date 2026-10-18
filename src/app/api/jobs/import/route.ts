@@ -74,7 +74,12 @@ export async function POST(req: Request) {
       }
 
       const experienceLevel = determineExperienceLevel(title, rawDesc);
-      const earlyCareerLevels = ["Internship", "Fresher / Entry Level (0-1 Yr)", "Junior (1-3 Yrs)"];
+      const earlyCareerLevels = [
+        "Internship",
+        "Fresher / Entry Level (0-1 Yr)",
+        "Junior (1-3 Yrs)",
+        "0-3 Years (Entry/Junior)",
+      ];
       if (!earlyCareerLevels.includes(experienceLevel)) {
         rejectedCount++;
         continue;
