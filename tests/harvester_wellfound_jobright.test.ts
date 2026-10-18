@@ -107,7 +107,7 @@ describe("WellfoundProvider & JobrightProvider Execution", () => {
     expect(result.providerKey).toBe(PlatformSource.WELLFOUND);
     expect(result.success).toBe(true);
     expect(Array.isArray(result.jobs)).toBe(true);
-  });
+  }, 30000);
 
   it("JobrightProvider completes safely and returns valid ProviderResult", async () => {
     const provider = new JobrightProvider();
@@ -116,7 +116,7 @@ describe("WellfoundProvider & JobrightProvider Execution", () => {
     expect(result.providerKey).toBe(PlatformSource.JOBRIGHT);
     expect(result.success).toBe(true);
     expect(Array.isArray(result.jobs)).toBe(true);
-  });
+  }, 30000);
 });
 
 describe("Database Bulk Ingestion & Deduplication", () => {

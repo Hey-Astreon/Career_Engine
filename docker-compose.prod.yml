@@ -19,6 +19,7 @@ services:
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - AGENT_GATEWAY_URL=${AGENT_GATEWAY_URL:-http://agent:8000}
+      - AUTO_START_SCHEDULER=true
     depends_on:
       - redis
       - agent
