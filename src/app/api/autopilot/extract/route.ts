@@ -21,7 +21,16 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { pageText, pageUrl } = body;
+    const { pageText, pageUrl, recruiter } = body as {
+      pageText?: string;
+      pageUrl?: string;
+      recruiter?: {
+        name?: string;
+        title?: string;
+        profileUrl?: string;
+        linkedinId?: string;
+      };
+    };
 
     if (!pageText || typeof pageText !== "string") {
       return NextResponse.json({ error: "pageText is required" }, { status: 400, headers: CORS });
@@ -30,7 +39,13 @@ export async function POST(req: Request) {
     // Find profile for this user
     const profile = await db.profile.findFirst({
       where: { userId },
-      select: { id: true, fullName: true, title: true, location: true },
+      select: {
+        id: true,
+        fullName: true,
+        title: true,
+        location: true,
+        projects: { select: { title: true, techStack: true } },
+      },
     });
 
     if (!profile) {
@@ -68,7 +83,7 @@ Respond ONLY with a valid JSON object in the following format:
         cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
       }
       extractedData = JSON.parse(cleaned);
-    } catch (e) {
+    } catch {
       console.error("Failed to parse LLM extraction response:", response.text);
       return NextResponse.json({ error: "Failed to parse extracted data" }, { status: 500, headers: CORS });
     }
@@ -83,6 +98,20 @@ Respond ONLY with a valid JSON object in the following format:
     // Quick tailored summary (could be better if we ran a second LLM call, but we'll keep it fast)
     const tailoredSummary = `Highly motivated professional applying for the ${extractedData.jobTitle} position at ${extractedData.company}. Experienced in ${extractedData.keySkills?.slice(0, 3).join(", ") || "relevant technologies"}.`;
 
+    // Generate personalized LinkedIn outreach note (< 300 characters)
+    const candidateName = profile.fullName || "Candidate";
+    const topProject = profile.projects[0]?.title || "cloud applications";
+    let connectionNote = "";
+    if (recruiter?.name) {
+      const firstName = recruiter.name.trim().split(" ")[0];
+      connectionNote = `Hi ${firstName}, saw the ${extractedData.jobTitle} opening at ${extractedData.company}. Built ${topProject}—would love to connect and share my work! —${candidateName}`;
+      if (connectionNote.length > 295) {
+        connectionNote = `Hi ${firstName}, saw the ${extractedData.jobTitle} opening at ${extractedData.company}. Would love to connect and share my work! —${candidateName}`;
+      }
+    } else {
+      connectionNote = `Hi Team, saw the ${extractedData.jobTitle} opening at ${extractedData.company}. Would love to connect and share my engineering portfolio! —${candidateName}`;
+    }
+
     // Save to AutopilotSession
     const session = await db.autopilotSession.create({
       data: {
@@ -95,6 +124,10 @@ Respond ONLY with a valid JSON object in the following format:
         astraShieldLegit: extractedData.astraShieldLegit !== undefined ? extractedData.astraShieldLegit : true,
         astraShieldScore: extractedData.astraShieldScore !== undefined ? extractedData.astraShieldScore : 100,
         astraShieldReason: extractedData.astraShieldReason || "Verified safe.",
+        recruiterName: recruiter?.name || null,
+        recruiterTitle: recruiter?.title || null,
+        recruiterLinkedInUrl: recruiter?.profileUrl || null,
+        recruiterId: recruiter?.linkedinId || null,
       }
     });
 
@@ -108,7 +141,14 @@ Respond ONLY with a valid JSON object in the following format:
           isLegit: session.astraShieldLegit,
           score: session.astraShieldScore,
           reason: session.astraShieldReason
-        }
+        },
+        recruiter: recruiter ? {
+          name: recruiter.name || null,
+          title: recruiter.title || null,
+          profileUrl: recruiter.profileUrl || null,
+          linkedinId: recruiter.linkedinId || null,
+          connectionNote,
+        } : null,
       },
       { headers: CORS }
     );

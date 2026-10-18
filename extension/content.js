@@ -151,6 +151,65 @@
     });
   }
 
+  function extractRecruiterInfo() {
+    try {
+      // 1. LinkedIn Job View Hiring Team Card Selectors
+      const hirerCard = document.querySelector(
+        '.hirer-card__hirer-information, [data-view-name="job-details-hiring-team"], .jobs-poster, .job-details-jobs-unified-top-card__hiring-team, .hirer-card'
+      );
+      
+      if (hirerCard) {
+        const linkEl = hirerCard.querySelector('a[href*="/in/"], a[href*="linkedin.com/in/"]');
+        const nameEl = hirerCard.querySelector('.jobs-poster__name, .hirer-card__hirer-information a, .inline-show-more-text, strong, h3');
+        const titleEl = hirerCard.querySelector('.jobs-poster__title, .hirer-card__job-poster-headline, .jobs-poster__headline, .linked-area');
+        
+        let profileUrl = linkEl ? linkEl.href : null;
+        if (profileUrl) {
+          profileUrl = profileUrl.split('?')[0].replace(/\/+$/, '');
+        }
+        
+        const rawName = nameEl ? nameEl.innerText.trim() : null;
+        const rawTitle = titleEl ? titleEl.innerText.trim() : 'Recruiter / Hiring Lead';
+        
+        let linkedinId = null;
+        if (profileUrl) {
+          const match = profileUrl.match(/\/in\/([a-zA-Z0-9_%-]+)/);
+          if (match) linkedinId = decodeURIComponent(match[1]);
+        }
+        
+        if (profileUrl || rawName) {
+          return {
+            name: rawName || 'Hiring Lead',
+            title: rawTitle,
+            profileUrl: profileUrl,
+            linkedinId: linkedinId,
+          };
+        }
+      }
+
+      // 2. Generic ATS / Career Page Scans (e.g. Greenhouse, Ashby, Lever hiring manager link)
+      const genericLink = document.querySelector(
+        'a[href*="linkedin.com/in/"]:not([href*="linkedin.com/company/"])'
+      );
+      if (genericLink && (window.location.hostname.includes('greenhouse.io') || window.location.hostname.includes('ashbyhq.com') || window.location.hostname.includes('lever.co') || window.location.hostname.includes('jobs.'))) {
+        let profileUrl = genericLink.href.split('?')[0].replace(/\/+$/, '');
+        let linkedinId = null;
+        const match = profileUrl.match(/\/in\/([a-zA-Z0-9_%-]+)/);
+        if (match) linkedinId = decodeURIComponent(match[1]);
+        const name = genericLink.innerText.trim() || genericLink.closest('.team-member, .hiring-lead')?.querySelector('h3, h4, strong')?.innerText.trim() || 'Hiring Lead';
+        return {
+          name: name,
+          title: 'Hiring Lead',
+          profileUrl: profileUrl,
+          linkedinId: linkedinId,
+        };
+      }
+    } catch (e) {
+      console.warn('[AstrePilot] Recruiter extraction error:', e);
+    }
+    return null;
+  }
+
   function extractPageContent() {
     const clone = document.body.cloneNode(true);
     const removeSelectors = ['nav', 'footer', 'header', 'script', 'style', 'noscript', 'iframe', 'svg', 'img'];
@@ -166,7 +225,8 @@
     return {
       pageText: text,
       pageUrl: window.location.href,
-      pageTitle: document.title
+      pageTitle: document.title,
+      recruiter: extractRecruiterInfo()
     };
   }
 
@@ -574,7 +634,7 @@
       hud.setState('extracting', { step: 'Analyzing job requirements...' });
       const res = await apFetch('/extract', {
         method: 'POST',
-        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl })
+        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl, recruiter: data.recruiter })
       });
       
       if (res.ok) {
@@ -582,6 +642,9 @@
         if (extracted.success) {
            if (extracted.astraShield && hud.setAstraShield) {
              hud.setAstraShield(extracted.astraShield);
+           }
+           if (extracted.recruiter && hud.setRecruiter) {
+             hud.setRecruiter(extracted.recruiter);
            }
            hud.setState('extracting', { step: 'Finalizing Extraction...' });
            setTimeout(async () => {
@@ -652,12 +715,18 @@
       hud.setState('extracting', { step: 'Analyzing job requirements...' });
       const res = await apFetch('/extract', {
         method: 'POST',
-        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl })
+        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl, recruiter: data.recruiter })
       });
       
       if (res.ok) {
         const extracted = await res.json();
         if (extracted.success) {
+           if (extracted.astraShield && hud.setAstraShield) {
+             hud.setAstraShield(extracted.astraShield);
+           }
+           if (extracted.recruiter && hud.setRecruiter) {
+             hud.setRecruiter(extracted.recruiter);
+           }
            hud.setState('extracting', { step: 'Locating Apply button...' });
            setTimeout(() => {
              const success = findAndClickApplyButton();

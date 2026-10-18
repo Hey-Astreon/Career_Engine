@@ -486,6 +486,10 @@ model AutopilotSession {
   astraShieldLegit Boolean  @default(true)
   astraShieldScore Int      @default(100)
   astraShieldReason String?
+  recruiterName        String?
+  recruiterTitle       String?
+  recruiterLinkedInUrl String?
+  recruiterId          String?
   createdAt       DateTime @default(now())
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)

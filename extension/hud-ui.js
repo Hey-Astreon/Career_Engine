@@ -79,6 +79,7 @@ window.AstrePilotHUD = (function () {
       this.isDragging = false;
       this.dragOffset = { x: 0, y: 0 };
       this.astraShield = null;
+      this.recruiter = null;
 
       // Restore position if possible
       try {
@@ -218,6 +219,20 @@ window.AstrePilotHUD = (function () {
         else if (btn.classList.contains('action-extract')) {
           if (this.options.onExtract) this.options.onExtract();
         }
+        else if (btn.classList.contains('btn-copy-outreach')) {
+          const noteText = btn.getAttribute('data-note') || '';
+          if (noteText) {
+            navigator.clipboard.writeText(noteText).then(() => {
+              const original = btn.innerText;
+              btn.innerText = '✓ Copied!';
+              btn.style.background = 'var(--ap-success, #10b981)';
+              setTimeout(() => {
+                btn.innerText = original;
+                btn.style.background = 'var(--ap-accent, #0071e3)';
+              }, 2000);
+            }).catch(() => {});
+          }
+        }
       });
 
       // Escape to collapse
@@ -309,6 +324,11 @@ window.AstrePilotHUD = (function () {
 
     setAstraShield(data) {
       this.astraShield = data;
+      this._renderBody();
+    }
+
+    setRecruiter(data) {
+      this.recruiter = data;
       this._renderBody();
     }
 
@@ -450,6 +470,39 @@ window.AstrePilotHUD = (function () {
               <div style="font-weight: 600; font-size: 13px; color: ${shieldColor};">AstraShield: ${shieldLabel} (${this.astraShield.score}/100)</div>
               <div style="font-size: 11px; color: var(--ap-text-muted, #9ca3af); margin-top: 4px; line-height: 1.3;">${esc(this.astraShield.reason)}</div>
             </div>
+          </div>
+        `;
+      }
+
+      // Recruiter Radar Indicator
+      if (this.recruiter && (this.recruiter.name || this.recruiter.profileUrl)) {
+        const recruiterName = this.recruiter.name || 'Hiring Lead';
+        const recruiterTitle = this.recruiter.title || 'Technical Recruiter';
+        const profileLink = this.recruiter.profileUrl;
+        const note = this.recruiter.connectionNote || '';
+        
+        html += `
+          <div class="recruiter-radar-card" style="margin-top: 10px; padding: 10px; background: rgba(0, 113, 227, 0.08); border: 1px solid rgba(0, 113, 227, 0.3); border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ap-ai, #2563eb); background: rgba(37,99,235,0.12); padding: 2px 6px; border-radius: 4px;">🎯 Recruiter Radar</span>
+                <span style="font-weight: 600; font-size: 12px; color: var(--ap-ink, #0f172a);">${esc(recruiterName)}</span>
+              </div>
+              ${profileLink ? `
+                <a href="${esc(profileLink)}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; font-weight: 600; color: var(--ap-ai, #2563eb); text-decoration: none; display: flex; align-items: center; gap: 3px;" title="Open Recruiter Profile">
+                  Profile ↗
+                </a>
+              ` : ''}
+            </div>
+            <div style="font-size: 11px; color: var(--ap-ink-2, #475569); margin-top: 3px; line-height: 1.3;">${esc(recruiterTitle)}</div>
+            ${note ? `
+              <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; background: rgba(0,0,0,0.04); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.05);">
+                <span style="font-size: 10px; color: var(--ap-ink-3, #94a3b8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">Note: "${esc(note.slice(0, 30))}..."</span>
+                <button type="button" class="btn-copy-outreach" data-note="${esc(note)}" style="padding: 3px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); background: var(--ap-ai, #2563eb); color: white; cursor: pointer; white-space: nowrap;">
+                  Copy Note
+                </button>
+              </div>
+            ` : ''}
           </div>
         `;
       }

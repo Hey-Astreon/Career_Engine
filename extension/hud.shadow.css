@@ -592,6 +592,22 @@ svg {
   gap: 10px;
 }
 
+/* Recruiter Radar Component */
+.recruiter-radar-card {
+  transition: all 0.2s var(--ap-ease);
+}
+.recruiter-radar-card:hover {
+  border-color: var(--ap-ai) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+.btn-copy-outreach:hover {
+  filter: brightness(1.1);
+  transform: translateY(-0.5px);
+}
+.btn-copy-outreach:active {
+  transform: translateY(0.5px);
+}
+
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
