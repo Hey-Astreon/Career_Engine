@@ -71,7 +71,8 @@ export async function POST(req: Request) {
 
     // 2. Attempt to query Antigravity Python Agent Gateway
     try {
-      const agentRes = await fetch("http://127.0.0.1:8000/oracle/answer", {
+      const gatewayUrl = (process.env.AGENT_GATEWAY_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+      const agentRes = await fetch(`${gatewayUrl}/oracle/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

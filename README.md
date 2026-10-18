@@ -154,6 +154,9 @@ npm run agent:gateway
 npm run agent:heal ASTRA          # Diagnose/heal broken scraper selectors
 npm run agent:apply -- <URL>      # Run headless Playwright form applier (review-only)
 npm run agent:tailor              # Generate STAR/Google X-Y-Z tailored resume bullets
+
+# Deploy Agent Core to Cloud (Heroku Container via GitHub Student Credits):
+npm run deploy:agent:heroku
 ```
 
 ### 6. Production Validation & Testing
