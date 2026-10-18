@@ -18,8 +18,25 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://astrework.app}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - AGENT_GATEWAY_URL=${AGENT_GATEWAY_URL:-http://agent:8000}
     depends_on:
       - redis
+      - agent
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    image: ghcr.io/hey-astreon/career_engine-agent:latest
+    container_name: astrework_agent
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
 
   redis:
     image: redis:7-alpine

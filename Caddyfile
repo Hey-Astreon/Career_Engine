@@ -1,3 +1,8 @@
 astrework.app, www.astrework.app {
     reverse_proxy astrepilot:3000
 }
+
+agent.astrework.app {
+    reverse_proxy agent:8000
+}
+

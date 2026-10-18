@@ -179,10 +179,17 @@ AstreWork is officially live in production at **[https://astrework.app](https://
 
 ### 1. Production Architecture
 - **Dedicated Hardware:** Oracle Cloud `VM.Standard.A1.Flex` (4 ARM64 OCPUs, 24 GB RAM in Mumbai `ap-mumbai-1`)
-- **Reverse Proxy & SSL:** Caddy (`caddy:alpine`) with automatic HTTPS & TLS-ALPN-01 certificate renewals
-- **Container Mesh:** Docker Engine 29.9.0 & Compose v5.6.0 (`docker-compose.prod.yml`)
-- **CD Automation:** GitHub Actions ARM64 buildx to GHCR + Watchtower auto-updating containers every 60s
-- **Live Production URL:** [https://astrework.app](https://astrework.app)
+- **Reverse Proxy & SSL:** Caddy (`caddy:alpine`) with automatic HTTPS & TLS-ALPN-01 certificates for `astrework.app` and `agent.astrework.app`
+- **Container Mesh (`docker-compose.prod.yml`):**
+  - `astrepilot_web`: Next.js 16 standalone web application (:3000)
+  - `astrework_agent`: Antigravity Python Agent Core gateway (:8000)
+  - `astrework_redis`: Redis 7 LRU cache
+  - `caddy`: Dual reverse proxy & automated TLS
+  - `watchtower`: Continuous deployment watcher auto-reloading containers on new GHCR image pushes
+- **CD Automation:** GitHub Actions ARM64 buildx pushes both `career_engine:latest` and `career_engine-agent:latest` to GHCR on `git push origin main`
+- **Live Production URLs:**
+  - Web Application: [https://astrework.app](https://astrework.app)
+  - Antigravity Agent Core: [https://agent.astrework.app](https://agent.astrework.app)
 
 ### 2. Configure Production Environment Variables (`.env`)
 In your production `.env` file on the Oracle Cloud server, configure the following keys:
@@ -192,11 +199,12 @@ In your production `.env` file on the Oracle Cloud server, configure the followi
 | `TURSO_DATABASE_URL` | Remote Turso LibSQL connection (`libsql://...`) |
 | `TURSO_AUTH_TOKEN` | Turso database JWT auth token |
 | `GROQ_API_KEY` | Primary LLM inference key (`openai/gpt-oss-120b`, ~500 t/s) |
-| `GEMINI_API_KEY` | Google Cloud Gemini 3.8 Flash API key (`gemini-3.8-flash`) |
+| `GEMINI_API_KEY` | Google Cloud Gemini 3.8 Flash API key for Next.js & Antigravity Agents |
 | `CEREBRAS_API_KEY` | Cerebras fast fallback API key (`qwen-3.8-27b`) |
 | `NVIDIA_NIM_API_KEY` | NVIDIA NIM enterprise reasoning key (`meta/llama-4-maverick`) |
 | `NEXTAUTH_SECRET` | NextAuth session encryption secret |
 | `NEXTAUTH_URL` | Production deployment URL (`https://astrework.app`) |
+| `AGENT_GATEWAY_URL` | Internal Docker agent URL (`http://agent:8000` or `https://agent.astrework.app`) |
 
 ### 3. Synchronize Cloud Database Anytime
 Whenever new opportunities or candidate updates are made locally, sync them to Turso Cloud in one command:
