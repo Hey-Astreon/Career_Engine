@@ -12,6 +12,8 @@ import { LFXMentorshipProvider } from "./lfx";
 import { NoDeskProvider } from "./nodesk";
 import { InternListProvider } from "./internlist";
 import { AstraProvider } from "./astra";
+import { WellfoundProvider } from "./wellfound";
+import { JobrightProvider } from "./jobright";
 import { generateUrlHash, computeDeduplicationKey, isDirectAtsUrl } from "./dedup";
 import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS, EarlyCareerTier, determineEarlyCareerTier, calculateEarlyBirdScore } from "./normalize";
 import { isValidHttpUrl } from "@/lib/urlValidator";
@@ -30,6 +32,8 @@ export const ACTIVE_PROVIDERS: JobSourceProvider[] = [
   new NoDeskProvider(),
   new InternListProvider(),
   new AstraProvider(),
+  new WellfoundProvider(),
+  new JobrightProvider(),
 ];
 
 export interface ProviderRunOptions {

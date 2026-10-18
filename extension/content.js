@@ -120,7 +120,7 @@
       headers['Content-Type'] = 'application/json';
     }
     const cleanOrigin = config.origin.replace(/\/$/, '');
-    const url = cleanOrigin + '/api/autopilot' + path;
+    const url = cleanOrigin + (path.startsWith('/api/') ? path : ('/api/autopilot' + path));
 
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({
@@ -208,6 +208,77 @@
       console.warn('[AstrePilot] Recruiter extraction error:', e);
     }
     return null;
+  }
+
+  function extractCatalogJobs() {
+    try {
+      const hostname = window.location.hostname.toLowerCase();
+      const isWellfound = hostname.includes('wellfound.com');
+      const isJobright = hostname.includes('jobright.ai');
+      
+      if (!isWellfound && !isJobright) return null;
+      
+      const source = isWellfound ? 'WELLFOUND' : 'JOBRIGHT';
+      const harvested = [];
+
+      if (isWellfound) {
+        const cards = document.querySelectorAll('[data-test="JobCard"], div[class*="styles_jobCard"], div[class*="styles_result"]');
+        cards.forEach(card => {
+          try {
+            const titleEl = card.querySelector('a[class*="title"], h2, h3, [data-test="JobTitle"]');
+            const companyEl = card.querySelector('a[class*="company"], [data-test="StartupName"], h4, strong');
+            const linkEl = card.querySelector('a[href*="/jobs/"], a[href*="/company/"]');
+            const compEl = card.querySelector('span[class*="compensation"], span[class*="salary"]');
+            const locEl = card.querySelector('span[class*="location"], [data-test="Location"]');
+
+            const title = titleEl ? titleEl.innerText.trim() : null;
+            const company = companyEl ? companyEl.innerText.trim() : null;
+            let url = linkEl ? linkEl.href : null;
+            if (url && url.startsWith('/')) url = 'https://wellfound.com' + url;
+
+            if (title && company && url) {
+              harvested.push({
+                title,
+                company,
+                location: locEl ? locEl.innerText.trim() : 'Remote',
+                salary: compEl ? compEl.innerText.trim() : null,
+                url,
+                rawDescription: `${title} at ${company}. Live startup role on Wellfound.`,
+              });
+            }
+          } catch (e) {}
+        });
+      } else if (isJobright) {
+        const cards = document.querySelectorAll('[class*="job-card"], [class*="JobCard"], div[role="article"]');
+        cards.forEach(card => {
+          try {
+            const titleEl = card.querySelector('h2, h3, a[class*="title"]');
+            const companyEl = card.querySelector('p[class*="company"], span[class*="company"], strong');
+            const linkEl = card.querySelector('a[href*="/job/"], a[href*="http"]');
+            const locEl = card.querySelector('[class*="location"]');
+
+            const title = titleEl ? titleEl.innerText.trim() : null;
+            const company = companyEl ? companyEl.innerText.trim() : null;
+            const url = linkEl ? linkEl.href : null;
+
+            if (title && company && url) {
+              harvested.push({
+                title,
+                company,
+                location: locEl ? locEl.innerText.trim() : 'Remote',
+                url,
+                rawDescription: `${title} at ${company}. Harvested from Jobright AI.`,
+              });
+            }
+          } catch (e) {}
+        });
+      }
+
+      return harvested.length > 0 ? { source, jobs: harvested } : null;
+    } catch (err) {
+      console.warn('[AstrePilot Harvester] Error detecting jobs:', err);
+      return null;
+    }
   }
 
   function extractPageContent() {
@@ -553,6 +624,7 @@
       onExtract: runExtract,
       onExtractJD: runExtractJD,
       onDownloadResume: runDownloadResume,
+      onSyncHarvester: runSyncHarvester,
       onClose: () => {
         if (detectedFields) {
           detectedFields.forEach(f => f.element.classList.remove('ap-field-active', 'ap-field-done'));
@@ -586,6 +658,12 @@
 
     activeHud.setState('scanning');
     detectedFields = scanFields();
+
+    // Check for catalog jobs (Wellfound / Jobright)
+    const catalogData = extractCatalogJobs();
+    if (catalogData && activeHud.setHarvester) {
+      activeHud.setHarvester(catalogData);
+    }
 
     if (detectedFields.length === 0) {
       activeHud.setState('no-fields');
@@ -701,6 +779,38 @@
 
   function runDownloadResume() {
     chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
+  }
+
+  async function runSyncHarvester() {
+    const hud = activeHud;
+    if (!hud) return;
+    const data = extractCatalogJobs();
+    if (!data || !data.jobs.length) return;
+
+    hud.setState('extracting', { step: `Syncing ${data.jobs.length} ${data.source} roles...` });
+    try {
+      const res = await apFetch('/api/jobs/import', {
+        method: 'POST',
+        body: JSON.stringify({ source: data.source, jobs: data.jobs })
+      });
+      const result = await res.json();
+      if (result.success) {
+        if (hud.setHarvester) {
+          hud.setHarvester({
+            source: data.source,
+            count: data.jobs.length,
+            synced: true,
+            inserted: result.inserted || 0,
+            updated: result.updated || 0,
+          });
+        }
+        hud.setState('done');
+      } else {
+        hud.setState('error', { msg: result.error || 'Failed to sync roles.' });
+      }
+    } catch (e) {
+      hud.setState('error', { msg: e.message || 'Sync failed.' });
+    }
   }
 
   async function runExtract() {

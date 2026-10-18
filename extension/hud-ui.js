@@ -80,6 +80,7 @@ window.AstrePilotHUD = (function () {
       this.dragOffset = { x: 0, y: 0 };
       this.astraShield = null;
       this.recruiter = null;
+      this.harvester = null;
 
       // Restore position if possible
       try {
@@ -233,6 +234,9 @@ window.AstrePilotHUD = (function () {
             }).catch(() => {});
           }
         }
+        else if (btn.classList.contains('action-sync-harvester')) {
+          if (this.options.onSyncHarvester) this.options.onSyncHarvester();
+        }
       });
 
       // Escape to collapse
@@ -329,6 +333,11 @@ window.AstrePilotHUD = (function () {
 
     setRecruiter(data) {
       this.recruiter = data;
+      this._renderBody();
+    }
+
+    setHarvester(data) {
+      this.harvester = data;
       this._renderBody();
     }
 
@@ -503,6 +512,33 @@ window.AstrePilotHUD = (function () {
                 </button>
               </div>
             ` : ''}
+          </div>
+        `;
+      }
+
+      // Live Harvester Indicator (Wellfound / Jobright)
+      if (this.harvester && this.harvester.count > 0) {
+        html += `
+          <div class="harvester-card" style="margin-top: 10px; padding: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ap-success, #059669); background: rgba(5,150,105,0.12); padding: 2px 6px; border-radius: 4px;">✨ Harvester</span>
+                <span style="font-weight: 600; font-size: 12px; color: var(--ap-ink, #0f172a);">${esc(this.harvester.source)}</span>
+              </div>
+              <span style="font-size: 11px; font-weight: 700; color: var(--ap-success, #059669);">${this.harvester.count} Roles Detected</span>
+            </div>
+            ${this.harvester.synced ? `
+              <div style="margin-top: 8px; font-size: 11px; color: var(--ap-success, #059669); font-weight: 600;">
+                ✓ Ingested ${this.harvester.inserted} new roles (${this.harvester.updated} updated) to Feed!
+              </div>
+            ` : `
+              <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                <span style="font-size: 10px; color: var(--ap-ink-2, #475569);">Sync directly into AstreWork Feed</span>
+                <button type="button" class="action-sync-harvester" style="padding: 3px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); background: var(--ap-success, #059669); color: white; cursor: pointer; white-space: nowrap;">
+                  Sync to Feed ⚡
+                </button>
+              </div>
+            `}
           </div>
         `;
       }

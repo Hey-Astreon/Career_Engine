@@ -608,6 +608,22 @@ svg {
   transform: translateY(0.5px);
 }
 
+/* Harvester Card Component */
+.harvester-card {
+  transition: all 0.2s var(--ap-ease);
+}
+.harvester-card:hover {
+  border-color: var(--ap-success) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
+}
+.action-sync-harvester:hover {
+  filter: brightness(1.1);
+  transform: translateY(-0.5px);
+}
+.action-sync-harvester:active {
+  transform: translateY(0.5px);
+}
+
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

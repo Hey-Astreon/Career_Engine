@@ -14,6 +14,7 @@ from python_agents.services.oracle_service import generate_screening_answer
 from python_agents.services.self_healer import diagnose_provider, heal_provider
 from python_agents.services.headless_applier import fill_application_form
 from python_agents.services.resume_tailorer import tailor_resume_bullets
+from python_agents.services.stealth_scraper import harvest_jobs
 
 app = FastAPI(
     title="Career Engine — Antigravity Agent Core",
@@ -60,6 +61,13 @@ class TailorRequest(BaseModel):
     bullets: List[str]
     candidateSkills: Optional[List[str]] = None
 
+# 5. Scraper Models
+class ScraperRequest(BaseModel):
+    source: str = "wellfound"
+    query: Optional[str] = "software engineer"
+    remoteOnly: Optional[bool] = True
+    maxJobs: Optional[int] = 25
+
 @app.get("/")
 async def root():
     return {
@@ -67,7 +75,7 @@ async def root():
         "status": "online",
         "documentation": "/docs",
         "health": "/health",
-        "agents": ["oracle", "self_healer", "headless_applier", "resume_tailorer"]
+        "agents": ["oracle", "self_healer", "headless_applier", "resume_tailorer", "stealth_scraper"]
     }
 
 @app.get("/health")
@@ -76,7 +84,7 @@ async def health_check():
         "status": "healthy",
         "service": "Career Engine Antigravity Agent Core",
         "sdk": getattr(agy, "__file__", "active"),
-        "agents": ["oracle", "self_healer", "headless_applier", "resume_tailorer"]
+        "agents": ["oracle", "self_healer", "headless_applier", "resume_tailorer", "stealth_scraper"]
     }
 
 @app.post("/oracle/answer", response_model=OracleResponse)
@@ -127,6 +135,24 @@ async def api_tailor_bullets(req: TailorRequest):
             current_bullets=req.bullets,
             candidate_skills=req.candidateSkills,
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/scraper/harvest")
+async def api_scraper_harvest(req: ScraperRequest):
+    try:
+        jobs = await harvest_jobs(
+            source=req.source,
+            query=req.query or "software engineer",
+            remote_only=req.remoteOnly if req.remoteOnly is not None else True,
+            max_jobs=req.maxJobs or 25,
+        )
+        return {
+            "success": True,
+            "source": req.source,
+            "count": len(jobs),
+            "jobs": jobs,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
