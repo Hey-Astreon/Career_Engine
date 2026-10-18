@@ -55,7 +55,7 @@ async def harvest_wellfound_jobs(
                 if "graphql" in response.url and response.status == 200:
                     text = await response.text()
                     data = json.loads(text)
-                    if "data" in data and ("searchJobs" in data["data"] or "jobListings" in data["data"]):
+                    if "data" in data and any("search" in k.lower() or "job" in k.lower() or "talent" in k.lower() for k in data["data"].keys()):
                         intercepted_graphql.append(data)
             except Exception:
                 pass
@@ -82,32 +82,108 @@ async def harvest_wellfound_jobs(
             await page.goto(target_url, wait_until="domcontentloaded", timeout=25000)
             await asyncio.sleep(2.0)
 
+            # Proactively fill search bar if present on public page
+            try:
+                job_input = await page.query_selector('input[placeholder*="Job title" i], input[placeholder*="title" i], input[placeholder*="role" i]')
+                if job_input:
+                    await job_input.fill(query or "Software Engineer Intern")
+                    loc_input = await page.query_selector('input[placeholder*="Location" i]')
+                    if loc_input and remote_only:
+                        await loc_input.fill("Remote")
+                    search_btn = await page.query_selector('button:has-text("Search"), input[type="submit"]')
+                    if search_btn:
+                        await search_btn.click()
+                    else:
+                        await page.keyboard.press("Enter")
+                    await asyncio.sleep(2.5)
+            except Exception as e:
+                pass
+
             # Scroll down to trigger client-side hydration
             await page.evaluate("window.scrollBy(0, 800)")
             await asyncio.sleep(1.5)
 
-            # Check if GraphQL yielded items
+            # 1. First-class Loophole: Extract from Apollo Client store or __NEXT_DATA__ directly from page memory
+            try:
+                apollo_jobs = await page.evaluate("""() => {
+                    const results = [];
+                    let store = null;
+                    if (typeof window.__APOLLO_CLIENT__ !== 'undefined' && window.__APOLLO_CLIENT__.extract) {
+                        store = window.__APOLLO_CLIENT__.extract();
+                    } else {
+                        const nextScript = document.getElementById('__NEXT_DATA__');
+                        if (nextScript) {
+                            try {
+                                const parsed = JSON.parse(nextScript.textContent);
+                                store = parsed?.props?.pageProps?.apolloState || parsed?.props?.pageProps?.initialApolloState;
+                            } catch (e) {}
+                        }
+                    }
+                    if (!store) return results;
+
+                    for (const [key, val] of Object.entries(store)) {
+                        if (key.includes('JobListing') && val && val.title) {
+                            let company = 'Startup';
+                            if (val.startup && val.startup.__ref && store[val.startup.__ref]) {
+                                company = store[val.startup.__ref].name || company;
+                            } else if (val.company && val.company.__ref && store[val.company.__ref]) {
+                                company = store[val.company.__ref].name || company;
+                            }
+                            const isRemote = val.remote === true || 
+                                (Array.isArray(val.locationNames) && val.locationNames.some(l => typeof l === 'string' && l.toLowerCase().includes('remote')));
+                            const location = isRemote ? 'Remote' : ((Array.isArray(val.locationNames) && val.locationNames[0]) || 'Remote');
+                            const slug = val.slug || (val.id ? `job-${val.id}` : 'startup-job');
+                            const url = val.id ? `https://wellfound.com/jobs/${val.id}-${slug}` : `https://wellfound.com/jobs/${slug}`;
+                            results.push({
+                                title: val.title,
+                                company: company,
+                                location: location,
+                                url: url,
+                                salary: val.compensation || null,
+                                jobType: val.jobType || (val.title.toLowerCase().includes('intern') ? 'internship' : 'full-time'),
+                                rawDescription: val.description || `${val.title} at ${company}. Live startup role on Wellfound.`,
+                                isRemote: isRemote
+                            });
+                        }
+                    }
+                    return results;
+                }""")
+                if isinstance(apollo_jobs, list):
+                    for it in apollo_jobs:
+                        if len(jobs) >= max_jobs:
+                            break
+                        jobs.append(it)
+            except Exception as e:
+                print(f"[StealthScraper] Apollo state evaluation note: {e}")
+
+            # 2. Check if GraphQL interception yielded items
             for payload in intercepted_graphql:
-                listings = payload.get("data", {}).get("searchJobs", {}).get("listings", [])
-                for item in listings:
-                    if len(jobs) >= max_jobs:
-                        break
-                    title = item.get("title") or item.get("role")
-                    company_obj = item.get("startup") or item.get("company", {})
-                    company_name = company_obj.get("name") if isinstance(company_obj, dict) else "Startup"
-                    slug = item.get("slug") or item.get("id")
-                    url = f"https://wellfound.com/jobs/{slug}" if slug else target_url
-                    salary = item.get("compensation") or item.get("salary")
-                    
-                    if title and company_name:
-                        jobs.append({
-                            "title": title,
-                            "company": company_name,
-                            "location": "Remote",
-                            "url": url,
-                            "salary": salary,
-                            "rawDescription": f"{title} at {company_name}. Live startup role on Wellfound.",
-                        })
+                data_obj = payload.get("data", {})
+                for top_key, top_val in data_obj.items():
+                    listings = []
+                    if isinstance(top_val, dict):
+                        listings = top_val.get("listings") or top_val.get("results") or top_val.get("jobs") or []
+                    elif isinstance(top_val, list):
+                        listings = top_val
+                    for item in listings:
+                        if len(jobs) >= max_jobs:
+                            break
+                        title = item.get("title") or item.get("role")
+                        company_obj = item.get("startup") or item.get("company", {})
+                        company_name = company_obj.get("name") if isinstance(company_obj, dict) else "Startup"
+                        slug = item.get("slug") or item.get("id")
+                        url = f"https://wellfound.com/jobs/{slug}" if slug else target_url
+                        salary = item.get("compensation") or item.get("salary")
+                        
+                        if title and company_name:
+                            jobs.append({
+                                "title": title,
+                                "company": company_name,
+                                "location": "Remote",
+                                "url": url,
+                                "salary": salary,
+                                "rawDescription": f"{title} at {company_name}. Live startup role on Wellfound.",
+                            })
 
             # DOM Scraping Fallback if GraphQL didn't yield
             if len(jobs) == 0:

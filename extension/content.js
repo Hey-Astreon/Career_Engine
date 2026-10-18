@@ -222,32 +222,78 @@
       const harvested = [];
 
       if (isWellfound) {
-        const cards = document.querySelectorAll('[data-test="JobCard"], div[class*="styles_jobCard"], div[class*="styles_result"]');
-        cards.forEach(card => {
-          try {
-            const titleEl = card.querySelector('a[class*="title"], h2, h3, [data-test="JobTitle"]');
-            const companyEl = card.querySelector('a[class*="company"], [data-test="StartupName"], h4, strong');
-            const linkEl = card.querySelector('a[href*="/jobs/"], a[href*="/company/"]');
-            const compEl = card.querySelector('span[class*="compensation"], span[class*="salary"]');
-            const locEl = card.querySelector('span[class*="location"], [data-test="Location"]');
-
-            const title = titleEl ? titleEl.innerText.trim() : null;
-            const company = companyEl ? companyEl.innerText.trim() : null;
-            let url = linkEl ? linkEl.href : null;
-            if (url && url.startsWith('/')) url = 'https://wellfound.com' + url;
-
-            if (title && company && url) {
-              harvested.push({
-                title,
-                company,
-                location: locEl ? locEl.innerText.trim() : 'Remote',
-                salary: compEl ? compEl.innerText.trim() : null,
-                url,
-                rawDescription: `${title} at ${company}. Live startup role on Wellfound.`,
-              });
+        // 1. First-class Loophole: Apollo Store & __NEXT_DATA__ in-memory extraction
+        try {
+          const nextScript = document.getElementById('__NEXT_DATA__');
+          if (nextScript) {
+            const parsed = JSON.parse(nextScript.textContent);
+            const store = parsed?.props?.pageProps?.apolloState || parsed?.props?.pageProps?.initialApolloState;
+            if (store) {
+              for (const [key, val] of Object.entries(store)) {
+                if (key.includes('JobListing') && val && val.title) {
+                  let company = 'Startup';
+                  if (val.startup && val.startup.__ref && store[val.startup.__ref]) {
+                    company = store[val.startup.__ref].name || company;
+                  } else if (val.company && val.company.__ref && store[val.company.__ref]) {
+                    company = store[val.company.__ref].name || company;
+                  }
+                  const isRemote = val.remote === true || 
+                    (Array.isArray(val.locationNames) && val.locationNames.some(l => typeof l === 'string' && l.toLowerCase().includes('remote')));
+                  const loc = isRemote ? 'Remote' : ((Array.isArray(val.locationNames) && val.locationNames[0]) || 'Remote');
+                  const slug = val.slug || (val.id ? `job-${val.id}` : 'startup-job');
+                  const url = val.id ? `https://wellfound.com/jobs/${val.id}-${slug}` : `https://wellfound.com/jobs/${slug}`;
+                  harvested.push({
+                    title: val.title,
+                    company,
+                    location: loc,
+                    salary: val.compensation || null,
+                    url,
+                    rawDescription: val.description || `${val.title} at ${company}. Live startup role on Wellfound.`,
+                  });
+                }
+              }
             }
-          } catch (e) {}
-        });
+          }
+        } catch (apolloErr) {
+          console.warn('[AstrePilot] Apollo store parsing note:', apolloErr);
+        }
+
+        // 2. DOM fallback for rendered search cards
+        if (harvested.length === 0) {
+          const jobLinks = document.querySelectorAll('a[href*="/jobs/"]');
+          jobLinks.forEach(linkEl => {
+            try {
+              let url = linkEl.getAttribute('href');
+              if (!url || ['/signup', '/faq', '/login'].some(s => url.includes(s)) || url.endsWith('/jobs')) return;
+              if (url.startsWith('/')) url = 'https://wellfound.com' + url;
+
+              const card = linkEl.closest('div[class*="styles_jobListing"], div[class*="styles_company"], div[class*="styles_result"], li, tr, article') || linkEl.parentElement;
+              const titleEl = card ? card.querySelector('a[class*="title"], h2, h3, [data-test="JobTitle"]') : null;
+              const title = (titleEl ? titleEl.innerText : linkEl.innerText).split('\n')[0].trim();
+              if (!title || title.length < 3 || title.toLowerCase().includes('open position')) return;
+
+              let company = 'Startup';
+              const companyEl = card ? card.querySelector('a[href*="/company/"], [data-test="StartupName"], h4, strong') : null;
+              if (companyEl) {
+                company = companyEl.innerText.split('\n')[0].trim() || company;
+              }
+
+              const locEl = card ? card.querySelector('span[class*="location"], [data-test="Location"]') : null;
+              const compEl = card ? card.querySelector('span[class*="compensation"], span[class*="salary"]') : null;
+
+              if (title && url) {
+                harvested.push({
+                  title,
+                  company,
+                  location: locEl ? locEl.innerText.trim() : 'Remote',
+                  salary: compEl ? compEl.innerText.trim() : null,
+                  url,
+                  rawDescription: `${title} at ${company}. Live startup role on Wellfound.`,
+                });
+              }
+            } catch (e) {}
+          });
+        }
       } else if (isJobright) {
         const cards = document.querySelectorAll('[class*="job-card"], [class*="JobCard"], div[role="article"]');
         cards.forEach(card => {

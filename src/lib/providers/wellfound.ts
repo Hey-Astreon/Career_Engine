@@ -48,7 +48,7 @@ export class WellfoundProvider implements JobSourceProvider {
         config.apiEndpoint || `${agentGatewayUrl}/scraper/harvest`,
         {
           source: "wellfound",
-          query: "software engineer",
+          query: "software engineer intern",
           remoteOnly: true,
           maxJobs: 25,
         },
