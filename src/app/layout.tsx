@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { siteConfig } from "@/lib/siteConfig";
@@ -190,21 +191,23 @@ const jsonLd = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      <head>
-        <meta name="google-site-verification" content="DBE7LKgr6629Xr788PYMUHHMsP1273JDlxVNAEKoS0I" />
-        <script
+      <body suppressHydrationWarning>
+        <Script
+          id="vercel-redirect"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `if(typeof window!=="undefined"&&window.location.hostname.endsWith("vercel.app")){window.location.replace("https://astrework.app"+window.location.pathname+window.location.search);}`,
           }}
         />
-        <script
+        <Script
+          id="json-ld"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
+

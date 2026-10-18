@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { OptimizedResume } from "@/lib/ai/resumeOptimizer";
-import { Save, Copy, FileText, Trash2, SplitSquareHorizontal, Eye, X, Download, Sparkles, ShieldCheck } from "lucide-react";
+import { Copy, FileText, Trash2, SplitSquareHorizontal, Eye, X, Download } from "lucide-react";
 
 export interface SavedVariant {
   id: string;

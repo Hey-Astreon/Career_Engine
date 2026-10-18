@@ -6,14 +6,12 @@ import Link from "next/link";
 import { useProfileStore } from "@/store/useProfileStore";
 import { ProfileEditModal } from "./ProfileEditModal";
 import {
-  User,
   LogOut,
   Settings,
   Sparkles,
   Briefcase,
   FileText,
   ChevronDown,
-  ShieldCheck,
 } from "lucide-react";
 
 export function UserAccountMenu() {

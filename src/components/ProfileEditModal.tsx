@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ProfileData, useProfileStore } from "@/store/useProfileStore";
-import { X, Save, Sparkles, Loader2, CheckCircle2, User, Globe, Mail, Phone, MapPin } from "lucide-react";
+import { useProfileStore } from "@/store/useProfileStore";
+import { X, Save, Loader2, CheckCircle2, User, Globe, Mail, Phone, MapPin } from "lucide-react";
 
 interface ProfileEditModalProps {
   isOpen: boolean;

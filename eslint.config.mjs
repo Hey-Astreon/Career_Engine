@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     "extension/**",
     "scratch/**",
     "dev.db",
+    "python_agents/**",
+    ".venv/**",
+    "docs/**",
   ]),
   {
     rules: {

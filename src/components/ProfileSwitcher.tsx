@@ -1,7 +1,7 @@
 "use client";
 
 import { useProfileStore } from "@/store/useProfileStore";
-import { UserCheck, ChevronDown, Sparkles } from "lucide-react";
+import { UserCheck, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 function getInitials(name: string): string {

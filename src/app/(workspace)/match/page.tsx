@@ -148,6 +148,10 @@ export default function MatchStudioPage() {
   const handleRunMatch = async (jobId: string, forceRefresh = false) => {
     setSelectedJobId(jobId);
     setMatchData(null);
+    setTailorResult(null);
+    setShowTailorPanel(false);
+    setCopiedIndex(null);
+    setCopiedAll(false);
     setIsEvaluating(true);
 
     try {

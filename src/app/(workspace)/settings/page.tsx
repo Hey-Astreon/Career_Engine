@@ -30,6 +30,39 @@ interface ProfileForm {
   primarySkills: string[];
 }
 
+interface SettingsFieldProps {
+  label: string;
+  field: keyof ProfileForm;
+  value: string;
+  onChange: (field: keyof ProfileForm, val: string) => void;
+  type?: string;
+  placeholder?: string;
+}
+
+function SettingsField({
+  label,
+  field,
+  value,
+  onChange,
+  type = "text",
+  placeholder = "",
+}: SettingsFieldProps) {
+  return (
+    <div>
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(field, e.target.value)}
+        placeholder={placeholder}
+        className="w-full h-10 px-3 text-[13px] rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] focus:bg-white focus:border-[var(--blue)] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all text-[var(--ink)]"
+      />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Profile Identity Card
 // ---------------------------------------------------------------------------
@@ -167,27 +200,9 @@ function ProfileIdentityCard() {
     }
   };
 
-  const Field = ({
-    label, field, type = "text", placeholder = ""
-  }: {
-    label: string;
-    field: keyof ProfileForm;
-    type?: string;
-    placeholder?: string;
-  }) => (
-    <div>
-      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={form[field] as string}
-        onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-        placeholder={placeholder}
-        className="w-full h-10 px-3 text-[13px] rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] focus:bg-white focus:border-[var(--blue)] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all text-[var(--ink)]"
-      />
-    </div>
-  );
+  const handleFieldChange = (field: keyof ProfileForm, val: string) => {
+    setForm((prev) => ({ ...prev, [field]: val }));
+  };
 
   if (loading) {
     return (
@@ -304,14 +319,14 @@ function ProfileIdentityCard() {
           {expanded && (
             <div className="p-5 space-y-4 border-t border-[var(--line)]">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Full Name" field="fullName" placeholder="Your full name" />
-                <Field label="Target Role / Headline" field="title" placeholder="e.g. Software Engineer" />
-                <Field label="Location" field="location" placeholder="City, Country" />
-                <Field label="Email" field="email" type="email" placeholder="you@example.com" />
-                <Field label="Phone" field="phone" placeholder="+91 98765 43210" />
-                <Field label="LinkedIn URL" field="linkedinUrl" placeholder="https://linkedin.com/in/…" />
-                <Field label="Portfolio URL" field="portfolioUrl" placeholder="https://yoursite.dev" />
-                <Field label="GitHub URL" field="githubUrl" placeholder="https://github.com/…" />
+                <SettingsField label="Full Name" field="fullName" value={form.fullName} onChange={handleFieldChange} placeholder="Your full name" />
+                <SettingsField label="Target Role / Headline" field="title" value={form.title} onChange={handleFieldChange} placeholder="e.g. Software Engineer" />
+                <SettingsField label="Location" field="location" value={form.location} onChange={handleFieldChange} placeholder="City, Country" />
+                <SettingsField label="Email" field="email" value={form.email} onChange={handleFieldChange} type="email" placeholder="you@example.com" />
+                <SettingsField label="Phone" field="phone" value={form.phone} onChange={handleFieldChange} placeholder="+91 98765 43210" />
+                <SettingsField label="LinkedIn URL" field="linkedinUrl" value={form.linkedinUrl} onChange={handleFieldChange} placeholder="https://linkedin.com/in/…" />
+                <SettingsField label="Portfolio URL" field="portfolioUrl" value={form.portfolioUrl} onChange={handleFieldChange} placeholder="https://yoursite.dev" />
+                <SettingsField label="GitHub URL" field="githubUrl" value={form.githubUrl} onChange={handleFieldChange} placeholder="https://github.com/…" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-4 border-t border-[var(--line)]">
@@ -330,7 +345,7 @@ function ProfileIdentityCard() {
                     <option value="senior">Senior</option>
                   </select>
                 </div>
-                <Field label="Years of Exp" field="yearsOfExperience" type="number" placeholder="e.g. 2" />
+                <SettingsField label="Years of Exp" field="yearsOfExperience" value={form.yearsOfExperience} onChange={handleFieldChange} type="number" placeholder="e.g. 2" />
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Work Type</label>
                   <select
@@ -343,7 +358,7 @@ function ProfileIdentityCard() {
                     <option value="onsite">On-site</option>
                   </select>
                 </div>
-                <Field label="Salary Range" field="salaryRange" placeholder="e.g. $80k - $100k" />
+                <SettingsField label="Salary Range" field="salaryRange" value={form.salaryRange} onChange={handleFieldChange} placeholder="e.g. $80k - $100k" />
               </div>
 
               {/* Context note */}

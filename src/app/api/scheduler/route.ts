@@ -19,16 +19,13 @@ export async function GET(req: Request) {
     }
 
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const status = discoveryScheduler.getStatus();
+
     return NextResponse.json(
-      { success: true, status },
+      { success: true, status, authenticated: Boolean(session?.user) },
       {
         headers: {
-          "Cache-Control": "private, max-age=15, stale-while-revalidate=30",
+          "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
         },
       }
     );

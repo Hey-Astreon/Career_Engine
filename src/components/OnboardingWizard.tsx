@@ -53,6 +53,20 @@ const STEP_META = [
   { icon: CheckCircle2, label: "Review"  },
 ];
 
+const NavBar = ({ onBack, onNext, nextLabel = "Next", nextDisabled = false }: {
+  onBack?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean;
+}) => (
+  <div className="mt-8 flex items-center justify-between">
+    {onBack ? <button onClick={onBack} className="text-[#86868b] hover:text-[#1d1d1f] text-[15px] font-medium transition-colors">← Back</button> : <span />}
+    {onNext && (
+      <button onClick={onNext} disabled={nextDisabled}
+        className="bg-[#0071e3] hover:bg-[#0077ED] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-full px-7 py-2.5 text-[15px] font-semibold transition-all flex items-center gap-2 shadow-[0_4px_14px_rgba(0,113,227,0.25)]">
+        {nextLabel} <ChevronRight className="w-4 h-4" />
+      </button>
+    )}
+  </div>
+);
+
 export default function OnboardingWizard() {
   const router = useRouter();
   const { data: authSession } = useSession();
@@ -147,20 +161,6 @@ export default function OnboardingWizard() {
 
   const ic = "w-full h-12 bg-[#f5f5f7] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 rounded-xl px-4 text-[15px] text-[#1d1d1f] transition-all outline-none border border-transparent placeholder:text-[#b0b0b8]";
   const lc = "block text-[12px] font-semibold text-[#86868b] mb-1.5 uppercase tracking-wider";
-
-  const NavBar = ({ onBack, onNext, nextLabel = "Next", nextDisabled = false }: {
-    onBack?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean;
-  }) => (
-    <div className="mt-8 flex items-center justify-between">
-      {onBack ? <button onClick={onBack} className="text-[#86868b] hover:text-[#1d1d1f] text-[15px] font-medium transition-colors">← Back</button> : <span />}
-      {onNext && (
-        <button onClick={onNext} disabled={nextDisabled}
-          className="bg-[#0071e3] hover:bg-[#0077ED] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-full px-7 py-2.5 text-[15px] font-semibold transition-all flex items-center gap-2 shadow-[0_4px_14px_rgba(0,113,227,0.25)]">
-          {nextLabel} <ChevronRight className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  );
 
   return (
     <div className="flex flex-col h-full">
