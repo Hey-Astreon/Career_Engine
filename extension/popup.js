@@ -52,13 +52,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function getStoredConfig() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin'], (res) => {
-        let origin = (res.astrepilot_origin || 'https://astrework.app').trim();
+        const safeRes = res || {};
+        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').trim();
         if (!origin || origin.includes('vercel.app')) {
           origin = 'https://astrework.app';
           chrome.storage.sync.set({ astrepilot_origin: origin });
         }
         resolve({
-          token: res.astrepilot_token || null,
+          token: safeRes.astrepilot_token || null,
           origin
         });
       });

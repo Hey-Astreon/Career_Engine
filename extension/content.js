@@ -97,13 +97,14 @@
   async function getStoredConfig() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin'], (res) => {
-        let origin = (res.astrepilot_origin || 'https://astrework.app').trim();
+        const safeRes = res || {};
+        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').trim();
         if (!origin || origin.includes('vercel.app')) {
           origin = 'https://astrework.app';
           chrome.storage.sync.set({ astrepilot_origin: origin });
         }
         resolve({
-          token: res.astrepilot_token || null,
+          token: safeRes.astrepilot_token || null,
           origin
         });
       });
@@ -220,28 +221,36 @@
       
       const source = isWellfound ? 'WELLFOUND' : 'JOBRIGHT';
       const harvested = [];
+      const seenUrls = new Set();
 
       if (isWellfound) {
         // 1. First-class Loophole: Apollo Store & __NEXT_DATA__ in-memory extraction
         try {
           const nextScript = document.getElementById('__NEXT_DATA__');
-          if (nextScript) {
+          if (nextScript && nextScript.textContent) {
             const parsed = JSON.parse(nextScript.textContent);
             const store = parsed?.props?.pageProps?.apolloState || parsed?.props?.pageProps?.initialApolloState;
             if (store) {
               for (const [key, val] of Object.entries(store)) {
-                if (key.includes('JobListing') && val && val.title) {
+                if ((key.includes('JobListing') || key.includes('JobPosting') || key.startsWith('Job:')) && val && val.title) {
                   let company = 'Startup';
-                  if (val.startup && val.startup.__ref && store[val.startup.__ref]) {
+                  if (val.startup && val.startup.name) {
+                    company = val.startup.name;
+                  } else if (val.company && val.company.name) {
+                    company = val.company.name;
+                  } else if (val.startup && val.startup.__ref && store[val.startup.__ref]) {
                     company = store[val.startup.__ref].name || company;
                   } else if (val.company && val.company.__ref && store[val.company.__ref]) {
                     company = store[val.company.__ref].name || company;
                   }
-                  const isRemote = val.remote === true || 
+                  const isRemote = val.remote === true || val.remote === 'REMOTE' || val.remoteType === 'REMOTE' || 
                     (Array.isArray(val.locationNames) && val.locationNames.some(l => typeof l === 'string' && l.toLowerCase().includes('remote')));
                   const loc = isRemote ? 'Remote' : ((Array.isArray(val.locationNames) && val.locationNames[0]) || 'Remote');
                   const slug = val.slug || (val.id ? `job-${val.id}` : 'startup-job');
                   const url = val.id ? `https://wellfound.com/jobs/${val.id}-${slug}` : `https://wellfound.com/jobs/${slug}`;
+                  if (seenUrls.has(url)) continue;
+                  seenUrls.add(url);
+
                   harvested.push({
                     title: val.title,
                     company,
@@ -266,8 +275,9 @@
               let url = linkEl.getAttribute('href');
               if (!url || ['/signup', '/faq', '/login'].some(s => url.includes(s)) || url.endsWith('/jobs')) return;
               if (url.startsWith('/')) url = 'https://wellfound.com' + url;
+              if (seenUrls.has(url)) return;
 
-              const card = linkEl.closest('div[class*="styles_jobListing"], div[class*="styles_company"], div[class*="styles_result"], li, tr, article') || linkEl.parentElement;
+              const card = linkEl.closest('div[class*="styles_jobListing"], div[class*="styles_company"], div[class*="styles_result"], [data-test*="JobListing"], [data-test*="JobCard"], li, tr, article') || linkEl.parentElement;
               const titleEl = card ? card.querySelector('a[class*="title"], h2, h3, [data-test="JobTitle"]') : null;
               const title = (titleEl ? titleEl.innerText : linkEl.innerText).split('\n')[0].trim();
               if (!title || title.length < 3 || title.toLowerCase().includes('open position')) return;
@@ -282,6 +292,7 @@
               const compEl = card ? card.querySelector('span[class*="compensation"], span[class*="salary"]') : null;
 
               if (title && url) {
+                seenUrls.add(url);
                 harvested.push({
                   title,
                   company,
@@ -308,6 +319,8 @@
             const url = linkEl ? linkEl.href : null;
 
             if (title && company && url) {
+              if (seenUrls.has(url)) return;
+              seenUrls.add(url);
               harvested.push({
                 title,
                 company,
@@ -320,7 +333,7 @@
         });
       }
 
-      return harvested.length > 0 ? { source, jobs: harvested } : null;
+      return harvested.length > 0 ? { source, jobs: harvested, count: harvested.length } : null;
     } catch (err) {
       console.warn('[AstrePilot Harvester] Error detecting jobs:', err);
       return null;
@@ -499,6 +512,15 @@
       return;
     }
 
+    if (el.tagName === 'INPUT' && el.type === 'checkbox') {
+      const valLower = String(value).toLowerCase();
+      const shouldCheck = valLower === 'yes' || valLower === 'true' || valLower === '1' || valLower === 'checked';
+      el.checked = shouldCheck;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+
     if (el.tagName === 'SELECT') {
       const valLower = String(value).toLowerCase();
       let targetOpt = null;
@@ -525,6 +547,9 @@
       : window.HTMLInputElement.prototype;
     const setter = Object.getOwnPropertyDescriptor(proto, 'value');
     if (setter && setter.set) { setter.set.call(el, value); } else { el.value = value; }
+    if (el._valueTracker) {
+      try { el._valueTracker.setValue(''); } catch(e) {}
+    }
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
@@ -715,11 +740,20 @@
     // Check for catalog jobs (Wellfound / Jobright)
     const catalogData = extractCatalogJobs();
     if (catalogData && activeHud.setHarvester) {
-      activeHud.setHarvester(catalogData);
+      activeHud.setHarvester({
+        source: catalogData.source,
+        count: catalogData.jobs.length,
+        jobs: catalogData.jobs,
+        synced: false
+      });
     }
 
     if (detectedFields.length === 0) {
-      activeHud.setState('no-fields');
+      if (catalogData && catalogData.jobs.length > 0) {
+        activeHud.setState('catalog');
+      } else {
+        activeHud.setState('no-fields');
+      }
       return;
     }
 
@@ -838,20 +872,26 @@
     const hud = activeHud;
     if (!hud) return;
     const data = extractCatalogJobs();
-    if (!data || !data.jobs.length) return;
+    const jobs = (data && data.jobs && data.jobs.length) ? data.jobs : (hud.harvester && hud.harvester.jobs);
+    const source = (data && data.source) || (hud.harvester && hud.harvester.source) || 'WELLFOUND';
+    if (!jobs || !jobs.length) {
+      hud.setState('error', { msg: 'No roles found to sync.' });
+      return;
+    }
 
-    hud.setState('extracting', { step: `Syncing ${data.jobs.length} ${data.source} roles...` });
+    hud.setState('extracting', { step: `Syncing ${jobs.length} ${source} roles...` });
     try {
       const res = await apFetch('/api/jobs/import', {
         method: 'POST',
-        body: JSON.stringify({ source: data.source, jobs: data.jobs })
+        body: JSON.stringify({ source: source, jobs: jobs })
       });
-      const result = await res.json();
-      if (result.success) {
+      const result = await res.json().catch(() => null);
+      if (result && result.success) {
         if (hud.setHarvester) {
           hud.setHarvester({
-            source: data.source,
-            count: data.jobs.length,
+            source: source,
+            count: jobs.length,
+            jobs: jobs,
             synced: true,
             inserted: result.inserted || 0,
             updated: result.updated || 0,
@@ -859,7 +899,7 @@
         }
         hud.setState('done');
       } else {
-        hud.setState('error', { msg: result.error || 'Failed to sync roles.' });
+        hud.setState('error', { msg: (result && result.error) || 'Failed to sync roles.' });
       }
     } catch (e) {
       hud.setState('error', { msg: e.message || 'Sync failed.' });
@@ -929,7 +969,7 @@
       const skipped = !val || String(val).trim() === '';
 
       if (!skipped) {
-        if (f.element.tagName === 'SELECT' || (f.element.tagName === 'INPUT' && f.element.type === 'radio')) {
+        if (f.element.tagName === 'SELECT' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
           setNativeValue(f.element, val);
         } else {
           AstrePilotHUD.highlight(f.element);
@@ -968,13 +1008,7 @@
     if (!detectedFields) return;
     detectedFields.forEach(f => {
       if (f.originalValue !== undefined) {
-        if (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox')) {
-          f.element.checked = f.originalValue;
-        } else {
-          f.element.value = f.originalValue;
-        }
-        f.element.dispatchEvent(new Event('input', { bubbles: true }));
-        f.element.dispatchEvent(new Event('change', { bubbles: true }));
+        setNativeValue(f.element, f.originalValue);
         f.element.classList.remove('ap-field-active', 'ap-field-done');
       }
     });

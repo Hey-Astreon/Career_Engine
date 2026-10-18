@@ -517,7 +517,8 @@ window.AstrePilotHUD = (function () {
       }
 
       // Live Harvester Indicator (Wellfound / Jobright)
-      if (this.harvester && this.harvester.count > 0) {
+      const harvestCount = this.harvester ? (this.harvester.count || (this.harvester.jobs ? this.harvester.jobs.length : 0)) : 0;
+      if (this.harvester && harvestCount > 0) {
         html += `
           <div class="harvester-card" style="margin-top: 10px; padding: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
@@ -525,7 +526,7 @@ window.AstrePilotHUD = (function () {
                 <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ap-success, #059669); background: rgba(5,150,105,0.12); padding: 2px 6px; border-radius: 4px;">✨ Harvester</span>
                 <span style="font-weight: 600; font-size: 12px; color: var(--ap-ink, #0f172a);">${esc(this.harvester.source)}</span>
               </div>
-              <span style="font-size: 11px; font-weight: 700; color: var(--ap-success, #059669);">${this.harvester.count} Roles Detected</span>
+              <span style="font-size: 11px; font-weight: 700; color: var(--ap-success, #059669);">${harvestCount} Roles Detected</span>
             </div>
             ${this.harvester.synced ? `
               <div style="margin-top: 8px; font-size: 11px; color: var(--ap-success, #059669); font-weight: 600;">
@@ -570,11 +571,25 @@ window.AstrePilotHUD = (function () {
       }
 
       // Footer
-      if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done') {
+      if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog') {
         html += `<div class="hud-footer">`;
         if (this.state === 'done') {
           html += `<button class="btn-primary action-close">Done</button>`;
-          html += `<button class="btn-secondary action-undo">Undo Autofill</button>`;
+          if (this.fields && this.fields.length > 0) {
+            html += `<button class="btn-secondary action-undo">Undo Autofill</button>`;
+          }
+        } else if (this.state === 'catalog') {
+          const count = this.harvester ? (this.harvester.count || (this.harvester.jobs ? this.harvester.jobs.length : 0)) : 0;
+          if (this.harvester && this.harvester.synced) {
+            html += `<button class="btn-primary action-close">Done</button>`;
+          } else {
+            html += `
+              <button class="btn-primary action-sync-harvester" style="background: var(--ap-success, #059669); border-color: var(--ap-success, #059669); color: white;">
+                ${ICONS.sparkle} Sync ${count} Roles to AstreWork
+              </button>
+              <div class="footnote">Direct feed ingestion · Remote roles</div>
+            `;
+          }
         } else {
           const btnText = this.state === 'scanning' ? 'Scanning...' : `Autofill ${this.fields.length} fields`;
           html += `

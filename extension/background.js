@@ -66,13 +66,21 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// 2. Handle keyboard shortcut (Ctrl+Shift+A / Command+Shift+A)
+// 2. Handle keyboard shortcut (Alt+Shift+A)
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'toggle_astrepilot') {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (activeTab && activeTab.id) {
       chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {
-        // Tab may not have injected content script yet (e.g. chrome:// page)
+        // Fallback: auto-inject into tab if not already running
+        chrome.scripting.executeScript({ target: { tabId: activeTab.id }, files: ['hud-ui.js'] }).then(() => {
+          chrome.scripting.insertCSS({ target: { tabId: activeTab.id }, files: ['hud.css'] });
+          chrome.scripting.executeScript({ target: { tabId: activeTab.id }, files: ['content.js'] }).then(() => {
+            setTimeout(() => {
+              chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {});
+            }, 300);
+          });
+        }).catch(() => {});
       });
     }
   }
@@ -98,7 +106,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.type === 'OPEN_OPTIONS') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      let origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      const safeRes = res || {};
+      let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       if (origin.includes('vercel.app')) {
         origin = 'https://astrework.app';
         chrome.storage.sync.set({ astrepilot_origin: origin });
@@ -110,7 +119,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'OPEN_CUSTOM_JD') {
     chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      let origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      const safeRes = res || {};
+      let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       if (origin.includes('vercel.app')) {
         origin = 'https://astrework.app';
         chrome.storage.sync.set({ astrepilot_origin: origin });
@@ -122,12 +132,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'DOWNLOAD_RESUME') {
     chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token'], (res) => {
-      let origin = (res.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+      const safeRes = res || {};
+      let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       if (origin.includes('vercel.app')) {
         origin = 'https://astrework.app';
         chrome.storage.sync.set({ astrepilot_origin: origin });
       }
-      const token = res.astrepilot_token || '';
+      const token = safeRes.astrepilot_token || '';
       const url = origin + '/api/resume/download/latest?token=' + token;
       chrome.tabs.create({ url, active: false });
     });
@@ -135,7 +146,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === 'PROXY_FETCH') {
-    fetch(request.url, request.options)
+    fetch(request.url, request.options || {})
       .then(async res => {
         const data = await res.json().catch(() => null);
         sendResponse({
@@ -157,7 +168,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // 4. Initialize default settings on install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-    if (!res.astrepilot_origin || res.astrepilot_origin.includes('vercel.app')) {
+    const safeRes = res || {};
+    if (!safeRes.astrepilot_origin || safeRes.astrepilot_origin.includes('vercel.app')) {
       chrome.storage.sync.set({
         astrepilot_origin: 'https://astrework.app'
       });
