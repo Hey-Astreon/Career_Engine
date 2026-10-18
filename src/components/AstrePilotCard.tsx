@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, ExternalLink, Copy, BrainCircuit, Download, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Zap, RefreshCw, Clock, Target, Layers, AlertCircle, Check, Copy, BrainCircuit, Download, Sparkles, ExternalLink } from "lucide-react";
 
 interface Stats {
   fills: number;
@@ -36,50 +36,69 @@ export default function AstrePilotCard() {
   const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const loadToken = useCallback(async () => {
-    setLoadingToken(true);
-    try {
-      const res = await fetch("/api/autopilot/token");
-      if (!res.ok) throw new Error("fetch failed");
-      const data = await res.json();
-      setToken(data.token);
-    } catch {
-      setToken(null);
-    } finally {
-      setLoadingToken(false);
+  useEffect(() => {
+    let active = true;
+    async function fetchToken() {
+      try {
+        const res = await fetch("/api/autopilot/token");
+        if (!res.ok) throw new Error("fetch failed");
+        const data = await res.json();
+        if (active) setToken(data.token);
+      } catch {
+        if (active) setToken(null);
+      } finally {
+        if (active) setLoadingToken(false);
+      }
     }
+    fetchToken();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const loadStats = useCallback(async () => {
+  useEffect(() => {
     if (!token) return;
-    try {
-      const [statsRes, sessionRes] = await Promise.all([
-        fetch("/api/autopilot/log", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/autopilot/session", { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-      
-      if (statsRes.ok) {
-        const data = await statsRes.json();
-        setStats(data.stats);
-        setHistory(data.history ?? []);
+    let active = true;
+    async function fetchStats() {
+      try {
+        const [statsRes, sessionRes] = await Promise.all([
+          fetch("/api/autopilot/log", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("/api/autopilot/session", { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        if (statsRes.ok) {
+          const data = await statsRes.json();
+          if (active) {
+            setStats(data.stats);
+            setHistory(data.history ?? []);
+          }
+        }
+        if (sessionRes.ok) {
+          const sData = await sessionRes.json();
+          if (active) setSession(sData.session || null);
+        }
+      } catch {
+        /* silent */
       }
-      
-      if (sessionRes.ok) {
-        const sData = await sessionRes.json();
-        setSession(sData.session || null);
-      }
-    } catch {
-      /* silent */
     }
+    fetchStats();
+    return () => {
+      active = false;
+    };
   }, [token]);
-
-  useEffect(() => { loadToken(); }, [loadToken]);
-  useEffect(() => { if (token) loadStats(); }, [token, loadStats]);
 
   const handleRegen = async () => {
     setRegenLoading(true);
-    await loadToken();
-    setRegenLoading(false);
+    try {
+      const res = await fetch("/api/autopilot/token");
+      if (res.ok) {
+        const data = await res.json();
+        setToken(data.token);
+      }
+    } catch {
+      /* silent */
+    } finally {
+      setRegenLoading(false);
+    }
   };
 
   const handleCopyToken = async () => {

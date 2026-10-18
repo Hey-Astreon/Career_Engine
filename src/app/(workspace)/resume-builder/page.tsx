@@ -171,8 +171,8 @@ export default function ResumeBuilderPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("loadSession") === "true" && params.get("mode") === "custom") {
-      setCustomMode(true);
       async function loadSession() {
+        setCustomMode(true);
         try {
           const res = await fetch("/api/autopilot/session");
           if (res.ok) {

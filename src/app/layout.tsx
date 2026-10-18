@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { siteConfig } from "@/lib/siteConfig";
@@ -192,17 +191,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <Script
-          id="vercel-redirect"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `if(typeof window!=="undefined"&&window.location.hostname.endsWith("vercel.app")){window.location.replace("https://astrework.app"+window.location.pathname+window.location.search);}`,
-          }}
-        />
-        <Script
-          id="json-ld"
+        <script
           type="application/ld+json"
-          strategy="beforeInteractive"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <AuthProvider>{children}</AuthProvider>

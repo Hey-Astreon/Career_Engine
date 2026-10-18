@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 interface Particle {
@@ -58,7 +58,6 @@ export default function DataDustBackground() {
     
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setParticles(generated);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { OptimizedResume } from "@/lib/ai/resumeOptimizer";
 import { Copy, FileText, Trash2, SplitSquareHorizontal, Eye, X, Download } from "lucide-react";
 
@@ -41,7 +41,7 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
   const [compareDiff, setCompareDiff] = useState<any>(null);
   const [selectedForCompare, setSelectedForCompare] = useState<string | null>(null);
 
-  const fetchVariants = async () => {
+  const fetchVariants = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/resume/variants?profileSlug=${profileSlug}`);
@@ -57,12 +57,11 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profileSlug]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchVariants();
-  }, [profileSlug]);
+    void fetchVariants();
+  }, [fetchVariants]);
 
   const handleSave = async () => {
     if (!saveName.trim()) return alert("Variant name is required");

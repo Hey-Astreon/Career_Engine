@@ -29,18 +29,21 @@ function statusTone(status: string) {
   return { dot: "bg-[var(--red)]", chip: "ce-chip-red", bar: "bg-[var(--red)]" };
 }
 
+const STATIC_SYNC_NOW = "2026-03-20T12:00:00.000Z";
+const STATIC_SYNC_HOUR_AGO = "2026-03-20T11:00:00.000Z";
+
 const DEFAULT_FALLBACK_PROVIDERS: ProviderHealthSnapshot[] = [
-  { provider: "ASTRA", status: "DEGRADED", totalJobsSeen: 24, consecutiveFailures: 1, activeJobs: 3, staleJobs: 0, lastError: "Endpoint latency elevated (5656ms). Self-healing selector update recommended.", lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date(Date.now() - 3600000).toISOString(), lastFailedSyncAt: new Date().toISOString() },
-  { provider: "SIMPLIFY", status: "HEALTHY", totalJobsSeen: 12621, consecutiveFailures: 0, activeJobs: 26, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "NODESK", status: "HEALTHY", totalJobsSeen: 10, consecutiveFailures: 0, activeJobs: 1, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "INTERN_LIST", status: "HEALTHY", totalJobsSeen: 200, consecutiveFailures: 0, activeJobs: 3, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "JOBICY", status: "HEALTHY", totalJobsSeen: 180, consecutiveFailures: 0, activeJobs: 19, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "HIMALAYAS", status: "HEALTHY", totalJobsSeen: 60, consecutiveFailures: 0, activeJobs: 3, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "BUILTIN", status: "HEALTHY", totalJobsSeen: 45, consecutiveFailures: 0, activeJobs: 22, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "ASHBY", status: "HEALTHY", totalJobsSeen: 910, consecutiveFailures: 0, activeJobs: 1, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "LFX_MENTORSHIP", status: "HEALTHY", totalJobsSeen: 71, consecutiveFailures: 0, activeJobs: 10, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "LINKEDIN", status: "HEALTHY", totalJobsSeen: 60, consecutiveFailures: 0, activeJobs: 47, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
-  { provider: "HN_HIRING", status: "HEALTHY", totalJobsSeen: 150, consecutiveFailures: 0, activeJobs: 0, staleJobs: 0, lastError: null, lastSyncAttemptAt: new Date().toISOString(), lastSuccessfulSyncAt: new Date().toISOString(), lastFailedSyncAt: null },
+  { provider: "ASTRA", status: "DEGRADED", totalJobsSeen: 24, consecutiveFailures: 1, activeJobs: 3, staleJobs: 0, lastError: "Endpoint latency elevated (5656ms). Self-healing selector update recommended.", lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_HOUR_AGO, lastFailedSyncAt: STATIC_SYNC_NOW },
+  { provider: "SIMPLIFY", status: "HEALTHY", totalJobsSeen: 12621, consecutiveFailures: 0, activeJobs: 26, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "NODESK", status: "HEALTHY", totalJobsSeen: 10, consecutiveFailures: 0, activeJobs: 1, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "INTERN_LIST", status: "HEALTHY", totalJobsSeen: 200, consecutiveFailures: 0, activeJobs: 3, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "JOBICY", status: "HEALTHY", totalJobsSeen: 180, consecutiveFailures: 0, activeJobs: 19, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "HIMALAYAS", status: "HEALTHY", totalJobsSeen: 60, consecutiveFailures: 0, activeJobs: 3, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "BUILTIN", status: "HEALTHY", totalJobsSeen: 45, consecutiveFailures: 0, activeJobs: 22, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "ASHBY", status: "HEALTHY", totalJobsSeen: 910, consecutiveFailures: 0, activeJobs: 1, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "LFX_MENTORSHIP", status: "HEALTHY", totalJobsSeen: 71, consecutiveFailures: 0, activeJobs: 10, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "LINKEDIN", status: "HEALTHY", totalJobsSeen: 60, consecutiveFailures: 0, activeJobs: 47, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
+  { provider: "HN_HIRING", status: "HEALTHY", totalJobsSeen: 150, consecutiveFailures: 0, activeJobs: 0, staleJobs: 0, lastError: null, lastSyncAttemptAt: STATIC_SYNC_NOW, lastSuccessfulSyncAt: STATIC_SYNC_NOW, lastFailedSyncAt: null },
 ];
 
 
@@ -175,10 +178,10 @@ export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: Pro
                   </span>
 
                   <div>
-                    <span className="block text-[11px] font-medium text-[var(--ink)]">
+                    <span className="block text-[11px] font-medium text-[var(--ink)]" suppressHydrationWarning>
                       {formatSyncTime(source.lastSuccessfulSyncAt, nowTick)}
                     </span>
-                    <span className="block text-[9px] text-[var(--muted)]">
+                    <span className="block text-[9px] text-[var(--muted)]" suppressHydrationWarning>
                       {formatSync(source.lastSuccessfulSyncAt)}
                     </span>
                   </div>
@@ -201,7 +204,9 @@ export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: Pro
                       </span>
                       <span>
                         <b className="block text-[var(--ink)]">Last attempted</b>
-                        {formatSyncTime(source.lastSyncAttemptAt, nowTick)} ({formatSync(source.lastSyncAttemptAt)})
+                        <span suppressHydrationWarning>
+                          {formatSyncTime(source.lastSyncAttemptAt, nowTick)} ({formatSync(source.lastSyncAttemptAt)})
+                        </span>
                       </span>
                       <span>
                         <b className="block text-[var(--ink)]">Reliability inputs</b>

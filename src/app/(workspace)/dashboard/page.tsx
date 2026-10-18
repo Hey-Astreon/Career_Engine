@@ -161,7 +161,7 @@ export default function Home() {
           </span>
           Auto-sync active ({Math.round(((schedulerStatus.intervalMs as number) || 3600000) / 3600000)}h cycle)
         </span>
-        <span className="text-[var(--muted)]">
+        <span className="text-[var(--muted)]" suppressHydrationWarning>
           {schedulerStatus.lastRunAt 
             ? `Last scan: ${formatRelativeAge(null, schedulerStatus.lastRunAt.toString(), nowTick)}`
             : "Next scan scheduled"}
@@ -285,7 +285,7 @@ function RoleListRow({ job, score, nowTick, onOpen, onQuickApply }: { job: JobIt
           ) : freshness.isHot ? (
             <span className="ce-chip ce-chip-amber !min-h-4 !px-1.5 !text-[8px]">{freshness.label}</span>
           ) : (
-            <span className="flex items-center gap-1"><Clock3 className="h-3 w-3" />{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>
+            <span className="flex items-center gap-1" suppressHydrationWarning><Clock3 className="h-3 w-3" />{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>
           )}
           <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </span>
@@ -329,7 +329,7 @@ function RoleCard({ job, score, nowTick, onOpen, onQuickApply }: { job: JobItem;
         ) : freshness.isHot ? (
           <span className="ce-chip ce-chip-amber !min-h-5 !px-2 !text-[9px]">{freshness.label}</span>
         ) : (
-          <span className="font-mono text-[9px] text-[var(--muted)]">{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>
+          <span className="font-mono text-[9px] text-[var(--muted)]" suppressHydrationWarning>{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>
         )}
         <div className="flex items-center gap-2">
           {onQuickApply && (
@@ -373,7 +373,7 @@ function JobDrawer({ job, score, nowTick, onClose, onGenerateKit, onOpenQuickApp
         <div className="grid gap-3 border-b border-[var(--line)] py-5 sm:grid-cols-4">
           <DrawerMetric label="Candidate fit" value={<MatchBadge score={score} />} />
           <DrawerMetric label="Priority Tier" value={<span className={`ce-chip ${tier.tierNumber === 1 ? "ce-chip-green" : tier.tierNumber === 2 ? "ce-chip-blue" : ""}`}>{tier.label}</span>} />
-          <DrawerMetric label="Freshness" value={freshness.isHot ? <span className={`ce-chip ${freshness.isUltraFresh ? "ce-chip-green" : "ce-chip-amber"}`}>{freshness.label}</span> : <span>{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>} />
+          <DrawerMetric label="Freshness" value={freshness.isHot ? <span className={`ce-chip ${freshness.isUltraFresh ? "ce-chip-green" : "ce-chip-amber"}`}>{freshness.label}</span> : <span suppressHydrationWarning>{formatRelativeAge(job.postedAt, job.firstSeenAt || job.createdAt, nowTick)}</span>} />
           <DrawerMetric label="Remote scope" value={<span className="text-[var(--green)]">{formatRemoteScopeLabel(job.remoteScope, job.location)}</span>} />
         </div>
         <div className="grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_280px]">
