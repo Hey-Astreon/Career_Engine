@@ -63,8 +63,19 @@ async def harvest_wellfound_jobs(
         page.on("response", handle_response)
 
         target_url = "https://wellfound.com/jobs"
+        params = []
         if remote_only:
-            target_url += "?remote=true"
+            params.append("remote=true")
+        if query:
+            clean_q = query.lower()
+            if "intern" in clean_q:
+                params.append("role=Software+Engineer")
+                params.append("experience=internship")
+            elif "software" in clean_q or "engineer" in clean_q or "developer" in clean_q:
+                params.append("role=Software+Engineer")
+            params.append(f"q={urllib.parse.quote(query)}")
+        if params:
+            target_url += "?" + "&".join(params)
 
         print(f"[StealthScraper] Navigating to {target_url}...")
         try:
@@ -211,7 +222,9 @@ async def harvest_jobright_jobs(
 
         page.on("response", handle_response)
 
-        target_url = "https://jobright.ai/"
+        import urllib.parse
+        encoded_query = urllib.parse.quote(query or "software engineer intern")
+        target_url = f"https://jobright.ai/jobs?query={encoded_query}"
         print(f"[StealthScraper] Navigating to {target_url}...")
         try:
             await page.goto(target_url, wait_until="domcontentloaded", timeout=25000)
@@ -219,7 +232,7 @@ async def harvest_jobright_jobs(
 
             # Fallback DOM scrape if API didn't populate
             if len(jobs) == 0:
-                raw_links = await page.query_selector_all("a[href*='/jobs/info/'], a[href*='/job/']")
+                raw_links = await page.query_selector_all("a[href*='/jobs/info/'], a[href*='/job/'], a[href*='/jobs/']")
                 for link_el in raw_links:
                     if len(jobs) >= max_jobs:
                         break
