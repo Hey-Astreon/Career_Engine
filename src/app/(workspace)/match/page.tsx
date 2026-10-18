@@ -235,11 +235,24 @@ export default function MatchStudioPage() {
                 <p className="mt-2 text-[11px] text-[var(--muted)]">{selectedJob.location}</p>
               </div>
             </div>
-            <button onClick={() => void handleRunMatch(selectedJob.id, shouldReevaluate)} disabled={isEvaluating} className="ce-button-primary disabled:opacity-60">
-              <Sparkles className={`h-3.5 w-3.5 ${isEvaluating ? "animate-spin" : ""}`} />
-              {isEvaluating ? "Evaluating profile" : shouldReevaluate ? "Re-evaluate source text" : "Run evaluation"}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => void handleRunMatch(selectedJob.id, shouldReevaluate)} disabled={isEvaluating} className="ce-button-primary disabled:opacity-60">
+                <Sparkles className={`h-3.5 w-3.5 ${isEvaluating ? "animate-spin" : ""}`} />
+                {isEvaluating ? "Evaluating profile" : shouldReevaluate ? "Re-evaluate source text" : "Run evaluation"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleTailorBullets()}
+                disabled={isTailoring}
+                className="ce-button-secondary !min-h-9 !px-3 text-[11px] inline-flex items-center gap-1.5 border-[var(--blue)] text-[var(--blue)] hover:bg-[var(--blue-soft)] disabled:opacity-60 font-semibold shadow-xs"
+                title="Rewrite candidate project bullets using Antigravity Agent Core"
+              >
+                <Wand2 className={`h-3.5 w-3.5 ${isTailoring ? "animate-spin text-[var(--blue)]" : ""}`} />
+                {isTailoring ? "Tailoring bullets..." : "Antigravity Bullet Tailor"}
+              </button>
+            </div>
           </div>
+
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
             <section className="border border-[var(--line)] bg-[var(--surface-muted)] p-5">
@@ -253,11 +266,130 @@ export default function MatchStudioPage() {
                 <div><div className="ce-page-eyebrow">Decision evidence</div><h3 className="mt-2 text-[16px] font-bold tracking-[-.035em] text-[var(--ink)]">Skills and requirement coverage</h3></div>
                 {matchData && <span className={`ce-chip ${matchData.eligible === false ? "ce-chip-red" : "ce-chip-green"}`}>{matchData.eligible === false ? "STRICT GATE FAILED" : "READY TO REVIEW"}</span>}
               </div>
-              {matchData?.eligible === false ? <div className="mt-5 border border-[var(--red-soft)] bg-[var(--red-soft)] p-4 text-[11px] leading-5 text-[var(--red)]">{matchData.rejectionReason || "This role does not meet a hard eligibility requirement for the active candidate workflow."}</div> : matchData ? <div className="mt-5 grid gap-4 sm:grid-cols-2"><SkillPanel title="Verified overlap" icon={<CheckCircle2 className="h-4 w-4" />} skills={matchData.hardSkills} good /><SkillPanel title="Skills to develop" icon={<AlertTriangle className="h-4 w-4" />} skills={matchData.missingSkills} /></div> : <div className="mt-6 flex items-start gap-3 border-t border-[var(--line)] pt-5 text-[11px] leading-5 text-[var(--muted)]"><Sparkles className="h-4 w-4 shrink-0 text-[var(--blue)]" />Choose “Run evaluation” to use the existing match service against the active profile.</div>}
+              {matchData?.eligible === false ? <div className="mt-5 border border-[var(--red-soft)] bg-[var(--red-soft)] p-4 text-[11px] leading-5 text-[var(--red)]">{matchData.rejectionReason || "This role does not meet a hard eligibility requirement for the active candidate workflow."}</div> : matchData ? <div className="mt-5 grid gap-4 sm:grid-cols-2"><SkillPanel title="Verified overlap" icon={<CheckCircle2 className="h-4 w-4" />} skills={matchData.hardSkills} good /><SkillPanel title="Skills to develop" icon={<AlertTriangle className="h-4 w-4" />} skills={matchData.missingSkills} /></div> : <div className="mt-6 flex items-start gap-3 border-t border-[var(--line)] pt-5 text-[11px] leading-5 text-[var(--muted)]"><Sparkles className="h-4 w-4 shrink-0 text-[var(--blue)]" />Choose “Run evaluation” to inspect match evidence or click “Antigravity Bullet Tailor” above to rewrite bullets.</div>}
             </section>
           </div>
 
+          {/* Antigravity Tailor Output Panel - Always Accessible */}
+          {showTailorPanel && (
+            <section className="mt-5 border border-[var(--blue)] bg-white/95 p-4 rounded-lg shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-7 w-7 place-items-center rounded bg-[var(--blue-soft)] text-[var(--blue)]">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <strong className="block text-[14px] font-bold text-[var(--ink)]">
+                      Antigravity Agent Bullet Tailor
+                    </strong>
+                    <span className="font-mono text-[8px] text-[var(--muted)] uppercase tracking-wider">
+                      Autonomous STAR & Google X-Y-Z Optimization · {tailorResult?.source === "antigravity-agent" ? "Live Agent Gateway (https://agent.astrework.app)" : "Multi-LLM Fallback"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {tailorResult?.atsAssessment && (
+                    <span className="ce-chip ce-chip-green font-mono text-[9px] font-bold">
+                      ATS Delta: {tailorResult.atsAssessment.before}% → {tailorResult.atsAssessment.after}% (+{tailorResult.atsAssessment.after - tailorResult.atsAssessment.before}%)
+                    </span>
+                  )}
+                  {tailorResult?.tailoredBullets.length ? (
+                    <button
+                      type="button"
+                      onClick={handleCopyAllBullets}
+                      className="ce-button-secondary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1"
+                    >
+                      {copiedAll ? <Check className="h-3 w-3 text-[var(--green)]" /> : <Copy className="h-3 w-3" />}
+                      {copiedAll ? "All Copied!" : "Copy All Bullets"}
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setShowTailorPanel(false)}
+                    className="ce-button-quiet !min-h-7 !px-2 text-[10px] text-[var(--muted)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              {isTailoring && (
+                <div className="mt-4 flex items-center gap-3 rounded border border-[var(--blue)]/20 bg-[var(--blue-soft)]/50 p-4 text-[11px] text-[var(--blue)]">
+                  <Sparkles className="h-4 w-4 animate-spin shrink-0" />
+                  <span>Antigravity Agent is parsing target role requirements and restructuring technical impact metrics with STAR reasoning...</span>
+                </div>
+              )}
+
+              {tailorResult && !isTailoring && (
+                <div className="mt-4 space-y-4">
+                  {/* Technical Keyword Signals */}
+                  {tailorResult.technicalSignals.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                        Target Signals Injected:
+                      </span>
+                      {tailorResult.technicalSignals.map((sig) => (
+                        <span key={sig} className="ce-chip ce-chip-blue font-medium text-[9px]">
+                          {sig}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  {tailorResult.atsAssessment?.summary && (
+                    <p className="text-[11px] leading-relaxed text-[var(--muted)] italic border-l-2 border-[var(--blue)] pl-2.5">
+                      "{tailorResult.atsAssessment.summary}"
+                    </p>
+                  )}
+
+                  {/* Tailored Bullets */}
+                  <div className="space-y-2.5">
+                    {tailorResult.tailoredBullets.map((bullet, idx) => (
+                      <div
+                        key={idx}
+                        className="group relative rounded border border-[var(--line)] bg-[var(--surface-muted)]/70 p-3 hover:border-[var(--blue)]/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[11px] leading-relaxed text-[var(--ink)] pr-12 font-medium">
+                            {bullet}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyBullet(bullet, idx)}
+                            className="ce-button-quiet !min-h-6 !px-1.5 text-[9px] inline-flex items-center gap-1 text-[var(--blue)] shrink-0"
+                            title="Copy this bullet point"
+                          >
+                            {copiedIndex === idx ? (
+                              <>
+                                <Check className="h-3 w-3 text-[var(--green)]" />
+                                <span className="text-[var(--green)]">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {tailorResult.originalBullets[idx] && (
+                          <div className="mt-2 border-t border-[var(--line)]/60 pt-1.5 text-[9px] text-[var(--muted)]">
+                            <span className="font-semibold text-[var(--muted)]">Original: </span>
+                            {tailorResult.originalBullets[idx]}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {matchData?.recommendedResumeVariant && (
+
             <section className="mt-5 border border-[var(--blue)] bg-[var(--blue-soft)] p-4 rounded-lg">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="font-mono text-[9px] font-bold uppercase tracking-[.1em] text-[var(--blue)] flex items-center gap-1.5">
@@ -331,116 +463,6 @@ export default function MatchStudioPage() {
                 )}
               </div>
 
-              {/* Antigravity Tailor Output Panel */}
-              {showTailorPanel && (
-                <div className="mt-4 border-t border-[var(--blue)]/30 pt-4">
-                  <div className="rounded-lg border border-[var(--blue)] bg-white/95 p-4 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="grid h-6 w-6 place-items-center rounded bg-[var(--blue-soft)] text-[var(--blue)]">
-                          <Sparkles className="h-3.5 w-3.5" />
-                        </span>
-                        <div>
-                          <strong className="block text-[13px] font-bold text-[var(--ink)]">
-                            Antigravity Agent Bullet Tailor
-                          </strong>
-                          <span className="font-mono text-[8px] text-[var(--muted)] uppercase tracking-wider">
-                            Autonomous STAR & Google X-Y-Z Optimization · {tailorResult?.source === "antigravity-agent" ? "Live Agent Gateway" : "Multi-LLM Fallback"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {tailorResult?.atsAssessment && (
-                        <div className="flex items-center gap-2">
-                          <span className="ce-chip ce-chip-green font-mono text-[9px] font-bold">
-                            ATS Delta: {tailorResult.atsAssessment.before}% → {tailorResult.atsAssessment.after}% (+{tailorResult.atsAssessment.after - tailorResult.atsAssessment.before}%)
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleCopyAllBullets}
-                            className="ce-button-secondary !min-h-7 !px-2 text-[10px] inline-flex items-center gap-1"
-                          >
-                            {copiedAll ? <Check className="h-3 w-3 text-[var(--green)]" /> : <Copy className="h-3 w-3" />}
-                            {copiedAll ? "All Copied!" : "Copy All Bullets"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {isTailoring && (
-                      <div className="mt-4 flex items-center gap-3 rounded border border-[var(--blue)]/20 bg-[var(--blue-soft)]/50 p-4 text-[11px] text-[var(--blue)]">
-                        <Sparkles className="h-4 w-4 animate-spin shrink-0" />
-                        <span>Antigravity Agent is parsing target role requirements and restructuring technical impact metrics...</span>
-                      </div>
-                    )}
-
-                    {tailorResult && !isTailoring && (
-                      <div className="mt-4 space-y-4">
-                        {/* Technical Keyword Signals */}
-                        {tailorResult.technicalSignals.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                              Target Signals Injected:
-                            </span>
-                            {tailorResult.technicalSignals.map((sig) => (
-                              <span key={sig} className="ce-chip ce-chip-blue font-medium text-[9px]">
-                                {sig}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Summary */}
-                        {tailorResult.atsAssessment?.summary && (
-                          <p className="text-[11px] leading-relaxed text-[var(--muted)] italic border-l-2 border-[var(--blue)] pl-2.5">
-                            "{tailorResult.atsAssessment.summary}"
-                          </p>
-                        )}
-
-                        {/* Tailored Bullets */}
-                        <div className="space-y-2.5">
-                          {tailorResult.tailoredBullets.map((bullet, idx) => (
-                            <div
-                              key={idx}
-                              className="group relative rounded border border-[var(--line)] bg-[var(--surface-muted)]/70 p-3 hover:border-[var(--blue)]/50 transition-colors"
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <p className="text-[11px] leading-relaxed text-[var(--ink)] pr-12 font-medium">
-                                  {bullet}
-                                </p>
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopyBullet(bullet, idx)}
-                                  className="ce-button-quiet !min-h-6 !px-1.5 text-[9px] inline-flex items-center gap-1 text-[var(--blue)] shrink-0"
-                                  title="Copy this bullet point"
-                                >
-                                  {copiedIndex === idx ? (
-                                    <>
-                                      <Check className="h-3 w-3 text-[var(--green)]" />
-                                      <span className="text-[var(--green)]">Copied</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy className="h-3 w-3" />
-                                      <span>Copy</span>
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                              {tailorResult.originalBullets[idx] && (
-                                <div className="mt-2 border-t border-[var(--line)]/60 pt-1.5 text-[9px] text-[var(--muted)]">
-                                  <span className="font-semibold text-[var(--muted)]">Original: </span>
-                                  {tailorResult.originalBullets[idx]}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
 
               {/* Collapsible drawer of all candidate variants */}

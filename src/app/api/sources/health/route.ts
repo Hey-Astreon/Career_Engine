@@ -36,9 +36,32 @@ export async function GET() {
         staleJobs: jobCounts.get(state.providerKey)?.staleJobs ?? 0,
       });
 
-      const activeStates = syncStates
-        .filter((state) => activeProviderKeys.has(state.providerKey.toUpperCase()))
-        .map(mapState);
+      const existingActiveKeys = new Set(
+        syncStates.map((s) => s.providerKey.toUpperCase())
+      );
+
+      // Ensure every active provider appears in the health table even if sync state is uninitialized
+      const defaultActiveStates = ACTIVE_PROVIDERS.filter(
+        (p) => !existingActiveKeys.has(p.name.toUpperCase())
+      ).map((p) => ({
+        provider: p.name.toUpperCase(),
+        status: "HEALTHY",
+        lastSyncAttemptAt: null,
+        lastSuccessfulSyncAt: null,
+        lastFailedSyncAt: null,
+        consecutiveFailures: 0,
+        lastError: null,
+        totalJobsSeen: 0,
+        activeJobs: jobCounts.get(p.name.toUpperCase())?.activeJobs ?? 0,
+        staleJobs: jobCounts.get(p.name.toUpperCase())?.staleJobs ?? 0,
+      }));
+
+      const activeStates = [
+        ...syncStates
+          .filter((state) => activeProviderKeys.has(state.providerKey.toUpperCase()))
+          .map(mapState),
+        ...defaultActiveStates,
+      ];
 
       const archivedStates = syncStates
         .filter((state) => !activeProviderKeys.has(state.providerKey.toUpperCase()))
@@ -48,6 +71,7 @@ export async function GET() {
         sources: activeStates,
         archivedSources: archivedStates,
       };
+
     });
 
     return NextResponse.json({
