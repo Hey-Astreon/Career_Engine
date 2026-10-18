@@ -60,6 +60,16 @@ class TailorRequest(BaseModel):
     bullets: List[str]
     candidateSkills: Optional[List[str]] = None
 
+@app.get("/")
+async def root():
+    return {
+        "service": "Career Engine — Google Antigravity Agent Core",
+        "status": "online",
+        "documentation": "/docs",
+        "health": "/health",
+        "agents": ["oracle", "self_healer", "headless_applier", "resume_tailorer"]
+    }
+
 @app.get("/health")
 async def health_check():
     return {
