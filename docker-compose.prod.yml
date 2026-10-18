@@ -20,6 +20,7 @@ services:
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - AGENT_GATEWAY_URL=${AGENT_GATEWAY_URL:-http://agent:8000}
       - AUTO_START_SCHEDULER=true
+    shm_size: '2gb'
     depends_on:
       - redis
       - agent
@@ -31,6 +32,7 @@ services:
     image: ghcr.io/hey-astreon/career_engine-agent:latest
     container_name: astrework_agent
     restart: always
+    shm_size: '2gb'
     ports:
       - "127.0.0.1:8000:8000"
     env_file:

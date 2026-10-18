@@ -96,6 +96,23 @@ model ProviderSyncState {
   @@map("provider_sync_states")
 }
 
+model ProviderConfig {
+  id              String         @id @default(uuid())
+  providerKey     PlatformSource @unique
+  status          String         @default("HEALTHY")
+  cardSelector    String?
+  titleSelector   String?
+  companySelector String?
+  urlSelector     String?
+  apiEndpoint     String?
+  customHeaders   String?
+  lastHealedAt    DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("provider_configs")
+}
+
 model ProviderEndpointRun {
   id           String   @id @default(uuid())
   scrapeRunId  String

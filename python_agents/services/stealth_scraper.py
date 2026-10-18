@@ -11,6 +11,7 @@ import os
 import asyncio
 import json
 import re
+import random
 from typing import Dict, Any, List, Optional
 from playwright.async_api import async_playwright
 
@@ -129,7 +130,18 @@ async def harvest_wellfound_jobs(
         except Exception as e:
             print(f"[StealthScraper] Wellfound harvest exception: {e}")
         finally:
-            await browser.close()
+            try:
+                await page.close()
+            except Exception:
+                pass
+            try:
+                await context.close()
+            except Exception:
+                pass
+            try:
+                await browser.close()
+            except Exception:
+                pass
 
     print(f"[StealthScraper] Successfully harvested {len(jobs)} jobs from Wellfound.")
     return jobs
@@ -224,7 +236,18 @@ async def harvest_jobright_jobs(
         except Exception as e:
             print(f"[StealthScraper] Jobright harvest exception: {e}")
         finally:
-            await browser.close()
+            try:
+                await page.close()
+            except Exception:
+                pass
+            try:
+                await context.close()
+            except Exception:
+                pass
+            try:
+                await browser.close()
+            except Exception:
+                pass
 
     print(f"[StealthScraper] Successfully harvested {len(jobs)} jobs from Jobright AI.")
     return jobs

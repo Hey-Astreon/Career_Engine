@@ -7,6 +7,21 @@ import {
   getMasterResumeBaseline,
 } from "../resumeBaseline";
 
+export const BANNED_AI_SLOP_REGEX = /\b(spearheaded|orchestrated|revolutionized|synergized|thrilled|passionate|cutting-edge|testament|rich tapestry|multifaceted|seamlessly|driving excellence|results-oriented|deep expertise in)\b/gi;
+
+export function sanitizeAiSlop(text: string): string {
+  return text
+    .replace(/\b(?:spearheaded|orchestrated)\b/gi, "Engineered")
+    .replace(/\b(?:revolutionized)\b/gi, "Restructured")
+    .replace(/\b(?:synergized|leveraged)\b/gi, "Integrated")
+    .replace(/\b(?:cutting-edge)\b/gi, "High-performance")
+    .replace(/\b(?:rich tapestry|testament|multifaceted)\b/gi, "Core architecture")
+    .replace(/\b(?:seamlessly)\b/gi, "Directly")
+    .replace(/\b(?:passionate|thrilled)\b/gi, "Focused")
+    .replace(/\b(?:driving excellence|results-oriented)\b/gi, "Reliability-focused")
+    .replace(/\b(?:deep expertise in)\b/gi, "Experience with");
+}
+
 /**
  * Optimizes and tailors the 1-page A4 resume for a specific target job using Big Tech Recruiter & Google XYZ standards
  */
@@ -46,17 +61,20 @@ STRICT WRITING & RECRUITING RULES:
    - ALLOWED: "Backend Developer with a focus on distributed systems and cryptographic security, with shipped projects that demonstrate end-to-end ownership."
    - ALLOWED: "Drawn to roles where system reliability and developer tooling intersect — particularly at scale."
 
-3. FACTUAL INTEGRITY (NO HALLUCINATIONS):
+3. FACTUAL INTEGRITY & STRICT FACT-ANCHORING (ZERO HALLUCINATIONS):
+   - You are strictly prohibited from adding technologies, frameworks, or tools that do not appear in CANDIDATE FACTUAL BACKGROUND.
+   - If the target job requires an unlisted technology, place it in missingKeywords, but NEVER invent it in the candidate's projects or experience.
    - NEVER fabricate years of experience or enterprise domains the candidate never built.
    - Frame their real strengths to demonstrate exceptional transferability for '${jobTitle}' at '${company}'.
 
 4. BAN ROBOTIC AI BUZZWORDS & FLUFF:
-   - FORBIDDEN WORDS IN SUMMARY: "Seasoned", "Proven track record", "Passionate", "Driving excellence", "Results-oriented", "Spearheaded", "Dynamic", "Adept at", "Systems-focused", "Deep expertise in".
-   - Use direct, authoritative, human statements that a person would actually write.
+   - FORBIDDEN WORDS ANYWHERE IN RESUME: "Seasoned", "Proven track record", "Passionate", "Driving excellence", "Results-oriented", "Spearheaded", "Orchestrated", "Synergized", "Revolutionized", "Cutting-edge", "Testament", "Rich tapestry", "Dynamic", "Adept at", "Systems-focused", "Deep expertise in".
+   - Use direct, authoritative, human statements that a real senior engineer would write.
 
 5. GOOGLE XYZ POWER-VERB FORMULA FOR ALL PROJECT BULLETS:
    - Structure: [Decisive Technical Verb] [Specific System Built/Optimized] using [Exact Tech Stack] to [Achieve concrete performance/reliability outcome].
-   - Verbs to use: Architected, Engineered, Benchmarked, Streamlined, Hardened, Containerized, Decoupled, Orchestrated, Profiled, Accelerated.
+   - Verbs to use: Architected, Engineered, Benchmarked, Streamlined, Hardened, Containerized, Decoupled, Deployed, Constructed, Profiled, Accelerated.
+   - Brevity constraint: Keep each bullet to 18-28 words max. Concise, punchy, metric-backed.
    - Example: "Architected streaming financial analytics pipeline using Google Gemini SDK and Fastify microservices, slashing transaction anomaly detection latency by 35%."
 
 6. ATS FORMATTING & GEOMETRY:
@@ -99,9 +117,21 @@ TASKS:
       const parsed = JSON.parse(aiRes.text);
 
       const tailoredHeadline = parsed.targetHeadline || baseline.header.targetHeadline;
-      const tailoredSummary = parsed.summary || baseline.summary;
+      const tailoredSummary = sanitizeAiSlop(parsed.summary || baseline.summary);
       const tailoredSkills = Array.isArray(parsed.skills) && parsed.skills.length === 6 ? parsed.skills : baseline.skills;
-      const tailoredProjects = Array.isArray(parsed.projects) && parsed.projects.length === 3 ? parsed.projects : baseline.projects;
+      
+      const rawProjects = Array.isArray(parsed.projects) && parsed.projects.length === 3 ? parsed.projects : baseline.projects;
+      const tailoredProjects = rawProjects.map((p: { title: string; techStack: string; liveDemoUrl?: string; githubUrl?: string; bullets?: string[] }) => ({
+        ...p,
+        bullets: (p.bullets || []).map((b: string) => {
+          const sanitized = sanitizeAiSlop(b);
+          const words = sanitized.split(/\s+/);
+          if (words.length > 28) {
+            return words.slice(0, 28).join(" ") + ".";
+          }
+          return sanitized;
+        }),
+      }));
 
       const fullText = (tailoredSummary + " " + JSON.stringify(tailoredSkills) + " " + JSON.stringify(tailoredProjects)).toLowerCase();
       const finalMatched = targetSkills.filter((s) => fullText.includes(s.toLowerCase()));

@@ -12,6 +12,8 @@ import {
   sanitizeRoleTitle,
 } from "./normalize";
 
+import { getProviderConfig } from "./config";
+
 export class JobrightProvider implements JobSourceProvider {
   name = "Jobright AI";
   providerKey = PlatformSource.JOBRIGHT;
@@ -23,12 +25,27 @@ export class JobrightProvider implements JobSourceProvider {
     let discoveredCount = 0;
     let rejectedCount = 0;
 
-    // Check if the Python AI Agent Gateway is available on port 8000
     const agentGatewayUrl = process.env.AGENT_GATEWAY_URL || "http://localhost:8000";
+    const config = await getProviderConfig(PlatformSource.JOBRIGHT, {
+      status: "HEALTHY",
+      apiEndpoint: `${agentGatewayUrl}/scraper/harvest`,
+    });
+
+    if (config.status === "COOLDOWN") {
+      return {
+        providerKey: this.providerKey,
+        success: true,
+        jobs: [],
+        jobsDiscovered: 0,
+        jobsRejected: 0,
+        durationMs: Date.now() - startTime,
+        error: "Provider in temporary cooldown circuit breaker",
+      };
+    }
 
     try {
       const res = await axios.post(
-        `${agentGatewayUrl}/scraper/harvest`,
+        config.apiEndpoint || `${agentGatewayUrl}/scraper/harvest`,
         {
           source: "jobright",
           query: "software engineer intern",

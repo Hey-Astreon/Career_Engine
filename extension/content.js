@@ -540,9 +540,16 @@
       case 'TITLE':       return session ? session.jobTitle : profile.title;
       case 'SUMMARY':     return session ? session.tailoredSummary : profile.professionalSummary;
       case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
-      case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
-      case 'SALARY':      return session ? session.salaryRange : (profile.salaryRange || null);
-      case 'NOTICE_PERIOD':return profile.noticePeriod;
+      case 'SALARY': {
+        const rawSal = session ? session.salaryRange : (profile.salaryRange || null);
+        if (!rawSal) return null;
+        if (field.element && (field.element.type === 'number' || field.element.inputMode === 'numeric')) {
+          const nums = String(rawSal).replace(/[^0-9-]/g, '').split('-').map(Number).filter(Boolean);
+          if (nums.length >= 2) return String(Math.round((nums[0] + nums[1]) / 2));
+          if (nums.length === 1) return String(nums[0]);
+        }
+        return rawSal;
+      }
       case 'RELOCATE':    return profile.willingnessToRelocate ? 'Yes' : 'No';
       case 'EDUCATION':   return profile.highestEducation;
       case 'GENDER':      return profile.gender;

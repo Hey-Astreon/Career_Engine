@@ -99,7 +99,18 @@ async def fill_application_form(
                     elif any(k in descriptor for k in ["portfolio", "website", "personal site"]):
                         value_to_fill = profile["portfolioUrl"]
                     elif any(k in descriptor for k in ["city", "location", "address"]):
-                        value_to_fill = profile["location"]
+                        value_to_fill = profile.get("location") or "Remote"
+                    elif any(k in descriptor for k in ["require sponsorship", "need sponsorship", "visa sponsorship"]):
+                        value_to_fill = "Yes" if profile.get("requiresVisa") else "No"
+                    elif any(k in descriptor for k in ["authorized to work", "legally authorized", "work authorization"]):
+                        value_to_fill = "Yes" if profile.get("workAuthorized", True) else "No"
+                    elif any(k in descriptor for k in ["salary", "compensation", "expected salary"]):
+                        raw_salary = str(profile.get("salaryRange") or "100000")
+                        if inp_type == "number":
+                            nums = re.findall(r"\d+", raw_salary)
+                            value_to_fill = nums[0] if nums else "100000"
+                        else:
+                            value_to_fill = raw_salary
 
                     if value_to_fill:
                         if tag_name == "select":
@@ -135,7 +146,18 @@ async def fill_application_form(
                 results["status"] = "STAGED_FOR_REVIEW"
 
         finally:
-            await browser.close()
+            try:
+                await page.close()
+            except Exception:
+                pass
+            try:
+                await context.close()
+            except Exception:
+                pass
+            try:
+                await browser.close()
+            except Exception:
+                pass
 
     return results
 
