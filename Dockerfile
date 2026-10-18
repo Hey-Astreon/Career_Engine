@@ -3,6 +3,7 @@ FROM node:20-slim AS base
 # Install OpenSSL (required for Prisma) and Chromium (required for Puppeteer)
 RUN apt-get update && apt-get install -y \
     openssl \
+    zip \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
