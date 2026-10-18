@@ -99,7 +99,7 @@ function detectTechTypos(text: string): { count: number; variants: string[] } {
   const lower = text.toLowerCase();
   const found: string[] = [];
 
-  for (const [_correct, misspellings] of Object.entries(TECH_TYPO_MAP)) {
+  for (const misspellings of Object.values(TECH_TYPO_MAP)) {
     for (const typo of misspellings) {
       // Word-boundary aware match — "debase" should not match "databse"
       const escaped = typo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

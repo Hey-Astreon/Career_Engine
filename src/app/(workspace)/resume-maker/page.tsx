@@ -430,6 +430,9 @@ export default function ResumeMakerPage() {
               {copiedFormat === "markdown" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span>Markdown</span>
             </button>
+            <button onClick={handleDownloadMarkdown} className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5" title="Download Markdown (.md)">
+              <Download className="w-3.5 h-3.5" /><span>.md</span>
+            </button>
             <button onClick={handleDownloadPlaintext} className="ce-button-secondary !min-h-[34px] !text-xs gap-1.5" title="ATS Plaintext">
               <FileText className="w-3.5 h-3.5" /><span>ATS Text</span>
             </button>

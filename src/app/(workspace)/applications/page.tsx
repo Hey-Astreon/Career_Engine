@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useProfileStore } from "@/store/useProfileStore";
 import {
   Briefcase,
   ExternalLink,
   RefreshCw,
   Trash2,
-  Send,
   Copy,
   Check,
   X,
@@ -43,7 +42,7 @@ const STATUS_COLUMNS = [
 ];
 
 export default function ApplicationsPage() {
-  const { activeProfileSlug, activeProfile } = useProfileStore();
+  const { activeProfileSlug } = useProfileStore();
   const [applications, setApplications] = useState<TrackedApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,7 +62,7 @@ export default function ApplicationsPage() {
   const [isGeneratingFollowup, setIsGeneratingFollowup] = useState(false);
   const [copiedFollowup, setCopiedFollowup] = useState(false);
 
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/applications?profileSlug=${activeProfileSlug || "roushan"}`);
@@ -76,10 +75,26 @@ export default function ApplicationsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeProfileSlug]);
 
   useEffect(() => {
-    fetchApplications();
+    let isMounted = true;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/applications?profileSlug=${activeProfileSlug || "roushan"}`);
+        const data = await res.json();
+        if (isMounted && data.success) {
+          setApplications(data.applications || []);
+        }
+      } catch (err) {
+        if (isMounted) console.error("Failed to load applications", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
   }, [activeProfileSlug]);
 
   const updateStatus = async (appId: string, newStatus: string) => {

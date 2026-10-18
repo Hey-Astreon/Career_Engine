@@ -60,8 +60,27 @@ export function ResumeVariantsSidebar({ profileSlug, currentResumeData, onLoadVa
   }, [profileSlug]);
 
   useEffect(() => {
-    void fetchVariants();
-  }, [fetchVariants]);
+    let isMounted = true;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/resume/variants?profileSlug=${profileSlug}`);
+        const data = await res.json();
+        if (isMounted && data.success) {
+          setVariants(data.variants || []);
+          if (Array.isArray(data.officialVariants)) {
+            setOfficialVariants(data.officialVariants);
+          }
+        }
+      } catch (err) {
+        if (isMounted) console.error(err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [profileSlug]);
 
   const handleSave = async () => {
     if (!saveName.trim()) return alert("Variant name is required");

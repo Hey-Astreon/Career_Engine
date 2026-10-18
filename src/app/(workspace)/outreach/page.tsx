@@ -9,15 +9,10 @@ import {
   Check,
   ExternalLink,
   Search,
-  Building2,
   Mail,
   MessageSquare,
-  RefreshCw,
   Loader2,
   Users,
-  Target,
-  ArrowRight,
-  Flame,
 } from "lucide-react";
 
 interface JobItem {
@@ -43,7 +38,7 @@ interface OutreachData {
 }
 
 export default function OutreachPage() {
-  const { activeProfileSlug, activeProfile } = useProfileStore();
+  const { activeProfileSlug } = useProfileStore();
 
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("");

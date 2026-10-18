@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useRef, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -15,17 +15,8 @@ import {
   RotateCcw,
   Upload,
   FileText,
-  AlertCircle,
-  Building,
-  MapPin,
-  Clock,
-  DollarSign,
-  HelpCircle,
-  Check,
   Send,
   Trash2,
-  ExternalLink,
-  ChevronDown,
   Info
 } from "lucide-react";
 
@@ -33,12 +24,12 @@ function SimulationApplyContent() {
   const searchParams = useSearchParams();
   const companyId = searchParams.get("company") || "novasphere";
 
-  const [company, setCompany] = useState<CompanyVacancy>(() => {
+  const company = useMemo<CompanyVacancy>(() => {
     return (
       SIMULATION_COMPANIES.find((c) => c.id === companyId) ||
       SIMULATION_COMPANIES[0]
     );
-  });
+  }, [companyId]);
 
   // Form field state
   const [formData, setFormData] = useState({
@@ -63,29 +54,23 @@ function SimulationApplyContent() {
   const [resumeFile, setResumeFile] = useState<{ name: string; size: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [filledCount, setFilledCount] = useState(0);
   const totalFields = 16;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const found = SIMULATION_COMPANIES.find((c) => c.id === companyId);
-    if (found) setCompany(found);
-  }, [companyId]);
-
-  // Recalculate filled count whenever formData or resume changes
-  useEffect(() => {
+  // Derive filled count whenever formData or resume changes
+  const filledCount = useMemo(() => {
     let count = 0;
     Object.values(formData).forEach((val) => {
       if (val && String(val).trim().length > 0) count++;
     });
     if (resumeFile) count++;
-    setFilledCount(count);
+    return count;
   }, [formData, resumeFile]);
 
   // 1-Click Mock Autofill (in case testing without active extension)
   const handleMockAutofill = () => {
     // Read stored simulation session or candidate profile if available
-    let storedProfile: any = null;
+    let storedProfile: Record<string, string> | null = null;
     try {
       const raw = localStorage.getItem("astrework_profile_cache");
       if (raw) storedProfile = JSON.parse(raw);

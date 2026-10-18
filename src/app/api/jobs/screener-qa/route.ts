@@ -56,10 +56,11 @@ ${questions}`;
       answers: llmResult.text,
       provider: llmResult.provider
     });
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to generate answers";
     console.error("Screener QA Generation Error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to generate answers" },
+      { success: false, error: message },
       { status: 500 }
     );
   }

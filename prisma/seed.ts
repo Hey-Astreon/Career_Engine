@@ -259,7 +259,7 @@ async function main() {
   }
 
   const finalCount = await db.jobPosting.count();
-  console.log(`[Seed Complete] Profiles ready (Roushan: ${roushan.id}, Ayushi: ${ayushi.id}). Active postings in SQLite: ${finalCount}`);
+  console.log(`[Seed Complete] Profiles ready (Roushan: ${roushan.id}, Ayushi: ${ayushi.id}). Processed: ${insertedCount}. Active postings in SQLite: ${finalCount}`);
 }
 
 main()

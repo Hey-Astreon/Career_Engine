@@ -15,7 +15,7 @@ import { AstraProvider } from "./astra";
 import { WellfoundProvider } from "./wellfound";
 import { JobrightProvider } from "./jobright";
 import { generateUrlHash, computeDeduplicationKey, isDirectAtsUrl } from "./dedup";
-import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS, EarlyCareerTier, determineEarlyCareerTier, calculateEarlyBirdScore } from "./normalize";
+import { parseRemoteScope, isOlderThanMaxPostingAge, MAX_POSTING_AGE_DAYS, determineEarlyCareerTier, calculateEarlyBirdScore } from "./normalize";
 import { isValidHttpUrl } from "@/lib/urlValidator";
 import { logProviderDiagnostics } from "./diagnostic";
 import { extractSkills } from "@/lib/ai/scorer";
@@ -422,7 +422,7 @@ export async function ingestNormalizedJobs(
 
         // 1. Ingest into JobPosting model for backward compatibility
         try {
-          const res = await db.jobPosting.upsert({
+          await db.jobPosting.upsert({
             where: { urlHash },
             create: {
               urlHash,

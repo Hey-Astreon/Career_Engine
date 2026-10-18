@@ -47,7 +47,7 @@ function createStructuredSections(sourceText: string): DescriptionSection[] {
     .filter((section) => section.items.length > 0);
 }
 
-export function FormattedJobDescription({ description, hasFullText, canFetchSourceText, onFetchSourceText }: FormattedJobDescriptionProps) {
+export function FormattedJobDescription({ description, canFetchSourceText, onFetchSourceText }: FormattedJobDescriptionProps) {
   const [viewMode, setViewMode] = useState<"structured" | "original">("structured");
   const [copied, setCopied] = useState(false);
   const [isFetching, setIsFetching] = useState(false);

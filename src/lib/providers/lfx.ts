@@ -11,7 +11,6 @@ import {
   cleanCompanySlug,
   cleanHtmlText,
   determineCategory,
-  determineExperienceLevel,
   isStrictlyRemoteDeveloperRole,
   determineOpportunitySignals,
   sanitizeRoleTitle,

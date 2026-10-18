@@ -47,12 +47,23 @@ const DEFAULT_FALLBACK_PROVIDERS: ProviderHealthSnapshot[] = [
 ];
 
 
+interface DiagnosticResultItem {
+  source?: string;
+  healthy?: boolean;
+  status?: string;
+  statusCode?: number;
+  latencyMs?: number;
+  message?: string;
+  changes?: string[];
+  [key: string]: unknown;
+}
+
 // eslint-disable-next-line react-hooks/purity
 export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: ProviderHealthSnapshot[]; nowTick?: number }) {
   const [expandedProvider, setExpandedProvider] = useState<string | null>("ASTRA");
   const [diagnosingProvider, setDiagnosingProvider] = useState<string | null>(null);
   const [diagnosingAction, setDiagnosingAction] = useState<"diagnose" | "heal" | null>(null);
-  const [diagnosticResults, setDiagnosticResults] = useState<Record<string, any>>({});
+  const [diagnosticResults, setDiagnosticResults] = useState<Record<string, DiagnosticResultItem>>({});
 
   const effectiveRows = rows.length > 0 ? rows : DEFAULT_FALLBACK_PROVIDERS;
   const reportRows = [...effectiveRows].sort((left, right) => left.provider.localeCompare(right.provider));
@@ -293,13 +304,13 @@ export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: Pro
                                 : "Endpoint latency or structure requires attention.")}
                           </p>
 
-                          {Array.isArray(diagnosticResults[source.provider].changes) &&
-                            diagnosticResults[source.provider].changes.length > 0 && (
+                          {Array.isArray(diagnosticResults[source.provider]?.changes) &&
+                            (diagnosticResults[source.provider].changes?.length ?? 0) > 0 && (
                               <div className="mt-2 space-y-1 rounded bg-[var(--surface-muted)] p-2">
                                 <b className="block text-[9px] font-bold uppercase text-[var(--muted)]">
                                   Patches Generated:
                                 </b>
-                                {diagnosticResults[source.provider].changes.map((c: string, i: number) => (
+                                {diagnosticResults[source.provider].changes?.map((c: string, i: number) => (
                                   <div key={i} className="font-mono text-[9px] text-[var(--green)]">
                                     ✓ {c}
                                   </div>

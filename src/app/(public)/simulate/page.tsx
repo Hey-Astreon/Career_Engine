@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -21,38 +21,33 @@ import {
   RotateCcw,
   Check,
   Share2,
-  Bookmark,
-  ExternalLink,
   ShieldCheck,
   ChevronRight,
-  Globe
 } from "lucide-react";
 
 function SimulationJobContent() {
   const searchParams = useSearchParams();
   const initialId = searchParams.get("company") || "novasphere";
 
-  const [selectedCompany, setSelectedCompany] = useState<CompanyVacancy>(() => {
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  const selectedCompany = useMemo<CompanyVacancy>(() => {
+    const id = selectedCompanyId || initialId;
     return (
-      SIMULATION_COMPANIES.find((c) => c.id === initialId) ||
+      SIMULATION_COMPANIES.find((c) => c.id === id) ||
       SIMULATION_COMPANIES[0]
     );
-  });
+  }, [selectedCompanyId, initialId]);
 
   const [isPrimed, setIsPrimed] = useState(false);
   const [isPriming, setIsPriming] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  useEffect(() => {
-    const found = SIMULATION_COMPANIES.find((c) => c.id === initialId);
-    if (found) setSelectedCompany(found);
-  }, [initialId]);
-
   const handleRandomize = () => {
     const others = SIMULATION_COMPANIES.filter((c) => c.id !== selectedCompany.id);
     const random = others[Math.floor(Math.random() * others.length)];
     if (random) {
-      setSelectedCompany(random);
+      setSelectedCompanyId(random.id);
       setIsPrimed(false);
     }
   };
@@ -135,7 +130,7 @@ function SimulationJobContent() {
                 <button
                   key={c.id}
                   onClick={() => {
-                    setSelectedCompany(c);
+                    setSelectedCompanyId(c.id);
                     setIsPrimed(false);
                   }}
                   className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${

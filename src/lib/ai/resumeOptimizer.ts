@@ -212,9 +212,9 @@ function generateDynamicOptimizedFallback(
   matchedKeywords: string[],
   missingKeywords: string[]
 ): OptimizedResume {
-  const topSkillStr = targetSkills.length > 0 ? targetSkills.slice(0, 4).join(", ") : "low-latency APIs, distributed microservices, and robust database design";
+  const topSkillStr = targetSkills.length > 0 ? targetSkills.slice(0, 4).join(", ") : "REST APIs, distributed architecture, and AI-integrated tooling";
 
-  const tailoredSummary = `Backend Developer with hands-on experience building production systems across REST APIs, distributed architecture, and AI-integrated tooling — work that has shipped to real users. Has contributed to structured engineering simulations at industry-grade organisations, working through actual codebases to deliver measurable outcomes. Focused on ${jobTitle} challenges at ${company}, particularly where system reliability, concurrency, and security intersect.`;
+  const tailoredSummary = `Backend Developer with hands-on experience building production systems across ${topSkillStr} — work that has shipped to real users. Has contributed to structured engineering simulations at industry-grade organisations, working through actual codebases to deliver measurable outcomes. Focused on ${jobTitle} challenges at ${company}, particularly where system reliability, concurrency, and security intersect.`;
 
   const tailoredSkills = baseline.skills.map((cat) => {
     const matching = targetSkills.filter((s) => cat.skillsText.toLowerCase().includes(s.toLowerCase()));

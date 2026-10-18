@@ -78,7 +78,7 @@ export async function GET(req: Request) {
     const company = session?.company?.replace(/[^a-zA-Z0-9]/g, "_") || "Company";
     const filename = `${candidateName}_Resume_${company}.pdf`;
 
-    return new NextResponse(pdfBuffer as any, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,

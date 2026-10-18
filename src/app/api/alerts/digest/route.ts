@@ -7,7 +7,7 @@ import { generateDigestHtml } from "@/lib/digestEmail";
 // import { Resend } from 'resend';
 // const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -80,7 +80,7 @@ export async function PUT(req: Request) {
 }
 
 // POST endpoint to trigger a test digest manually
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {

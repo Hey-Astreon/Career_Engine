@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
 import { runAllProviders, ingestNormalizedJobs } from "@/lib/providers/registry";
-import { parseRemoteScope, MAX_POSTING_AGE_DAYS, PROBATION_MAX_AGE_DAYS, EarlyCareerTier, determineEarlyCareerTier, calculateEarlyBirdScore } from "@/lib/providers/normalize";
+import { parseRemoteScope, MAX_POSTING_AGE_DAYS, PROBATION_MAX_AGE_DAYS, determineEarlyCareerTier, calculateEarlyBirdScore } from "@/lib/providers/normalize";
 import { buildProviderEndpointRunInserts } from "@/lib/providerEndpointTelemetry";
 import { cache } from "@/lib/cache/redis";
 

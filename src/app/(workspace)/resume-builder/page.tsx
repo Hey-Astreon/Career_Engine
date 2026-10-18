@@ -21,8 +21,6 @@ import {
   ZoomOut,
   ChevronDown,
   ChevronUp,
-  Clock,
-  ExternalLink,
   Briefcase,
   Download,
   FileText,

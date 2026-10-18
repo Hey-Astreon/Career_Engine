@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useProfileStore } from "@/store/useProfileStore";
-import { Activity, AlertTriangle, ArrowUpDown, ArrowUpRight, BarChart3, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Copy, Database, ExternalLink, FileText, Gauge, Grid2X2, LayoutList, MapPin, RefreshCw, Search, ServerCog, ShieldAlert, ShieldCheck, ShieldX, SlidersHorizontal, Sparkles, Target, TimerReset, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Copy, Database, ExternalLink, FileText, Gauge, Grid2X2, LayoutList, MapPin, RefreshCw, Search, ServerCog, ShieldAlert, ShieldCheck, ShieldX, SlidersHorizontal, Sparkles, TimerReset, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_HERO_FILTERS, determineCategory, determineExperienceLevel, formatRemoteScopeLabel, getFreshnessBadgeInfo, getEarlyCareerTierPresentation, isInternshipRole, matchesCareerSearch, matchesExperienceFilter, matchesPostingWindowFilter, matchesRemoteRoleView, paginateCareerFeed, sortCareerJobs, type ExperienceFilter, type JobSortCriteria, type PostingWindowFilter, type RemoteRoleView } from "@/lib/jobPresentation";
 import { FormattedJobDescription } from "@/components/FormattedJobDescription";
@@ -85,27 +85,43 @@ export default function Home() {
   const [schedulerStatus, setSchedulerStatus] = useState<{ isRunning: boolean; intervalMs: number; lastRunAt: string | null; nextRunAt: string | null } | null>(null);
 
   useEffect(() => {
-    async function loadJobs() {
+    let isMounted = true;
+    async function initDashboard() {
       try {
-        const response = await fetch("/api/jobs/scrape");
-        const data = await response.json();
-        if (data.success && Array.isArray(data.jobs)) {
-          setJobs(data.jobs);
+        const [jobsRes, healthRes, diagRes, schedRes] = await Promise.allSettled([
+          fetch("/api/jobs/scrape").then((r) => r.json()),
+          fetch("/api/sources/health").then((r) => r.json()),
+          fetch("/api/diagnostics/provider-endpoints?days=1").then((r) => r.json()),
+          fetch("/api/scheduler").then((r) => r.json()),
+        ]);
+
+        if (!isMounted) return;
+
+        if (jobsRes.status === "fulfilled" && jobsRes.value?.success && Array.isArray(jobsRes.value.jobs)) {
+          setJobs(jobsRes.value.jobs);
         }
-      } catch (error) {
-        console.error("Failed to load jobs:", error);
+        if (healthRes.status === "fulfilled" && healthRes.value?.success && Array.isArray(healthRes.value.sources)) {
+          setSourceHealth(healthRes.value.sources);
+        }
+        if (diagRes.status === "fulfilled" && diagRes.value?.success) {
+          setEndpointDiagnostics(diagRes.value);
+        }
+        if (schedRes.status === "fulfilled" && schedRes.value?.success) {
+          setSchedulerStatus(schedRes.value.status);
+        }
+      } catch (err) {
+        console.error("Dashboard initialization error:", err);
       } finally {
-        setIsLoadingJobs(false);
+        if (isMounted) {
+          setIsLoadingJobs(false);
+          setIsEndpointDiagnosticsLoading(false);
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadJobs();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadSourceHealth();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadEndpointDiagnostics();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadSchedulerStatus();
+    void initDashboard();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -129,7 +145,6 @@ export default function Home() {
         console.error("Failed to load feed scores:", error);
       }
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadScores();
     return () => {
       cancelled = true;
@@ -146,7 +161,11 @@ export default function Home() {
   const filteredJobs = useMemo(() => { const matched = policyEligibleJobs.filter((job) => { const searchable = `${job.title} ${job.company} ${job.rawDescription}`.toLowerCase(); const matchesSearch = matchesCareerSearch(job, searchTerm); const category = determineCategory(job.title, job.rawDescription); const matchesCategory = selectedCategory === "ALL" || category === selectedCategory || (selectedCategory === "React Developer" && searchable.includes("react")) || (selectedCategory === "Backend Developer" && (searchable.includes("backend") || searchable.includes("systems"))) || (selectedCategory === "Frontend Developer" && searchable.includes("frontend")) || (selectedCategory === "Full Stack Developer" && (searchable.includes("full stack") || searchable.includes("fullstack"))) || (selectedCategory === "Python Developer" && searchable.includes("python")) || (selectedCategory === "AI / ML Engineer" && (searchable.includes("machine learning") || searchable.includes(" ai "))); const matchesPlatform = selectedPlatform === "ALL" || job.platform.toUpperCase() === selectedPlatform; const score = scoresMap[job.id]; const matchesScore = minMatchScore === "ALL" || !score || (score.eligible && score.score >= Number(minMatchScore)); if (hideShieldFlagged && (score?.trustTier === "RED" || score?.trustTier === "AMBER")) return false; return matchesSearch && matchesCategory && matchesPlatform && matchesScore; }); return sortCareerJobs(matched, sortBy, scoresMap); }, [policyEligibleJobs, searchTerm, selectedCategory, selectedPlatform, minMatchScore, scoresMap, sortBy, hideShieldFlagged]);
   const feedPagination = useMemo(() => paginateCareerFeed(filteredJobs, feedPage, 50), [filteredJobs, feedPage]);
   const visibleJobs = feedPagination.items;
-  const scoredEligible = Object.values(scoresMap).filter((score) => score.eligible && score.score >= 70).length; const sources = new Set(eligibleJobs.map((job) => job.platform)).size; const healthSummary = useMemo(() => summarizeProviderHealth(sourceHealth), [sourceHealth]); const healthRows = useMemo(() => sortProviderHealth(sourceHealth), [sourceHealth]); const rejectionRate = lastRun ? calculateRejectionRate(lastRun.totalDiscovered, lastRun.totalRejected) : null; const policyScanned = lastRun ? lastRun.totalDiscovered : null; const policyRemoved = lastRun ? lastRun.totalRejected : null;
+  const healthSummary = useMemo(() => summarizeProviderHealth(sourceHealth), [sourceHealth]);
+  const healthRows = useMemo(() => sortProviderHealth(sourceHealth), [sourceHealth]);
+  const rejectionRate = lastRun ? calculateRejectionRate(lastRun.totalDiscovered, lastRun.totalRejected) : null;
+  const policyScanned = lastRun ? lastRun.totalDiscovered : null;
+  const policyRemoved = lastRun ? lastRun.totalRejected : null;
   const internshipCount = useMemo(() => eligibleJobs.filter((j) => isInternshipRole(j.title, j.rawDescription)).length, [eligibleJobs]);
   const internshipPercentage = eligibleJobs.length > 0 ? Math.round((internshipCount / eligibleJobs.length) * 100) : 0;
   const resetFilters = () => { setSearchTerm(""); setSelectedCategory("ALL"); setSelectedPlatform("ALL"); setMinMatchScore("ALL"); setSortBy("EARLY_BIRD"); setExperienceRange(DEFAULT_HERO_FILTERS.experienceRange); setMaximumPostedDays(DEFAULT_HERO_FILTERS.maximumPostedDays); setRemoteRoleView(DEFAULT_HERO_FILTERS.remoteRoleView); setFeedPage(1); setHideShieldFlagged(false); };

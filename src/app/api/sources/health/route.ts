@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { cache } from "@/lib/cache/redis";
 import { ACTIVE_PROVIDERS } from "@/lib/providers/registry";
