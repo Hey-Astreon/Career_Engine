@@ -28,23 +28,44 @@ jobs:
       - name: ⚙️ Generate Prisma Client
         run: npx prisma generate
 
-      - name: 🔐 Verify Turso Secrets
+      - name: 🔐 Sanitize & Verify Turso Cloud Secrets
         run: |
-          if [ -z "${{ secrets.TURSO_DATABASE_URL }}" ]; then
+          CLEAN_URL=$(echo "${{ secrets.TURSO_DATABASE_URL }}" | tr -d '\r\n"' | xargs)
+          CLEAN_TOKEN=$(echo "${{ secrets.TURSO_AUTH_TOKEN }}" | tr -d '\r\n"' | xargs)
+
+          if [ -z "$CLEAN_URL" ]; then
             echo "::error::TURSO_DATABASE_URL secret is missing in GitHub Repository Secrets!"
             echo "Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions"
             exit 1
           fi
-          if [ -z "${{ secrets.TURSO_AUTH_TOKEN }}" ]; then
+          if [ -z "$CLEAN_TOKEN" ]; then
             echo "::error::TURSO_AUTH_TOKEN secret is missing in GitHub Repository Secrets!"
             echo "Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions"
             exit 1
           fi
-          echo "✅ Turso cloud secrets successfully verified."
+
+          echo "TURSO_DATABASE_URL=$CLEAN_URL" >> $GITHUB_ENV
+          echo "DATABASE_URL=$CLEAN_URL" >> $GITHUB_ENV
+          echo "TURSO_AUTH_TOKEN=$CLEAN_TOKEN" >> $GITHUB_ENV
+
+          echo "Testing Turso Cloud database schema connectivity..."
+          node -e '
+            const { createClient } = require("@libsql/client");
+            const rawUrl = process.env.TURSO_DATABASE_URL;
+            const url = rawUrl.startsWith("https://") ? "libsql://" + rawUrl.slice(8) : rawUrl;
+            const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+            client.execute("SELECT count(*) as count FROM opportunities").then(r => {
+              console.log("✅ Turso Cloud Verified: Schema contains " + r.rows[0].count + " opportunities.");
+            }).catch(e => {
+              console.error("❌ Turso Cloud Preflight Verification Failed:", e.message);
+              process.exit(1);
+            });
+          '
 
       - name: 🚀 Run 19-Source Scraping Engine (Direct Turso Cloud)
-        run: npx tsx scripts/run-discovery-cli.ts
+        run: npx --yes tsx scripts/run-discovery-cli.ts
         env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          TURSO_DATABASE_URL: ${{ env.TURSO_DATABASE_URL }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ env.TURSO_AUTH_TOKEN }}
           AGENT_GATEWAY_URL: https://agent.astrework.app
