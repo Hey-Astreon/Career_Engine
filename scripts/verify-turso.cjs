@@ -4,30 +4,56 @@ const { createClient } = require('@libsql/client');
 
 function extractUrl(raw) {
   if (!raw) return null;
-  const str = String(raw);
+  let str = String(raw).trim();
+  // Strip TURSO_DATABASE_URL= or DATABASE_URL= prefix if present
+  str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
+  // Strip surrounding quotes/backticks
+  str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
+
+  // 1. Check if contains full URL with scheme (libsql://, https://, http://)
   const match = str.match(/(?:libsql|https?):\/\/[^\s"'`]+/);
-  if (!match) return null;
-  let clean = match[0];
-  if (clean.startsWith('https://')) {
-    clean = 'libsql://' + clean.slice(8);
-  } else if (clean.startsWith('http://')) {
-    clean = 'libsql://' + clean.slice(7);
+  if (match) {
+    let clean = match[0];
+    if (clean.startsWith('https://')) clean = 'libsql://' + clean.slice(8);
+    if (clean.startsWith('http://')) clean = 'libsql://' + clean.slice(7);
+    return clean;
   }
-  return clean;
+
+  // 2. Check if it is a turso hostname (e.g. astrework-db-hey-astreon.aws-ap-south-1.turso.io)
+  const tursoMatch = str.match(/[a-zA-Z0-9_.-]+\.turso\.io[^\s"'`]*/);
+  if (tursoMatch) {
+    return 'libsql://' + tursoMatch[0];
+  }
+
+  // 3. Any standard URI scheme (e.g. wss://, file:)
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(str)) {
+    return str;
+  }
+
+  return null;
 }
 
 function extractToken(raw) {
   if (!raw) return null;
-  const str = String(raw);
+  let str = String(raw).trim();
+  // Strip TURSO_AUTH_TOKEN= prefix if present
+  str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
+  // Strip surrounding quotes/backticks
+  str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
+
+  // Extract JWT if present
   const jwtMatch = str.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
   if (jwtMatch) return jwtMatch[0];
-  const cleaned = str.trim().replace(/^[\r\n'"]+|[\r\n'"]+$/g, '').trim();
-  return cleaned || null;
+
+  return str || null;
 }
 
 async function verify() {
   const rawUrl = process.env.RAW_TURSO_URL || process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
   const rawToken = process.env.RAW_TURSO_TOKEN || process.env.TURSO_AUTH_TOKEN;
+
+  console.log(`[Turso Preflight] Raw URL received: ${rawUrl ? `length=${rawUrl.length}` : 'EMPTY'}`);
+  console.log(`[Turso Preflight] Raw Token received: ${rawToken ? `length=${rawToken.length}` : 'EMPTY'}`);
 
   const cleanUrl = extractUrl(rawUrl);
   const cleanToken = extractToken(rawToken);

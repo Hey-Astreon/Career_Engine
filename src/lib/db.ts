@@ -9,29 +9,35 @@ const globalForPrisma = globalThis as unknown as {
 
 export function cleanDbUrl(raw?: string): { url: string; isRemote: boolean } {
   if (!raw) return { url: "", isRemote: false };
-  const str = String(raw);
+  let str = String(raw).trim();
+  str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
+  str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
+
   const match = str.match(/(?:libsql|https?):\/\/[^\s"'`]+/);
-  if (!match) {
-    const trimmed = str.trim().replace(/^[\r\n]+|[\r\n]+$/g, "").trim().replace(/^['"]+|['"]+$/g, "").trim();
-    const isRemote = trimmed.startsWith("libsql://") || trimmed.startsWith("wss://");
-    return { url: trimmed, isRemote };
+  if (match) {
+    let clean = match[0];
+    if (clean.startsWith("https://")) clean = "libsql://" + clean.slice(8);
+    if (clean.startsWith("http://")) clean = "libsql://" + clean.slice(7);
+    return { url: clean, isRemote: true };
   }
-  let clean = match[0];
-  if (clean.startsWith("https://")) {
-    clean = "libsql://" + clean.slice(8);
-  } else if (clean.startsWith("http://")) {
-    clean = "libsql://" + clean.slice(7);
+
+  const tursoMatch = str.match(/[a-zA-Z0-9_.-]+\.turso\.io[^\s"'`]*/);
+  if (tursoMatch) {
+    return { url: "libsql://" + tursoMatch[0], isRemote: true };
   }
-  return { url: clean, isRemote: clean.startsWith("libsql://") || clean.startsWith("wss://") };
+
+  const isRemote = str.startsWith("libsql://") || str.startsWith("wss://");
+  return { url: str, isRemote };
 }
 
 export function cleanAuthToken(raw?: string): string | undefined {
   if (!raw) return undefined;
-  const str = String(raw);
+  let str = String(raw).trim();
+  str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
+  str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
   const jwtMatch = str.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
   if (jwtMatch) return jwtMatch[0];
-  const cleaned = str.trim().replace(/^[\r\n'"]+|[\r\n'"]+$/g, "").trim();
-  return cleaned || undefined;
+  return str || undefined;
 }
 
 function createPrismaClient() {
