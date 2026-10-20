@@ -114,19 +114,20 @@
 
 | Layer | Package / Tool | Version | Architecture Role |
 | :--- | :--- | :--- | :--- |
-| **Framework** | `next` | `16.3.0` | Turbopack engine, App Router, Route Handlers |
-| **UI Library** | `react`, `react-dom` | `19.2.8` | React 19 Concurrent Root, Client Components |
+| **Framework** | `next` | `16.3.0` | Turbopack engine, App Router, Server Actions, Route Handlers |
+| **UI Library** | `react`, `react-dom` | `19.2.8` | React 19 Concurrent Root, Transitions, Client Components |
 | **Language** | `typescript` | `5.9.3` | Strict type checking (`strict: true`) |
-| **Database Engine** | SQLite (`dev.db`) | Local WAL | High-speed local relational persistence |
-| **Prisma ORM** | `@prisma/client`, `@prisma/adapter-libsql` | `7.9.1` / `7.10.0` | Driver adapter bridge to SQLite |
-| **Styling** | `tailwindcss`, `@tailwindcss/postcss` | `4.0` | PostCSS 4, Custom Design Tokens |
-| **Icons** | `lucide-react` | `1.28.0` | UI iconography |
+| **Primary Cloud DB** | Turso Cloud (LibSQL) | `aws-ap-south-1` | Distributed SQLite over HTTP/WebSocket, WAL mode, AWS Mumbai |
+| **Local Dev DB** | SQLite (`prisma/dev.db`) | Local WAL | Offline/fallback local relational persistence |
+| **Prisma ORM** | `@prisma/client`, `@prisma/adapter-libsql` | `7.9.1` / `7.10.0` | Universal driver adapter bridge to Turso Cloud & SQLite |
+| **CI Headless Runner** | `tsx` | `4.19.3` | Deterministic headless TypeScript execution in GitHub Actions CI |
+| **Autonomous Extension** | AstrePilot | `Manifest V3` | Injected shadow-DOM glassmorphic HUD, ATS autofill, in-browser scraping |
+| **Styling** | `tailwindcss`, `@tailwindcss/postcss` | `4.0` | Tailwind CSS 4, Custom Glassmorphic Tokens |
+| **Icons** | `lucide-react` | `1.28.0` | High-density UI iconography |
 | **State Management** | `zustand` | `5.0.14` | Client-side reactive profile & UI store |
-| **Data Querying** | `@tanstack/react-query` | `5.101.4` | Background polling, caching, optimistic updates |
-| **Validation** | `zod` | `4.4.3` | API payload schema validation |
-| **Scraping & DOM** | `playwright`, `cheerio`, `axios` | `1.62.1` / `1.2.0` / `1.19.0` | Headless execution, HTML parsing, JSON REST |
+| **Scraping & DOM** | `cheerio`, `axios` | `1.2.0` / `1.19.0` | Headless execution, RSS/XML parsing, JSON REST |
 | **Document Parser** | `pdf-parse` | `2.4.5` | Resume text extraction |
-| **Test Runner** | `vitest`, `@vitest/coverage-v8` | `4.1.10` | 21 test suites, 260+ passing tests |
+| **Test Runner** | `vitest`, `@vitest/coverage-v8` | `4.1.10` | 28 test suites, 301+ passing tests |
 
 ---
 
@@ -152,29 +153,44 @@ graph TD
 
 ## 🗄️ SECTION 6: DATABASE SCHEMA & ENTITY ARCHITECTURE
 
-Defined in `prisma/schema.prisma` with 8 core models:
+Defined in `prisma/schema.prisma` spanning 19 comprehensive tables:
 
 ```mermaid
 erDiagram
+    User ||--o{ Account : has
+    User ||--o{ Session : has
+    User ||--|| Profile : owns
     Profile ||--o{ Project : has
     Profile ||--o{ VirtualExperience : has
-    Profile ||--o{ MatchScore : receives
+    Profile ||--o{ Skill : lists
+    Profile ||--o{ ResumeVariant : customizes
     Profile ||--o{ Application : submits
-    Opportunity ||--o{ JobOccurrence : originates_from
-    Opportunity ||--o{ MatchScore : evaluated_for
     Opportunity ||--o{ Application : targeted_by
-    ProviderSyncState ||--o{ JobOccurrence : tracks
+    Opportunity ||--o{ JobPosting : aggregates
+    User ||--o{ AutopilotSession : launches
+    User ||--o{ AutopilotLog : logs
 ```
 
-1. **`Profile`**: Master candidate record (`slug`, `fullName`, `title`, `email`, `phone`, `location`, URLs, `masterResumePath`).
-2. **`Project`**: Structured engineering project with tech stack, architecture summary, and JSON stringified bullet points.
-3. **`VirtualExperience`**: Structured work achievements (`company`, `roleTitle`, `period`, `problemScope`, `actionTaken`, `outcome`).
-4. **`Opportunity`**: Canonical deduplicated job entity (`companySlug`, `title`, `category`, `jobType`, `experienceLevel`, `isRemote`, `remoteScope`, `canonicalAppUrl`, `rawDescription`, `opportunitySignals`, `postedAt`, `isExpired`).
-5. **`JobOccurrence`**: Source-specific posting instance (`opportunityId`, `providerKey`, `sourceJobId`, `discoveryUrl`, `applicationUrl`, `verificationStatus`, `lastSeenAt`).
-6. **`ProviderSyncState`**: Provider health tracking (`providerKey`, `status`: `HEALTHY` | `DEGRADED` | `FAILING` | `DISABLED`, `consecutiveFailures`, `totalJobsSeen`).
-7. **`ProviderEndpointRun`**: High-resolution latency and HTTP response telemetry per scrape execution (`scrapeRunId`, `providerKey`, `endpointKey`, `endpointUrl`, `latencyMs`, `statusCode`, `errorMessage`).
-8. **`MatchScore`**: Semantic matching record (`profileId`, `jobPostingId`, `opportunityId`, `score` 0–100, `hardSkills`, `missingSkills`, `reasoning`).
-9. **`Application`**: Candidate job application lifecycle (`status`: `DISCOVERED` &rarr; `SHORTLISTED` &rarr; `APPLIED` &rarr; `SCREENING` &rarr; `TECHNICAL_ROUND` &rarr; `OFFER` &rarr; `REJECTED`).
+### Complete 19-Table Ledger:
+1. **`users`**: NextAuth user identity (`id`, `email`, `name`, `emailVerified`, `image`). Consolidated exclusively for Roushan Kumar & Ayushi Raj.
+2. **`accounts`**: OAuth provider account linkings (`google`, `github`) with token management.
+3. **`sessions`**: Server-side session tokens for web app authentication.
+4. **`verification_tokens`**: Passwordless magic link and verification state.
+5. **`profiles`**: Master candidate record (`userId`, `fullName`, `title`, `email`, `phone`, `location`, `linkedinUrl`, `githubUrl`, `portfolioUrl`, `masterResumePath`).
+6. **`projects`**: High-impact engineering builds (`title`, `techStack`, `architectureSummary`, `bulletsJson`, `liveUrl`, `githubUrl`).
+7. **`virtual_experiences`**: Structured work achievements (`company`, `roleTitle`, `period`, `problemScope`, `actionTaken`, `outcome`).
+8. **`skills`**: Granular categorized candidate skills (Languages, Frameworks, Cloud, Tools).
+9. **`resumes`**: Uploaded candidate PDF resumes with parsed full-text.
+10. **`resume_variants`**: Calibrated PDF resume variants tailored to specific roles/specializations.
+11. **`job_postings`**: Raw incoming scraped job entries before canonical deduplication.
+12. **`opportunities`**: Canonical deduplicated opportunity entity (`companySlug`, `title`, `category`, `jobType`, `experienceLevel`, `isRemote`, `remoteRegion`, `remoteScope`, `canonicalAppUrl`, `rawDescription`, `opportunitySignals`, `postedAt`, `isExpired`).
+13. **`applications`**: Application tracking Kanban (`status`: `DISCOVERED` &rarr; `SHORTLISTED` &rarr; `APPLIED` &rarr; `SCREENING` &rarr; `TECHNICAL_ROUND` &rarr; `OFFER` &rarr; `REJECTED`).
+14. **`application_events`**: Immutable audit timeline events for every application status change.
+15. **`scrapes`**: High-level execution logs per provider run.
+16. **`sync_states`**: Continuous health telemetry per provider (`status`: `HEALTHY` | `DEGRADED` | `FAILING`, `consecutiveFailures`, `totalJobsSeen`).
+17. **`autopilot_sessions`**: Active application sessions generated for AstrePilot extension (`jobTitle`, `company`, `tailoredSummary`, `salaryRange`).
+18. **`autopilot_logs`**: Telemetry of successful autofills performed by AstrePilot (`domain`, `fieldsFilled`, `timestamp`).
+19. **`_prisma_migrations`**: Migration history tracking schema state in Turso Cloud.
 
 ---
 
@@ -258,72 +274,95 @@ interface ProfileState {
 
 ---
 
-## 📡 SECTION 12: 17+ DISCOVERY SCRAPERS REGISTRY
+## 📡 SECTION 12: 13-PROVIDER AUTONOMOUS DISCOVERY REGISTRY
 
-Located in `src/lib/providers/`:
+Located in `src/lib/providers/registry.ts`:
 
-| Provider | File | Strategy & Target |
-| :--- | :--- | :--- |
-| **Greenhouse ATS** | `greenhouse.ts` | Public JSON API with full HTML body extraction |
-| **Ashby ATS** | `ashby.ts` | High-yield startup ATS board ingestion |
-| **Lever ATS** | `lever.ts` | Direct posting query & category normalization |
-| **Workable ATS** | `workable.ts` | Enterprise posting parser |
-| **SmartRecruiters** | `smartrecruiters.ts` | High-volume ATS feed scraper |
-| **Recruitee** | `recruitee.ts` | Direct European and US startup portals |
-| **Himalayas** | `himalayas.ts` | Remote-first developer roles with salary ranges |
-| **Remotive** | `remotive.ts` | Global remote software engineering feed |
-| **Arbeitnow** | `arbeitnow.ts` | European & worldwide tech opportunities |
-| **RemoteOK** | `remoteok.ts` | High-density developer roles with tag parsing |
-| **Jobicy** | `jobicy.ts` | Verified remote tech feeds |
-| **Simplify** | `simplify.ts` | New grad and summer internship aggregator |
-| **Arc.dev** | `arcdev.ts` | Vetted remote developer job board |
-| **BuiltIn** | `builtin.ts` | High-growth US tech hubs |
-| **LinkedIn** | `linkedin.ts` | Public job post scraper with developer keyword matching |
-| **Hacker News** | `hackernews.ts` | Monthly "Who is Hiring?" thread parser via Algolia |
-| **micro1** | `micro1.ts` | AI and full-stack contractor roles |
+| Provider | File | Class | Ingestion Mechanism | Target Category |
+| :--- | :--- | :--- | :--- | :--- |
+| **LinkedIn Remote** | `linkedin.ts` | `LinkedInProvider` | Public guest endpoint & developer keyword query | SDE, Backend, Full Stack |
+| **Simplify Jobs** | `simplify.ts` | `SimplifyProvider` | High-frequency Summer/Fall internship feed | Internships & Freshers |
+| **Himalayas** | `himalayas.ts` | `HimalayasProvider` | Direct JSON REST API with salary telemetry | Remote Global Tech |
+| **Jobicy** | `jobicy.ts` | `JobicyProvider` | Clean XML/RSS feed parser with category gating | Remote Software Engineering |
+| **BuiltIn** | `builtin.ts` | `BuiltInProvider` | Tech hub aggregator (Austin, NYC, SF, Remote) | High-Growth Tech Startups |
+| **Hacker News** | `hackernews.ts` | `HackerNewsProvider` | Monthly "Who is Hiring?" thread via Algolia | Direct Engineering Teams |
+| **Ashby ATS** | `ashby.ts` | `AshbyProvider` | Direct high-yield startup board feeds | Direct ATS Applications |
+| **LFX Mentorship** | `lfx.ts` | `LFXMentorshipProvider` | CNCF / Linux Foundation GitHub raw markdown | Paid Open Source Mentorships |
+| **NoDesk Remote** | `nodesk.ts` | `NoDeskProvider` | NoDesk clean XML RSS feed parser | Remote-First Developer Roles |
+| **InternList** | `internlist.ts` | `InternListProvider` | Curated undergraduate & graduate internship lists | 2026 Developer Internships |
+| **Astra Engine** | `astra.ts` | `AstraProvider` | In-house specialized early-career aggregator | Verified Remote Roles |
+| **Wellfound (AngelList)** | `wellfound.ts` | `WellfoundProvider` | In-Browser Apollo GraphQL Harvester via AstrePilot | Seed & Series A Startups |
+| **JobRight AI** | `jobright.ts` | `JobrightProvider` | In-Browser Harvester via AstrePilot Session | Verified Remote Jobs |
 
 ---
 
-## 🔑 SECTION 13: ENVIRONMENT SCHEMA & 5-MINUTE RECOVERY RUNBOOK
+## 🔑 SECTION 13: ENVIRONMENT SCHEMA & 5-MINUTE DISASTER RECOVERY RUNBOOK
 
-### `.env` File Schema
+### Production `.env` File Schema
 
 ```env
-# Database Connection (SQLite LibSQL Adapter)
-DATABASE_URL="file:./prisma/dev.db"
+# ========================================================
+# 1. DATABASE & CLOUD LIB-SQL (Turso Cloud)
+# ========================================================
+# Smart resolver handles libsql://, https://, or raw hostname
+TURSO_DATABASE_URL="libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io"
+TURSO_AUTH_TOKEN="eyJhbGciOiJFZERTQTE5MSIsInR5cCI6IkpXVCJ9..." # Turso JWT token
+DATABASE_URL="libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io"
 
-# Multi-Provider AI Inference API Keys
-GEMINI_API_KEY="your_gemini_api_key_here"        # Google AI Studio
-GROQ_API_KEY="your_groq_api_key_here"            # Groq Cloud Console
-CEREBRAS_API_KEY="your_cerebras_api_key_here"    # Cerebras Cloud
-NVIDIA_NIM_API_KEY="your_nvidia_nim_api_key_here"# NVIDIA NGC / NIM
+# ========================================================
+# 2. NEXTAUTH / AUTHENTICATION
+# ========================================================
+NEXTAUTH_URL="https://astrework.app"
+NEXTAUTH_SECRET="your_nextauth_hmac_secret"
+
+# OAuth Providers (Google & GitHub)
+GOOGLE_CLIENT_ID="your_google_client_id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+GITHUB_ID="your_github_oauth_app_id"
+GITHUB_SECRET="your_github_oauth_app_secret"
+
+# ========================================================
+# 3. MULTI-PROVIDER AI INFERENCE ROUTING
+# ========================================================
+GEMINI_API_KEY="AIzaSy..."                        # Google AI Studio
+GROQ_API_KEY="gsk_..."                           # Groq Cloud Console
+CEREBRAS_API_KEY="csk-..."                       # Cerebras Inference
+NVIDIA_NIM_API_KEY="nvapi-..."                   # NVIDIA NGC / NIM
+
+# ========================================================
+# 4. MICROSERVICES & EXTENSION GATEWAY
+# ========================================================
+AGENT_GATEWAY_URL="https://agent.astrework.app"
+REDIS_URL="redis://localhost:6379"               # In-memory LRU cache
 ```
 
-### 5-Minute Fresh Setup Runbook
+### 5-Minute Fresh System Recovery Runbook
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/Hey-Astreon/CareerAgent.git
-cd CareerAgent
+# 1. Clone official repository
+git clone https://github.com/Hey-Astreon/Career_Engine.git
+cd Career_Engine/1_RCMS
 
 # 2. Configure Git identity
 git config user.name "Hey-Astreon"
 git config user.email "playboxstation460@gmail.com"
 
-# 3. Install dependencies
-npm install
+# 3. Install clean dependencies
+npm ci
 
-# 4. Synchronize database & seed profiles
-npx prisma db push --skip-generate
-npx tsx prisma/seed.ts
+# 4. Generate Prisma Client
+npx prisma generate
 
-# 5. Verify test suite & build
-npx vitest run
-npm run build
+# 5. Verify Turso Cloud Database Connectivity & Schema
+node scripts/verify-turso.cjs
 
-# 6. Launch development server
-npm run dev
-# Dashboard live at http://localhost:3000
+# 6. Run Full Autonomous Discovery & Ingestion Pipeline
+npx tsx scripts/run-discovery-cli.ts
+
+# 7. Run Test Suite
+npm test
+
+# 8. Start Local Development Server
 ```
 
 ---
@@ -361,21 +400,107 @@ npm run dev
 
 ---
 
-## 💻 SECTION 15: MASTER OPERATIONAL COMMANDS
+## 🛸 SECTION 14: ASTREPILOT AUTONOMOUS CHROME EXTENSION (MANIFEST V3)
+
+Located in `extension/`:
+
+### 1. Architectural Components
+- **`background.js` (Service Worker):** Listens for tab updates, checks URL patterns against known ATS domains (`boards.greenhouse.io`, `jobs.lever.co`, `jobs.ashbyhq.com`, `*.myworkdayjobs.com`, `bamboohr.com`, `wellfound.com`), badges the icon when an ATS form is detected, and handles cross-origin proxy requests (`PROXY_FETCH`) to bypass browser CORS restrictions.
+- **`content.js` (DOM Engine):** Scans page elements, matches inputs using semantic boundary regex (`kwMatch`), extracts job description text, injects the HUD, and executes human-like typing micro-animations while updating internal framework state (reconciles `_valueTracker` for React, Angular, and Vue).
+- **`hud-ui.js` (Shadow DOM HUD):** Renders the floating glassmorphic control console inside an isolated Shadow Root (`#astrepilot-root`) to guarantee host page styles (Tailwind, Bootstrap, custom CSS) never bleed into or break the HUD layout.
+- **`popup.html` & `popup.js` (Action Menu):** Quick-launch interface displaying connection state, authenticated candidate badge, application statistics, and direct connection token input.
+
+### 2. Supported ATS Platforms
+- **Greenhouse:** Full support for standard hosted boards and embedded iframe application forms.
+- **Lever:** Direct field mapping including resume uploads, customized social links, and demographic surveys.
+- **Ashby:** Complete auto-detection of dynamic React form fields and custom questions.
+- **Workday:** Multi-step wizard automation with state preservation across pages.
+- **BambooHR & SmartRecruiters:** Granular matching of contact details, work history, and custom questions.
+- **LinkedIn Easy Apply:** Form step detection and automated profile mapping.
+- **Wellfound (AngelList):** Seamless candidate profile autofill and in-browser job harvesting.
+- **Custom Careers Portals:** Universal semantic keyword heuristic capable of mapping 95%+ of arbitrary HTML5 job forms.
+
+### 3. Keyboard Shortcuts
+- **`Alt + Shift + A` (Global):** Instantly launches or toggles the AstrePilot HUD on any page regardless of cursor focus.
+- **`Alt + A` (In-Page Secondary):** Toggles the HUD when the user is not actively typing inside an input or textarea.
+
+### 4. 6-Stage HUD State Machine
+```text
+[IDLE] ──► [SCANNING] ──► [READY] ──► [AUTOFILLING] ──► [DONE] ──► [COLLAPSED]
+                             │
+                             └──► [EXTRACTING] (AstreShield & JD Analysis)
+```
+1. **`idle`:** Extension dormant in tab until triggered or an ATS page is opened.
+2. **`scanning`:** Discovers inputs, selects, radios, checkboxes, and textareas across the page.
+3. **`ready`:** Displays mapped fields with live candidate previews. Users can verify or edit values before injection.
+4. **`autofilling`:** Progress bar advances as fields are filled with synthetic keystroke and input events.
+5. **`extracting`:** Extracts job description, calculates AstreShield trust score (0–100), and primes tailored summary.
+6. **`done` / `collapsed`:** Form ready for candidate review and 1-click submission. Automatically tucks into a non-intrusive floating pill.
+
+### 5. In-Browser Sourcing Loophole (Wellfound & JobRight)
+- Running in the user's active authenticated browser session allows AstrePilot to bypass Cloudflare, Datadome, and Apollo GraphQL rate limits that block headless servers.
+- The HUD includes dedicated **"Harvest Opportunities"** capabilities that read active feed items from the DOM/state and pipe them directly into Turso Cloud via `/api/jobs/import`.
+
+### 6. Twin Founder AstrePilot Connection Tokens (90-Day Validity)
+- **Roushan Kumar (`playboxstation460@gmail.com`):**
+  ```text
+  eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs
+  ```
+- **Ayushi Raj (`ayushi29507@gmail.com`):**
+  ```text
+  eyJ1aWQiOiIxNjlmMzA2NS1jYzQ4LTQyYzgtODI1YS05ZWZkOTA2MjI3ZjciLCJleHAiOjE4MDAzMDE3Mjg3Nzd9._mtlYHR3HhN3tJtGmyVC2971rWalwcL2hp1cpj0LcmQ
+  ```
+
+---
+
+## 🏁 SECTION 15: THE 10-DAY SPRINT TO EMPLOYMENT PLAYBOOK (50+ APPLICATIONS DAILY)
+
+> **CORE MANDATE:** Target 50+ submitted applications daily per person (100+ combined) to secure remote engineering internships/offers within 10 days.
+
+### Daily 4-Hour Execution Blueprint:
+```text
+┌─────────────────────────┬─────────────────────────┬─────────────────────────┬─────────────────────────┐
+│     08:00 - 09:00       │      09:00 - 11:30      │      11:30 - 12:30      │      17:00 - 18:00      │
+│  Morning Sourcing Sync  │  High-Velocity Autofill │  Pipeline & Follow-ups  │  Targeted Cold Outreach │
+│  (AstreWork Dashboard)  │  (AstrePilot 1-Click)   │  (/applications Nudge)  │  (/outreach Studio)     │
+└─────────────────────────┴─────────────────────────┴─────────────────────────┴─────────────────────────┘
+```
+
+1. **Step 1: Fresh Batch Sourcing (08:00 - 09:00)**
+   - Open [https://astrework.app/dashboard](https://astrework.app/dashboard). Filter for `Remote: Worldwide / India`, `Role: Backend / Full Stack / AI / Software Engineer`, `Tier: Tier 1 Internship / Early Career`.
+   - Open 25–30 direct ATS application links in background tabs (`Cmd/Ctrl + Click`).
+2. **Step 2: High-Velocity ATS Ingestion (09:00 - 11:30)**
+   - On each job tab, press `Alt + Shift + A` to summon AstrePilot HUD.
+   - Review mapped fields and AstreShield score (100% verified for direct ATS).
+   - Click **"Autofill All Fields"** (takes ~10 seconds).
+   - Review uploaded resume PDF and click **Submit Application**.
+   - *Rate:* 20–25 applications per hour. 50 applications take ~2 hours.
+3. **Step 3: Pipeline Tracking & Follow-up Nudges (11:30 - 12:30)**
+   - Open [https://astrework.app/applications](https://astrework.app/applications).
+   - Applications $>5$ days quiet trigger the `⚡ Send Nudge` indicator.
+   - Open Follow-up Studio, generate tailored follow-up email (`nudge` or `project_update`), and send via 1-click `mailto:`.
+4. **Step 4: Strategic Recruiter Outreach (17:00 - 18:00)**
+   - Open [https://astrework.app/outreach](https://astrework.app/outreach).
+   - Use `🎓 Intern 2026` or `🛠️ Direct Engineer` tone to generate concise (<300 char) LinkedIn connection notes citing Astra Vision, IDBI FinSync, and CommBank work simulations.
+
+---
+
+## 💻 SECTION 16: MASTER OPERATIONAL COMMANDS
 
 | Command | Action |
 | :--- | :--- |
 | `npm run dev` | Start local Next.js dev server on `http://localhost:3000` |
-| `npm run build` | Compile Next.js production build and validate all routes |
-| `npx vitest run` | Execute entire 21-suite test runner (260+ tests) |
-| `npx prisma db push --skip-generate` | Synchronize SQLite database with Prisma schema |
+| `npm run build` | Compile Next.js production build and validate all 55+ routes |
+| `npm test` | Execute entire 28-suite test runner (301+ passing tests) |
+| `node scripts/verify-turso.cjs` | Verify live Turso Cloud database schema and table connectivity |
+| `npx tsx scripts/run-discovery-cli.ts` | Execute full 13-source autonomous scraping & Turso Cloud ingestion |
+| `npx prisma db push --skip-generate` | Synchronize Turso Cloud database with Prisma schema |
 | `npx prisma studio` | Open interactive web-based database management GUI |
-| `npx tsx prisma/seed.ts` | Re-seed profiles and baseline postings |
-| `git push origin main` | Push commits to `Hey-Astreon/CareerAgent` |
+| `git push origin main` | Push commits to `Hey-Astreon/Career_Engine` |
 
 ---
 
-## 🎯 SECTION 16: PHASE EXECUTION LEDGER & EXACTLY WHERE WE LEFT OFF
+## 🎯 SECTION 17: PHASE EXECUTION LEDGER & EXACTLY WHERE WE LEFT OFF
 
 ### Completed Phases & Milestones
 - [x] **Phase 1: Multi-Provider Scraper Infrastructure** (17+ scrapers integrated with fault isolation).
