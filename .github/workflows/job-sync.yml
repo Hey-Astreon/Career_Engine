@@ -44,6 +44,10 @@ jobs:
             exit 1
           fi
 
+          export TURSO_DATABASE_URL="$CLEAN_URL"
+          export DATABASE_URL="$CLEAN_URL"
+          export TURSO_AUTH_TOKEN="$CLEAN_TOKEN"
+
           echo "TURSO_DATABASE_URL=$CLEAN_URL" >> $GITHUB_ENV
           echo "DATABASE_URL=$CLEAN_URL" >> $GITHUB_ENV
           echo "TURSO_AUTH_TOKEN=$CLEAN_TOKEN" >> $GITHUB_ENV
@@ -51,7 +55,7 @@ jobs:
           echo "Testing Turso Cloud database schema connectivity..."
           node -e '
             const { createClient } = require("@libsql/client");
-            const rawUrl = process.env.TURSO_DATABASE_URL;
+            const rawUrl = process.env.TURSO_DATABASE_URL || "";
             const url = rawUrl.startsWith("https://") ? "libsql://" + rawUrl.slice(8) : rawUrl;
             const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
             client.execute("SELECT count(*) as count FROM opportunities").then(r => {
