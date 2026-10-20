@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 12, 2026 (Ultra-Fresh Remote Internship Overhaul, Automated Stale Pruning, Source Health Quarantining, Quick Apply Internship Kit, Application Pipeline Tracker & Follow-up Studio, Outreach Studio 4-Tone Engine, Extension Build Packaging)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Live CI/CD Self-Healing Turso Sync, In-Browser Wellfound/JobRight Harvester, Database Account Cleansing, 90-Day AstrePilot Founder Tokens, 50+ Daily Applications Sprint)
 
 ---
 
@@ -531,6 +531,35 @@ npm run dev
   - **2. NoDesk Remote Internships (`NoDeskProvider`):** Implemented parsing of NoDesk's clean RSS XML feed (`https://nodesk.co/remote-jobs/index.xml`), extracting role titles, companies, canonical application links, and publication dates with strict developer and remote gating.
   - **3. Schema & Normalization Alignment:** Added `LFX_MENTORSHIP` and `NODESK` to `enum PlatformSource` in `prisma/schema.prisma` and registered them as `NICHE_SOURCE` in `determineOpportunitySignals()`.
   - **4. Test Suite & Diagnostics:** Authored `tests/lfx-provider.test.ts` (2/2 passing) and `tests/nodesk-provider.test.ts` (2/2 passing), achieving 100% pass rate across all 28 test suites (301/301 tests).
+
+- [x] **Phase 35: AstrePilot In-Browser Harvester & Wellfound/JobRight Loophole (Oct 18-20, 2026)**
+  - **1. In-Browser Session Context Harvester:** Implemented direct DOM and state extraction inside the AstrePilot Chrome Extension HUD (`hud-ui.js`, `content.js`) to bypass Cloudflare, Datadome, and Apollo GraphQL anti-bot rate limits that block headless servers.
+  - **2. Wellfound & JobRight Direct Ingestion:** Added interactive HUD scanner capable of parsing job listings, applicant counts, recruiter metadata, and canonical apply links directly from active user browser sessions on Wellfound and JobRight.
+  - **3. Ingestion Bridge (`/api/jobs/import`):** Created dedicated ingestion endpoint with CORS and schema normalization to push in-browser harvested opportunities directly into Turso Cloud.
+
+- [x] **Phase 36: GitHub Actions 3-Hour Sync Self-Healing Architecture (Oct 21, 2026)**
+  - **1. Root Cause Resolution (`SQLITE_ERROR: no such table`):** Fixed database adapter fallback in `src/lib/db.ts` where secret formatting anomalies caused CI runners to fall back to an uninitialized local `prisma/dev.db`.
+  - **2. Inverted Secret Auto-Detection:** Discovered that in GitHub Actions Repository Secrets, `TURSO_DATABASE_URL` contained the 349-character JWT token while `TURSO_AUTH_TOKEN` contained the 57-character Turso hostname (`astrework-db-hey-astreon.aws-ap-south-1.turso.io`) without scheme prefix.
+  - **3. Smart Bidirectional Credential Resolver (`scripts/verify-turso.cjs` & `src/lib/db.ts`):** Engineered `resolveTursoConfig()`, an autonomous self-healing parser that:
+    - Analyzes secret values by payload characteristics (identifying JWT tokens by `eyJ...` and length >200 vs database URLs by `*.turso.io` or `libsql://`).
+    - Strips surrounding quotes, whitespace, and variable name prefixes (e.g., `TURSO_DATABASE_URL=`).
+    - Auto-normalizes schemes (`https://` -> `libsql://`, prepends `libsql://` to raw hostnames).
+    - Automatically swaps inverted secrets back into correct positions without requiring manual repository reconfiguration.
+  - **4. Preflight CI Verification:** Added isolated preflight step in `.github/workflows/job-sync.yml` verifying database connectivity and querying `SELECT count(*) as count FROM opportunities` before scrapers run. Added `tsx` to `devDependencies` in `package.json`.
+  - **5. Verified Live Run (Run 39483116675):** All 10 workflow steps passed with green checkmarks. 13/13 providers succeeded, 14,461 total opportunities discovered, 156 valid developer roles extracted, 100 fresh remote opportunities inserted directly into Turso Cloud in 153.25 seconds.
+
+- [x] **Phase 37: Production Database Cleansing & Twin Founder Authentication Protocol (Oct 21, 2026)**
+  - **1. Legacy & Dummy User Purge:** Permanently deleted all dummy test accounts (`test_cli_1@example.com`, `test.jane.999@example.com`, `roushankumarlonewolf@gmail.com`) and placeholder profiles from Turso Cloud.
+  - **2. Twin Founder Account Federation:**
+    - **Roushan Kumar** (`playboxstation460@gmail.com`, UID: `ca0d442b-2689-4eb3-b43e-69438b7b9deb`): Linked to verified master profile (`ROUSHAN KUMAR`, phone `+91-9431483512`, location `Patna, Bihar, India`, GitHub `https://github.com/Hey-Astreon`, portfolio `https://astreon.me`, LinkedIn `https://linkedin.com/in/astreon4547`).
+    - **Ayushi Raj** (`ayushi29507@gmail.com`, UID: `169f3065-cc48-42c8-825a-9efd906227f7`): Created official account linked to verified master profile (`AYUSHI RAJ`, phone `+91-8709852305`, location `Bihar, India`, GitHub `https://github.com/Silenttears-cloud`, portfolio `https://ayushiraj.me`, LinkedIn `https://www.linkedin.com/in/alrya404/`).
+  - **3. Persistent AstrePilot Tokens (90-Day Validity):**
+    - Generated cryptographically signed HMAC-SHA256 tokens for both founders to allow immediate 1-click ATS application autofill via AstrePilot Chrome Extension.
+    - Token Roushan: `eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs`
+    - Token Ayushi: `eyJ1aWQiOiIxNjlmMzA2NS1jYzQ4LTQyYzgtODI1YS05ZWZkOTA2MjI3ZjciLCJleHAiOjE4MDAzMDE3Mjg3Nzd9._mtlYHR3HhN3tJtGmyVC2971rWalwcL2hp1cpj0LcmQ`
+  - **4. 50+ Daily Applications Sprint Readiness:**
+    - AstrePilot extension verified against Greenhouse, Lever, Ashby, Workday, LinkedIn, and Wellfound.
+    - AI-powered screening answer generation and 1-click autofill reduces application time to ~15 seconds per job, empowering Roushan and Ayushi to hit 50-100 applications daily in under 1 hour.
 
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
