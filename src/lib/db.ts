@@ -9,17 +9,29 @@ const globalForPrisma = globalThis as unknown as {
 
 export function cleanDbUrl(raw?: string): { url: string; isRemote: boolean } {
   if (!raw) return { url: "", isRemote: false };
-  let trimmed = String(raw).trim().replace(/^[\r\n]+|[\r\n]+$/g, "").trim().replace(/^['"]+|['"]+$/g, "").trim();
-  if (!trimmed) return { url: "", isRemote: false };
-
-  if (trimmed.startsWith("https://")) {
-    trimmed = "libsql://" + trimmed.slice("https://".length);
-  } else if (trimmed.startsWith("http://")) {
-    trimmed = "libsql://" + trimmed.slice("http://".length);
+  const str = String(raw);
+  const match = str.match(/(?:libsql|https?):\/\/[^\s"'`]+/);
+  if (!match) {
+    const trimmed = str.trim().replace(/^[\r\n]+|[\r\n]+$/g, "").trim().replace(/^['"]+|['"]+$/g, "").trim();
+    const isRemote = trimmed.startsWith("libsql://") || trimmed.startsWith("wss://");
+    return { url: trimmed, isRemote };
   }
+  let clean = match[0];
+  if (clean.startsWith("https://")) {
+    clean = "libsql://" + clean.slice(8);
+  } else if (clean.startsWith("http://")) {
+    clean = "libsql://" + clean.slice(7);
+  }
+  return { url: clean, isRemote: clean.startsWith("libsql://") || clean.startsWith("wss://") };
+}
 
-  const isRemote = trimmed.startsWith("libsql://") || trimmed.startsWith("wss://");
-  return { url: trimmed, isRemote };
+export function cleanAuthToken(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const str = String(raw);
+  const jwtMatch = str.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
+  if (jwtMatch) return jwtMatch[0];
+  const cleaned = str.trim().replace(/^[\r\n'"]+|[\r\n'"]+$/g, "").trim();
+  return cleaned || undefined;
 }
 
 function createPrismaClient() {
@@ -31,9 +43,7 @@ function createPrismaClient() {
 
   if (isRemote) {
     url = remoteUrl;
-    authToken = process.env.TURSO_AUTH_TOKEN
-      ? String(process.env.TURSO_AUTH_TOKEN).trim().replace(/^[\r\n]+|[\r\n]+$/g, "").trim().replace(/^['"]+|['"]+$/g, "").trim()
-      : undefined;
+    authToken = cleanAuthToken(process.env.TURSO_AUTH_TOKEN);
     console.log(`[DB] Connected to Turso Cloud LibSQL (${url.replace(/:\/\/.*@/, "://***@")})`);
   } else {
     if (process.env.CI || process.env.NODE_ENV === "production") {

@@ -29,35 +29,39 @@ jobs:
         run: npx prisma generate
 
       - name: 🔐 Sanitize & Verify Turso Cloud Secrets
+        env:
+          RAW_TURSO_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          RAW_TURSO_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
         run: |
-          CLEAN_URL=$(echo "${{ secrets.TURSO_DATABASE_URL }}" | tr -d '\r\n"' | xargs)
-          CLEAN_TOKEN=$(echo "${{ secrets.TURSO_AUTH_TOKEN }}" | tr -d '\r\n"' | xargs)
-
-          if [ -z "$CLEAN_URL" ]; then
-            echo "::error::TURSO_DATABASE_URL secret is missing in GitHub Repository Secrets!"
-            echo "Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            exit 1
-          fi
-          if [ -z "$CLEAN_TOKEN" ]; then
-            echo "::error::TURSO_AUTH_TOKEN secret is missing in GitHub Repository Secrets!"
-            echo "Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            exit 1
-          fi
-
-          export TURSO_DATABASE_URL="$CLEAN_URL"
-          export DATABASE_URL="$CLEAN_URL"
-          export TURSO_AUTH_TOKEN="$CLEAN_TOKEN"
-
-          echo "TURSO_DATABASE_URL=$CLEAN_URL" >> $GITHUB_ENV
-          echo "DATABASE_URL=$CLEAN_URL" >> $GITHUB_ENV
-          echo "TURSO_AUTH_TOKEN=$CLEAN_TOKEN" >> $GITHUB_ENV
-
-          echo "Testing Turso Cloud database schema connectivity..."
           node -e '
+            const rawUrl = process.env.RAW_TURSO_URL || "";
+            const rawToken = process.env.RAW_TURSO_TOKEN || "";
+
+            const urlMatch = rawUrl.match(/(?:libsql|https?):\/\/[^\s"'\`]+/);
+            if (!urlMatch) {
+              console.error("::error::TURSO_DATABASE_URL secret is missing or does not contain a valid URL in GitHub Repository Secrets!");
+              console.error("Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions");
+              process.exit(1);
+            }
+            let cleanUrl = urlMatch[0];
+            if (cleanUrl.startsWith("https://")) cleanUrl = "libsql://" + cleanUrl.slice(8);
+            if (cleanUrl.startsWith("http://")) cleanUrl = "libsql://" + cleanUrl.slice(7);
+
+            const tokenMatch = rawToken.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
+            const cleanToken = tokenMatch ? tokenMatch[0] : rawToken.trim().replace(/^[\r\n\'"]+|[\r\n\'"]+$/g, "").trim();
+
+            if (!cleanToken) {
+              console.error("::error::TURSO_AUTH_TOKEN secret is missing or empty in GitHub Repository Secrets!");
+              console.error("Add it here: https://github.com/${{ github.repository }}/settings/secrets/actions");
+              process.exit(1);
+            }
+
+            const fs = require("fs");
+            fs.appendFileSync(process.env.GITHUB_ENV, `TURSO_DATABASE_URL=${cleanUrl}\nDATABASE_URL=${cleanUrl}\nTURSO_AUTH_TOKEN=${cleanToken}\n`);
+            console.log("Extracted Turso Database URL: " + cleanUrl.replace(/:\/\/.*@/, "://***@"));
+
             const { createClient } = require("@libsql/client");
-            const rawUrl = process.env.TURSO_DATABASE_URL || "";
-            const url = rawUrl.startsWith("https://") ? "libsql://" + rawUrl.slice(8) : rawUrl;
-            const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+            const client = createClient({ url: cleanUrl, authToken: cleanToken });
             client.execute("SELECT count(*) as count FROM opportunities").then(r => {
               console.log("✅ Turso Cloud Verified: Schema contains " + r.rows[0].count + " opportunities.");
             }).catch(e => {
