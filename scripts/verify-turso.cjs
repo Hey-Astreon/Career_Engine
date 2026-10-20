@@ -2,15 +2,17 @@
 const fs = require('fs');
 const { createClient } = require('@libsql/client');
 
-function extractUrl(raw) {
-  if (!raw) return null;
-  let str = String(raw).trim();
-  // Strip TURSO_DATABASE_URL= or DATABASE_URL= prefix if present
+function tryExtractUrl(s) {
+  if (!s) return null;
+  let str = String(s).trim();
   str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
-  // Strip surrounding quotes/backticks
   str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
 
-  // 1. Check if contains full URL with scheme (libsql://, https://, http://)
+  // If it starts with eyJ (JWT auth token), it is definitely NOT a URL
+  if (str.startsWith('eyJ') || /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/.test(str)) {
+    return null;
+  }
+
   const match = str.match(/(?:libsql|https?):\/\/[^\s"'`]+/);
   if (match) {
     let clean = match[0];
@@ -19,53 +21,67 @@ function extractUrl(raw) {
     return clean;
   }
 
-  // 2. Check if it is a turso hostname (e.g. astrework-db-hey-astreon.aws-ap-south-1.turso.io)
   const tursoMatch = str.match(/[a-zA-Z0-9_.-]+\.turso\.io[^\s"'`]*/);
   if (tursoMatch) {
     return 'libsql://' + tursoMatch[0];
   }
 
-  // 3. Any standard URI scheme (e.g. wss://, file:)
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(str)) {
     return str;
   }
-
   return null;
 }
 
-function extractToken(raw) {
-  if (!raw) return null;
-  let str = String(raw).trim();
-  // Strip TURSO_AUTH_TOKEN= prefix if present
+function tryExtractToken(s) {
+  if (!s) return null;
+  let str = String(s).trim();
   str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
-  // Strip surrounding quotes/backticks
   str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
 
-  // Extract JWT if present
   const jwtMatch = str.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
   if (jwtMatch) return jwtMatch[0];
+
+  // If it looks like a URL or hostname, it is NOT an auth token
+  if (str.includes('.turso.io') || str.startsWith('libsql://') || str.startsWith('http')) {
+    return null;
+  }
 
   return str || null;
 }
 
+function resolveTursoCredentials(inputs) {
+  let url = null;
+  let token = null;
+
+  for (const item of inputs) {
+    if (!url) url = tryExtractUrl(item);
+    if (!token) token = tryExtractToken(item);
+  }
+
+  return { url, token };
+}
+
 async function verify() {
-  const rawUrl = process.env.RAW_TURSO_URL || process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
-  const rawToken = process.env.RAW_TURSO_TOKEN || process.env.TURSO_AUTH_TOKEN;
+  const inputs = [
+    process.env.RAW_TURSO_URL,
+    process.env.RAW_TURSO_TOKEN,
+    process.env.TURSO_DATABASE_URL,
+    process.env.TURSO_AUTH_TOKEN,
+    process.env.DATABASE_URL
+  ].filter(Boolean);
 
-  console.log(`[Turso Preflight] Raw URL received: ${rawUrl ? `length=${rawUrl.length}` : 'EMPTY'}`);
-  console.log(`[Turso Preflight] Raw Token received: ${rawToken ? `length=${rawToken.length}` : 'EMPTY'}`);
+  console.log(`[Turso Preflight] Processing ${inputs.length} secret inputs...`);
 
-  const cleanUrl = extractUrl(rawUrl);
-  const cleanToken = extractToken(rawToken);
+  const { url: cleanUrl, token: cleanToken } = resolveTursoCredentials(inputs);
 
   if (!cleanUrl) {
-    console.error('::error::TURSO_DATABASE_URL secret is missing or does not contain a valid URL in GitHub Repository Secrets!');
+    console.error('::error::Could not resolve a valid Turso Database URL from repository secrets!');
     console.error('Please configure TURSO_DATABASE_URL in repository Settings -> Secrets and variables -> Actions');
     process.exit(1);
   }
 
   if (!cleanToken) {
-    console.error('::error::TURSO_AUTH_TOKEN secret is missing or empty in GitHub Repository Secrets!');
+    console.error('::error::Could not resolve a valid Turso Auth Token from repository secrets!');
     console.error('Please configure TURSO_AUTH_TOKEN in repository Settings -> Secrets and variables -> Actions');
     process.exit(1);
   }
@@ -84,7 +100,8 @@ async function verify() {
   process.env.TURSO_AUTH_TOKEN = cleanToken;
 
   const maskedUrl = cleanUrl.replace(/:\/\/.*@/, '://***@');
-  console.log(`🔐 Extracted Turso Cloud URL: ${maskedUrl}`);
+  console.log(`🔐 Successfully Resolved Turso Cloud URL: ${maskedUrl}`);
+  console.log(`🔑 Successfully Resolved Turso Cloud Token: eyJ... (length: ${cleanToken.length})`);
 
   try {
     const client = createClient({ url: cleanUrl, authToken: cleanToken });

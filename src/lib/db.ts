@@ -7,49 +7,65 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export function cleanDbUrl(raw?: string): { url: string; isRemote: boolean } {
-  if (!raw) return { url: "", isRemote: false };
-  let str = String(raw).trim();
-  str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
-  str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
+export function resolveTursoConfig() {
+  const inputs = [
+    process.env.TURSO_DATABASE_URL,
+    process.env.TURSO_AUTH_TOKEN,
+    process.env.DATABASE_URL
+  ].filter(Boolean) as string[];
 
-  const match = str.match(/(?:libsql|https?):\/\/[^\s"'`]+/);
-  if (match) {
-    let clean = match[0];
-    if (clean.startsWith("https://")) clean = "libsql://" + clean.slice(8);
-    if (clean.startsWith("http://")) clean = "libsql://" + clean.slice(7);
-    return { url: clean, isRemote: true };
+  let url: string | undefined;
+  let authToken: string | undefined;
+
+  for (const item of inputs) {
+    let str = String(item).trim();
+    str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
+    str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
+
+    if (!url && !str.startsWith('eyJ') && !/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/.test(str)) {
+      const match = str.match(/(?:libsql|https?):\/\/[^\s"'`]+/);
+      if (match) {
+        let clean = match[0];
+        if (clean.startsWith('https://')) clean = 'libsql://' + clean.slice(8);
+        if (clean.startsWith('http://')) clean = 'libsql://' + clean.slice(7);
+        url = clean;
+      } else {
+        const tursoMatch = str.match(/[a-zA-Z0-9_.-]+\.turso\.io[^\s"'`]*/);
+        if (tursoMatch) {
+          url = 'libsql://' + tursoMatch[0];
+        } else if (str.startsWith('libsql://') || str.startsWith('wss://')) {
+          url = str;
+        }
+      }
+    }
+
+    if (!authToken) {
+      const jwtMatch = str.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
+      if (jwtMatch) {
+        authToken = jwtMatch[0];
+      } else if (!str.includes('.turso.io') && !str.startsWith('libsql://') && !str.startsWith('http')) {
+        authToken = str || undefined;
+      }
+    }
   }
 
-  const tursoMatch = str.match(/[a-zA-Z0-9_.-]+\.turso\.io[^\s"'`]*/);
-  if (tursoMatch) {
-    return { url: "libsql://" + tursoMatch[0], isRemote: true };
-  }
-
-  const isRemote = str.startsWith("libsql://") || str.startsWith("wss://");
-  return { url: str, isRemote };
+  const isRemote = Boolean(url && (url.startsWith('libsql://') || url.startsWith('wss://')));
+  return { url: url || '', authToken, isRemote };
 }
 
-export function cleanAuthToken(raw?: string): string | undefined {
-  if (!raw) return undefined;
-  let str = String(raw).trim();
-  str = str.replace(/^[A-Za-z0-9_]+=\s*/, '');
-  str = str.replace(/^['"`]+|['"`]+$/g, '').trim();
-  const jwtMatch = str.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
-  if (jwtMatch) return jwtMatch[0];
-  return str || undefined;
+export function cleanDbUrl(raw?: string): { url: string; isRemote: boolean } {
+  return resolveTursoConfig();
 }
 
 function createPrismaClient() {
-  const rawTursoUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
-  const { url: remoteUrl, isRemote } = cleanDbUrl(rawTursoUrl);
+  const { url: remoteUrl, authToken: remoteAuthToken, isRemote } = resolveTursoConfig();
 
   let url: string;
   let authToken: string | undefined;
 
   if (isRemote) {
     url = remoteUrl;
-    authToken = cleanAuthToken(process.env.TURSO_AUTH_TOKEN);
+    authToken = remoteAuthToken;
     console.log(`[DB] Connected to Turso Cloud LibSQL (${url.replace(/:\/\/.*@/, "://***@")})`);
   } else {
     if (process.env.CI || process.env.NODE_ENV === "production") {
