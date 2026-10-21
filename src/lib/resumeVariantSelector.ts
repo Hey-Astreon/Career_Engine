@@ -16,23 +16,18 @@ export interface RecommendedResumeVariant {
 }
 
 function resolveResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar", fileName: string): string {
-  const publicPath = path.resolve(process.cwd(), "public", "candidates", candidateFolder, fileName);
-  if (fs.existsSync(publicPath)) {
+  const publicPath = path.join(process.cwd(), "public", "candidates", candidateFolder, fileName);
+  if (fs.existsSync(/*turbopackIgnore: true*/ publicPath)) {
     return publicPath.replace(/\\/g, "/");
   }
 
-  const relativePath = path.resolve(process.cwd(), "..", candidateFolder, "14_final_documents", fileName);
-  if (fs.existsSync(relativePath)) {
-    return relativePath.replace(/\\/g, "/");
-  }
-
-  const directRelativePath = path.resolve(process.cwd(), "..", candidateFolder, fileName);
-  if (fs.existsSync(directRelativePath)) {
-    return directRelativePath.replace(/\\/g, "/");
-  }
-
-  return publicPath.replace(/\\/g, "/");
+  // Fallback to master resume in public/candidates if a specific variant is missing
+  const defaultFileName = candidateFolder === "2_Ayushi_Raj" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
+  const defaultPath = path.join(process.cwd(), "public", "candidates", candidateFolder, defaultFileName);
+  return defaultPath.replace(/\\/g, "/");
 }
+
+
 
 export function selectRecommendedResumeVariant(
   profileSlug: string,

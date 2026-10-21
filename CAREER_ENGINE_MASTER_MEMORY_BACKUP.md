@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 44: The 10 Specialized Domain Mastery Skills Expansion, Satellite Powercell Network & Inviolable Memory Archive, 357 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 45: Candidate Vaults Consolidation, Interview Kits Migration & Architecture Decoupling, 357 Passing Tests)
 
 ---
 
@@ -995,6 +995,30 @@ Located in `extension/`:
     - Executed targeted critical test suites: `tests/resume_optimizer.test.ts`, `tests/candidate_context_privacy.test.ts`, `tests/internship-kit-tailoring.test.ts` (All Passing).
     - Executed TypeScript check: `npx tsc --noEmit` (0 errors).
     - Pushed to `origin main`.
+
+- [x] **Phase 45: Candidate Vaults Consolidation, Interview Kits Migration & Architecture Decoupling (Oct 21, 2026)**
+  - **1. Objective & Strategic Motivation:**
+    - The user requested analyzing the external folders `x:\Career_Engine\2_Ayushi_Raj` and `x:\Career_Engine\3_Roushan_Kumar` to determine whether they were needed or safe to remove.
+    - Forensic analysis proved that the web application in `1_RCMS` was 100% autonomous: all 19 official locked PDF resumes and `usecase.md` matrices were already bundled directly in `1_RCMS/public/candidates/`. In Docker on OCI and Vercel, the external folders were never copied.
+    - However, the external folders contained invaluable offline assets (12 production-grade STAR stories, project interview kits, cover letters, recruiter InMail templates) that were unversioned and untracked in Git.
+  - **2. Full Migration into Version-Controlled Codebase:**
+    - Created `x:\Career_Engine\1_RCMS\docs\interview_vaults\`:
+      - `docs/interview_vaults/roushan/`: Migrated all 10 core interview asset folders (`03_cover_letters`, `04_recruiter_messages`, `05_cold_emails`, `06_follow_up_templates`, `07_interview_preparation`, `08_star_story_library`, `09_project_interview_kits`, `10_ats_keyword_library`, `12_networking_system`, `13_company_research_framework`).
+      - `docs/interview_vaults/ayushi/`: Migrated matching 10 folders for Ayushi.
+    - Authored comprehensive project interview kits for AstreWork:
+      - `docs/interview_vaults/roushan/09_project_interview_kits/kit_astrework.md`: Creator & Lead Backend Developer, OCI Ampere ARM64 VM, Playwright/Puppeteer/Selenium scrapers, Turso LibSQL WAL, Redis 7 caching, Caddy HTTP/3 QUIC, system design Q&A.
+      - `docs/interview_vaults/ayushi/09_project_interview_kits/kit_astrework.md`: Co-Developer & Lead Frontend Architect, AstrePilot Chrome Extension (MV3 Closed Shadow DOM), Gemini ATS scoring studio, Next.js 16 reactive UI tokens, system design Q&A.
+  - **3. Complete Codebase Decoupling:**
+    - Decoupled `src/lib/resumeVariantSelector.ts`: Statically scoped `resolveResumePdf` to `public/candidates/` with `/*turbopackIgnore: true*/`, removing legacy parent directory lookups (`..`).
+    - Decoupled `src/app/api/resume/download/route.ts`: Statically scoped `resolveCandidatePdf` to `public/candidates/`, eliminating Turbopack full-project tracing warnings.
+    - Updated `prisma/seed.ts`: Replaced hardcoded `x:/Career_Engine/...` paths with web-accessible relative paths (`/candidates/3_Roushan_Kumar/Roushan_Kumar_Resume.pdf` and `/candidates/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf`).
+  - **4. Legacy Backup & Root Directory Clean-up:**
+    - Compressed external folders into a single offline backup zip: `x:\Career_Engine\legacy_candidate_vaults_backup.zip` (1.95 MB).
+    - Removed `x:\Career_Engine\2_Ayushi_Raj` and `x:\Career_Engine\3_Roushan_Kumar` from root, leaving a pristine clean project structure (`1_RCMS` and the backup zip).
+  - **5. Automated Verification:**
+    - Vitest test suites: `tests/candidate_context_privacy.test.ts`, `tests/resume_optimizer.test.ts`, `tests/internship-kit-tailoring.test.ts` (All 25 tests passing green).
+    - TypeScript check: `npx tsc --noEmit` clean with 0 errors.
+    - Production build: `npm run build` compiled all 59 routes with 0 warnings and 0 errors.
 
 ---
 

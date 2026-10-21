@@ -30,27 +30,26 @@ function resolveCandidatePdf(slug: string, rawFileName?: string | null): { resol
     }
   }
 
-  const candidatePaths = [
-    path.resolve(process.cwd(), "public", "candidates", folder, safeFileName),
-    path.resolve(process.cwd(), "..", folder, "14_final_documents", safeFileName),
-    path.resolve(process.cwd(), "..", folder, safeFileName),
-    // Fallback to default master resume if a specific variant is missing
-    path.resolve(process.cwd(), "public", "candidates", folder, defaultFileName),
-    path.resolve(process.cwd(), "..", folder, "14_final_documents", defaultFileName),
-    path.resolve(process.cwd(), "..", folder, defaultFileName),
-  ];
+  const candidateBasePath = path.join(process.cwd(), "public", "candidates", folder);
+  const targetPath = path.join(candidateBasePath, safeFileName);
+  if (fs.existsSync(/*turbopackIgnore: true*/ targetPath)) {
+    return {
+      resolvedPath: targetPath.replace(/\\/g, "/"),
+      fileName: safeFileName,
+    };
+  }
 
-  for (const candidate of candidatePaths) {
-    if (fs.existsSync(candidate)) {
-      return {
-        resolvedPath: candidate.replace(/\\/g, "/"),
-        fileName: path.basename(candidate),
-      };
-    }
+  const fallbackPath = path.join(candidateBasePath, defaultFileName);
+  if (fs.existsSync(/*turbopackIgnore: true*/ fallbackPath)) {
+    return {
+      resolvedPath: fallbackPath.replace(/\\/g, "/"),
+      fileName: defaultFileName,
+    };
   }
 
   return null;
 }
+
 
 export async function GET(req: Request) {
   try {
