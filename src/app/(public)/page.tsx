@@ -2,32 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRight,
-  Search,
-  ShieldCheck,
-  CheckCircle2,
-  Zap,
-  BarChart3,
-  ChevronDown,
-  Terminal,
-  Cpu,
-  Layers,
-  Lock,
-  FileText,
-  Sparkles,
-  Clock,
-  Radio,
-  Globe,
-  Activity,
-  Check,
-  ExternalLink,
-  ShieldAlert,
-  Scan,
-  Boxes,
-  FileSpreadsheet,
-  Flame,
-} from "lucide-react";
+import { Search, Zap, CheckCircle2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import Idea1HeroVisual from "@/components/Idea1HeroVisual";
@@ -91,7 +66,7 @@ function useLiveTime() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   STICKY GLASS NAVBAR (Modern Agency Minimalist)
+   STICKY GLASS NAVBAR (Clean, Professional, Zero Clutter)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyNavbar() {
   const liveTime = useLiveTime();
@@ -99,7 +74,7 @@ function ModernAgencyNavbar() {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-black/[0.06] z-50 transition-all">
       <div className="max-w-7xl mx-auto h-full px-6 sm:px-10 flex items-center justify-between">
-        {/* Brand & Live Telemetry Pill */}
+        {/* Brand & Telemetry Pill */}
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center group">
             <Image
@@ -117,25 +92,25 @@ function ModernAgencyNavbar() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="font-mono text-[11px] font-semibold tracking-wider uppercase text-[#52525b]">
-              {liveTime || "00:00:00 IST"} • 21 ATS PIPELINES ONLINE
+            <span className="text-[12px] font-medium text-[#52525b]">
+              21 ATS Pipelines Online • {liveTime || "Sync Active"}
             </span>
           </div>
         </div>
 
-        {/* Center Editorial Links */}
-        <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-[#71717a]">
-          <a href="#engines" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
-            <span className="font-mono text-[10px] text-[#a1a1aa]">( 02 )</span> Engines
+        {/* Center Navigation Links (Clean, No Number Stamps) */}
+        <nav className="hidden md:flex items-center gap-8 text-[14px] font-medium text-[#71717a]">
+          <a href="#engines" className="hover:text-[#0f0f11] transition-colors">
+            Engines
           </a>
-          <a href="#discovery" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
-            <span className="font-mono text-[10px] text-[#a1a1aa]">( 03 )</span> Discovery
+          <a href="#discovery" className="hover:text-[#0f0f11] transition-colors">
+            Discovery
           </a>
-          <a href="#benchmark" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
-            <span className="font-mono text-[10px] text-[#a1a1aa]">( 04 )</span> ATS Suite
+          <a href="#benchmark" className="hover:text-[#0f0f11] transition-colors">
+            ATS Benchmark
           </a>
-          <a href="#faq" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
-            <span className="font-mono text-[10px] text-[#a1a1aa]">( 05 )</span> FAQ
+          <a href="#faq" className="hover:text-[#0f0f11] transition-colors">
+            FAQ
           </a>
         </nav>
 
@@ -164,7 +139,7 @@ function ModernAgencyNavbar() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION ( 01 ) — INTRODUCING ASTREWORK (Hero Section)
+   HERO SECTION (High-Authority Typography, Zero Vibe-Coded Numbering)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; totalProviders: number } }) {
   return (
@@ -177,15 +152,12 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
         <motion.div initial="hidden" animate="visible" variants={stagger}>
-          {/* Numbered Agency Stamp */}
+          {/* Authentic Status Badge */}
           <motion.div variants={fadeUp} className="inline-flex items-center justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-white/80 backdrop-blur-md shadow-sm">
-              <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
-                ( 01 )
-              </span>
-              <span className="h-3 w-px bg-black/10" />
-              <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
-                INTRODUCING ASTREWORK
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-black/[0.08] bg-white/90 backdrop-blur-md shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[12px] font-semibold tracking-wide text-[#0f0f11]">
+                Autonomous Remote Career Operating System
               </span>
             </div>
           </motion.div>
@@ -202,7 +174,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
             </span>
           </motion.h1>
 
-          {/* Clean Editorial Subtitle */}
+          {/* Editorial Subtitle */}
           <motion.p
             variants={fadeUp}
             className="text-[17px] sm:text-[20px] text-[#52525b] max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
@@ -231,7 +203,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
             </a>
           </motion.div>
 
-          {/* 4-Metric High-Density Telemetry Strip */}
+          {/* 4-Metric Telemetry Strip */}
           <motion.div
             variants={fadeUp}
             className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-14"
@@ -240,7 +212,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
                 {metrics.totalJobsIndexed > 0 ? metrics.totalJobsIndexed.toLocaleString() : "2,840+"}
               </div>
-              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
                 Remote Roles Indexed
               </div>
             </div>
@@ -249,7 +221,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
                 {metrics.totalProviders > 0 ? `${metrics.totalProviders}+` : "21+"}
               </div>
-              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
                 Direct ATS Pipelines
               </div>
             </div>
@@ -258,7 +230,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
                 99.4%
               </div>
-              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
                 AstreShield Trust Score
               </div>
             </div>
@@ -267,7 +239,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
                 297mm
               </div>
-              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
                 Single-Page A4 Precision
               </div>
             </div>
@@ -284,7 +256,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 1.5 — SOCIAL PROOF MARQUEE (Direct ATS Ingestion Pipeline)
+   SOCIAL PROOF MARQUEE (Direct ATS Ingestion Network)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyMarquee() {
   const companies = useMemo(
@@ -311,16 +283,16 @@ function ModernAgencyMarquee() {
     <section className="py-8 border-y border-black/[0.06] bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] font-bold text-[#71717a] tracking-[0.2em] uppercase">
-            ( DIRECT ATS HARVESTING )
+          <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
+            Direct ATS Ingestion
           </span>
-          <span className="text-[12px] font-medium text-[#71717a] tracking-wide">
-            Verified Ingestion Pipelines Across Tier-1 Tech
+          <span className="text-[12px] text-[#71717a]">
+            — Continuous Harvesting Across High-Growth Engineering
           </span>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-[#a1a1aa]">
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#71717a]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          HOURLY SYNC ACTIVE
+          Hourly Pipeline Synchronization Active
         </div>
       </div>
 
@@ -350,7 +322,7 @@ function ModernAgencyMarquee() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION ( 02 ) — THE 4 INTELLIGENCE ENGINES (Asymmetric Bento Grid)
+   ARCHITECTURE BENTO GRID (The 4 Intelligence Engines)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyEngines() {
   return (
@@ -359,12 +331,8 @@ function ModernAgencyEngines() {
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-[#fafafa] mb-4">
-            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
-              ( 02 )
-            </span>
-            <span className="h-3 w-px bg-black/10" />
-            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
-              ARCHITECTURE & CAPABILITIES
+            <span className="text-[12px] font-semibold text-[#52525b]">
+              Core Intelligence Architecture
             </span>
           </div>
 
@@ -377,17 +345,17 @@ function ModernAgencyEngines() {
           </p>
         </div>
 
-        {/* Asymmetric Editorial Bento Grid */}
+        {/* Asymmetric Bento Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Card A: AstrePilot MV3 (Span 7) */}
           <div className="lg:col-span-7 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
-                  01 / BROWSER RUNTIME
+                <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
+                  Browser Co-Pilot
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 font-mono text-[10px] font-semibold">
-                  MANIFEST V3 • SHADOW DOM
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-[11px] font-semibold">
+                  Manifest V3 • Closed Shadow DOM
                 </span>
               </div>
 
@@ -401,45 +369,45 @@ function ModernAgencyEngines() {
 
             {/* Visual HUD Mockup */}
             <div className="relative rounded-2xl bg-white border border-black/[0.06] p-5 shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] text-[12px] font-mono text-[#71717a]">
+              <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] text-[12px] text-[#71717a]">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>TARGET: greenhouse.io/v1/jobs/59182</span>
+                  <span className="font-mono text-[11px]">TARGET: greenhouse.io/v1/jobs/59182</span>
                 </div>
-                <span className="text-[#0f0f11] font-semibold">MATCH: 98.6%</span>
+                <span className="text-[#0f0f11] font-semibold text-[12px]">MATCH: 98.6%</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-4">
                 <div className="p-2.5 rounded-lg bg-[#fafafa] border border-black/[0.04]">
-                  <span className="block text-[10px] font-mono text-[#86868b] uppercase">Candidate</span>
-                  <strong className="text-[12px] text-[#0f0f11] font-semibold">Verified Vault</strong>
+                  <span className="block text-[11px] text-[#86868b]">Candidate</span>
+                  <strong className="text-[13px] text-[#0f0f11] font-semibold">Verified Vault</strong>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#fafafa] border border-black/[0.04]">
-                  <span className="block text-[10px] font-mono text-[#86868b] uppercase">Target Title</span>
-                  <strong className="text-[12px] text-[#0f0f11] font-semibold">Software Developer</strong>
+                  <span className="block text-[11px] text-[#86868b]">Target Title</span>
+                  <strong className="text-[13px] text-[#0f0f11] font-semibold">Software Developer</strong>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#fafafa] border border-black/[0.04] col-span-2 sm:col-span-1">
-                  <span className="block text-[10px] font-mono text-[#86868b] uppercase">Mapped Fields</span>
-                  <strong className="text-[12px] text-emerald-600 font-semibold">14 / 14 Synthesized</strong>
+                  <span className="block text-[11px] text-[#86868b]">Mapped Fields</span>
+                  <strong className="text-[13px] text-emerald-600 font-semibold">14 / 14 Synthesized</strong>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 text-[11px] font-mono text-[#71717a]">
-                <span>CLOSED SHADOW DOM HUD</span>
-                <span className="text-blue-600 font-semibold">READY TO INJECT →</span>
+              <div className="flex items-center justify-between pt-2 text-[12px] text-[#71717a]">
+                <span>Closed Shadow DOM HUD</span>
+                <span className="text-blue-600 font-semibold">Ready to Inject →</span>
               </div>
             </div>
           </div>
 
-          {/* Card B: AstreShield Fraud & Ghost Postings (Span 5) */}
+          {/* Card B: AstreShield (Span 5) */}
           <div className="lg:col-span-5 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
-                  02 / HEURISTIC DEFENSE
+                <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
+                  Fraud & Ghost Defense
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 font-mono text-[10px] font-semibold">
-                  ASYMMETRIC COST LAW
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-[11px] font-semibold">
+                  Asymmetric Cost Shield
                 </span>
               </div>
 
@@ -454,10 +422,10 @@ function ModernAgencyEngines() {
             {/* Visual Gauge */}
             <div className="relative rounded-2xl bg-white border border-black/[0.06] p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717a]">
-                  STREAM INTEGRITY
+                <span className="text-[12px] font-semibold text-[#71717a]">
+                  Stream Integrity
                 </span>
-                <span className="text-[12px] font-bold text-emerald-600">ZERO GHOST POSTINGS</span>
+                <span className="text-[12px] font-bold text-emerald-600">Zero Ghost Postings</span>
               </div>
 
               <div className="space-y-3">
@@ -488,11 +456,11 @@ function ModernAgencyEngines() {
           <div className="lg:col-span-5 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
-                  03 / PRINT GEOMETRY
+                <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
+                  Print Geometry
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/60 text-purple-700 font-mono text-[10px] font-semibold">
-                  STRICT 297MM CEILING
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/60 text-purple-700 text-[11px] font-semibold">
+                  Strict 297mm Ceiling
                 </span>
               </div>
 
@@ -506,28 +474,28 @@ function ModernAgencyEngines() {
 
             {/* Visual Micro Sheet */}
             <div className="relative rounded-2xl bg-white border border-black/[0.06] p-5 shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] text-[11px] font-mono">
-                <span className="text-[#0f0f11] font-bold">A4 SHEET GEOMETRY (210 × 297mm)</span>
-                <span className="text-purple-600 font-semibold">100% PARSE SCORE</span>
+              <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] text-[12px]">
+                <span className="text-[#0f0f11] font-semibold">A4 Sheet Geometry (210 × 297mm)</span>
+                <span className="text-purple-600 font-semibold">100% Parse Score</span>
               </div>
               <div className="mt-3 space-y-2">
-                <div className="flex items-center justify-between text-[12px] text-[#52525b]">
+                <div className="flex items-center justify-between text-[13px] text-[#52525b]">
                   <span className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Google XYZ Metrics Enforced
                   </span>
-                  <span className="font-mono text-[11px] text-[#0f0f11]">98/100</span>
+                  <span className="font-semibold text-[#0f0f11]">98/100</span>
                 </div>
-                <div className="flex items-center justify-between text-[12px] text-[#52525b]">
+                <div className="flex items-center justify-between text-[13px] text-[#52525b]">
                   <span className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Workday & Greenhouse Safe
                   </span>
-                  <span className="font-mono text-[11px] text-[#0f0f11]">PASS</span>
+                  <span className="font-semibold text-[#0f0f11]">Pass</span>
                 </div>
-                <div className="flex items-center justify-between text-[12px] text-[#52525b]">
+                <div className="flex items-center justify-between text-[13px] text-[#52525b]">
                   <span className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Zero Layout Shift Print CSS
                   </span>
-                  <span className="font-mono text-[11px] text-[#0f0f11]">1.00 PAGE</span>
+                  <span className="font-semibold text-[#0f0f11]">1.00 Page</span>
                 </div>
               </div>
             </div>
@@ -537,11 +505,11 @@ function ModernAgencyEngines() {
           <div className="lg:col-span-7 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
-                  04 / HIGH-THROUGHPUT HARVESTER
+                <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
+                  High-Throughput Harvester
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-amber-700 font-mono text-[10px] font-semibold">
-                  21 DIRECT ATS SOURCES
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-amber-700 text-[11px] font-semibold">
+                  21 Direct ATS Sources
                 </span>
               </div>
 
@@ -555,8 +523,8 @@ function ModernAgencyEngines() {
 
             {/* Provider Grid Chips */}
             <div className="relative rounded-2xl bg-white border border-black/[0.06] p-5 shadow-sm">
-              <span className="block font-mono text-[11px] uppercase tracking-wider text-[#71717a] mb-3">
-                ACTIVE INGESTION PIPELINES
+              <span className="block text-[12px] font-semibold text-[#71717a] mb-3">
+                Active Ingestion Pipelines
               </span>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -591,7 +559,7 @@ function ModernAgencyEngines() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION ( 03 ) — LIVE DISCOVERY STREAM (Interactive Test-Drive)
+   LIVE DISCOVERY STREAM (Interactive Test-Drive)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyDiscoveryStream() {
   const [roleQuery, setRoleQuery] = useState("Full Stack Developer");
@@ -645,12 +613,8 @@ function ModernAgencyDiscoveryStream() {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-white mb-4 shadow-sm">
-            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
-              ( 03 )
-            </span>
-            <span className="h-3 w-px bg-black/10" />
-            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
-              LIVE DISCOVERY STREAM
+            <span className="text-[12px] font-semibold text-[#52525b]">
+              Live Discovery Stream
             </span>
           </div>
 
@@ -699,7 +663,7 @@ function ModernAgencyDiscoveryStream() {
 
           {/* Quick Filter Suggestions */}
           <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-            <span className="font-mono text-[11px] text-[#86868b] mr-1">QUICK ROLES:</span>
+            <span className="text-[12px] font-semibold text-[#86868b] mr-1">Quick Roles:</span>
             {[
               "Full Stack Developer",
               "Backend Systems Developer",
@@ -714,7 +678,7 @@ function ModernAgencyDiscoveryStream() {
                   setIsScanning(true);
                   setTimeout(() => setIsScanning(false), 800);
                 }}
-                className="text-[12px] font-medium px-3 py-1 rounded-full bg-white border border-black/[0.06] hover:border-black/20 text-[#52525b] hover:text-[#0f0f11] transition-all"
+                className="text-[12px] font-medium px-3.5 py-1.5 rounded-full bg-white border border-black/[0.06] hover:border-black/20 text-[#52525b] hover:text-[#0f0f11] transition-all"
               >
                 {role}
               </button>
@@ -734,8 +698,8 @@ function ModernAgencyDiscoveryStream() {
                 className="py-16 text-center rounded-2xl bg-white border border-black/[0.06]"
               >
                 <div className="inline-block w-6 h-6 border-2 border-[#0f0f11] border-t-transparent rounded-full animate-spin mb-3" />
-                <div className="font-mono text-[13px] text-[#52525b]">
-                  QUERYING 21 LIVE ATS PIPELINES • FILTERING STALE POSTINGS...
+                <div className="text-[14px] font-medium text-[#52525b]">
+                  Querying 21 Live ATS Pipelines • Filtering Stale Postings...
                 </div>
               </motion.div>
             ) : scanDone ? (
@@ -756,19 +720,19 @@ function ModernAgencyDiscoveryStream() {
                         <h4 className="text-[17px] font-semibold text-[#0f0f11] tracking-tight">
                           {role.title}
                         </h4>
-                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {role.trust} TRUST
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {role.trust} Trust
                         </span>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[#71717a]">
                         <strong className="text-[#0f0f11] font-semibold">{role.company}</strong>
                         <span>•</span>
-                        <span className="flex items-center gap-1 font-mono text-[11px] text-[#52525b]">
+                        <span className="flex items-center gap-1 text-[12px] text-[#52525b]">
                           <Zap className="w-3.5 h-3.5 text-blue-500" /> {role.ats}
                         </span>
                         <span>•</span>
-                        <span className="font-mono text-[11px] text-[#0f0f11] font-semibold">
+                        <span className="text-[12px] text-[#0f0f11] font-semibold">
                           {role.salary}
                         </span>
                         <span>•</span>
@@ -795,7 +759,7 @@ function ModernAgencyDiscoveryStream() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION ( 04 ) — ATS BENCHMARK SUITE (The Precision Standard)
+   ATS BENCHMARK SUITE (The Precision Standard)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyBenchmark() {
   const comparisons = [
@@ -816,7 +780,7 @@ function ModernAgencyBenchmark() {
     },
     {
       dimension: "Candidate Compliance",
-      generic: "Hallucinated engineer credentials risking Indian corporate & academic audit sanctions.",
+      generic: "Hallucinated engineer credentials risking corporate & academic audit sanctions.",
       astrework: "Strict BCA Developer title compliance (Developer/Architect) and isolated candidate vaults.",
     },
   ];
@@ -827,12 +791,8 @@ function ModernAgencyBenchmark() {
         {/* Header */}
         <div className="max-w-3xl mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-[#fafafa] mb-4">
-            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
-              ( 04 )
-            </span>
-            <span className="h-3 w-px bg-black/10" />
-            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
-              ATS BENCHMARK SUITE
+            <span className="text-[12px] font-semibold text-[#52525b]">
+              ATS Benchmark Suite
             </span>
           </div>
 
@@ -845,9 +805,9 @@ function ModernAgencyBenchmark() {
           </p>
         </div>
 
-        {/* Editorial Side-by-Side Matrix */}
+        {/* Editorial Comparative Matrix */}
         <div className="rounded-3xl border border-black/[0.08] bg-[#fafafa] overflow-hidden shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-12 bg-white border-b border-black/[0.08] p-6 text-[12px] font-mono font-bold tracking-wider text-[#71717a] uppercase">
+          <div className="grid grid-cols-1 md:grid-cols-12 bg-white border-b border-black/[0.08] p-6 text-[12px] font-semibold tracking-wider text-[#71717a] uppercase">
             <div className="md:col-span-3">SPECIFICATION</div>
             <div className="md:col-span-4 text-red-600/80">GENERIC RESUME / CANVA</div>
             <div className="md:col-span-5 text-[#0f0f11]">ASTREWORK ATS ENGINE</div>
@@ -857,21 +817,18 @@ function ModernAgencyBenchmark() {
             {comparisons.map((c, i) => (
               <div key={i} className="grid grid-cols-1 md:grid-cols-12 p-6 sm:p-8 gap-4 sm:gap-6 items-start">
                 <div className="md:col-span-3">
-                  <span className="font-mono text-[11px] font-bold text-[#71717a] uppercase tracking-wider block mb-1">
-                    0{i + 1}
-                  </span>
                   <strong className="text-[16px] font-semibold text-[#0f0f11]">{c.dimension}</strong>
                 </div>
 
                 <div className="md:col-span-4 text-[14px] text-[#71717a] leading-relaxed pr-4">
-                  <span className="inline-block md:hidden font-mono text-[10px] text-red-500 uppercase tracking-wider mb-1">
+                  <span className="inline-block md:hidden text-[11px] font-semibold text-red-500 uppercase tracking-wider mb-1">
                     GENERIC:
                   </span>
                   {c.generic}
                 </div>
 
                 <div className="md:col-span-5 text-[14px] text-[#0f0f11] font-medium leading-relaxed bg-white p-4 rounded-xl border border-black/[0.05] shadow-xs">
-                  <span className="inline-block md:hidden font-mono text-[10px] text-emerald-600 uppercase tracking-wider mb-1">
+                  <span className="inline-block md:hidden text-[11px] font-semibold text-emerald-600 uppercase tracking-wider mb-1">
                     ASTREWORK:
                   </span>
                   {c.astrework}
@@ -886,7 +843,7 @@ function ModernAgencyBenchmark() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION ( 05 ) — FREQUENTLY ASKED QUESTIONS (Accordion)
+   FREQUENTLY ASKED QUESTIONS (Accordion)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -920,12 +877,8 @@ function ModernAgencyFAQ() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-white mb-4 shadow-sm">
-            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
-              ( 05 )
-            </span>
-            <span className="h-3 w-px bg-black/10" />
-            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
-              SPECIFICATIONS & FAQ
+            <span className="text-[12px] font-semibold text-[#52525b]">
+              Frequently Asked Questions
             </span>
           </div>
 
@@ -984,51 +937,67 @@ function ModernAgencyFAQ() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION ( 06 ) — TAKE COMMAND (Final Obsidian Callout)
+   FINAL CALL TO ACTION (Seamless Full-Bleed Dark Transition)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyCTA() {
   return (
-    <section className="py-28 px-6 sm:px-10 bg-white">
-      <div className="max-w-5xl mx-auto">
-        <div className="rounded-3xl bg-[#0f0f11] text-white p-10 sm:p-16 text-center relative overflow-hidden shadow-2xl">
-          {/* Subtle radial glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-blue-600/20 via-purple-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+    <section className="relative bg-[#090a0f] text-white pt-24 pb-20 px-6 sm:px-10 overflow-hidden border-t border-white/[0.08]">
+      {/* Ambient Gradient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[360px] bg-[radial-gradient(ellipse_at_top,rgba(0,113,227,0.22),transparent_70%)] pointer-events-none" />
 
-          <div className="relative z-10 max-w-3xl mx-auto">
-            {/* Numbered Stamp */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 mb-6">
-              <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-white">
-                ( 06 )
-              </span>
-              <span className="h-3 w-px bg-white/20" />
-              <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-white/70">
-                TAKE COMMAND
-              </span>
-            </div>
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
+        {/* Subtle Pill */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 mb-8 backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="text-[12px] font-semibold text-white/80">
+            Start Free Today
+          </span>
+        </div>
 
-            <h2 className="text-[36px] sm:text-[54px] md:text-[62px] font-semibold tracking-[-0.035em] leading-[1.06] mb-6">
-              Your career velocity deserves an autonomous operating system.
-            </h2>
+        {/* Powerful Headline */}
+        <h2 className="text-[38px] sm:text-[54px] md:text-[64px] font-semibold tracking-[-0.035em] leading-[1.08] mb-6 text-white">
+          Deploy the Autonomous Career Engine.
+        </h2>
 
-            <p className="text-[17px] sm:text-[19px] text-white/70 font-medium leading-relaxed mb-10 max-w-2xl mx-auto">
-              Stop submitting resumes into the black hole. Deploy AstreWork today to discover verified remote roles and generate ATS-unrejectable applications.
-            </p>
+        {/* Subhead */}
+        <p className="text-[17px] sm:text-[20px] text-white/70 font-medium leading-relaxed mb-10 max-w-2xl mx-auto">
+          Continuous direct ATS discovery, proactive fraud neutralization, and single-page A4 precision — built for developers who take their careers seriously.
+        </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-              <Link
-                href="/onboard"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white hover:bg-neutral-100 text-[#0f0f11] text-[16px] font-semibold transition-all shadow-[0_4px_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98] group"
-              >
-                <span>Initialize Free Workspace</span>
-                <span className="w-6 h-6 rounded-full bg-[#0f0f11]/10 flex items-center justify-center text-[#0f0f11] text-[13px] group-hover:translate-x-1 transition-transform">
-                  →
-                </span>
-              </Link>
-            </div>
+        {/* Dual Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+          <Link
+            href="/onboard"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white hover:bg-neutral-100 text-[#0f0f11] text-[16px] font-semibold transition-all shadow-[0_4px_24px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98] group"
+          >
+            <span>Start Free Workspace</span>
+            <span className="w-6 h-6 rounded-full bg-[#0f0f11]/10 flex items-center justify-center text-[#0f0f11] text-[13px] group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </Link>
 
-            <p className="font-mono text-[11px] text-white/40 tracking-wider uppercase">
-              INSTANT INITIALIZATION • ZERO CREDIT CARD REQUIRED • DATA STAYS PRIVATE
-            </p>
+          <a
+            href="#discovery"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 text-white text-[15px] font-semibold transition-all backdrop-blur-md"
+          >
+            <span>Explore Discovery Matrix</span>
+            <span className="text-white/40 text-[13px]">↓</span>
+          </a>
+        </div>
+
+        {/* Value Points */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-10 border-t border-white/[0.08] text-[13px] text-white/60 font-medium">
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>21+ Direct ATS Feeds Scanned Hourly</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Strict Candidate Privacy & Isolation</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Free for Individual Software Builders</span>
           </div>
         </div>
       </div>
@@ -1037,7 +1006,7 @@ function ModernAgencyCTA() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   FOOTER (Modern Agency Minimalist & Title Compliant)
+   FOOTER (Seamless Dark Integration & Title Compliant)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyFooter() {
   const currentYear = new Date().getFullYear();
@@ -1062,7 +1031,7 @@ function ModernAgencyFooter() {
             </p>
             <div className="flex items-center gap-2 pt-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="font-mono text-[11px] font-semibold text-[#71717a] uppercase tracking-wider">
+              <span className="text-[12px] font-medium text-[#71717a]">
                 Production Engine Operational
               </span>
             </div>
@@ -1070,7 +1039,7 @@ function ModernAgencyFooter() {
 
           {/* Column 1: Product */}
           <div>
-            <h4 className="font-mono text-[11px] font-bold text-[#0f0f11] tracking-wider uppercase mb-4">
+            <h4 className="text-[12px] font-semibold text-[#0f0f11] tracking-wider uppercase mb-4">
               PRODUCT
             </h4>
             <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
@@ -1094,7 +1063,7 @@ function ModernAgencyFooter() {
 
           {/* Column 2: Architecture */}
           <div>
-            <h4 className="font-mono text-[11px] font-bold text-[#0f0f11] tracking-wider uppercase mb-4">
+            <h4 className="text-[12px] font-semibold text-[#0f0f11] tracking-wider uppercase mb-4">
               ARCHITECTURE
             </h4>
             <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
@@ -1118,7 +1087,7 @@ function ModernAgencyFooter() {
 
           {/* Column 3: Legal & Compliance */}
           <div>
-            <h4 className="font-mono text-[11px] font-bold text-[#0f0f11] tracking-wider uppercase mb-4">
+            <h4 className="text-[12px] font-semibold text-[#0f0f11] tracking-wider uppercase mb-4">
               COMPLIANCE
             </h4>
             <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
@@ -1149,7 +1118,7 @@ function ModernAgencyFooter() {
         {/* Bottom Credits & Strict Developer Title Compliance */}
         <div className="pt-8 border-t border-black/[0.06] flex flex-col md:flex-row items-center justify-between text-[12px] text-[#71717a] font-medium gap-4">
           <p>© {currentYear} AstreWork. All rights reserved.</p>
-          <p className="text-center md:text-right font-mono text-[11px] text-[#52525b]">
+          <p className="text-center md:text-right text-[12px] text-[#52525b]">
             Architected & Built by Roushan Kumar & Ayushi Raj — Software Developers & Systems Architects.
           </p>
         </div>

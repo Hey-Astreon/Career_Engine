@@ -104,7 +104,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    let { profileSlug, jobPostingId, company, title, url } = body;
+    const { jobPostingId, company, title, url } = body;
+    let { profileSlug } = body;
 
     if (!profileSlug) {
       if (isDeveloperEmail(session.user.email)) {

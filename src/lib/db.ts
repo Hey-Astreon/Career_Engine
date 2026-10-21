@@ -53,7 +53,7 @@ export function resolveTursoConfig() {
   return { url: url || '', authToken, isRemote };
 }
 
-export function cleanDbUrl(raw?: string): { url: string; isRemote: boolean } {
+export function cleanDbUrl(): { url: string; isRemote: boolean } {
   return resolveTursoConfig();
 }
 

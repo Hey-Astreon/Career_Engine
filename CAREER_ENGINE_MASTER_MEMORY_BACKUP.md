@@ -1284,6 +1284,22 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+### 🔴 Case 12: Eliminating AI Vibe-Coding Artifacts & Grounding Full-Bleed Section Geometry
+* **What Happened:** The user pointed out that arbitrary numbered stamps like `( 01 )`, `( 02 )`, `( 03 )` in the navbar and section headers looked like artificial prompt templates ("purely vibe-coded"), and that the CTA section appeared as an awkward floating dark box surrounded by empty white margins.
+* **The Root Cause / Mistake:**
+  - AI landing page prompts often rely on faux-editorial numbers `( 01 )` or `01 /` to create artificial structure, which undermines credibility and feels synthetic to real developers.
+  - Floating a dark card inside a white section with large padding causes an ungrounded visual defect where the CTA looks like an isolated, stranded box rather than an intentional page climax.
+* **How We Solved It:**
+  1. **Purged All Arbitrary Numbering:** Removed every `( 01 )`, `( 02 )`, `( 03 )`, `01 /`, `02 /` from the navbar, hero badge, bento grid cards, discovery stream, benchmark matrix, and FAQ. Replaced with authentic semantic titles (`Core Intelligence Architecture`, `Live Discovery Matrix`, `Browser Co-Pilot`, `Fraud & Ghost Defense`).
+  2. **Full-Bleed Obsidian CTA Band:** Replaced the floating dark box with a full-bleed edge-to-edge dark obsidian section (`bg-[#090a0f] text-white pt-24 pb-20 border-t border-white/[0.08]`) featuring an ambient radial blue glow, dual CTA buttons (`Start Free Workspace →` and `Explore Discovery Matrix ↓`), and three clear value checks.
+  3. **Seamless Footer Continuity:** Retained the clean gallery footer (`#fafafa`) directly beneath the full-bleed dark CTA with native black-and-blue brand logo presentation and strict BCA developer title compliance.
+  4. **Codebase-Wide Lint Zeroing:** Fixed all ESLint errors (`prefer-const` in API routes, unused variables), bringing `npm run lint` to 0 errors and 0 warnings.
+* **Engineering Experience Gained:**
+  - **Rule:** Never use bracketed numbers like `( 01 )` or `( 02 )` as decorative crutches. Real enterprise developer software uses clean, purposeful typography and semantic categorization.
+  - **Rule:** High-contrast dark call-to-action sections must be edge-to-edge full-bleed bands rather than floating isolated boxes with empty space around them.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 

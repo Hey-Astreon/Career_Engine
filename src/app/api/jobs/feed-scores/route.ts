@@ -29,7 +29,8 @@ export async function POST(req: Request) {
       );
     }
 
-    let { profileSlug, jobPostingIds } = body || {};
+    const { jobPostingIds } = body || {};
+    let { profileSlug } = body || {};
 
     if (!profileSlug && session?.user) {
       if (isDeveloperEmail(session.user.email)) {

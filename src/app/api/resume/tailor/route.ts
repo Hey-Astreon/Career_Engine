@@ -93,7 +93,8 @@ export async function POST(req: Request) {
     }
 
     const body = (await req.json()) as TailorRequestBody;
-    let { jobDescription, profileSlug, customBullets } = body;
+    const { jobDescription, customBullets } = body;
+    let { profileSlug } = body;
 
     if (!jobDescription?.trim()) {
       return NextResponse.json(

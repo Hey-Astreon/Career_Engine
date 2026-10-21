@@ -11,7 +11,6 @@ export async function POST(req: Request) {
   const startTime = Date.now();
   try {
     const session = await getServerSession(authOptions);
-    const currentUserId = session?.user?.id || null;
 
     const { profileSlug, jobPostingId, forceRefresh } = await req.json();
 
