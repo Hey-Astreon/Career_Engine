@@ -2,13 +2,13 @@
 name: job-scraper-engineering
 description: >-
   Architectural laws, multi-engine scraping strategies (Playwright, Puppeteer, Selenium, direct API extraction),
-  deduplication hashes, 48-hour rolling freshness, and circuit breakers for AstreWork's ingestion engine
-  (src/lib/providers/). Use whenever building scrapers, debugging rate limits, fixing schema drift, or optimizing sync times.
+  deduplication hashes, 48-hour rolling freshness, circuit breakers, and 13 active provider catalog for AstreWork's ingestion engine
+  (src/lib/providers/ & scripts/run-discovery-cli.ts). Use whenever building scrapers, debugging rate limits, fixing schema drift, or optimizing sync times.
 ---
 
 # 🕷️ The Engineering of Job Scrapers: Laws, Resilience & Circuit Breakers
 
-This skill codifies the architectural rules, deduplication mathematics, anti-bot bypass protocols, and database ingestion safeguards for AstreWork's job harvesting pipelines (`src/lib/providers/` and `.github/workflows/job-sync.yml`).
+This skill codifies the architectural rules, deduplication mathematics, anti-bot bypass protocols, and database ingestion safeguards for AstreWork's job harvesting pipelines (`src/lib/providers/`, `scripts/run-discovery-cli.ts`, and `.github/workflows/job-sync.yml`).
 
 ---
 
@@ -36,7 +36,31 @@ Job sources present radically different anti-bot measures, dynamic hydration mod
 
 ---
 
-## 🔄 2. Ingestion Pipeline & Deduplication Mathematics
+## 🌐 2. The 13 Active Production Providers Catalog (`src/lib/providers/registry.ts`)
+
+AstreWork actively harvests remote tech roles across 13 vetted production providers:
+
+| # | Provider Key (`PlatformSource`) | Source Name | Mechanism & Extraction Strategy |
+| :-: | :--- | :--- | :--- |
+| **1** | `LINKEDIN` | LinkedIn Jobs | Authenticated guest search endpoint with stealth User-Agent rotation. |
+| **2** | `SIMPLIFY` | Simplify | Public GraphQL endpoint extracting curated New Grad & Internship opportunities. |
+| **3** | `HIMALAYAS` | Himalayas | Direct JSON API parsing verified remote positions worldwide. |
+| **4** | `JOBICY` | Jobicy | REST API query with strict remote developer tag filtering. |
+| **5** | `BUILTIN` | BuiltIn | HTML scraper parsing venture-backed tech startups with remote US/Global flags. |
+| **6** | `HACKERNEWS` | Hacker News ("Who is hiring?") | Monthly community thread parser with regex contact & compensation extraction. |
+| **7** | `ASHBY` | Ashby ATS Directory | Multi-tenant ATS job board directory scanner targeting engineering roles. |
+| **8** | `LFX_MENTORSHIP` | Linux Foundation (LFX) | Open-source mentorship internship harvester with stipend tracking. |
+| **9** | `NODESK` | NoDesk | Direct feed extractor filtering 100% remote digital nomad software positions. |
+| **10** | `INTERN_LIST` | Intern-List.com | High-speed batch queries against embedded JobRight mini-site API (`/swan/mini-sites/list`). |
+| **11** | `ASTRA` | Astra Security / Dev | Remote cybersecurity and developer job stream harvester. |
+| **12** | `WELLFOUND` | Wellfound (AngelList) | Startup remote opportunity harvester parsing founder & equity compensation. |
+| **13** | `JOBRIGHT` | JobRight AI Minisites | High-throughput JSON batch querying across multi-category remote engineering boards. |
+
+*(Legacy deadweight providers like obsolete Webflow scrapers, Aligner, and Naukri are quarantined to prevent 0-yield scrape loops).*
+
+---
+
+## 🔄 3. Ingestion Pipeline & Deduplication Mathematics
 
 Duplicate job postings and ghost listings pollute candidate recommendations. The ingestion engine enforces strict canonical normalization.
 
@@ -52,9 +76,15 @@ Duplicate job postings and ghost listings pollute candidate recommendations. The
    - Example: `stripe::software-developer-backend::remote-us`
    - If a duplicate tuple appears within a 14-day window, mark as alternate occurrence rather than creating duplicate records.
 
+### Opportunity Signals & Verification (`src/lib/providers/types.ts`)
+Each normalized job is tagged with structural signals:
+- **`OpportunitySignal`:** `FRESH` (< 24h), `DIRECT_APPLICATION`, `NICHE_SOURCE`, `EXPLICIT_APPLICANT_COUNT`, `UNKNOWN`.
+- **`ApplicationUrlType`:** `DIRECT_ATS` (Greenhouse, Lever, Ashby, Workday), `DIRECT_EMPLOYER_SITE`, `AGGREGATOR_PAGE`, `COMMUNITY_POST`.
+- **`VerificationStatus`:** `VERIFIED_DIRECT_ATS`, `VERIFIED_AGGREGATOR`, `COMMUNITY_SUBMITTED`, `UNVERIFIED`.
+
 ---
 
-## ⏳ 3. Freshness & The 48-Hour Rolling Window
+## ⏳ 4. Freshness & The 48-Hour Rolling Window
 
 Stale job postings destroy user trust. AstreWork enforces rigid time-decay thresholds:
 
@@ -71,14 +101,14 @@ export const MAX_POSTING_AGE_DAYS = 30;
 
 ---
 
-## 🛑 4. Circuit Breakers & Self-Healing Guards
+## 🛑 5. Circuit Breakers & Self-Healing Guards
 
 Automated scrapers inevitably face network partitions, CAPTCHAs, and provider HTML redesigns.
 
 ### The Zero-Discovery Circuit Breaker
 If a previously reliable provider returns `jobsDiscovered === 0` or fails with status `5xx`:
 1. **Do NOT wipe existing database records:** A failed scrape run must never purge existing active jobs from that provider.
-2. **Consecutive Failure Trip:** If a provider fails 3 consecutive runs, automatically disable provider in `db.providerSyncState` and emit a high-priority diagnostic alert.
+2. **Consecutive Failure Trip:** If a provider fails 3 consecutive runs, automatically mark `SyncStatus.FAILING` in `db.providerSyncState` and emit a high-priority diagnostic alert.
 3. **Execution Isolation (`Promise.allSettled`):** In `runAllProviders()`, one catastrophic scraper failure (e.g. fatal Puppeteer crash) MUST NEVER bring down or abort the other 12 providers.
 4. **Tuple Locks Mutex:** Prevent concurrent cron runs from overlapping and causing database deadlock in Turso LibSQL:
    ```ts
@@ -90,7 +120,17 @@ If a previously reliable provider returns `jobsDiscovered === 0` or fails with s
 
 ---
 
-## 📋 5. Provider Quality Assurance Checklist
+## 📊 6. Telemetry & Execution CLI (`scripts/run-discovery-cli.ts`)
+
+In production and CI/CD (`job-sync.yml`), discovery is triggered via:
+```bash
+npx --yes tsx scripts/run-discovery-cli.ts
+```
+The CLI records `ProviderStageDiagnostics` (`rawCandidates`, `missingTitle`, `invalidUrl`, `roleGateRejected`, `accepted`, `instrumented`) and outputs a full tabular audit of execution latency and success rates.
+
+---
+
+## 📋 7. Provider Quality Assurance Checklist
 
 Before shipping a new provider in `src/lib/providers/`:
 1. [ ] Does the provider implement the standard `JobSourceProvider` interface (`providerKey`, `fetch()`, `timeoutMs`)?

@@ -2,13 +2,13 @@
 name: astrepilot-extension-architecture
 description: >-
   System design, Manifest V3 architecture, background service workers, Shadow DOM injection,
-  field classification heuristics, and XSS sanitization for the AstrePilot Chrome Extension (extension/).
+  message dispatch bus (TOGGLE_HUD, SCAN_FIELDS, AUTOFILL), and XSS sanitization for the AstrePilot Chrome Extension (extension/).
   Use whenever modifying extension scripts, HUD components, ATS autofill strategies, or extension pairing tokens.
 ---
 
 # 🛸 System Design & Architecture of AstrePilot: The Autonomous Career Copilot
 
-This skill defines the technical architecture, Manifest V3 lifecycle, Shadow DOM security containment, field classification heuristics, and multi-ATS autofill automation for the AstrePilot browser extension (`extension/`).
+This skill defines the technical architecture, Manifest V3 lifecycle, Shadow DOM security containment, field classification heuristics, message dispatch bus, and multi-ATS autofill automation for the AstrePilot browser extension (`extension/`).
 
 ---
 
@@ -28,14 +28,16 @@ AstrePilot operates across three isolated browser process boundaries:
 +-----------------------------------v-----------------------------------+
 | Host Web Page (DOM)                                                   |
 | [content.js] Field Scanner & Automation Engine                        |
-|  • MutationObserver for dynamic multi-step ATS hydration              |
-|  • Synthesizes trusted user events (`InputEvent`, `change`, `blur`)   |
+|  • window.__ASTREPILOT_CLEANUP__ tear-down listener                   |
+|  • mountPromise lock preventing race-condition double injection       |
+|  • isFilling re-entrancy guard for runAutofill()                      |
+|  • Synthesizes trusted user events (InputEvent, change, blur)         |
 +-----------------------------------^-----------------------------------+
                                     | DOM Injection (Isolated)
 +-----------------------------------v-----------------------------------+
 | Isolated Shadow Root (#astrepilot-hud-host)                           |
 | [hud-ui.js] Presentation Layer                                        |
-|  • Closed Shadow DOM Boundary (Zero CSS leakage to/from host)         |
+|  • Encapsulated Shadow DOM Boundary (Zero CSS leakage to/from host)   |
 |  • 6-Stage HUD State Machine                                          |
 |  • Draggable Dock & AstreShield Warning Banner                        |
 +-----------------------------------------------------------------------+
@@ -43,13 +45,41 @@ AstrePilot operates across three isolated browser process boundaries:
 
 ---
 
-## 🔒 2. Security Containment & The Shadow DOM Invariant
+## 📡 2. Message Bus & Communication Protocol (`extension/content.js`)
+
+Communication between popup, background worker, and injected content script uses a typed message bus:
+
+| Action Identifier | Payload / Arguments | Purpose |
+| :--- | :--- | :--- |
+| `TOGGLE_HUD` | `{}` | Mounts or hides the floating HUD dock. Hotkey: `Alt+Shift+A`. |
+| `SCAN_FIELDS` | `{}` | Scans active DOM form inputs and returns field count + classified types. |
+| `AUTOFILL` | `{}` | Awaits `mountPromise` lock, fetches candidate profile, and triggers animated autofill. |
+| `EXTRACT_PAGE` | `{}` | Extracts raw job description text from ATS containers for instant tailoring. |
+| `CLICK_APPLY` | `{}` | Locates and activates multi-step navigation buttons (`"Next"`, `"Review"`, `"Submit"`). |
+
+### Re-Entrancy & Clean-up Guards
+To prevent duplicate DOM HUDs when hotkeys are rapidly pressed:
+```js
+if (window.__ASTREPILOT_CLEANUP__) {
+  try { window.__ASTREPILOT_CLEANUP__(); } catch (e) {}
+}
+window.__ASTREPILOT_INJECTED__ = true;
+
+// Await HUD initialization before triggering autofill
+if (!activeHud) await toggleAstrePilotHUD();
+else if (mountPromise) await mountPromise;
+await runAutofill();
+```
+
+---
+
+## 🔒 3. Security Containment & The Shadow DOM Invariant
 
 ATS platforms (e.g. Workday, Lever) enforce aggressive styling rules and external scripts that can break third-party extensions.
 
 ### The Closed Shadow DOM Architecture
 - The HUD is mounted to `document.body` under a detached host element `#astrepilot-hud-host`.
-- **Shadow Mode:** `element.attachShadow({ mode: 'closed' })` or `mode: 'open'` with encapsulated CSS (`hud.shadow.css`).
+- Encapsulated with `hud.shadow.css` inside the shadow root.
 - Host page styles CANNOT penetrate the Shadow root; extension styles CANNOT leak into the host page application.
 
 ### Mandatory `esc()` XSS Sanitization Rule
@@ -67,7 +97,7 @@ function esc(value) {
 
 ---
 
-## 🎯 3. Multi-ATS Field Classification Engine
+## 🎯 4. Multi-ATS Field Classification Engine
 
 Different ATS providers use widely divergent DOM hierarchies, label associations, and ARIA attributes. AstrePilot uses a fuzzy heuristic classifier across 18 distinct field types:
 
@@ -99,7 +129,7 @@ function setInputValue(input, val) {
 
 ---
 
-## 🎛️ 4. The 6-Stage HUD State Machine
+## 🎛️ 5. The 6-Stage HUD State Machine
 
 The floating heads-up display transitions through 6 formal states:
 1. `IDLE`: Extension asleep; observing URL and DOM changes.
@@ -111,7 +141,7 @@ The floating heads-up display transitions through 6 formal states:
 
 ---
 
-## 🔑 5. Founder Auth & 90-Day Pairing Handshake
+## 🔑 6. Founder Auth & 90-Day Pairing Handshake
 
 AstrePilot pairs with the main AstreWork workspace via a zero-password token handshake:
 - **Handshake Flow:** On visiting `https://astrework.app/dashboard`, the content script reads an ephemeral pairing nonce.

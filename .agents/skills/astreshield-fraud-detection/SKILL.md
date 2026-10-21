@@ -1,8 +1,8 @@
 ---
 name: astreshield-fraud-detection
 description: >-
-  System design, 4-tier fraud detection pipeline, asymmetric cost functions, scam taxonomy dictionaries,
-  and ghost job algorithms for AstreShield (src/lib/ai/astreShield.ts & astreShield.dict.ts).
+  System design, 4-tier fraud detection pipeline, asymmetric cost functions, scam taxonomy dictionaries (astreShield.dict.ts),
+  and ghost job algorithms for AstreShield (src/lib/ai/astreShield.ts).
   Use whenever modifying fraud detection heuristics, tuning trust score algorithms, updating scam dictionaries, or auditing alert badges.
 ---
 
@@ -56,25 +56,23 @@ $$\text{Damage}(\text{False Red}) \gg \text{Damage}(\text{False Green})$$
 
 ---
 
-## 📚 3. Scam Taxonomy & Dictionary Architecture (`astreShield.dict.ts`)
+## 📚 3. Scam Taxonomy & Dictionary Architecture (`src/lib/ai/astreShield.dict.ts`)
 
-AstreShield maintains specialized detection dictionaries targeting known recruitment fraud vectors:
+AstreShield maintains 13 specialized pattern dictionaries targeting known recruitment fraud vectors:
 
-### 1. Advance Fee & Check Schemes (`ADVANCE_FEE_PATTERNS`)
-- *"Send money for home office equipment"*
-- *"We will send you a cashier's check to purchase software"*
-- *"Pay for background check verification upfront"*
-
-### 2. PII & Identity Harvesting (`PII_HARVESTING_PATTERNS`)
-- Unsolicited requests for Social Security Numbers (SSN), passport copies, or bank account routing numbers prior to an initial interview.
-
-### 3. Untraceable Communication Channels (`PERSONAL_CONTACT_PATTERNS`)
-- Directing candidates away from corporate ATS systems to unverified personal channels:
-- *"Message our hiring manager on Telegram (@...) or WhatsApp (+1...)"*
-- Free personal email domains used for fortune 500 hiring (e.g. `google-careers@gmail.com`).
-
-### 4. MLM, Crypto & Reshipping Mules (`MLM_CRYPTO_PATTERNS`, `RESHIPPING_MULE_PATTERNS`)
-- Multi-level marketing recruitment, cryptocurrency wallet setup requirements, or "package forwarding/re-shipping assistant" parcel mule schemes.
+1. **`TECH_TYPO_MAP`:** High-frequency developer misspellings used by automated scraper spoofers.
+2. **`HOMOGLYPH_SUSPICIOUS_RANGES`:** Cyrillic / Greek Unicode spoofing targeting brand domains (e.g., `microsоft.com` with Cyrillic 'о').
+3. **`PII_HARVESTING_PATTERNS`:** Unsolicited pre-interview requests for SSN, passport, driver's license, or bank routing numbers.
+4. **`ADVANCE_FEE_PATTERNS`:** Advance check fee scams, home office hardware purchases, and upfront background check charges.
+5. **`UNREALISTIC_COMP_PATTERNS`:** Impossible compensation for entry-level tasks ($120/hr for data entry or typing).
+6. **`HIGH_PRESSURE_PATTERNS`:** *"Start immediately within 2 hours"*, artificial urgency coercion.
+7. **`PERSONAL_CONTACT_PATTERNS`:** Directing candidates away from corporate ATS systems to personal channels (`@telegram`, WhatsApp, Google Chat, free `@gmail.com` for Fortune 500 hiring).
+8. **`RESHIPPING_MULE_PATTERNS`:** Package forwarding, parcel inspection, money transfer agent schemes.
+9. **`MLM_CRYPTO_PATTERNS`:** Multi-level marketing recruitment, required crypto wallet creation, buy-in matrix schemes.
+10. **`VAGUE_NO_WORK_PATTERNS`:** Nebulous job descriptions lacking specific deliverables or requirements.
+11. **`SUSPICIOUS_URL_PATTERNS`:** Non-standard TLDs (`.xyz`, `.top`, `.tk`), IP address hostnames, or redirect chains.
+12. **`TRUSTED_ATS_PLATFORMS`:** Tier-1 verified ATS domains granting positive trust bonuses (Greenhouse, Lever, Workday, Taleo, Ashby, SmartRecruiters, Recruitee, Workable).
+13. **`NICHE_TRUSTED_BOARDS`:** Curated technical community boards (HackerNews, Himalayas, Simplify, Jobicy, BuiltIn).
 
 ---
 
@@ -89,7 +87,7 @@ Many corporate postings are "ghost jobs"—roles with no actual hiring intent ke
 
 ---
 
-## 🎨 5. UI Alert Hierarchy & Transparency
+## 🎨 5. UI Alert Hierarchy & Transparency (`src/app/globals.css`)
 
 AstreShield NEVER shows an opaque or unexplained warning badge. Every flag must cite specific evidence:
 
@@ -103,7 +101,26 @@ export interface ShieldFlag {
 }
 ```
 
-### Visual Tiers
-- **Verified Safe (`.shield-panel--green` / Score 75-100):** Clean slate/emerald badge indicating legitimate ATS or trusted board origin.
-- **Caution / Unverified (`.shield-panel--amber` / Score 40-74):** Amber badge warning candidates to verify domain and avoid sharing sensitive financial data.
-- **Threat Detected (`.shield-panel--red` / Score < 40):** Crimson banner detailing the exact corroborating scam patterns with an immediate warning modal before application redirection.
+### Visual Styling Tokens (`globals.css`)
+- **Verified Safe (`.shield-badge--green` / Score 75-100):** Clean slate/emerald badge indicating legitimate ATS or trusted board origin (`background: var(--green-soft); color: var(--green);`).
+- **Caution / Unverified (`.shield-badge--amber` / Score 40-74):** Amber badge warning candidates to verify domain (`background: var(--amber-soft); color: var(--amber);`).
+- **Threat Detected (`.shield-badge--red` / Score < 40):** Crimson badge indicating critical fraud pattern (`background: var(--red-soft); color: var(--red);`).
+- **Card Dimming Invariant (`.shield-blocked-card`):**
+  ```css
+  .shield-blocked-card {
+    opacity: .55;
+    filter: grayscale(.35);
+    transition: opacity .2s ease, filter .2s ease;
+  }
+  .shield-blocked-card:hover {
+    opacity: .88;
+    filter: grayscale(0);
+  }
+  ```
+  *(RED jobs remain visible and dimmed so users are aware they are being actively protected, rather than suffering from mysterious missing records).*
+- **Drawer Audit Panel (`.shield-panel`):**
+  ```css
+  .shield-panel { border: 1px solid var(--line); padding: 16px; margin-top: 4px; }
+  .shield-panel--amber { border-color: var(--amber); background: var(--amber-soft); }
+  .shield-panel--red { border-color: var(--red); background: var(--red-soft); }
+  ```

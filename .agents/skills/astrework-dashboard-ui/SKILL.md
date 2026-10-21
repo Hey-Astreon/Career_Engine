@@ -1,9 +1,9 @@
 ---
 name: astrework-dashboard-ui
 description: >-
-  Enterprise-grade workspace architecture, layout geometry, command palettes, slide-over drawers,
-  and keyboard navigation for the AstreWork Dashboard (src/app/(workspace)/dashboard/page.tsx).
-  Use whenever modifying sidebar navigation, header mechanics, KPI cards, job detail drawers, or hotkeys.
+  Enterprise-grade workspace architecture, layout geometry (.ce-shell, .ce-rail, .ce-workspace, .ce-header),
+  command palettes, slide-over drawers (.ce-drawer), shield badges, and keyboard navigation for the AstreWork Dashboard
+  (src/app/(workspace)/dashboard/page.tsx). Use whenever modifying sidebar navigation, header mechanics, KPI cards, job detail drawers, or hotkeys.
 ---
 
 # 🎛️ AstreWork Dashboard UI & Workspace Geometry Mastery
@@ -12,30 +12,33 @@ This skill defines the structural layout, interaction patterns, typography hiera
 
 ---
 
-## 🏛️ 1. Layout Geometry & CSS Grid Architecture
+## 🏛️ 1. Layout Geometry & CSS Grid Architecture (`globals.css`)
 
 The AstreWork workspace uses a rigid, zero-jitter layout foundation designed to support heavy data interaction without layout shifts.
 
 ```
 +-------------------------------------------------------------------------+
-| .ce-rail (242px)   |  .ce-header (72px sticky glass)                    |
-|                    +----------------------------------------------------+
-|  • Brand Logo      |  .ce-workspace (Fluid auto-fill)                   |
-|  • Nav Items       |                                                    |
-|  • Storage Bar     |  +------------------+  +-------------------------+ |
-|  • Shield Status   |  | .ce-filter-bar   |  | Slide-over JobDrawer    | |
-|  • User Profile    |  | Sticky Toolbar   |  | (540px right panel)     | |
-|                    |  +------------------+  |                         | |
-|                    |  | Job Cards Stream |  | Live ATS match score    | |
-|                    |  | & KPI Summary    |  | One-click tailoring     | |
-|                    |  +------------------+  +-------------------------+ |
+| .ce-rail (242px fixed) |  .ce-header (72px sticky glass)                |
+|                        +------------------------------------------------+
+|  • Brand Logo & Mark   |  .ce-workspace (Fluid: calc(100% - 242px))     |
+|  • Navigation Links    |                                                |
+|  • Context & Progress  |  +------------------+  +---------------------+ |
+|  • Live System Dot     |  | .ce-main (1460px)|  | Slide-over JobDrawer| |
+|                        |  | Job Stream Feed  |  | (.ce-drawer 540px)  | |
+|                        |  | & KPI Summary    |  | Live Match & Audit  | |
+|                        |  +------------------+  +---------------------+ |
 +-------------------------------------------------------------------------+
 ```
 
 ### Core Workspace Tokens
-- **Sidebar Width (`.ce-rail`):** Fixed `242px` on desktop (`min-width: 242px; max-width: 242px; flex: 0 0 242px`).
-- **Sticky Header Height (`.ce-header`):** Fixed `72px` with `backdrop-filter: blur(16px)` and border-bottom `1px solid var(--line)`.
-- **Slide-Over Drawer (`.ce-drawer`):** Fixed `540px` on desktop with `transform: translateX(0)` slide transition (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- **Root Shell (`.ce-shell`):** `min-height: 100vh; display: flex; background: var(--canvas);`
+- **Sidebar Rail (`.ce-rail`):** Fixed `242px` width on desktop (`position: fixed; inset: 0 auto 0 0; z-index: 20; width: 242px; border-right: 1px solid var(--line); background: var(--surface);`).
+- **Main Workspace (`.ce-workspace`):** `width: calc(100% - 242px); margin-left: 242px; min-height: 100vh;`
+- **Sticky Header (`.ce-header`):** Fixed `72px` height with `backdrop-filter: blur(16px); background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line);`.
+- **Command Trigger (`.ce-command`):** `max-width: 470px; background: var(--surface-muted);` featuring `<kbd>` hotkey hints.
+- **Main Container (`.ce-main`):** `max-width: 1460px; margin: 0 auto; padding: 50px 48px 42px;`
+- **Slide-Over Drawer Backdrop (`.ce-drawer-backdrop`):** `position: fixed; inset: 0; z-index: 50; backdrop-filter: blur(5px); background: rgba(15,23,42,.42);`
+- **Slide-Over Drawer Panel (`.ce-drawer`):** `width: min(1120px, 100%); max-height: min(880px, calc(100dvh - 56px)); border-radius: 10px; box-shadow: 0 24px 72px rgba(21,35,56,.22);`
 - **Cumulative Layout Shift (CLS) Constraint:** Hard limit `CLS < 0.02`. Height skeletons must always match exact component heights during network loading.
 
 ---
@@ -44,22 +47,26 @@ The AstreWork workspace uses a rigid, zero-jitter layout foundation designed to 
 
 AstreWork workspaces prioritize information hierarchy over decoration. Every pixel must communicate career intelligence.
 
-### KPI Stat Cards
-- 4-column balanced grid:
-  1. **Matched Roles:** Green badge showing high affinity (Score > 85%).
-  2. **Active Pipelines:** In-flight applications with status tracker.
-  3. **AstreShield Interceptions:** Red shield counter indicating intercepted ghost/scam listings.
-  4. **Tailored Resumes:** Count of generated job-specific PDF/DOCX assets.
-- **Visual Spec:** `background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow);`
+### Match & Feed Score Taxonomy
+Every job in the stream displays a formal evaluation state:
+- **`BASE_MATCH`:** 0ms deterministic keyword and qualification score.
+- **`FINAL_MATCH`:** LLM composite score evaluating architectural depth and experience fit.
+- **`INELIGIBLE` (`.ce-chip-red`):** Fails mandatory hard constraint (years of experience, location restriction, minimum salary).
+- **`SHIELD_BLOCKED`:** Intercepted by AstreShield as malicious, phishing, or ghost listing.
 
 ### Metadata Badge Hierarchy (`.ce-chip`)
 Metadata chips must be instantly decipherable at a glance:
-- **Workplace Type:** Remote (`bg: emerald-50, text: emerald-700, border: emerald-200`) vs Hybrid (`bg: blue-50, text: blue-700`).
-- **Salary Tier:** Pill format: `$140k - $180k USD` with gold coin icon.
-- **AstreShield Status:** 
-  - Verified Legitimate: Shield icon in slate (`#64748b`).
-  - Flagged/Suspicious: Warning amber (`#d97706`).
-  - Blocked Scam: Critical red (`#dc2626`).
+- **`.ce-chip`:** Standard metadata (Category, Experience level, Platform source).
+- **`.ce-chip-green`:** Remote Worldwide / High affinity match.
+- **`.ce-chip-blue`:** Early-bird posting (< 24h old) / Fresh ingestion.
+- **`.ce-chip-amber`:** Caution / Salary undisclosed / Borderline trust score.
+- **`.ce-chip-red`:** Hard ineligible / Flagged scam.
+
+### AstreShield Trust Indicators
+- **`.shield-badge--green`:** Verified legitimate ATS / trusted community source.
+- **`.shield-badge--amber`:** Caution / unverified domain / borderline trust (40-74).
+- **`.shield-badge--red`:** Critical fraud / advance fee scam / PII harvesting (< 40).
+- **`.shield-blocked-card`:** Card dimming rule (`opacity: .55; filter: grayscale(.35);`). Postings are dimmed for candidate protection, **never silently wiped**.
 
 ---
 
@@ -87,22 +94,24 @@ if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName))
 
 ---
 
-## 📱 4. Responsive Viewport Mechanics
+## 📱 4. Responsive Viewport Mechanics (`globals.css`)
 
 When viewports narrow, the dashboard gracefully adapts without breaking candidate workflow:
 
-### 1460px (Compact Desktop)
-- KPI cards scale font size from `28px` to `22px`.
-- Job cards switch from 2-column grid to full-width horizontal cards.
+### `@media (max-width: 920px)`
+- `.ce-shell` switches to `display: block`.
+- `.ce-rail` moves to top (`position: relative; width: 100%; flex-direction: row; align-items: center;`).
+- `.ce-nav-label`, `.ce-rail-context`, `.ce-rail-footer`, and `.ce-header-title` hide (`display: none`).
+- `.ce-workspace` expands to `width: 100%; margin-left: 0;`.
+- `.ce-main` padding adjusts to `38px 24px`.
 
-### 920px (Tablet Landscape & Portrait)
-- `.ce-rail` collapses from `242px` to an icon-only dock (`64px`) with tooltips on hover.
-- Slide-over JobDrawer expands to overlay 85% of screen width with backdrop dimmer.
-
-### 620px (Mobile Devices)
-- `.ce-rail` hides entirely; converts to a fixed bottom navigation dock (Home, Jobs, Resumes, Profile).
-- JobDrawer expands to full screen (`100vw`, `100vh`) with fixed swipe-down dismiss handle.
-- Filter toolbar becomes a horizontal swipeable pill carousel.
+### `@media (max-width: 620px)`
+- `.ce-rail` padding drops to `12px 14px`.
+- `.ce-header` height adjusts to `61px`.
+- `.ce-command kbd` and `.ce-nav-badge` hide to preserve input width.
+- `.ce-main` padding drops to `30px 14px`.
+- `.ce-drawer-backdrop` aligns to bottom (`align-items: flex-end; padding: 0;`).
+- `.ce-drawer` expands to `max-height: 92dvh; border-radius: 10px 10px 0 0;` (mobile sheet drawer).
 
 ---
 
