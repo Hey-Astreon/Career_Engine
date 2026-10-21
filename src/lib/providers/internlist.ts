@@ -11,6 +11,8 @@ import {
   cleanCompanySlug,
   cleanHtmlText,
   determineCategory,
+  determineJobType,
+  determineExperienceLevel,
   determineOpportunitySignals,
   isOlderThanMaxPostingAge,
   MAX_POSTING_AGE_DAYS,
@@ -20,29 +22,58 @@ import {
 } from "./normalize";
 
 const BASE_URL = "https://www.intern-list.com";
-const LIST_PAGES = [
-  { key: "intern_list_swe", path: "/swe-intern-list" },
-  { key: "intern_list_da", path: "/da-intern-list" },
-];
-const REQUEST_TIMEOUT_MS = 6000;
-const DETAIL_CONCURRENCY = 10;
+const SWAN_API_URL = "https://jobright.ai/swan/mini-sites/list";
+const REQUEST_TIMEOUT_MS = 10000;
 const HEADERS = {
   "User-Agent":
     "CareerAgent/2.0 (Job Discovery Engine; https://github.com/Hey-Astreon/CareerAgent)",
-  Accept: "text/html",
+  Accept: "application/json, text/plain, */*",
+  "Content-Type": "application/json",
 };
 
-interface ListEntry {
+export const INTERN_LIST_CATEGORIES = [
+  { key: "intern_us_swe", category: "intern:us:swe", label: "Software Engineering (US)" },
+  { key: "intern_us_ml_ai", category: "intern:us:ml_ai", label: "AI & Machine Learning" },
+  { key: "intern_us_da", category: "intern:us:data_analysis", label: "Data Analysis" },
+  { key: "intern_us_cyber", category: "intern:us:cyber_security", label: "Cybersecurity" },
+  { key: "intern_ca_swe", category: "intern:ca:swe", label: "Software Engineering (Canada)" },
+  { key: "newgrad_us_swe", category: "newgrad:us:swe", label: "New Grad Software Engineering" },
+  { key: "newgrad_us_da", category: "newgrad:us:data_analysis", label: "New Grad Data Analysis" },
+];
+
+export interface InternListMinisiteJob {
+  jobId: string;
+  tabCategory?: string[];
+  properties: {
+    title: string;
+    company: string;
+    location?: string;
+    salary?: string;
+    workModel?: string;
+    industry?: string[];
+    companySize?: string;
+    qualifications?: string;
+    expLevel?: string | null;
+    jobFunction?: string | null;
+    h1bSponsored?: string;
+    isNewGrad?: boolean;
+    roleType?: string | null;
+    hireTime?: string;
+    graduateTime?: string;
+  };
+  postedAt?: number;
+}
+
+// Legacy Webflow types & functions preserved for full backwards-compatibility
+export interface ListEntry {
   title: string;
   company: string;
   postedAt: Date | null;
   slug: string;
 }
 
-/** Parses the Webflow collection list rendered server-side on each intern-list page. */
 export function parseInternListPage(html: string): ListEntry[] {
   const entries: ListEntry[] = [];
-  // Split (not matchAll) so adjacent items are never skipped by a consumed delimiter.
   const chunks = html.split(/<div role="listitem" class="collection-item-\d+ w-dyn-item">/i).slice(1);
   for (const raw of chunks) {
     const slug = /href="([^"]+)"/i.exec(raw)?.[1];
@@ -68,10 +99,8 @@ export interface InternListDetail {
   description: string;
 }
 
-/** Extracts workplace type (Remote/Onsite/Hybrid), location, apply link and summary from a detail page. */
 export function parseInternListDetail(html: string): InternListDetail {
   const workplaceType = /class="text-block-47">(Onsite|Remote|Hybrid)</i.exec(html)?.[1] ?? null;
-
   const titleTag = /<title>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "";
   const pipe = titleTag.lastIndexOf("|");
   const location = pipe !== -1 ? cleanHtmlText(titleTag.substring(pipe + 1).trim()) : "";
@@ -96,23 +125,6 @@ export function parseInternListDetail(html: string): InternListDetail {
   return { workplaceType, location, applyUrl, description: paragraphs.join("\n\n") };
 }
 
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (cursor < items.length) {
-      const i = cursor++;
-      results[i] = await fn(items[i]);
-    }
-  });
-  await Promise.all(workers);
-  return results;
-}
-
 export class InternListProvider implements JobSourceProvider {
   name = "Intern-List (Tech Internships)";
   providerKey = PlatformSource.INTERN_LIST;
@@ -134,24 +146,150 @@ export class InternListProvider implements JobSourceProvider {
       instrumented: true,
     };
 
-    const entries: (ListEntry & { category: string })[] = [];
-    const seenSlugs = new Set<string>();
+    const seenJobIds = new Set<string>();
 
-    for (const page of LIST_PAGES) {
-      const url = `${BASE_URL}${page.path}`;
+    for (const cat of INTERN_LIST_CATEGORIES) {
+      const endpointUrl = `${SWAN_API_URL}?position=0&count=50`;
       const t0 = Date.now();
       try {
-        const res = await axios.get<string>(url, { headers: HEADERS, timeout: REQUEST_TIMEOUT_MS });
-        telemetry.push({ endpointKey: page.key, endpoint: url, latencyMs: Date.now() - t0, attempts: 1, success: true, statusCode: res.status });
-        for (const e of parseInternListPage(res.data)) {
-          if (seenSlugs.has(e.slug)) continue;
-          seenSlugs.add(e.slug);
-          entries.push({ ...e, category: page.key });
+        const res = await axios.post<{
+          success: boolean;
+          errorCode?: number;
+          result?: { total: number; jobList: InternListMinisiteJob[] };
+        }>(
+          endpointUrl,
+          {
+            category: cat.category,
+            workModel: [2], // 2 = Remote only
+          },
+          { headers: HEADERS, timeout: REQUEST_TIMEOUT_MS }
+        );
+
+        const latencyMs = Date.now() - t0;
+        const jobList = res.data?.result?.jobList || [];
+
+        telemetry.push({
+          endpointKey: cat.key,
+          endpoint: endpointUrl,
+          latencyMs,
+          attempts: 1,
+          success: true,
+          statusCode: res.status,
+        });
+
+        for (const item of jobList) {
+          discoveredCount++;
+          diagnostics.rawCandidates++;
+
+          if (!item.jobId) {
+            diagnostics.invalidUrl++;
+            rejectedCount++;
+            continue;
+          }
+
+          if (seenJobIds.has(item.jobId)) {
+            continue;
+          }
+          seenJobIds.add(item.jobId);
+
+          const rawTitle = item.properties?.title;
+          if (!rawTitle) {
+            diagnostics.missingTitle++;
+            rejectedCount++;
+            continue;
+          }
+
+          const title = sanitizeRoleTitle(rawTitle);
+          const rawCompany = item.properties?.company || "Tech Startup";
+          const { company, companySlug } = cleanCompanySlug(rawCompany);
+
+          // Build clean location string with explicit Remote marker
+          const rawLoc = item.properties?.location?.trim();
+          const location = rawLoc ? `Remote (${rawLoc})` : "Remote";
+
+          // Format description from qualifications, industry, and salary
+          const qualifications = item.properties?.qualifications || "";
+          const salary = item.properties?.salary ? `Compensation: ${item.properties.salary}` : "";
+          const industries = item.properties?.industry?.length
+            ? `Industry: ${item.properties.industry.join(", ")}`
+            : "";
+          const rawDescription = [
+            `${title} at ${company}.`,
+            salary,
+            industries,
+            qualifications ? `Qualifications:\n${qualifications}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n\n");
+
+          const postedAt = item.postedAt ? new Date(item.postedAt) : new Date();
+
+          // Role gate verification: must be remote developer / tech role
+          if (!isStrictlyRemoteDeveloperRole(title, location, rawDescription, postedAt)) {
+            diagnostics.roleGateRejected++;
+            rejectedCount++;
+            continue;
+          }
+
+          // Strict max age verification
+          if (isOlderThanMaxPostingAge(postedAt, MAX_POSTING_AGE_DAYS)) {
+            rejectedCount++;
+            continue;
+          }
+
+          const isInternship =
+            cat.category.startsWith("intern:") ||
+            title.toLowerCase().includes("intern") ||
+            determineJobType(title, rawDescription) === "Remote Internship";
+
+          const jobType = isInternship ? "Remote Internship" : "Remote Full-Time";
+          const experienceLevel = isInternship
+            ? "Fresher / Entry Level (0-1 Yr)"
+            : determineExperienceLevel(title, rawDescription);
+
+          const canonicalAppUrl = `https://jobright.ai/jobs/info/${item.jobId}?utm_source=intern-list`;
+          const discoveryUrl = `${BASE_URL}/`;
+          const remoteScope: RemoteScope = parseRemoteScope(location, rawDescription);
+
+          jobs.push({
+            sourceJobId: `intern-list-${item.jobId}`,
+            providerKey: PlatformSource.INTERN_LIST,
+            company,
+            companySlug,
+            title,
+            category: determineCategory(title, rawDescription),
+            jobType,
+            experienceLevel,
+            location,
+            isRemote: true,
+            remoteScope,
+            discoveryUrl,
+            canonicalAppUrl,
+            applicationUrlType: "AGGREGATOR_PAGE",
+            verificationStatus: "VERIFIED_AGGREGATOR",
+            postedAt,
+            applicantCount: null,
+            opportunitySignals: determineOpportunitySignals({
+              postedAt,
+              applicationUrlType: "AGGREGATOR_PAGE",
+              canonicalAppUrl,
+              providerKey: PlatformSource.INTERN_LIST,
+            }),
+            rawDescription,
+            hasFullText: rawDescription.length > 80,
+            metadata: {
+              salary: item.properties?.salary,
+              graduateTime: item.properties?.graduateTime,
+              industry: item.properties?.industry,
+              h1bSponsored: item.properties?.h1bSponsored,
+            },
+          });
+          diagnostics.accepted++;
         }
       } catch (err: unknown) {
         telemetry.push({
-          endpointKey: page.key,
-          endpoint: url,
+          endpointKey: cat.key,
+          endpoint: endpointUrl,
           latencyMs: Date.now() - t0,
           attempts: 1,
           success: false,
@@ -160,92 +298,10 @@ export class InternListProvider implements JobSourceProvider {
       }
     }
 
-    discoveredCount = entries.length;
-    diagnostics.rawCandidates = entries.length;
-
-    // Drop stale entries before spending a request on their detail page.
-    const fresh = entries.filter((e) => {
-      if (e.postedAt && isOlderThanMaxPostingAge(e.postedAt, MAX_POSTING_AGE_DAYS)) {
-        rejectedCount++;
-        return false;
-      }
-      return true;
-    });
-
-    const details = await mapWithConcurrency(fresh, DETAIL_CONCURRENCY, async (e) => {
-      try {
-        const res = await axios.get<string>(`${BASE_URL}${e.slug}`, { headers: HEADERS, timeout: REQUEST_TIMEOUT_MS });
-        return parseInternListDetail(res.data);
-      } catch {
-        return null;
-      }
-    });
-
-    fresh.forEach((entry, i) => {
-      const detail = details[i];
-      if (!detail) {
-        diagnostics.invalidUrl++;
-        rejectedCount++;
-        return;
-      }
-
-      // STRICT: remote only. Onsite, Hybrid and unknown workplace types are rejected.
-      if (!detail.workplaceType || detail.workplaceType.toLowerCase() !== "remote") {
-        diagnostics.roleGateRejected++;
-        rejectedCount++;
-        return;
-      }
-
-      const title = sanitizeRoleTitle(entry.title);
-      const location = detail.location ? `Remote (${detail.location})` : "Remote";
-      const desc = detail.description || `${entry.title} at ${entry.company}`;
-
-      if (!isStrictlyRemoteDeveloperRole(title, location, desc, entry.postedAt)) {
-        diagnostics.roleGateRejected++;
-        rejectedCount++;
-        return;
-      }
-
-      const discoveryUrl = `${BASE_URL}${entry.slug}`;
-      const canonicalAppUrl = detail.applyUrl ?? discoveryUrl;
-      const { company, companySlug } = cleanCompanySlug(entry.company || "Unknown");
-      const remoteScope: RemoteScope = parseRemoteScope(location, desc);
-
-      jobs.push({
-        sourceJobId: `intern-list-${entry.slug.split("/").pop()}`,
-        providerKey: PlatformSource.INTERN_LIST,
-        company,
-        companySlug,
-        title,
-        category: determineCategory(title, desc),
-        jobType: "Remote Internship",
-        experienceLevel: "Fresher / Entry Level (0-1 Yr)",
-        location,
-        isRemote: true,
-        remoteScope,
-        discoveryUrl,
-        canonicalAppUrl,
-        applicationUrlType: "AGGREGATOR_PAGE",
-        verificationStatus: "VERIFIED_AGGREGATOR",
-        postedAt: entry.postedAt,
-        applicantCount: null,
-        opportunitySignals: determineOpportunitySignals({
-          postedAt: entry.postedAt,
-          applicationUrlType: "AGGREGATOR_PAGE",
-          canonicalAppUrl,
-          providerKey: PlatformSource.INTERN_LIST,
-        }),
-        rawDescription: desc,
-        hasFullText: desc.length > 100,
-      });
-      diagnostics.accepted++;
-    });
-
     const failed = telemetry.filter((t) => !t.success);
     return {
       providerKey: PlatformSource.INTERN_LIST,
       jobs,
-      // Zero remote roles on a given day is a valid outcome; only fail if no list page loaded.
       success: failed.length < telemetry.length,
       error: failed.length === telemetry.length ? failed[0]?.error : undefined,
       durationMs: Date.now() - startTime,
@@ -257,7 +313,9 @@ export class InternListProvider implements JobSourceProvider {
         totalEndpoints: telemetry.length,
         successfulEndpoints: telemetry.length - failed.length,
         failedEndpoints: failed.length,
-        failureRatePercent: telemetry.length ? Math.round((failed.length / telemetry.length) * 100) : 0,
+        failureRatePercent: telemetry.length
+          ? Math.round((failed.length / telemetry.length) * 100)
+          : 0,
         averageLatencyMs: telemetry.length
           ? Math.round(telemetry.reduce((a, t) => a + t.latencyMs, 0) / telemetry.length)
           : 0,

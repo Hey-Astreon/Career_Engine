@@ -156,7 +156,7 @@ export async function runAllProviders(
             },
           }).catch((err) => console.warn(`[SyncState Warning] Failed to update ${provider.providerKey}:`, err.message));
 
-          if (result.success) {
+          if (result.success && result.jobsDiscovered > 0) {
             await evaluateJobFreshness(provider.providerKey).catch((err) =>
               console.warn(`[Freshness Warning] Failed to evaluate freshness for ${provider.providerKey}:`, err.message)
             );
@@ -190,9 +190,12 @@ export async function evaluateJobFreshness(providerKey: string): Promise<{
     return { prunedOccurrences: 0, expiredOpportunities: 0 };
   }
 
-  const cutoffTime = syncState.lastSuccessfulSyncAt;
+  // Rolling 48-hour staleness threshold: Never expire jobs missed in a single run.
+  // A job occurrence/posting is only considered stale if it has not been seen for 48+ hours.
+  const STALE_OCCURRENCE_THRESHOLD_HOURS = 48;
+  const cutoffTime = new Date(Date.now() - STALE_OCCURRENCE_THRESHOLD_HOURS * 3600000);
 
-  // 1. Find stale occurrences for this provider
+  // 1. Find stale occurrences for this provider (not seen in 48h)
   const staleOccurrences = await db.jobOccurrence.findMany({
     where: {
       providerKey,
@@ -233,7 +236,7 @@ export async function evaluateJobFreshness(providerKey: string): Promise<{
     expiredCount = updateResult.count;
   }
 
-  // 4. Mark stale JobPostings for this provider as expired in bulk
+  // 4. Mark stale JobPostings for this provider as expired in bulk (only if unseen for 48h)
   await db.jobPosting.updateMany({
     where: {
       platform: providerKey as PlatformSource,

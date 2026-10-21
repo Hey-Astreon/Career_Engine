@@ -3,6 +3,7 @@ import axios from "axios";
 import { PlatformSource } from "@prisma/client";
 import {
   InternListProvider,
+  INTERN_LIST_CATEGORIES,
   parseInternListPage,
   parseInternListDetail,
 } from "@/lib/providers/internlist";
@@ -24,7 +25,7 @@ const detailHtml = (type: string, loc: string) =>
   `<p>This internship builds backend services and APIs for a distributed platform used by thousands of customers.</p>` +
   `<a href="https://jobright.ai/jobs/info/abc123?utm_source=1111&amp;utm_campaign=x" class="link-2">Apply Now</a></body></html>`;
 
-describe("intern-list parsers", () => {
+describe("intern-list parsers (legacy Webflow)", () => {
   it("parses list entries", () => {
     const entries = parseInternListPage(LIST_HTML);
     expect(entries.length).toBe(3);
@@ -44,38 +45,93 @@ describe("intern-list parsers", () => {
 describe("InternListProvider", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("initializes correctly", () => {
+  it("initializes correctly with defined categories", () => {
     const p = new InternListProvider();
     expect(p.providerKey).toBe(PlatformSource.INTERN_LIST);
+    expect(INTERN_LIST_CATEGORIES.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("keeps remote internships and strictly rejects onsite and hybrid", async () => {
-    vi.spyOn(axios, "get").mockImplementation(async (url: string) => {
-      if (url.endsWith("/swe-intern-list") || url.endsWith("/da-intern-list")) {
-        return { status: 200, data: url.endsWith("/swe-intern-list") ? LIST_HTML : "" };
+  it("keeps remote internships and strictly filters non-developer roles", async () => {
+    const mockJobs = [
+      {
+        jobId: "remote_swe_1",
+        properties: {
+          title: "Software Engineer Intern",
+          company: "Acme Cloud",
+          location: "United States",
+          salary: "$45-$50/hr",
+          workModel: "Remote",
+          qualifications: "Experience with TypeScript, React, and REST APIs.",
+        },
+        postedAt: Date.now() - 3600000,
+      },
+      {
+        jobId: "non_dev_role",
+        properties: {
+          title: "Account Executive Intern",
+          company: "SalesCorp",
+          location: "United States",
+          salary: "$25/hr",
+          workModel: "Remote",
+          qualifications: "Cold calling and lead generation.",
+        },
+        postedAt: Date.now() - 3600000,
+      },
+      {
+        jobId: "senior_role",
+        properties: {
+          title: "Senior Staff Engineering Manager",
+          company: "MegaCorp",
+          location: "United States",
+          salary: "$200,000",
+          workModel: "Remote",
+          qualifications: "Manage 20+ engineers.",
+        },
+        postedAt: Date.now() - 3600000,
+      },
+    ];
+
+    vi.spyOn(axios, "post").mockImplementation(async (url: string) => {
+      if (url.includes("swan/mini-sites/list")) {
+        return {
+          status: 200,
+          data: {
+            success: true,
+            result: {
+              total: mockJobs.length,
+              jobList: mockJobs,
+            },
+          },
+        };
       }
-      if (url.includes("remote_one")) return { status: 200, data: detailHtml("Remote", "United States") };
-      if (url.includes("onsite_one")) return { status: 200, data: detailHtml("Onsite", "Atlanta, GA") };
-      return { status: 200, data: detailHtml("Hybrid", "Austin, TX") };
+      return { status: 404, data: {} };
     });
 
     const result = await new InternListProvider().fetch();
     expect(result.success).toBe(true);
     expect(result.jobs.length).toBe(1);
-    expect(result.jobs[0].company).toBe("Acme");
+    expect(result.jobs[0].company).toBe("Acme Cloud");
+    expect(result.jobs[0].title).toBe("Software Engineer Intern");
     expect(result.jobs[0].isRemote).toBe(true);
     expect(result.jobs[0].jobType).toBe("Remote Internship");
-    expect(result.jobs[0].canonicalAppUrl).toBe("https://jobright.ai/jobs/info/abc123");
+    expect(result.jobs[0].canonicalAppUrl).toBe(
+      "https://jobright.ai/jobs/info/remote_swe_1?utm_source=intern-list"
+    );
     expect(result.jobs[0].opportunitySignals).toContain("NICHE_SOURCE");
-    expect(result.jobsRejected).toBe(2);
+    expect(result.jobs[0].metadata?.salary).toBe("$45-$50/hr");
+    expect(result.diagnostics.accepted).toBe(1);
   });
 
-  it("live fetch never returns non-remote jobs", async () => {
+  it("live fetch returns verified remote jobs with valid structure", async () => {
     const result = await new InternListProvider().fetch();
-    expect(result.endpointTelemetry!.length).toBe(2);
+    expect(result.success).toBe(true);
+    expect(result.endpointTelemetry!.length).toBeGreaterThan(0);
+    expect(result.jobs.length).toBeGreaterThan(0);
     for (const job of result.jobs) {
       expect(job.isRemote).toBe(true);
       expect(job.location.toLowerCase()).toContain("remote");
+      expect(job.providerKey).toBe(PlatformSource.INTERN_LIST);
+      expect(job.canonicalAppUrl).toContain("jobright.ai/jobs/info/");
     }
-  }, 30000);
+  }, 35000);
 });

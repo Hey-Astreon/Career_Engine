@@ -216,10 +216,11 @@
       const hostname = window.location.hostname.toLowerCase();
       const isWellfound = hostname.includes('wellfound.com');
       const isJobright = hostname.includes('jobright.ai');
+      const isInternList = hostname.includes('intern-list.com');
       
-      if (!isWellfound && !isJobright) return null;
+      if (!isWellfound && !isJobright && !isInternList) return null;
       
-      const source = isWellfound ? 'WELLFOUND' : 'JOBRIGHT';
+      const source = isInternList ? 'INTERN_LIST' : (isJobright ? 'JOBRIGHT' : 'WELLFOUND');
       const harvested = [];
       const seenUrls = new Set();
 
@@ -305,32 +306,98 @@
             } catch (e) {}
           });
         }
-      } else if (isJobright) {
-        const cards = document.querySelectorAll('[class*="job-card"], [class*="JobCard"], div[role="article"]');
-        cards.forEach(card => {
-          try {
-            const titleEl = card.querySelector('h2, h3, a[class*="title"]');
-            const companyEl = card.querySelector('p[class*="company"], span[class*="company"], strong');
-            const linkEl = card.querySelector('a[href*="/job/"], a[href*="http"]');
-            const locEl = card.querySelector('[class*="location"]');
-
-            const title = titleEl ? titleEl.innerText.trim() : null;
-            const company = companyEl ? companyEl.innerText.trim() : null;
-            const url = linkEl ? linkEl.href : null;
-
-            if (title && company && url) {
-              if (seenUrls.has(url)) return;
-              seenUrls.add(url);
-              harvested.push({
-                title,
-                company,
-                location: locEl ? locEl.innerText.trim() : 'Remote',
-                url,
-                rawDescription: `${title} at ${company}. Harvested from Jobright AI.`,
-              });
+      } else if (isJobright || isInternList) {
+        // 1. Minisite Next.js __NEXT_DATA__ in-memory extraction
+        try {
+          const nextScript = document.getElementById('__NEXT_DATA__');
+          if (nextScript && nextScript.textContent) {
+            const parsed = JSON.parse(nextScript.textContent);
+            const initialJobs = parsed?.props?.pageProps?.initialJobs;
+            if (Array.isArray(initialJobs) && initialJobs.length > 0) {
+              for (const job of initialJobs) {
+                const title = job.title;
+                const company = job.company || 'Tech Startup';
+                const isRemote = job.workModel === 'Remote' || (job.location && job.location.toLowerCase().includes('remote'));
+                const location = isRemote ? (job.location ? `Remote (${job.location})` : 'Remote') : (job.location || 'Remote');
+                const url = job.applyUrl || `https://jobright.ai/jobs/info/${job.id}`;
+                if (!title || seenUrls.has(url)) continue;
+                seenUrls.add(url);
+                harvested.push({
+                  title,
+                  company,
+                  location,
+                  salary: job.salary || null,
+                  url,
+                  rawDescription: `${title} at ${company}. ${job.qualifications || ''}`,
+                });
+              }
             }
-          } catch (e) {}
-        });
+          }
+        } catch (nextErr) {
+          console.warn('[AstrePilot] Jobright Next.js extraction note:', nextErr);
+        }
+
+        // 2. DOM fallback for rendered cards or table rows
+        if (harvested.length === 0) {
+          // Check for minisite table rows & links
+          const applyLinks = document.querySelectorAll('a[class*="airtableApplyLink"], a[href*="/jobs/info/"], a[class*="apply"]');
+          applyLinks.forEach(linkEl => {
+            try {
+              const url = linkEl.href;
+              if (!url || seenUrls.has(url)) return;
+              const row = linkEl.closest('tr, div[class*="row"], div[role="row"], div[role="listitem"], li, article');
+              if (!row) return;
+
+              const titleEl = row.querySelector('[class*="title"], [class*="jobtitle"], strong, h3, h4');
+              const companyEl = row.querySelector('[class*="company"], [class*="companyname"], span, p');
+              const locEl = row.querySelector('[class*="location"], [class*="badge"], [class*="tag"]');
+
+              const title = titleEl ? titleEl.innerText.trim() : null;
+              const company = companyEl ? companyEl.innerText.trim() : 'Tech Startup';
+              const location = locEl ? locEl.innerText.trim() : 'Remote';
+
+              if (title && url) {
+                seenUrls.add(url);
+                harvested.push({
+                  title,
+                  company,
+                  location,
+                  url,
+                  rawDescription: `${title} at ${company}. Harvested from ${source}.`,
+                });
+              }
+            } catch (e) {}
+          });
+
+          // Check standard job cards (Jobright main site)
+          if (harvested.length === 0) {
+            const cards = document.querySelectorAll('[class*="job-card"], [class*="JobCard"], div[role="article"]');
+            cards.forEach(card => {
+              try {
+                const titleEl = card.querySelector('h2, h3, a[class*="title"]');
+                const companyEl = card.querySelector('p[class*="company"], span[class*="company"], strong');
+                const linkEl = card.querySelector('a[href*="/job/"], a[href*="http"]');
+                const locEl = card.querySelector('[class*="location"]');
+
+                const title = titleEl ? titleEl.innerText.trim() : null;
+                const company = companyEl ? companyEl.innerText.trim() : null;
+                const url = linkEl ? linkEl.href : null;
+
+                if (title && company && url) {
+                  if (seenUrls.has(url)) return;
+                  seenUrls.add(url);
+                  harvested.push({
+                    title,
+                    company,
+                    location: locEl ? locEl.innerText.trim() : 'Remote',
+                    url,
+                    rawDescription: `${title} at ${company}. Harvested from ${source}.`,
+                  });
+                }
+              } catch (e) {}
+            });
+          }
+        }
       }
 
       return harvested.length > 0 ? { source, jobs: harvested, count: harvested.length } : null;

@@ -47,7 +47,9 @@ export async function POST(req: Request) {
 
     const rawSource = (body.source || "WELLFOUND").toUpperCase();
     const providerKey =
-      rawSource === "JOBRIGHT"
+      rawSource === "INTERN_LIST" || rawSource === "INTERNLIST"
+        ? PlatformSource.INTERN_LIST
+        : rawSource === "JOBRIGHT"
         ? PlatformSource.JOBRIGHT
         : PlatformSource.WELLFOUND;
 

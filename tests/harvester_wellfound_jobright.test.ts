@@ -121,6 +121,51 @@ describe("Wellfound & Jobright Harvester Normalization", () => {
     expect(normalized.experienceLevel).toBe("Fresher / Entry Level (0-1 Yr)");
     expect(normalized.isRemote).toBe(true);
   });
+
+  it("normalizes Intern-List remote tech internship into valid NormalizedJob", () => {
+    const title = sanitizeRoleTitle("AI & Software Engineering Intern");
+    const { company, companySlug } = cleanCompanySlug("Galaxy");
+    const location = "Remote (United States; United Kingdom)";
+    const rawDesc = "Off-Cycle 2026 Cybersecurity Internship at Galaxy.\nCompensation: $55-$55/hr";
+    const cleanUrl = "https://jobright.ai/jobs/info/6a8e5cb7ef981311b92fbf12?utm_source=intern-list";
+    const postedAt = new Date();
+
+    const signals = determineOpportunitySignals({
+      postedAt,
+      applicationUrlType: "AGGREGATOR_PAGE",
+      canonicalAppUrl: cleanUrl,
+      providerKey: PlatformSource.INTERN_LIST,
+    });
+
+    const normalized: NormalizedJob = {
+      sourceJobId: "intern-list-6a8e5cb7ef981311b92fbf12",
+      providerKey: PlatformSource.INTERN_LIST,
+      company,
+      companySlug,
+      title,
+      category: determineCategory(title, rawDesc),
+      jobType: "Remote Internship",
+      experienceLevel: "Fresher / Entry Level (0-1 Yr)",
+      location,
+      isRemote: true,
+      remoteScope: parseRemoteScope(location, rawDesc),
+      discoveryUrl: "https://www.intern-list.com/",
+      canonicalAppUrl: cleanUrl,
+      applicationUrlType: "AGGREGATOR_PAGE",
+      verificationStatus: "VERIFIED_AGGREGATOR",
+      postedAt,
+      opportunitySignals: signals,
+      rawDescription: rawDesc,
+      hasFullText: true,
+      metadata: { salary: "$55-$55/hr" },
+    };
+
+    expect(normalized.providerKey).toBe("INTERN_LIST");
+    expect(normalized.isRemote).toBe(true);
+    expect(normalized.jobType).toBe("Remote Internship");
+    expect(normalized.opportunitySignals).toContain("NICHE_SOURCE");
+    expect(normalized.metadata?.salary).toBe("$55-$55/hr");
+  });
 });
 
 describe("WellfoundProvider & JobrightProvider Execution", () => {
