@@ -1363,6 +1363,41 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+### 🔴 Case 15: Upgrading Landing Page Typography to Plus Jakarta Sans & High-Authority Editorial Rhythm
+* **What Happened:**
+  - The hero section was previously rendered in standard system `Inter` at an uncalibrated `84px` size.
+  - On widescreen displays (1536px), the headline collapsed into four awkward, disjointed lines with single-word orphans: `Land your next remote` / `role.` / `Without the endless` / `ghosting.`.
+  - The text was entirely monochrome black/dark-grey, feeling dry, generic, and uninspiring ("feels very generic not wow").
+* **The Root Cause / Mistake:**
+  - `Inter` is an excellent body/data font but lacks geometric character and editorial authority when blown up to display sizes.
+  - Sizing (`84px`) inside a `max-w-4xl` box forced unnatural word wrapping without optical balancing (`text-wrap: balance` was omitted).
+  - Lack of chromatic contrast: no vibrant focal points or gradient highlights on the emotional payoff phrase.
+* **How We Solved It:**
+  1. **Configured Plus Jakarta Sans (`--font-display`):**
+     - Imported `Plus_Jakarta_Sans` in `src/app/layout.tsx` across weights 400-800.
+     - Added `--font-display` to `RootLayout` `<html>` class and wired `.font-display` utility in `src/app/globals.css`.
+  2. **Calibrated Balanced 2-Line Headline (`ModernAgencyHero`):**
+     - Set font scale to `text-[36px] sm:text-[52px] md:text-[62px] lg:text-[68px] xl:text-[72px]` with `font-extrabold tracking-[-0.038em] leading-[1.08]`.
+     - Structured into two balanced semantic blocks:
+       - **Line 1:** `Land your next remote role.` in deep obsidian `#090d16`.
+       - **Line 2:** `Without the endless ghosting.` in a radiant chromatic gradient (`from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent`).
+     - Eliminates all single-word orphans, ensuring perfect 2-line symmetry above the fold on all standard viewports.
+  3. **High-Conversion Copy & Visual Hierarchy Upgrades:**
+     - **Pill Badge:** Upgraded to `Direct ATS Pipelines • Zero Ghost Postings • 100% Free` with live pulsing emerald beacon.
+     - **Subtitle:** Rewritten with rhythm and semantic emphasis: *"Tired of applying to black holes? AstreWork bypasses middleman job boards to scrape **direct company ATS feeds**, eliminates ghost postings, and scores your resume against real recruiter algorithms—so you **actually get interviews**."*
+     - **Buttons:** Upgraded primary CTA with radiant cobalt glow (`shadow-[0_8px_25px_-6px_rgba(0,113,227,0.4)]`), secondary frosted glass CTA, and trust reassurance micro-copy (`100% Free for Job Seekers • No Credit Card • Zero Spam Postings`).
+     - **Unified Section Headings:** Applied `font-display` across Engines Bento, Discovery Stream, ATS Benchmark, FAQ, and Final CTA sections.
+  4. **Quality & Validation:**
+     - `npx tsc --noEmit`: 0 errors.
+     - `npm run lint`: 0 errors, 0 warnings.
+     - `npx vitest run`: 36 test files, 357/357 passing.
+     - `npm run build`: 59/59 static and dynamic routes compiled cleanly.
+     - Full visual verification via Chrome subagent screenshot.
+* **Engineering Experience Gained:**
+  - **Rule:** Never use standard system body fonts for high-impact landing page headlines. Always pair a geometric display font (`Plus Jakarta Sans`) with tight editorial tracking (`-0.035em` to `-0.04em`), calibrate line breaks with block spans so phrases never orphan single words, and illuminate emotional payoff words with radiant chromatic gradients.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 

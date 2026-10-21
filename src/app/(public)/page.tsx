@@ -151,92 +151,109 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
         <motion.div initial="hidden" animate="visible" variants={stagger}>
           {/* Authentic Status Badge */}
           <motion.div variants={fadeUp} className="inline-flex items-center justify-center mb-6">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-black/[0.08] bg-white/90 backdrop-blur-md shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[12px] font-semibold tracking-wide text-[#0f0f11]">
-                Verified Remote Roles • Zero Ghost Postings
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-blue-500/20 bg-white/95 backdrop-blur-md shadow-[0_2px_14px_rgba(0,113,227,0.08)]">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="font-display text-[12px] sm:text-[13px] font-bold tracking-wide text-[#0f172a]">
+                Direct ATS Pipelines • <span className="text-emerald-600 font-extrabold">Zero Ghost Postings</span> • 100% Free
               </span>
             </div>
           </motion.div>
 
-          {/* Clean, Human & Relatable Headline */}
+          {/* Clean, Human & Relatable Headline with World-Class Display Typography */}
           <motion.h1
             variants={fadeUp}
-            className="text-[42px] sm:text-[64px] md:text-[76px] lg:text-[84px] font-semibold tracking-[-0.038em] leading-[1.05] text-[#0f0f11] mb-6 max-w-4xl mx-auto"
+            className="font-display text-[36px] sm:text-[52px] md:text-[62px] lg:text-[68px] xl:text-[72px] font-extrabold tracking-[-0.038em] leading-[1.08] text-[#090d16] mb-6 max-w-5xl mx-auto"
           >
-            Land your next remote role.{" "}
-            <br className="hidden sm:block" />
-            <span className="text-[#0f0f11] bg-clip-text text-transparent bg-gradient-to-r from-[#0f0f11] via-[#2a2b30] to-[#52525b]">
+            <span className="block text-[#090d16]">
+              Land your next remote role.
+            </span>
+            <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">
               Without the endless ghosting.
             </span>
           </motion.h1>
 
-          {/* Simple, Clear Subtitle */}
+          {/* Punchy, High-Conversion Subtitle with Visual Highlights */}
           <motion.p
             variants={fadeUp}
-            className="text-[17px] sm:text-[20px] text-[#52525b] max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
+            className="text-[17px] sm:text-[20px] md:text-[21px] text-[#475569] max-w-2xl mx-auto leading-relaxed mb-10 font-normal"
           >
-            AstreWork searches 21+ direct company job boards, filters out ghost jobs and scams, and tests your resume against real ATS parsers so you actually get interviews.
+            Tired of applying to black holes? AstreWork bypasses middleman job boards to scrape{" "}
+            <span className="text-[#090d16] font-semibold">direct company ATS feeds</span>, eliminates ghost postings, and scores your resume against real recruiter algorithms—so you{" "}
+            <span className="text-[#090d16] font-semibold underline decoration-blue-500/30 decoration-2 underline-offset-4">actually get interviews</span>.
           </motion.p>
 
-          {/* Primary Action Buttons */}
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
-            <Link
-              href="/onboard"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#0f0f11] hover:bg-black text-white text-[16px] font-semibold transition-all shadow-[0_4px_20px_rgba(15,15,17,0.22)] hover:shadow-[0_8px_30px_rgba(15,15,17,0.3)] hover:scale-[1.02] active:scale-[0.98] group"
-            >
-              <span>Find Remote Jobs</span>
-              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-white text-[13px] group-hover:translate-x-1 transition-transform">
-                →
-              </span>
-            </Link>
+          {/* Primary Action Buttons & Reassurance Micro-Copy */}
+          <motion.div variants={fadeUp} className="flex flex-col items-center justify-center gap-3.5 mb-14">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+              <Link
+                href="/onboard"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#090d16] hover:bg-black text-white text-[16px] font-display font-bold tracking-tight transition-all duration-200 shadow-[0_8px_25px_-6px_rgba(0,113,227,0.4)] hover:shadow-[0_12px_32px_-4px_rgba(0,113,227,0.55)] hover:scale-[1.02] active:scale-[0.98] border border-white/10 group"
+              >
+                <span>Find Remote Jobs</span>
+                <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[13px] group-hover:translate-x-1 transition-transform">
+                  →
+                </span>
+              </Link>
 
-            <a
-              href="#discovery"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-black/10 hover:border-black/25 bg-white/80 backdrop-blur-md text-[#0f0f11] text-[15px] font-semibold transition-all hover:bg-white"
-            >
-              <span>Browse Live Roles</span>
-              <span className="text-black/40 text-[13px]">↓</span>
-            </a>
+              <a
+                href="#discovery"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-slate-200/90 hover:border-slate-300 bg-white/80 hover:bg-white backdrop-blur-md text-[#090d16] text-[15px] font-display font-semibold transition-all shadow-xs"
+              >
+                <span>Browse Live Roles</span>
+                <span className="text-slate-400 text-[13px]">↓</span>
+              </a>
+            </div>
+
+            <div className="flex items-center gap-2 text-[12px] font-medium text-[#64748b]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>100% Free for Job Seekers</span>
+              <span className="text-slate-300">•</span>
+              <span>No Credit Card</span>
+              <span className="text-slate-300">•</span>
+              <span>Zero Spam Postings</span>
+            </div>
           </motion.div>
 
           {/* 4-Metric Telemetry Strip */}
           <motion.div
             variants={fadeUp}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-12"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-[0_8px_30px_rgba(15,23,42,0.04)] mb-12"
           >
-            <div className="p-3 text-center border-r border-black/[0.04] last:border-r-0">
-              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+            <div className="p-3 text-center border-r border-slate-100 last:border-r-0">
+              <div className="font-display text-[28px] sm:text-[34px] font-extrabold tracking-tight text-[#090d16]">
                 {metrics.totalJobsIndexed > 0 ? metrics.totalJobsIndexed.toLocaleString() : "2,840+"}
               </div>
-              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
+              <div className="text-[11px] font-bold text-[#64748b] tracking-wider uppercase mt-1">
                 Active Remote Roles
               </div>
             </div>
 
-            <div className="p-3 text-center sm:border-r border-black/[0.04]">
-              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+            <div className="p-3 text-center sm:border-r border-slate-100">
+              <div className="font-display text-[28px] sm:text-[34px] font-extrabold tracking-tight text-[#090d16]">
                 {metrics.totalProviders > 0 ? `${metrics.totalProviders}+` : "21+"}
               </div>
-              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
-                Direct Company Boards
+              <div className="text-[11px] font-bold text-[#64748b] tracking-wider uppercase mt-1">
+                Direct ATS Feeds
               </div>
             </div>
 
-            <div className="p-3 text-center border-r border-black/[0.04] last:border-r-0">
-              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+            <div className="p-3 text-center border-r border-slate-100 last:border-r-0">
+              <div className="font-display text-[28px] sm:text-[34px] font-extrabold tracking-tight text-emerald-600">
                 98%
               </div>
-              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
+              <div className="text-[11px] font-bold text-[#64748b] tracking-wider uppercase mt-1">
                 ATS Parser Pass Rate
               </div>
             </div>
 
             <div className="p-3 text-center">
-              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
-                Zero
+              <div className="font-display text-[28px] sm:text-[34px] font-extrabold tracking-tight text-[#090d16]">
+                0%
               </div>
-              <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
+              <div className="text-[11px] font-bold text-[#64748b] tracking-wider uppercase mt-1">
                 Ghost Postings Allowed
               </div>
             </div>
@@ -331,7 +348,7 @@ function ModernAgencyEngines() {
             </span>
           </div>
 
-          <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+          <h2 className="font-display text-[36px] sm:text-[52px] font-extrabold tracking-[-0.035em] text-[#090d16] leading-[1.06] mb-4">
             Everything you need to land interviews. <br className="hidden sm:block" />
             Zero spreadsheets. Zero ghosting.
           </h2>
@@ -613,7 +630,7 @@ function ModernAgencyDiscoveryStream() {
             </span>
           </div>
 
-          <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+          <h2 className="font-display text-[36px] sm:text-[50px] font-extrabold tracking-[-0.035em] text-[#090d16] leading-[1.06] mb-4">
             Search verified remote roles in real time.
           </h2>
           <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
@@ -791,7 +808,7 @@ function ModernAgencyBenchmark() {
             </span>
           </div>
 
-          <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+          <h2 className="font-display text-[36px] sm:text-[50px] font-extrabold tracking-[-0.035em] text-[#090d16] leading-[1.06] mb-4">
             Engineered against enterprise parsers. <br className="hidden sm:block" />
             Zero guesswork.
           </h2>
@@ -877,7 +894,7 @@ function ModernAgencyFAQ() {
             </span>
           </div>
 
-          <h2 className="text-[36px] sm:text-[48px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+          <h2 className="font-display text-[36px] sm:text-[48px] font-extrabold tracking-[-0.035em] text-[#090d16] leading-[1.06] mb-4">
             Answers to critical questions.
           </h2>
           <p className="text-[17px] text-[#52525b] font-medium">
@@ -950,7 +967,7 @@ function ModernAgencyCTA() {
         </div>
 
         {/* Powerful Headline */}
-        <h2 className="text-[38px] sm:text-[54px] md:text-[64px] font-semibold tracking-[-0.035em] leading-[1.08] mb-6 text-white">
+        <h2 className="font-display text-[38px] sm:text-[54px] md:text-[64px] font-extrabold tracking-[-0.035em] leading-[1.06] mb-6 text-white">
           Stop getting ghosted. Start getting interviews.
         </h2>
 
