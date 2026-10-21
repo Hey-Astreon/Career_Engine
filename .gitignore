@@ -59,3 +59,6 @@ scripts/astrepilot-measure/output/
 python_agents/.venv/
 __pycache__/
 *.pyc
+
+# Backups & Archives
+legacy_candidate_vaults_backup.zip

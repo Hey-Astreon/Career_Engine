@@ -1,13 +1,13 @@
-# 🧠 CAREER_ENGINE / RCMS — ENCYCLOPEDIC COGNITIVE MEMORY & NEURAL RESURRECTION VAULT
+# 🧠 CAREER_ENGINE / ASTREWORK — ENCYCLOPEDIC COGNITIVE MEMORY & NEURAL RESURRECTION VAULT
 # 🌟 FOUNDER PROTOCOL CODE: 9926 — COMPLETE AUTONOMOUS RETENTION SYSTEM
 
 > **CLASSIFICATION:** TOP-LEVEL AI NEURAL ARCHIVE, SYSTEM LEDGER & COGNITIVE MEMORY  
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
+> **WORKSPACE ROOT:** `X:\Career_Engine`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 45: Candidate Vaults Consolidation, Interview Kits Migration & Architecture Decoupling, 357 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 46: Root Codebase Consolidation, Git Resurrection & Total Legacy Architecture Eradication, 357 Passing Tests)
 
 ---
 
@@ -98,7 +98,7 @@
 ### Anti-Hallucination & Quality Mandates
 - **Verify before declaring:** Never assume an API structure or file content. Use `view_file`, `grep_search`, or query tools to inspect active source code.
 - **Run tests proactively:** After making core changes, execute `npx vitest run` or `npm run build` to guarantee correctness before reporting completion.
-- **Preserve design elegance:** CareerAgent / RCMS is a high-density, modern OS. Every UI view must be responsive, visually clean, and state-of-the-art.
+- **Preserve design elegance:** CareerAgent / AstreWork is a high-density, modern OS. Every UI view must be responsive, visually clean, and state-of-the-art.
 
 ---
 
@@ -381,7 +381,7 @@ REDIS_URL="redis://localhost:6379"               # In-memory LRU cache
 ```bash
 # 1. Clone official repository
 git clone https://github.com/Hey-Astreon/Career_Engine.git
-cd Career_Engine/1_RCMS
+cd Career_Engine
 
 # 2. Configure Git identity
 git config user.name "Hey-Astreon"
@@ -547,7 +547,7 @@ Located in `extension/`:
 - [x] **Phase 2: Multi-Signal Canonical Deduplication** (`Opportunity` vs `JobOccurrence` provenance).
 - [x] **Phase 3: Zero-Downtime Multi-LLM Router** (Groq &rarr; NVIDIA NIM &rarr; Cerebras &rarr; Gemini).
 - [x] **Phase 4: Telemetry & Observability Dashboard** (`ProviderEndpointRun` + `ProviderHealthReport`).
-- [x] **Phase 5: RCMS Design System Overhaul** (Master-detail split feed, freshness gates, keyboard navigation).
+- [x] **Phase 5: AstreWork Design System Overhaul** (Master-detail split feed, freshness gates, keyboard navigation).
 - [x] **Phase 6: Tier-1 ATS Resume Maker Engine** (Interactive `/resume-maker`, 5 presets, live audit score, A4 print CSS).
 - [x] **Phase 7: Git & Identity Standardization** (`Hey-Astreon` author unification, removal of duplicate scripts).
 - [x] **Phase 8: Master Memory & Cognitive Retention System** (`AGENTS.md`, workspace `SKILL.md`, global `SKILL.md`, and this vault).
@@ -999,10 +999,10 @@ Located in `extension/`:
 - [x] **Phase 45: Candidate Vaults Consolidation, Interview Kits Migration & Architecture Decoupling (Oct 21, 2026)**
   - **1. Objective & Strategic Motivation:**
     - The user requested analyzing the external folders `x:\Career_Engine\2_Ayushi_Raj` and `x:\Career_Engine\3_Roushan_Kumar` to determine whether they were needed or safe to remove.
-    - Forensic analysis proved that the web application in `1_RCMS` was 100% autonomous: all 19 official locked PDF resumes and `usecase.md` matrices were already bundled directly in `1_RCMS/public/candidates/`. In Docker on OCI and Vercel, the external folders were never copied.
+    - Forensic analysis proved that the web application was 100% autonomous: all 19 official locked PDF resumes and `usecase.md` matrices were already bundled directly in `public/candidates/`. In Docker on OCI and Vercel, the external folders were never copied.
     - However, the external folders contained invaluable offline assets (12 production-grade STAR stories, project interview kits, cover letters, recruiter InMail templates) that were unversioned and untracked in Git.
   - **2. Full Migration into Version-Controlled Codebase:**
-    - Created `x:\Career_Engine\1_RCMS\docs\interview_vaults\`:
+    - Created `x:\Career_Engine\docs\interview_vaults\`:
       - `docs/interview_vaults/roushan/`: Migrated all 10 core interview asset folders (`03_cover_letters`, `04_recruiter_messages`, `05_cold_emails`, `06_follow_up_templates`, `07_interview_preparation`, `08_star_story_library`, `09_project_interview_kits`, `10_ats_keyword_library`, `12_networking_system`, `13_company_research_framework`).
       - `docs/interview_vaults/ayushi/`: Migrated matching 10 folders for Ayushi.
     - Authored comprehensive project interview kits for AstreWork:
@@ -1014,11 +1014,29 @@ Located in `extension/`:
     - Updated `prisma/seed.ts`: Replaced hardcoded `x:/Career_Engine/...` paths with web-accessible relative paths (`/candidates/3_Roushan_Kumar/Roushan_Kumar_Resume.pdf` and `/candidates/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf`).
   - **4. Legacy Backup & Root Directory Clean-up:**
     - Compressed external folders into a single offline backup zip: `x:\Career_Engine\legacy_candidate_vaults_backup.zip` (1.95 MB).
-    - Removed `x:\Career_Engine\2_Ayushi_Raj` and `x:\Career_Engine\3_Roushan_Kumar` from root, leaving a pristine clean project structure (`1_RCMS` and the backup zip).
+    - Removed `x:\Career_Engine\2_Ayushi_Raj` and `x:\Career_Engine\3_Roushan_Kumar` from root, leaving a pristine clean project structure and the backup zip.
   - **5. Automated Verification:**
     - Vitest test suites: `tests/candidate_context_privacy.test.ts`, `tests/resume_optimizer.test.ts`, `tests/internship-kit-tailoring.test.ts` (All 25 tests passing green).
     - TypeScript check: `npx tsc --noEmit` clean with 0 errors.
     - Production build: `npm run build` compiled all 59 routes with 0 warnings and 0 errors.
+
+- [x] **Phase 46: Root Codebase Consolidation, Git Resurrection & Total Legacy Architecture Eradication (Oct 21, 2026)**
+  - **1. Codebase Relocation to Root:**
+    - Successfully relocated the entire application, configs, dependencies, and agents from the legacy subfolder directly into `X:\Career_Engine\`.
+    - Cleaned up the empty leftover legacy subfolder.
+  - **2. Git Tracking Recovery:**
+    - Discovered that the hidden `.git` folder was placed into the Recycle Bin during the folder migration.
+    - Restored `.git` back to `X:\Career_Engine\.git`, perfectly preserving unbroken commit history, remotes, branches, and author attribution.
+  - **3. Complete Legacy Branding Eradication:**
+    - Renamed `"name": "career-engine"` in `package.json` and `package-lock.json`.
+    - Purged all legacy acronym references and modernized links across `AGENTS.md`, `.agents/skills/career-agent-expert/SKILL.md`, `README.md`, `todo.md`, and `scripts/*.ps1`.
+    - Verified `src/`, `prisma/`, `extension/`, `python_agents/`, `docs/`, `tests/`, and `public/` are 100% free of legacy names.
+  - **4. Strict BCA Title Regulation Compliance:**
+    - Updated `README.md` candidate role titles from "Engineer" to "Developer" ("AI Developer", "Backend & Systems Developer", "Full Stack Developer", "Product Developer") in compliance with Section 5 rules.
+  - **5. Automated Quality & Build Verification:**
+    - Vitest: All 36 test files and 357 tests passing green (`npx vitest run`).
+    - Typecheck: `npx tsc --noEmit` exited with 0 errors.
+    - Production Build: Next.js 16 (Turbopack) successfully compiled all 59 production routes (`59/59`).
 
 ---
 
@@ -1242,7 +1260,7 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
-*This document is the permanent neural memory of Antigravity for CareerAgent / RCMS / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
+*This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 
 ## Codebase Cleanup & Junk Removal (Latest)

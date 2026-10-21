@@ -12,7 +12,7 @@
 - [x] Create a presentation summarizing the strict gate architecture, code changes, and verified results.
 
 - [x] Audit the existing local frontend routes, data hooks, and API contracts used by the working Career Agent.
-- [x] Port the premium RCMS visual system and responsive workspace shell onto the local Next.js frontend.
+- [x] Port the premium AstreWork visual system and responsive workspace shell onto the local Next.js frontend.
 - [x] Bind the redesigned workspace to existing real job, score, profile, application, and alert APIs without recreating backend logic.
 - [x] Validate live local workflows, desktop/mobile usability, TypeScript, tests, and production build after the UI replacement.
 - [x] Exercise live scrape, profile, match, and application-kit API contracts after the UI replacement and document the current provider outcome.

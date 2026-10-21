@@ -1,7 +1,7 @@
 ---
 name: career-agent-expert
 description: >-
-  The foundational Powercore, master architectural blueprint, and neural engine for CareerAgent / RCMS / AstreWork.
+  The foundational Powercore, master architectural blueprint, and neural engine for CareerAgent / AstreWork.
   Locks in the 5 synchronized elite engineering personas (Distributed Systems Architect, Cloud Reliability Engineer,
   AI Automation Specialist, ATS Typography Virtuoso, Devoted Technical Brother) until override code 9926.
   Governs autonomous job harvesting, Turso Cloud LibSQL WAL persistence, Redis 7 caching, OCI ARM64 infrastructure,
@@ -14,7 +14,7 @@ description: >-
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **CO-CREATORS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **PRIMARY REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LOCAL WORKSPACE:** `X:\Career_Engine\1_RCMS`  
+> **LOCAL WORKSPACE:** `X:\Career_Engine`  
 > **PRODUCTION PLATFORM:** `https://astrework.app` (Oracle Cloud Infrastructure, Mumbai)
 
 ---
@@ -58,7 +58,7 @@ graph TD
 
 > **POWERCORE LAW:**  
 > Master memory is the persistent brain of this system. Never finish a task and leave master memory stale.  
-> After completing **ANY** bug fix, layout overhaul, feature implementation, scraper update, or database migration, updating [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/1_RCMS/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) is a **MANDATORY MISSION REPORT** that must be executed and committed before concluding your turn.
+> After completing **ANY** bug fix, layout overhaul, feature implementation, scraper update, or database migration, updating [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) is a **MANDATORY MISSION REPORT** that must be executed and committed before concluding your turn.
 
 ### Mandatory Post-Task Mission Report Checklist:
 1. **Document the Challenge / Defect:** State clearly what failed, what alignment broke, what data disappeared, or what requirement was requested.
@@ -216,15 +216,15 @@ graph TD
     PC --> S10[10. astreshield-fraud-detection]
 ```
 
-1. **[ats-resume-maker](file:///x:/Career_Engine/1_RCMS/.agents/skills/ats-resume-maker/SKILL.md):** 210x297mm A4 geometry laws, 60pt space budgeting, 2-column flexbox hanging indent, header link pinning, Google XYZ bullets, anti-AI slop, BCA title compliance.
-2. **[astrework-landing-page](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-landing-page/SKILL.md):** Pain-first conversion architecture, `Idea1HeroVisual` & `DataDustBackground` canvas budgeting, Framer Motion choreography, dynamic metrics `/api/public/metrics`, responsive viewports.
-3. **[astrework-dashboard-ui](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-dashboard-ui/SKILL.md):** Workspace layout geometry (`.ce-rail` 242px, `.ce-workspace`, `.ce-header` 72px), slide-over JobDrawer (540px), `.ce-chip` metadata badges, keyboard shortcuts (`Cmd+K`, `Alt+Shift+A`).
-4. **[astrework-design-system](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-design-system/SKILL.md):** Curated color tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode protocols, 7:1 WCAG AAA contrast, button hierarchy, glassmorphism limits.
-5. **[job-scraper-engineering](file:///x:/Career_Engine/1_RCMS/.agents/skills/job-scraper-engineering/SKILL.md):** Multi-engine scrapers (Playwright, Puppeteer, Selenium, internal APIs), canonical URL & tuple deduplication, 48-hour rolling window, zero-discovery circuit breakers.
-6. **[ai-agent-automation](file:///x:/Career_Engine/1_RCMS/.agents/skills/ai-agent-automation/SKILL.md):** The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage latency optimization, `cleanJsonResponse`.
-7. **[github-actions-watchtower-cicd](file:///x:/Career_Engine/1_RCMS/.agents/skills/github-actions-watchtower-cicd/SKILL.md):** 3-hour cron workflow (`job-sync.yml`), `verify-turso.cjs` secret inversion auto-recovery, preflight DB ping, Watchtower 60s continuous container updates on OCI.
-8. **[oracle-cloud-security](file:///x:/Career_Engine/1_RCMS/.agents/skills/oracle-cloud-security/SKILL.md):** OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm_size), `career-engine-vcn` ingress rules, Caddy automated Let's Encrypt SSL & HTTP/3 QUIC, Docker bridge isolation, UFW/fail2ban.
-9. **[astrepilot-extension-architecture](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrepilot-extension-architecture/SKILL.md):** Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM injection (`#astrepilot-hud-host`), 6-stage HUD state machine, multi-ATS form synthesis, mandatory `esc()` XSS sanitization.
-10. **[astreshield-fraud-detection](file:///x:/Career_Engine/1_RCMS/.agents/skills/astreshield-fraud-detection/SKILL.md):** 4-tier detection pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries (advance fees, PII harvesting, Telegram/crypto), ghost job algorithms.
+1. **[ats-resume-maker](file:///x:/Career_Engine/.agents/skills/ats-resume-maker/SKILL.md):** 210x297mm A4 geometry laws, 60pt space budgeting, 2-column flexbox hanging indent, header link pinning, Google XYZ bullets, anti-AI slop, BCA title compliance.
+2. **[astrework-landing-page](file:///x:/Career_Engine/.agents/skills/astrework-landing-page/SKILL.md):** Pain-first conversion architecture, `Idea1HeroVisual` & `DataDustBackground` canvas budgeting, Framer Motion choreography, dynamic metrics `/api/public/metrics`, responsive viewports.
+3. **[astrework-dashboard-ui](file:///x:/Career_Engine/.agents/skills/astrework-dashboard-ui/SKILL.md):** Workspace layout geometry (`.ce-rail` 242px, `.ce-workspace`, `.ce-header` 72px), slide-over JobDrawer (540px), `.ce-chip` metadata badges, keyboard shortcuts (`Cmd+K`, `Alt+Shift+A`).
+4. **[astrework-design-system](file:///x:/Career_Engine/.agents/skills/astrework-design-system/SKILL.md):** Curated color tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode protocols, 7:1 WCAG AAA contrast, button hierarchy, glassmorphism limits.
+5. **[job-scraper-engineering](file:///x:/Career_Engine/.agents/skills/job-scraper-engineering/SKILL.md):** Multi-engine scrapers (Playwright, Puppeteer, Selenium, internal APIs), canonical URL & tuple deduplication, 48-hour rolling window, zero-discovery circuit breakers.
+6. **[ai-agent-automation](file:///x:/Career_Engine/.agents/skills/ai-agent-automation/SKILL.md):** The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage latency optimization, `cleanJsonResponse`.
+7. **[github-actions-watchtower-cicd](file:///x:/Career_Engine/.agents/skills/github-actions-watchtower-cicd/SKILL.md):** 3-hour cron workflow (`job-sync.yml`), `verify-turso.cjs` secret inversion auto-recovery, preflight DB ping, Watchtower 60s continuous container updates on OCI.
+8. **[oracle-cloud-security](file:///x:/Career_Engine/.agents/skills/oracle-cloud-security/SKILL.md):** OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm_size), `career-engine-vcn` ingress rules, Caddy automated Let's Encrypt SSL & HTTP/3 QUIC, Docker bridge isolation, UFW/fail2ban.
+9. **[astrepilot-extension-architecture](file:///x:/Career_Engine/.agents/skills/astrepilot-extension-architecture/SKILL.md):** Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM injection (`#astrepilot-hud-host`), 6-stage HUD state machine, multi-ATS form synthesis, mandatory `esc()` XSS sanitization.
+10. **[astreshield-fraud-detection](file:///x:/Career_Engine/.agents/skills/astreshield-fraud-detection/SKILL.md):** 4-tier detection pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries (advance fees, PII harvesting, Telegram/crypto), ghost job algorithms.
 
 

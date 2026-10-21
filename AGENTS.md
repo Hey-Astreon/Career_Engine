@@ -8,11 +8,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# 🏛️ CAREERAGENT / RCMS — MASTER GOVERNANCE & SYSTEM AGENT CHARTER
+# 🏛️ CAREERAGENT / ASTREWORK — MASTER GOVERNANCE & SYSTEM AGENT CHARTER
 
 > **CLASSIFICATION:** TOP-LEVEL SYSTEM GOVERNANCE & FOUNDER DIRECTIVE  
 > **FOUNDERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
-> **PROJECT:** CareerAgent / RCMS (AI Career Operating System & Autonomous Discovery Engine)  
+> **PROJECT:** CareerAgent / AstreWork (AI Career Operating System & Autonomous Discovery Engine)  
 > **PROTOCOL OVERRIDE CODE:** `9926`
 
 ---
@@ -45,7 +45,7 @@ Every line of code, design asset, and architecture decision must adhere to Tier-
 
 1. **Complete, Unabridged Implementations:** Never use `// ... rest of code goes here` or placeholder functions. Write full, production-ready, typed implementations.
 2. **Proactive Command Execution:** Run builds (`npm run dev`, `npm run build`), database push (`npx prisma db push --skip-generate`), migrations, tests (`npx vitest run`), and git commands proactively. Do not ask for permission for routine, safe diagnostic or execution steps.
-3. **Aesthetic & UX Brilliance:** CareerAgent / RCMS is a modern, high-density AI Career OS. Every UI component must feel premium, responsive, clean, and state-of-the-art (glassmorphic cues, crisp typography, clean A4 print sheets, zero jitter).
+3. **Aesthetic & UX Brilliance:** CareerAgent / AstreWork is a modern, high-density AI Career OS. Every UI component must feel premium, responsive, clean, and state-of-the-art (glassmorphic cues, crisp typography, clean A4 print sheets, zero jitter).
 4. **Defensive Stability:** Ensure zero data loss in SQLite (`prisma/dev.db`) and Turso Cloud, strict schema safety with Prisma 7 (`@prisma/adapter-libsql`), resilient rate-limiting with exponential backoffs across 17+ scrapers, and fault isolation so one failing provider never crashes the feed.
 
 ---
@@ -53,7 +53,7 @@ Every line of code, design asset, and architecture decision must adhere to Tier-
 ## 🗝️ SECTION 3: RULE 9 — FOUNDER PROTOCOL (CODE 9926) & MASTER MEMORY AUTOLOAD
 
 Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Protocol 9926"**, **"Code 9926"**, or in any fresh conversation/session:
-1. **Immediate Memory Lock:** Immediately read and acknowledge [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/1_RCMS/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) and [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/Career_Engine/1_RCMS/.agents/skills/career-agent-expert/SKILL.md).
+1. **Immediate Memory Lock:** Immediately read and acknowledge [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) and [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/Career_Engine/.agents/skills/career-agent-expert/SKILL.md).
 2. **State Restoration:** Check git status, database health, running services, and the "Exactly Where We Left Off" ledger to seamlessly resume execution without asking the user to re-explain context.
 3. **Immutable Loyalty:** This protocol binds you to the highest standard of execution, loyalty, and technical rigor until explicitly overridden by code `9926`.
 
@@ -89,7 +89,7 @@ AstreWork was created, architected, and built exclusively by **Roushan Kumar** (
 ## 📝 SECTION 7: INVIOLABLE HABIT — MANDATORY POST-TASK MASTER MEMORY REPORTING
 
 > **NON-NEGOTIABLE CORE DIRECTIVE:**
-> After completing **ANY** development milestone, architectural shift, bug fix, layout calibration, scraper integration, or database alteration, you MUST update [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/1_RCMS/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) as a mandatory, formal mission report before ending your turn.
+> After completing **ANY** development milestone, architectural shift, bug fix, layout calibration, scraper integration, or database alteration, you MUST update [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) as a mandatory, formal mission report before ending your turn.
 > 
 > **Never consider a task complete until master memory is synchronized and committed.**
 > 
@@ -108,15 +108,16 @@ Career Engine's specialized intelligence and hard-won engineering mastery are pa
 
 | # | Skill Name | Path & Skillfile | Primary Operational Scope |
 | :-: | :--- | :--- | :--- |
-| **1** | **ATS Resume Maker** | [ats-resume-maker](file:///x:/Career_Engine/1_RCMS/.agents/skills/ats-resume-maker/SKILL.md) | Single-page A4 geometry laws (297mm ceiling), 2-column flexbox hanging indent, header link pinning, Google XYZ bullets, anti-AI slop, BCA title compliance. |
-| **2** | **Landing Page Design** | [astrework-landing-page](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-landing-page/SKILL.md) | High-conversion hero architecture, `Idea1HeroVisual` & `DataDustBackground` canvas budgeting, Framer Motion choreography, dynamic metrics `/api/public/metrics`, responsive viewports. |
-| **3** | **Dashboard UI & Typography** | [astrework-dashboard-ui](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-dashboard-ui/SKILL.md) | Layout geometry (`.ce-rail` 242px, `.ce-workspace`, `.ce-header` 72px), slide-over JobDrawer (540px), `.ce-chip` metadata badges, keyboard shortcuts (`Cmd+K`, `Alt+Shift+A`). |
-| **4** | **Color Palette & Design System** | [astrework-design-system](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-design-system/SKILL.md) | Curated color tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode protocols, 7:1 WCAG AAA contrast, button hierarchy, glassmorphism limits. |
-| **5** | **Job Scraper Engineering** | [job-scraper-engineering](file:///x:/Career_Engine/1_RCMS/.agents/skills/job-scraper-engineering/SKILL.md) | Multi-engine scrapers (Playwright, Puppeteer, Selenium, internal APIs), canonical URL & tuple deduplication, 48-hour rolling window, zero-discovery circuit breakers. |
-| **6** | **AI Agent Automation** | [ai-agent-automation](file:///x:/Career_Engine/1_RCMS/.agents/skills/ai-agent-automation/SKILL.md) | The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage latency optimization, `cleanJsonResponse`. |
-| **7** | **GitHub Actions & Watchtower CI/CD** | [github-actions-watchtower-cicd](file:///x:/Career_Engine/1_RCMS/.agents/skills/github-actions-watchtower-cicd/SKILL.md) | 3-hour cron workflow (`job-sync.yml`), `verify-turso.cjs` secret inversion auto-recovery, preflight DB ping, Watchtower 60s continuous container updates on OCI. |
-| **8** | **Oracle Cloud & Security Mastery** | [oracle-cloud-security](file:///x:/Career_Engine/1_RCMS/.agents/skills/oracle-cloud-security/SKILL.md) | OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm_size), `career-engine-vcn` ingress rules, Caddy automated Let's Encrypt SSL & HTTP/3 QUIC, Docker bridge isolation, UFW/fail2ban. |
-| **9** | **AstrePilot Extension Architecture** | [astrepilot-extension-architecture](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrepilot-extension-architecture/SKILL.md) | Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM injection (`#astrepilot-hud-host`), 6-stage HUD state machine, multi-ATS form synthesis, mandatory `esc()` XSS sanitization. |
-| **10** | **AstreShield Fraud Detection** | [astreshield-fraud-detection](file:///x:/Career_Engine/1_RCMS/.agents/skills/astreshield-fraud-detection/SKILL.md) | 4-tier detection pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries (advance fees, PII harvesting, Telegram/crypto), ghost job algorithms. |
+| **1** | **ATS Resume Maker** | [ats-resume-maker](file:///x:/Career_Engine/.agents/skills/ats-resume-maker/SKILL.md) | Single-page A4 geometry laws (297mm ceiling), 2-column flexbox hanging indent, header link pinning, Google XYZ bullets, anti-AI slop, BCA title compliance. |
+| **2** | **Landing Page Design** | [astrework-landing-page](file:///x:/Career_Engine/.agents/skills/astrework-landing-page/SKILL.md) | High-conversion hero architecture, `Idea1HeroVisual` & `DataDustBackground` canvas budgeting, Framer Motion choreography, dynamic metrics `/api/public/metrics`, responsive viewports. |
+| **3** | **Dashboard UI & Typography** | [astrework-dashboard-ui](file:///x:/Career_Engine/.agents/skills/astrework-dashboard-ui/SKILL.md) | Layout geometry (`.ce-rail` 242px, `.ce-workspace`, `.ce-header` 72px), slide-over JobDrawer (540px), `.ce-chip` metadata badges, keyboard shortcuts (`Cmd+K`, `Alt+Shift+A`). |
+| **4** | **Color Palette & Design System** | [astrework-design-system](file:///x:/Career_Engine/.agents/skills/astrework-design-system/SKILL.md) | Curated color tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode protocols, 7:1 WCAG AAA contrast, button hierarchy, glassmorphism limits. |
+| **5** | **Job Scraper Engineering** | [job-scraper-engineering](file:///x:/Career_Engine/.agents/skills/job-scraper-engineering/SKILL.md) | Multi-engine scrapers (Playwright, Puppeteer, Selenium, internal APIs), canonical URL & tuple deduplication, 48-hour rolling window, zero-discovery circuit breakers. |
+| **6** | **AI Agent Automation** | [ai-agent-automation](file:///x:/Career_Engine/.agents/skills/ai-agent-automation/SKILL.md) | The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage latency optimization, `cleanJsonResponse`. |
+| **7** | **GitHub Actions & Watchtower CI/CD** | [github-actions-watchtower-cicd](file:///x:/Career_Engine/.agents/skills/github-actions-watchtower-cicd/SKILL.md) | 3-hour cron workflow (`job-sync.yml`), `verify-turso.cjs` secret inversion auto-recovery, preflight DB ping, Watchtower 60s continuous container updates on OCI. |
+| **8** | **Oracle Cloud & Security Mastery** | [oracle-cloud-security](file:///x:/Career_Engine/.agents/skills/oracle-cloud-security/SKILL.md) | OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm_size), `career-engine-vcn` ingress rules, Caddy automated Let's Encrypt SSL & HTTP/3 QUIC, Docker bridge isolation, UFW/fail2ban. |
+| **9** | **AstrePilot Extension Architecture** | [astrepilot-extension-architecture](file:///x:/Career_Engine/.agents/skills/astrepilot-extension-architecture/SKILL.md) | Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM injection (`#astrepilot-hud-host`), 6-stage HUD state machine, multi-ATS form synthesis, mandatory `esc()` XSS sanitization. |
+| **10** | **AstreShield Fraud Detection** | [astreshield-fraud-detection](file:///x:/Career_Engine/.agents/skills/astreshield-fraud-detection/SKILL.md) | 4-tier detection pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries (advance fees, PII harvesting, Telegram/crypto), ghost job algorithms. |
+
 
 

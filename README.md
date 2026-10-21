@@ -37,12 +37,12 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
 
 ### 3. 👤 Candidate Profile & Targeted Asset Synchronization
 - **Candidate Profiles:** Seamlessly switch between **Roushan Kumar** and **Ayushi Raj** via the header `ProfileSwitcher`.
-- **Locked Resume Variant Selector:** Maps job descriptions directly to specialized resume variants in candidate disk repositories (`2_Ayushi_Raj` & `3_Roushan_Kumar`):
-  - AI Engineer / GenAI Specialist
+- **Locked Resume Variant Selector:** Maps job descriptions directly to specialized resume variants in candidate vaults (`docs/interview_vaults/`):
+  - AI Developer / GenAI Specialist
   - AI Training & Benchmark Specialist (RLHF, Scale AI)
-  - Backend & Systems Engineer (.NET, C#, Spring Boot, Java)
-  - Full Stack Engineer (React, Next.js, Node.js)
-  - Product Engineer & Startup Software Engineer
+  - Backend & Systems Developer (.NET, C#, Spring Boot, Java)
+  - Full Stack Developer (React, Next.js, Node.js)
+  - Product Developer & Startup Software Developer
 - **Empirical ATS Parseability:** Real-time PDF text layer extractability verification scoring 78,000+ characters directly from disk buffers (`isParseable: true`).
   - **1-Click PDF Variant Downloader & Previewer (`/api/resume/download`):**
     - High-speed streaming route handler with path traversal security (`path.basename()`), supporting inline viewing (`view=inline`) and direct download (`view=attachment`).
@@ -105,12 +105,12 @@ Engineered with the official **Google Antigravity Python SDK (`google-antigravit
 ### 1. Clone & Install Dependencies
 ```bash
 git clone https://github.com/Hey-Astreon/Career_Engine.git
-cd Career_Engine/1_RCMS
+cd Career_Engine
 npm install
 ```
 
 ### 2. Environment Configuration
-Create a `.env` file in `1_RCMS`:
+Create a `.env` file in the project root:
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 NEXTAUTH_SECRET="your-nextauth-secret"
@@ -218,29 +218,27 @@ npm run db:sync:turso
 
 ```text
 Career_Engine/
-├── 1_RCMS/                                  # Primary Next.js 16 Web Application
-│   ├── src/
-│   │   ├── app/                            # App Router (45 production routes)
-│   │   │   ├── (workspace)/                # Protected dashboard, match, builder, outreach
-│   │   │   └── api/                        # Scrapers, match scoring, kits, scheduler, health
-│   │   ├── components/                     # High-density UI tokens, ProfileSwitcher, Sidebar
-│   │   ├── lib/
-│   │   │   ├── providers/                  # 19 Job source providers & normalization engine
-│   │   │   ├── ai/                         # Multi-LLM router, scorer, ATS validator, drafter
-│   │   │   └── scheduler.ts                # DiscoveryScheduler singleton engine
-│   │   └── store/                          # Zustand candidate context store
-│   ├── python_agents/                      # Google Antigravity Python Agent Core (SDK)
-│   │   ├── services/                       # Oracle, Self-Healer, Headless Applier, Resume Tailorer
-│   │   ├── config.py                       # Antigravity SDK Agent configurations
-│   │   ├── main.py                         # FastAPI Agent Gateway (:8000)
-│   │   └── requirements.txt                # Python SDK dependencies
-│   ├── extension/                          # AstrePilot MV3 extension (popup, HUD, background worker)
-│   ├── scripts/dev-patches/                # Archived one-off patch scripts (not shipped)
-│   └── prisma/                             # Database schema & candidate seed data
-├── 2_Ayushi_Raj/                            # Ayushi Raj Master Profile & Document Vault
-│   └── 14_final_documents/                 # Locked tailored PDF resume variants
-└── 3_Roushan_Kumar/                         # Roushan Kumar Master Profile & Document Vault
-    └── 14_final_documents/                 # Locked tailored PDF resume variants
+├── src/
+│   ├── app/                            # App Router (59 production routes)
+│   │   ├── (workspace)/                # Protected dashboard, match, builder, outreach
+│   │   └── api/                        # Scrapers, match scoring, kits, scheduler, health
+│   ├── components/                     # High-density UI tokens, ProfileSwitcher, Sidebar
+│   ├── lib/
+│   │   ├── providers/                  # 21 Job source providers & normalization engine
+│   │   ├── ai/                         # Multi-LLM router, scorer, ATS validator, drafter
+│   │   └── scheduler.ts                # DiscoveryScheduler singleton engine
+│   └── store/                          # Zustand candidate context store
+├── python_agents/                      # Google Antigravity Python Agent Core (SDK)
+│   ├── services/                       # Oracle, Self-Healer, Headless Applier, Resume Tailorer
+│   ├── config.py                       # Antigravity SDK Agent configurations
+│   ├── main.py                         # FastAPI Agent Gateway (:8000)
+│   └── requirements.txt                # Python SDK dependencies
+├── extension/                          # AstrePilot MV3 extension (popup, HUD, background worker)
+├── prisma/                             # Database schema & candidate seed data
+├── docs/                               # System documentation & interview vaults
+│   └── interview_vaults/               # Consolidated candidate interview vaults
+├── public/                             # Static brand assets & candidate documents
+└── scripts/                            # Discovery CLI, diagnostics & migration tools
 ```
 
 ---
@@ -253,5 +251,5 @@ Career_Engine/
 ---
 
 <div align="center">
-  <sub>Built with precision, brotherhood, and relentless dedication for the modern remote software engineer.</sub>
+  <sub>Built with precision, brotherhood, and relentless dedication for the modern remote software developer.</sub>
 </div>
