@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Search, Zap, CheckCircle2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
-import Idea1HeroVisual from "@/components/Idea1HeroVisual";
+import HeroInteractiveShowcase from "@/components/HeroInteractiveShowcase";
 import DataDustBackground from "@/components/DataDustBackground";
 
 /* ── Animation Presets ── */
@@ -139,7 +139,7 @@ function ModernAgencyNavbar() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   HERO SECTION (High-Authority Typography, Zero Vibe-Coded Numbering)
+   HERO SECTION (High-Authority Typography, Human & Relatable)
    ════════════════════════════════════════════════════════════════════════════ */
 function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; totalProviders: number } }) {
   return (
@@ -157,29 +157,29 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-black/[0.08] bg-white/90 backdrop-blur-md shadow-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[12px] font-semibold tracking-wide text-[#0f0f11]">
-                Autonomous Remote Career Operating System
+                Verified Remote Roles • Zero Ghost Postings
               </span>
             </div>
           </motion.div>
 
-          {/* Luxury Editorial Headline */}
+          {/* Clean, Human & Relatable Headline */}
           <motion.h1
             variants={fadeUp}
-            className="text-[44px] sm:text-[68px] md:text-[80px] lg:text-[88px] font-semibold tracking-[-0.038em] leading-[1.04] text-[#0f0f11] mb-6 max-w-4xl mx-auto"
+            className="text-[42px] sm:text-[64px] md:text-[76px] lg:text-[84px] font-semibold tracking-[-0.038em] leading-[1.05] text-[#0f0f11] mb-6 max-w-4xl mx-auto"
           >
-            The Autonomous Career Engine{" "}
+            Land your next remote role.{" "}
             <br className="hidden sm:block" />
             <span className="text-[#0f0f11] bg-clip-text text-transparent bg-gradient-to-r from-[#0f0f11] via-[#2a2b30] to-[#52525b]">
-              for High-Velocity Builders.
+              Without the endless ghosting.
             </span>
           </motion.h1>
 
-          {/* Editorial Subtitle */}
+          {/* Simple, Clear Subtitle */}
           <motion.p
             variants={fadeUp}
             className="text-[17px] sm:text-[20px] text-[#52525b] max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
           >
-            AstreWork continuously orchestrates 21+ direct ATS feeds, neutralizes ghost postings with AstreShield fraud heuristics, and crafts single-page A4 resumes engineered to sail through enterprise parsers.
+            AstreWork searches 21+ direct company job boards, filters out ghost jobs and scams, and tests your resume against real ATS parsers so you actually get interviews.
           </motion.p>
 
           {/* Primary Action Buttons */}
@@ -188,7 +188,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
               href="/onboard"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#0f0f11] hover:bg-black text-white text-[16px] font-semibold transition-all shadow-[0_4px_20px_rgba(15,15,17,0.22)] hover:shadow-[0_8px_30px_rgba(15,15,17,0.3)] hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <span>Start Free Workspace</span>
+              <span>Find Remote Jobs</span>
               <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-white text-[13px] group-hover:translate-x-1 transition-transform">
                 →
               </span>
@@ -198,7 +198,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
               href="#discovery"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-black/10 hover:border-black/25 bg-white/80 backdrop-blur-md text-[#0f0f11] text-[15px] font-semibold transition-all hover:bg-white"
             >
-              <span>Query Discovery Matrix</span>
+              <span>Browse Live Roles</span>
               <span className="text-black/40 text-[13px]">↓</span>
             </a>
           </motion.div>
@@ -206,14 +206,14 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
           {/* 4-Metric Telemetry Strip */}
           <motion.div
             variants={fadeUp}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-14"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-12"
           >
             <div className="p-3 text-center border-r border-black/[0.04] last:border-r-0">
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
                 {metrics.totalJobsIndexed > 0 ? metrics.totalJobsIndexed.toLocaleString() : "2,840+"}
               </div>
               <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
-                Remote Roles Indexed
+                Active Remote Roles
               </div>
             </div>
 
@@ -222,34 +222,32 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
                 {metrics.totalProviders > 0 ? `${metrics.totalProviders}+` : "21+"}
               </div>
               <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
-                Direct ATS Pipelines
+                Direct Company Boards
               </div>
             </div>
 
             <div className="p-3 text-center border-r border-black/[0.04] last:border-r-0">
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
-                99.4%
+                98%
               </div>
               <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
-                AstreShield Trust Score
+                ATS Parser Pass Rate
               </div>
             </div>
 
             <div className="p-3 text-center">
               <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
-                297mm
+                Zero
               </div>
               <div className="text-[12px] font-medium text-[#71717a] mt-0.5">
-                Single-Page A4 Precision
+                Ghost Postings Allowed
               </div>
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Hero Interactive Transformation Canvas */}
-        <div className="relative mt-4">
-          <Idea1HeroVisual />
-        </div>
+        {/* Hero Interactive Transformation Showcase */}
+        <HeroInteractiveShowcase />
       </div>
     </section>
   );
@@ -284,10 +282,10 @@ function ModernAgencyMarquee() {
       <div className="max-w-7xl mx-auto px-6 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
-            Direct ATS Ingestion
+            Direct Company Boards
           </span>
           <span className="text-[12px] text-[#71717a]">
-            — Continuous Harvesting Across High-Growth Engineering
+            — Fresh Remote Roles from High-Growth Tech Teams
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#71717a]">
@@ -332,16 +330,16 @@ function ModernAgencyEngines() {
         <div className="max-w-3xl mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-[#fafafa] mb-4">
             <span className="text-[12px] font-semibold text-[#52525b]">
-              Core Intelligence Architecture
+              Job Search Without The Frustration
             </span>
           </div>
 
           <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
-            Four synchronized AI engines. <br className="hidden sm:block" />
-            One unified terminal.
+            Everything you need to land interviews. <br className="hidden sm:block" />
+            Zero spreadsheets. Zero ghosting.
           </h2>
           <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
-            Engineered from first principles to replace fragmented spreadsheets, blind applications, and ATS auto-rejections with autonomous precision.
+            Built for developers tired of sending resumes into automated black holes, filling out the same application 50 times, and getting zero callbacks.
           </p>
         </div>
 
@@ -355,15 +353,15 @@ function ModernAgencyEngines() {
                   Browser Co-Pilot
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-[11px] font-semibold">
-                  Manifest V3 • Closed Shadow DOM
+                  Manifest V3 Extension
                 </span>
               </div>
 
               <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
-                AstrePilot MV3 • In-Browser ATS Co-Pilot
+                1-Click In-Browser Autofill
               </h3>
               <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8 max-w-xl">
-                Injects an isolated HUD directly into application pages across Greenhouse, Ashby, Lever, and Workable. Automatically maps 40+ dynamic fields and autofills verified profiles in seconds with zero DOM contamination.
+                Automatically detects Greenhouse, Ashby, Lever, and Workable application pages. Fills out all form fields and attaches your tailored resume in seconds so you never re-type your history.
               </p>
             </div>
 
@@ -393,8 +391,8 @@ function ModernAgencyEngines() {
               </div>
 
               <div className="flex items-center justify-between pt-2 text-[12px] text-[#71717a]">
-                <span>Closed Shadow DOM HUD</span>
-                <span className="text-blue-600 font-semibold">Ready to Inject →</span>
+                <span>AstrePilot In-Browser Assistant</span>
+                <span className="text-blue-600 font-semibold">Ready to Autofill →</span>
               </div>
             </div>
           </div>
@@ -407,15 +405,15 @@ function ModernAgencyEngines() {
                   Fraud & Ghost Defense
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-[11px] font-semibold">
-                  Asymmetric Cost Shield
+                  Zero Fake Jobs
                 </span>
               </div>
 
               <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
-                AstreShield • Heuristic Fraud & Ghost Defense
+                Scam & Ghost Job Protection
               </h3>
               <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8">
-                4-tier algorithmic filter scanning for crypto/telegram escrow schemes, PII harvesters, and stagnant ghost jobs with 48-hour freshness verification.
+                Continuously verifies company domains, checks posting freshness, and blocks fake crypto listings and stagnant reposts. You only apply to companies actively hiring.
               </p>
             </div>
 
@@ -457,18 +455,18 @@ function ModernAgencyEngines() {
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
-                  Print Geometry
+                  Single-Page Resume
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/60 text-purple-700 text-[11px] font-semibold">
-                  Strict 297mm Ceiling
+                  A4 Print Precision
                 </span>
               </div>
 
               <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
-                ATS Resume Maker • Single-Page A4 Canvas
+                ATS-Optimized Resumes
               </h3>
               <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8">
-                Strict single-page A4 geometry (297mm ceiling) engineered for the recruiter 6-second F-scan. Employs 2-column flexbox hanging indent layouts and Google XYZ impact bullet structure.
+                Strict single-page A4 format engineered for recruiter reading patterns and automated parsers. Enforces clean single-column structure and Google XYZ impact bullet metrics.
               </p>
             </div>
 
@@ -506,7 +504,7 @@ function ModernAgencyEngines() {
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[12px] font-semibold text-[#0f0f11] tracking-wide">
-                  High-Throughput Harvester
+                  Live Job Feeds
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-amber-700 text-[11px] font-semibold">
                   21 Direct ATS Sources
@@ -514,10 +512,10 @@ function ModernAgencyEngines() {
               </div>
 
               <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
-                Discovery Matrix • Multi-Signal Deduplication
+                21+ Direct Company Feeds
               </h3>
               <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8 max-w-xl">
-                Hourly automated scrapers querying 21 direct ATS endpoints and curated job feeds with SHA-256 tuple deduplication, sub-50ms query cache, and 48-hour freshness rolling window.
+                Scrapes verified company career boards hourly — uncovering remote developer roles before they get inundated with thousands of applications on LinkedIn or Indeed.
               </p>
             </div>
 
@@ -619,10 +617,10 @@ function ModernAgencyDiscoveryStream() {
           </div>
 
           <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
-            Query the discovery matrix in real-time.
+            Search verified remote roles in real time.
           </h2>
           <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
-            Filter across 21 live ATS endpoints and experience real-time role provenance, salary transparency, and fraud verification.
+            Directly from company career boards with transparent salary ranges, verified company domains, and instant ATS match scores.
           </p>
         </div>
 
@@ -654,7 +652,7 @@ function ModernAgencyDiscoveryStream() {
                 </>
               ) : (
                 <>
-                  <span>Scan Endpoints</span>
+                  <span>Scan Live Roles</span>
                   <span className="text-white/60">→</span>
                 </>
               )}
@@ -956,12 +954,12 @@ function ModernAgencyCTA() {
 
         {/* Powerful Headline */}
         <h2 className="text-[38px] sm:text-[54px] md:text-[64px] font-semibold tracking-[-0.035em] leading-[1.08] mb-6 text-white">
-          Deploy the Autonomous Career Engine.
+          Stop getting ghosted. Start getting interviews.
         </h2>
 
         {/* Subhead */}
         <p className="text-[17px] sm:text-[20px] text-white/70 font-medium leading-relaxed mb-10 max-w-2xl mx-auto">
-          Continuous direct ATS discovery, proactive fraud neutralization, and single-page A4 precision — built for developers who take their careers seriously.
+          Verified remote jobs directly from company career pages, automated ATS resume testing, and 1-click in-browser applications — 100% free for developers.
         </p>
 
         {/* Dual Actions */}
@@ -980,7 +978,7 @@ function ModernAgencyCTA() {
             href="#discovery"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 text-white text-[15px] font-semibold transition-all backdrop-blur-md"
           >
-            <span>Explore Discovery Matrix</span>
+            <span>Browse Remote Roles</span>
             <span className="text-white/40 text-[13px]">↓</span>
           </a>
         </div>
