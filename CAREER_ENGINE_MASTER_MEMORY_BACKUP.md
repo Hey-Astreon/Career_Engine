@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 43: Persona Elevation, Powercore SKILL.md Overhaul & Inviolable Master Memory Reporting Habit, 357 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 44: The 10 Specialized Domain Mastery Skills Expansion, Satellite Powercell Network & Inviolable Memory Archive, 357 Passing Tests)
 
 ---
 
@@ -914,6 +914,88 @@ Located in `extension/`:
   - **4. Verification & Commit:**
     - Git committed (`main`) and pushed to remote `https://github.com/Hey-Astreon/Career_Engine.git`.
 
+- [x] **Phase 44: The 10 Specialized Domain Mastery Skills Expansion & Satellite Powercell Network (Oct 21, 2026)**
+  - **1. Strategic Motivation & User Mandate:**
+    - The user observed that during our work on AstreWork we faced numerous complex bugs, styling defects, alignment issues, and hard lessons across 10 critical domains.
+    - Rather than letting this hard-won experience and engineering mastery fade, the user requested creating **10 exclusive, separate specialized Skills** inside `.agents/skills/` to codify this knowledge permanently:
+      1. ATS Resume Maker & Its laws
+      2. Landing Page Design
+      3. Dashboard Design & Typography UI
+      4. Color Pallet and design
+      5. The Engineering of Job Scraper & Its Laws and Rules
+      6. 4 AI Agents Specialists & Enhancing the Automation Works
+      7. Github Actions CI CD & Watchtower
+      8. Oracle Cloud Deployment & Security Mastery
+      9. System Design and Architecture of Astrepilot & its Workflow Pipeline Engineering
+      10. Deep Engineering & System Design of Astreshield to flag out the fake remote opportunities
+  - **2. Full Creation of the 10 Standalone Specialized Skills in `.agents/skills/`:**
+    - **`ats-resume-maker` (`.agents/skills/ats-resume-maker/SKILL.md`):**
+      - Single-page A4 geometry laws (rigid 210mm x 297mm ceiling).
+      - The 60-point vertical space budget breakdown (container padding 6.0mm top / 5.0mm bottom, `<hr />` divider tightening 1.5pt 0 1.2pt, list margin reduction).
+      - Two-column hanging indent flexbox gutter layout (`10pt` bullet column + `flex: 1` category and skills column).
+      - Project header link pinning (`whiteSpace: "nowrap"`, `flexShrink: 0`, title character budget ~92 chars).
+      - Google XYZ metric bullets (20-25 words), anti-AI slop phrasing, and BCA Title Regulation enforcement.
+    - **`astrework-landing-page` (`.agents/skills/astrework-landing-page/SKILL.md`):**
+      - Pain-first conversion architecture ("Stop sending resumes into the void").
+      - `Idea1HeroVisual` & `DataDustBackground` canvas particle budgeting (max 45 particles, offscreen pause via `IntersectionObserver`).
+      - Framer Motion choreography (`FADE_UP`, `STAGGER_CONTAINER`, `useReducedMotion`).
+      - Dynamic public metrics (`/api/public/metrics` with SWR caching, 1.2s numeric count-up interpolator).
+      - Viewport responsiveness matrix (1440px desktop -> 1024px laptop -> 768px tablet -> mobile zero-overflow).
+    - **`astrework-dashboard-ui` (`.agents/skills/astrework-dashboard-ui/SKILL.md`):**
+      - Workspace geometry (`.ce-rail` 242px fixed, `.ce-header` 72px sticky glass, `.ce-workspace` fluid auto-fill).
+      - Slide-over JobDrawer (540px right panel with cubic-bezier transition).
+      - Cumulative Layout Shift (CLS) limit < 0.02 with matched skeleton loading states.
+      - Power-user keyboard registry (`Cmd+K`, `Alt+Shift+A`, `J`/`K`, `Space`, `Escape`).
+      - Responsive collapsing tiers (1460px -> 920px -> 620px mobile bottom navigation dock).
+    - **`astrework-design-system` (`.agents/skills/astrework-design-system/SKILL.md`):**
+      - Curated color tokens (`--canvas: #f7f9fc`, `--surface: #ffffff`, `--ink: #142033`, `--blue: #1d5fd1`, `--green: #13875c`, `--red: #bd3b3b`, `--amber: #a96500`, `--line: #e2e8f0`).
+      - Dark mode protocol (`[data-theme='dark']` with `--canvas: #0b0f19`, `--surface: #111827`, WCAG AAA 7:1 contrast).
+      - Font scales (Inter UI, Outfit headings, JetBrains Mono numbers/tokens).
+      - Button hierarchy (Primary Gradient, Secondary Outlined, Ghost, Danger).
+      - Glassmorphism limits (`backdrop-filter: blur(16px)` cap) and strict anti-patterns (no `#000000`, no `#ff0000`).
+    - **`job-scraper-engineering` (`.agents/skills/job-scraper-engineering/SKILL.md`):**
+      - Multi-engine hierarchy (Private API -> Lightweight HTTP -> Playwright/Puppeteer -> Stealthed Selenium).
+      - Ingestion deduplication (canonical URL stripping + SHA-256 hash, semantic tuple key `company::title::location`).
+      - 48-hour rolling freshness window (`STALE_OCCURRENCE_THRESHOLD_HOURS = 48`, `MAX_POSTING_AGE_DAYS = 30`).
+      - Zero-discovery circuit breaker (`jobsDiscovered === 0` aborts mass expiration).
+      - Isolation with `Promise.allSettled` and `tupleLocks` mutex to prevent Turso Cloud write deadlocks.
+    - **`ai-agent-automation` (`.agents/skills/ai-agent-automation/SKILL.md`):**
+      - The 4 specialized agents: Opportunity Sentry, AstreShield Guardian, Resume Tailoring Engine, Astrepilot Copilot.
+      - Multi-provider LLM routing cascade: Groq (`openai/gpt-oss-120b`, 500+ t/s) -> Gemini (`gemini-3.8-flash`, 1M ctx) -> Cerebras (`qwen-3.8-27b`) -> NVIDIA NIM (`meta/llama-4-maverick`) -> Heuristic fallback.
+      - Two-stage latency optimization: Stage 1 deterministic base match (0ms latency, $0 cost) -> Stage 2 LLM composite scoring for top affinity jobs.
+      - Anti-hallucination guardrails and `cleanJsonResponse` markdown fence stripping.
+    - **`github-actions-watchtower-cicd` (`.agents/skills/github-actions-watchtower-cicd/SKILL.md`):**
+      - Automated 3-hour cron sync (`.github/workflows/job-sync.yml` on `0 */3 * * *`).
+      - `scripts/verify-turso.cjs` automated secret inversion heuristic (detects JWT `eyJ` vs hostname `libsql://` and auto-swaps).
+      - Preflight database ping (`SELECT 1`) before launching scrapers.
+      - Watchtower continuous deployment daemon on OCI polling every 60s with `--cleanup` to purge dangling images.
+    - **`oracle-cloud-security` (`.agents/skills/oracle-cloud-security/SKILL.md`):**
+      - Dedicated OCI Ampere A1 Compute VM (4 ARM64 OCPUs, 24GB RAM, 200GB NVMe storage, Mumbai region).
+      - `shm_size: '2gb'` shared memory allocation to prevent headless Chromium crashes.
+      - Network Security Lists (`career-engine-vcn`) exposing only ports 80, 443, and key-restricted SSH port 22.
+      - Caddy automated Let's Encrypt TLS issuance, HTTP/3 (QUIC) enablement, and enterprise security headers.
+      - Multi-service Docker bridge isolation (`astrepilot_web`, `astrework_agent`, `astrework_redis`).
+    - **`astrepilot-extension-architecture` (`.agents/skills/astrepilot-extension-architecture/SKILL.md`):**
+      - Manifest V3 architecture (`background.js`, `content.js`, `hud-ui.js`).
+      - Isolated Closed Shadow DOM boundary (`#astrepilot-hud-host`) preventing host page style bleeding.
+      - Mandatory `esc()` XSS sanitization rule for all dynamic interpolations.
+      - Multi-ATS 18-type field classifier (First Name, Email, LinkedIn, Visa, Resume, Salary, etc.).
+      - 6-stage HUD state machine (`IDLE` -> `DETECTING` -> `MATCHED` -> `AUTOFILLING` -> `REVIEW_REQUIRED` -> `SUBMITTED`).
+      - 90-day HMAC-SHA256 pairing token handshake.
+    - **`astreshield-fraud-detection` (`.agents/skills/astreshield-fraud-detection/SKILL.md`):**
+      - 4-tier detection pipeline (Lexical Integrity -> Semantic Red Flags -> Structural Credibility -> AI Intent Analysis).
+      - Asymmetric cost function: False Red (blocking genuine job) causes 10x damage vs False Green (5x damage); system biased toward caution.
+      - Two-signal corroboration law: a single signal can NEVER trigger a RED rating; requires 2+ independent corroborating signals.
+      - Scam taxonomy dictionaries (advance fees, fake cashier's checks, PII harvesting, Telegram/crypto redirects, mule schemes).
+      - Ghost job heuristics (active > 90 days, 7-day cyclical reposting, vague requirements with wild salary spreads).
+  - **3. Master Governance & Powercore Integration:**
+    - Updated `AGENTS.md` with Section 8: The 10 Specialized Agent Skills & Domain Mastery Catalog with direct markdown links.
+    - Updated `.agents/skills/career-agent-expert/SKILL.md` with Section 9: The 10 Satellite Powercells (Domain Mastery Matrix) linking all 10 skills directly to the Master Powercore.
+  - **4. Verification & Testing:**
+    - Executed targeted critical test suites: `tests/resume_optimizer.test.ts`, `tests/candidate_context_privacy.test.ts`, `tests/internship-kit-tailoring.test.ts` (All Passing).
+    - Executed TypeScript check: `npx tsc --noEmit` (0 errors).
+    - Pushed to `origin main`.
+
 ---
 
 ## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
@@ -1057,6 +1139,40 @@ Located in `extension/`:
   3. **CI/CD Preflight Step:** Added an isolated preflight verification step in `.github/workflows/job-sync.yml` that performs a lightweight `SELECT count(*) FROM opportunities` before spawning scraper jobs.
 * **Engineering Experience Gained:**
   - **Rule:** Defense-in-depth configuration parsing. In automated cron pipelines, code should proactively validate and heal inverted or malformed credentials rather than throwing unhandled fatal exceptions.
+
+---
+
+### 🔴 Case 9: Specialized Domain Skills Fragmentation vs. Centralized Powercell Architecture
+* **What Happened:** Over 43 engineering phases, critical lessons across landing page aesthetics, dashboard layouts, color palettes, scraper circuit breakers, multi-LLM failover, OCI VM hardening, MV3 Shadow DOM extension UI, and fraud detection heuristics were buried across multiple PRs and commit logs, risking amnesia during session compactions.
+* **The Root Cause / Mistake:**
+  - Lacking dedicated, modular skill definitions in `.agents/skills/` tailored to specific engineering sub-systems. Monolithic prompts dilute domain-specific rules (e.g. A4 297mm height budget vs. OCI `shm_size: 2gb` vs. AstreShield asymmetric cost functions).
+* **How We Solved It:**
+  1. **Built 10 Dedicated Specialized Skills:** Authored full, typed, production-grounded markdown packages in `.agents/skills/` covering all 10 critical domains:
+     - `ats-resume-maker`: A4 geometry, 60pt space budget, hanging indent flexbox, Google XYZ metrics, BCA title law.
+     - `astrework-landing-page`: High-conversion hero architecture, `DataDustBackground` canvas budgeting, Framer Motion presets, dynamic metrics.
+     - `astrework-dashboard-ui`: Workspace geometry (`.ce-rail` 242px, `.ce-header` 72px), slide-over JobDrawer (540px), CLS < 0.02, hotkey registry.
+     - `astrework-design-system`: Curated tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`), dark mode protocols, 7:1 WCAG AAA contrast.
+     - `job-scraper-engineering`: Multi-engine scrapers (Playwright/Puppeteer/Selenium/APIs), deduplication hashes, 48-hour rolling window, circuit breakers.
+     - `ai-agent-automation`: The 4 agents (Sentry, AstreShield, Tailorer, Astrepilot), Groq/Gemini/Cerebras/NIM routing cascade, 2-stage latency optimization.
+     - `github-actions-watchtower-cicd`: 3-hour cron workflow (`job-sync.yml`), secret inversion auto-recovery, preflight DB ping, Watchtower 60s CD.
+     - `oracle-cloud-security`: OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm), Caddy automated SSL & HTTP/3 QUIC, Docker bridge isolation.
+     - `astrepilot-extension-architecture`: Manifest V3 lifecycle, closed Shadow DOM injection, 6-stage HUD state machine, mandatory `esc()` XSS sanitization.
+     - `astreshield-fraud-detection`: 4-tier pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries.
+  2. **Unified Powercore Topology:** Linked all 10 skills directly into `AGENTS.md` Section 8 and anchored them as Satellite Powercells under `career-agent-expert/SKILL.md` Section 9.
+* **Engineering Experience Gained:**
+  - **Rule:** Modularize agent intelligence into single-responsibility skill packages. Dedicated domain manuals enable surgical execution without context bloat or conflicting heuristics.
+
+---
+
+### 🔴 Case 10: Inviolable Preservation of Battle-Tested Engineering Lore (The Anti-Amnesia Imperative)
+* **What Happened:** The user pointed out that during the engineering of AstreWork, we overcame numerous intricate layout, typography, database, scraper, and security hurdles. If these hard-won lessons are not maintained in master memory time to time, future AI sessions will regress and repeat solved bugs.
+* **The Root Cause / Mistake:**
+  - Treating documentation and master memory logging as an optional "afterthought" or secondary step rather than a core engineering duty.
+* **How We Solved It:**
+  1. **Codified Mandatory Post-Task Reporting (`AGENTS.md` Section 7):** Established that after completing ANY milestone, bug fix, layout overhaul, or architectural shift, updating `CAREER_ENGINE_MASTER_MEMORY_BACKUP.md` is a mandatory, formal mission report before ending the turn.
+  2. **Synchronized Master Memory Backup:** Integrated Phase 44, Case 9, and Case 10 into the permanent cognitive vault, guaranteeing zero knowledge decay across future sessions.
+* **Engineering Experience Gained:**
+  - **Rule:** An AI pair programmer without persistent, disciplined memory logging is doomed to repeat its past mistakes. Memory synchronization is just as vital as code compilation. Never conclude a turn until master memory reflects ground truth.
 
 ---
 

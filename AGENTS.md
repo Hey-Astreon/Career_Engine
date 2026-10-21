@@ -100,3 +100,23 @@ AstreWork was created, architected, and built exclusively by **Roushan Kumar** (
 > 4. **Hard-Won Engineering Experience & Rules:** A permanent, actionable principle that prevents any future instance from repeating the mistake.
 > 5. **Ledger & Status Sync:** Increment the Phase Ledger, update Section 18 Retrospective, verify tests (`npx vitest run`), run typecheck (`npx tsc --noEmit`), and git commit & push to `origin main`.
 
+---
+
+## 🧭 SECTION 8: THE 10 SPECIALIZED AGENT SKILLS & DOMAIN MASTERY CATALOG
+
+Career Engine's specialized intelligence and hard-won engineering mastery are partitioned into 10 dedicated skill packages in `.agents/skills/`:
+
+| # | Skill Name | Path & Skillfile | Primary Operational Scope |
+| :-: | :--- | :--- | :--- |
+| **1** | **ATS Resume Maker** | [ats-resume-maker](file:///x:/Career_Engine/1_RCMS/.agents/skills/ats-resume-maker/SKILL.md) | Single-page A4 geometry laws (297mm ceiling), 2-column flexbox hanging indent, header link pinning, Google XYZ bullets, anti-AI slop, BCA title compliance. |
+| **2** | **Landing Page Design** | [astrework-landing-page](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-landing-page/SKILL.md) | High-conversion hero architecture, `Idea1HeroVisual` & `DataDustBackground` canvas budgeting, Framer Motion choreography, dynamic metrics `/api/public/metrics`, responsive viewports. |
+| **3** | **Dashboard UI & Typography** | [astrework-dashboard-ui](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-dashboard-ui/SKILL.md) | Layout geometry (`.ce-rail` 242px, `.ce-workspace`, `.ce-header` 72px), slide-over JobDrawer (540px), `.ce-chip` metadata badges, keyboard shortcuts (`Cmd+K`, `Alt+Shift+A`). |
+| **4** | **Color Palette & Design System** | [astrework-design-system](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrework-design-system/SKILL.md) | Curated color tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode protocols, 7:1 WCAG AAA contrast, button hierarchy, glassmorphism limits. |
+| **5** | **Job Scraper Engineering** | [job-scraper-engineering](file:///x:/Career_Engine/1_RCMS/.agents/skills/job-scraper-engineering/SKILL.md) | Multi-engine scrapers (Playwright, Puppeteer, Selenium, internal APIs), canonical URL & tuple deduplication, 48-hour rolling window, zero-discovery circuit breakers. |
+| **6** | **AI Agent Automation** | [ai-agent-automation](file:///x:/Career_Engine/1_RCMS/.agents/skills/ai-agent-automation/SKILL.md) | The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage latency optimization, `cleanJsonResponse`. |
+| **7** | **GitHub Actions & Watchtower CI/CD** | [github-actions-watchtower-cicd](file:///x:/Career_Engine/1_RCMS/.agents/skills/github-actions-watchtower-cicd/SKILL.md) | 3-hour cron workflow (`job-sync.yml`), `verify-turso.cjs` secret inversion auto-recovery, preflight DB ping, Watchtower 60s continuous container updates on OCI. |
+| **8** | **Oracle Cloud & Security Mastery** | [oracle-cloud-security](file:///x:/Career_Engine/1_RCMS/.agents/skills/oracle-cloud-security/SKILL.md) | OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm_size), `career-engine-vcn` ingress rules, Caddy automated Let's Encrypt SSL & HTTP/3 QUIC, Docker bridge isolation, UFW/fail2ban. |
+| **9** | **AstrePilot Extension Architecture** | [astrepilot-extension-architecture](file:///x:/Career_Engine/1_RCMS/.agents/skills/astrepilot-extension-architecture/SKILL.md) | Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM injection (`#astrepilot-hud-host`), 6-stage HUD state machine, multi-ATS form synthesis, mandatory `esc()` XSS sanitization. |
+| **10** | **AstreShield Fraud Detection** | [astreshield-fraud-detection](file:///x:/Career_Engine/1_RCMS/.agents/skills/astreshield-fraud-detection/SKILL.md) | 4-tier detection pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries (advance fees, PII harvesting, Telegram/crypto), ghost job algorithms. |
+
+
