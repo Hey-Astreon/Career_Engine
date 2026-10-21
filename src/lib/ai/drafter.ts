@@ -120,7 +120,7 @@ export function formatFormalCoverLetter(
         `I am writing to express my enthusiastic interest in the ${jobTitle} internship opportunity at ${company}. As an emerging software engineer passionate about ${skillList}, I have built rigorous hands-on projects and am eager to contribute fresh energy and rapid code execution to your engineering sprints.`
       );
       paragraphs.push(
-        `Across my personal and academic engineering initiatives, I have architected and deployed production-ready applications from scratch. In Astra Vision, I built an AST code-graph parsing engine with sandbox isolation, parsing full-stack dependency trees under 200ms. In IDBI FinSync, I co-engineered an AI wealth management dashboard with Fastify and PostgreSQL, handling concurrent updates reliably. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2).`
+        `Across my personal and academic engineering initiatives, I have architected and deployed production-ready applications from scratch. In AstreWork, I engineered a high-throughput job harvesting pipeline using Playwright and Redis 7 on Oracle Cloud (OCI), aggregating 14,000+ daily opportunities. In Astra Vision, I built an AST code-graph parsing engine with sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2).`
       );
       paragraphs.push(
         `I operate with high curiosity, rapid learning velocity, and strict automated testing standards (Jest, Pytest, TypeScript). I am available to commit full-time remote hours to this internship at ${company} without timezone or academic constraints, ready to learn alongside your senior engineers and deliver immediate value.`
@@ -133,7 +133,7 @@ export function formatFormalCoverLetter(
         `I am writing to express my enthusiastic interest in the ${jobTitle} position at ${company}. As a ${candidate.title}, I specialize in engineering resilient software architectures with a strong focus on ${skillList}. I have followed ${company}'s engineering initiatives with great admiration and am eager to contribute directly to your product roadmap.`
       );
       paragraphs.push(
-        `Across my technical work, I have architected and shipped high-performance systems from the ground up. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In IDBI FinSync, I co-engineered an AI wealth management dashboard with Fastify microservices and PostgreSQL transaction ledgers, handling concurrent balance updates reliably. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2), guaranteeing user data privacy through client-side encryption.`
+        `Across my technical work, I have architected and shipped high-performance systems from the ground up. In AstreWork, I engineered a distributed career platform and AstrePilot Chrome Extension (MV3) on Oracle Cloud with sub-50ms API response times. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2), guaranteeing user data privacy through client-side encryption.`
       );
       paragraphs.push(
         `I operate with high autonomy, automated test discipline (xUnit, Jest, Pytest), and clean architectural design patterns. Because of my flexible schedule, I am available to commit full-time remote hours to ${company} without timezone or academic constraints, bringing immediate shipping velocity and rigorous code quality to your team.`
@@ -179,8 +179,8 @@ export function generateRecruiterMessage(
   const portfolio = candidate.portfolioUrl || "portfolio";
   const github = candidate.githubUrl || "github";
 
-  const p1 = candidate.masterProjects[0] || { title: "Astra Vision", architecture: "AST code-graph parsing engine and isolated runtime sandbox" };
-  const p2 = candidate.masterProjects[1] || { title: "IDBI FinSync", architecture: "AI-integrated wealth management engine with PostgreSQL ledgers" };
+  const p1 = candidate.masterProjects[0] || { title: "AstreWork", architecture: "Distributed career platform and headless harvester on Oracle Cloud" };
+  const p2 = candidate.masterProjects[1] || { title: "Astra Vision", architecture: "AST code-graph parsing engine and isolated runtime sandbox" };
 
   const tier = determineEarlyCareerTier(jobTitle, jobDescription);
   const isIntern = tier === EarlyCareerTier.TIER_1_INTERNSHIP;
@@ -234,8 +234,8 @@ export function generateColdEmail(
   const portfolio = candidate.portfolioUrl || "portfolio";
   const github = candidate.githubUrl || "github";
 
-  const p1 = candidate.masterProjects[0] || { title: "Astra Vision", architecture: "AST code parsing with isolated runtime sandboxes under 200ms" };
-  const p2 = candidate.masterProjects[1] || { title: "IDBI FinSync", architecture: "Fastify/PostgreSQL ledgers handling concurrent transactions safely" };
+  const p1 = candidate.masterProjects[0] || { title: "AstreWork", architecture: "Autonomous career engine on OCI with Playwright and Redis 7" };
+  const p2 = candidate.masterProjects[1] || { title: "Astra Vision", architecture: "AST code parsing with isolated runtime sandboxes under 200ms" };
   const p3 = candidate.masterProjects[2] || { title: "Alyra Lock", architecture: "Client-side zero-knowledge vault utilizing Web Crypto AES-GCM (256-bit)" };
 
   return `Subject: ${jobTitle} (${skillSubject}) — ${candidate.fullName} (Portfolio & Systems Demos)

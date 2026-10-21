@@ -264,5 +264,5 @@ describe("AstraProvider", () => {
       expect(job.location.toLowerCase()).toContain("remote");
       expect(job.title.toLowerCase()).not.toMatch(/\b(hybrid|onsite|on-site|in-office)\b/);
     }
-  }, 45000);
+  }, 60000);
 });

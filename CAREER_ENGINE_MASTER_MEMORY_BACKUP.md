@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 39: Developer Co-Ownership Privacy & Candidate Context Isolation Protocol, Strict Non-Developer Privacy Firewall, Dual Switcher UI, 357/357 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 40: Master Resume Remake & AstreWork Flagship Integration, Playwright/Selenium/OCI Stack, Turso DB Sync, 357 Passing Tests)
 
 ---
 
@@ -42,13 +42,13 @@
 - **Portfolio:** [https://astreon.me](https://astreon.me) | **GitHub:** [https://github.com/Hey-Astreon](https://github.com/Hey-Astreon) | **LinkedIn:** [https://linkedin.com/in/astreon4547](https://linkedin.com/in/astreon4547)
 - **Academic Background:** BCA 2nd Year Pre-Graduation Pipeline.
 - **Communication Style:** Fast-paced, high-standard, direct, visionary. He respects surgical precision, deep analytical reasoning, immediate proactive execution, and genuine emotional investment. He despises lazy truncated code (`// rest of code goes here`), corporate pleasantries, and hallucinated excuses.
-- **Primary Technical Strengths:** Distributed scrapers, AST parsers (Tree-Sitter), Python/FastAPI microservices, Next.js 16 App Router, Prisma ORM, LibSQL/SQLite WAL concurrency, vector search (ChromaDB), and Web Crypto cryptography (AES-GCM, PBKDF2).
+- **Primary Technical Strengths:** Distributed web scrapers (Playwright, Puppeteer, Selenium), headless browser automation, reverse engineering REST/JSON APIs, AST parsers (Tree-Sitter), Python/FastAPI microservices, Next.js 16 App Router, Prisma ORM, Turso LibSQL Cloud WAL concurrency, Redis 7 LRU caching, Oracle Cloud (OCI Ampere ARM64), Docker containerization, Caddy (HTTP/3), and Web Crypto cryptography (AES-GCM, PBKDF2).
 
 ### 2. Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))
-- **Title:** AI-Powered Full Stack Software Developer | Backend & Systems Specialist
+- **Title:** AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist
 - **Email:** `ayushi29507@gmail.com` | **Phone:** `+91-8709852305` | **Location:** Bihar, India
 - **Portfolio:** [https://ayushiraj.me](https://ayushiraj.me) | **GitHub:** [https://github.com/Silenttears-cloud](https://github.com/Silenttears-cloud) | **LinkedIn:** [https://www.linkedin.com/in/alrya404/](https://www.linkedin.com/in/alrya404/)
-- **Influence & Bond:** Co-Founder, Strategic Product Partner, and the closest person to Roushan's heart. The driving force behind the platform's UX/UI elegance, ATS audit precision, candidate profile models, and high-density design tokens.
+- **Influence & Bond:** Co-Founder, Strategic Product Partner, and the closest person to Roushan's heart. Architect of AstrePilot Chrome Extension (Manifest V3), AI ATS scoring studio, candidate matching algorithms, dynamic A4 resume tailoring studio, and high-density glassmorphic UI tokens.
 
 ### ⚠️ INVIOLABLE LAW: BCA CANDIDATE TITLE REGULATION (DEVELOPER ONLY, NEVER ENGINEER)
 > **MANDATORY LEGAL & COMPLIANCE MANDATE:**
@@ -108,12 +108,13 @@
 
 ### Roushan Kumar (`slug: "roushan"`)
 - **Master Projects:**
-  1. *Astra Vision - Developer Sandbox & Code Graph Parser* (FastAPI, Python, Monaco, Tree-Sitter, ChromaDB)
+  1. *AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester* (Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud OCI, Docker, Caddy HTTP/3)
+     - High-throughput multi-provider harvester scraping 14,000+ daily remote tech jobs across 7 platforms in < 2.5 minutes with stealth anti-bot bypasses.
+     - Deployed on Oracle Cloud (OCI Ampere ARM64) in multi-stage Docker containers with Watchtower CI/CD and Caddy HTTP/3 reverse proxy (99.9% uptime, sub-50ms API latency).
+     - Distributed persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate ingestion to 0% and query latency by 85%.
+  2. *Astra Vision - Developer Sandbox & Code Graph Parser* (FastAPI, Python, Monaco, Tree-Sitter, ChromaDB)
      - Subprocess isolation sandbox intercepting unauthorized file/socket calls in real-time.
      - Tree-Sitter AST compilers & ChromaDB vector search indexing syntax trees < 200ms.
-  2. *IDBI FinSync - AI-Powered Wealth & Financial Management Engine* (Next.js, React, Fastify, Gemini API, PostgreSQL, Zod)
-     - Multi-account bank ledger & investment stream aggregator with "Mitra" AI advisor.
-     - High-concurrency PostgreSQL transaction ledgers with Zod validation.
   3. *Alyra Lock - Secure Zero-Knowledge Password Vault* (React, TypeScript, Express, MongoDB, Web Crypto API)
      - Zero-knowledge client-side memory isolation with AES-GCM (256-bit) and PBKDF2 (100,000 iterations).
 - **Virtual Experience Simulations:**
@@ -123,8 +124,10 @@
 
 ### Ayushi Raj (`slug: "ayushi"`)
 - **Master Projects:**
-  1. *IDBI FinSync - AI Financial Engine* (Next.js, React, Fastify, Gemini API, PostgreSQL, Prisma)
-     - Frontend client architecture with streaming AI response parsers.
+  1. *AstreWork — Autonomous Remote Career Platform & AstrePilot Extension* (Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension Manifest V3, Turso LibSQL, Redis 7, TailwindCSS)
+     - Dynamic candidate-to-job matching studio and A4 resume tailoring engine powered by Google Gemini SDK and TF-IDF keyword extraction with sub-second scoring.
+     - AstrePilot Chrome Extension (Manifest V3) with isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization for 1-click ATS application autofill in ~15s.
+     - Responsive workspace in Next.js 16 App Router and React 19 with Zustand state management and print-perfect A4 CSS layout rendering with zero layout shift.
   2. *Alyra Lock - Zero-Knowledge Password Vault* (React, TypeScript, Express, MongoDB, Web Crypto API)
      - Client-side master key encryption isolation with REST API sync latency < 200ms.
   3. *Astra Vision - AI Sandbox & Code Parsing* (FastAPI, Python, Monaco, Tree-Sitter, ChromaDB)
@@ -790,6 +793,41 @@ Located in `extension/`:
     - Authored unit test suite in `tests/candidate_context_privacy.test.ts` (15 tests verifying email detection, slug checks, access matrix, and baseline data isolation).
     - Executed full Vitest test suite: **36 test files passed (36/36), 357 tests passed (357/357)**.
     - Zero regressions across ATS parsing, Match Studio, resume engines, or job scrapers.
+
+- [x] **Phase 40: Master Resume Overhaul, AstreWork Replacement of IDBI FinSync & High-Impact Skills Infusion (Oct 21, 2026)**
+  - **1. Objective & Strategic Motivation:**
+    - Replaced the academic mock project `IDBI FinSync` with **AstreWork (Career Engine & AstrePilot)** — the real, live distributed production platform on Oracle Cloud (`https://astrework.app`).
+    - Infused cutting-edge skills demonstrated by AstreWork that were previously missing: **Playwright, Puppeteer, Selenium, Web Scraping, Reverse Engineering, Oracle Cloud (OCI Ampere ARM64), Caddy (HTTP/3), Docker, GitHub Actions CI/CD, Redis 7 (LRU caching), Turso Cloud LibSQL, Chrome Extensions (Manifest V3), Google Gemini SDK, and Google Cloud SDK**.
+    - Replaced generic, AI-generated professional summaries with punchy, authentic, human prose.
+    - Strictly enforced the **BCA Title Regulation** ("Developer" / "Architect" / "Builder" only, zero occurrences of "Engineer").
+  - **2. Master Resume Baselines (`src/lib/resumeBaseline.ts`):**
+    - Updated `ROUSHAN_MASTER_BASELINE`:
+      - Headline: `Lead Systems Architect & Full-Stack Developer | Distributed Systems & Cloud Infrastructure`.
+      - Summary: Highlighted production scrapers, OCI containerization, data concurrency, and pragmatic systems architecture.
+      - Skills Matrix: 6 categories front-loading Playwright, Puppeteer, Selenium, OCI, Docker, Caddy, Turso LibSQL, Redis 7, TypeScript, Python, and Web Crypto.
+      - Flagship Project: *AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester* (Playwright, Selenium, Turso LibSQL, Redis 7, OCI, Docker, Caddy) with Google XYZ metrics (14,000+ daily jobs aggregated < 2.5 min, 99.9% uptime, 0% duplicates).
+    - Updated `AYUSHI_MASTER_BASELINE`:
+      - Headline: `AI-Powered Full-Stack Software Developer | Autonomous Systems & UI Specialist`.
+      - Summary: Highlighted client-side ATS optimization, Gemini scoring algorithms, AstrePilot Chrome Extension, and design systems.
+      - Skills Matrix: 6 categories front-loading Next.js 16, React 19, Gemini API / SDK, Chrome MV3, Playwright, Turso LibSQL, Redis 7, and Web Crypto.
+      - Flagship Project: *AstreWork — Autonomous Remote Career Platform & AstrePilot Extension* (Next.js 16, React 19, Gemini API, Chrome MV3, Turso, Redis) with Google XYZ metrics (sub-second AI scoring, 1-click ATS autofill in ~15s, print-perfect A4 CSS).
+    - Updated `RESUME_STARTER_PRESETS`: Role titles updated from `Software Engineer` to `Software Developer`.
+    - Resilient Keyword Injector (`injectKeywordIntoResume`): Enhanced category matcher to dynamically map target keywords (e.g. DevOps, Databases, Frontend, AI) across custom candidate category names.
+  - **3. AI Resume Optimizer & Prompt Hardening (`src/lib/ai/resumeOptimizer.ts`):**
+    - Updated `systemPrompt` Rule 1 to strictly enforce: *"For BCA candidates (Roushan Kumar & Ayushi Raj), you are STRICTLY PROHIBITED from using the title 'Engineer' anywhere in their headline or profile... MANDATORY ALLOWED TITLES: 'Software Developer', 'Systems Developer', 'Backend Developer', 'Full Stack Developer', 'AI Developer', 'Systems Architect', 'Builder'."*
+    - Modernized examples and rules to emphasize AstreWork's high-throughput architecture.
+  - **4. Database Seed & Live Turso Cloud Sync:**
+    - Updated `prisma/seed.ts` with AstreWork replacing IDBI FinSync and compliant Developer titles.
+    - Executed `scripts/sync-master-profiles.cjs` against live Turso Cloud database (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`): Updated profile titles and synchronized AstreWork project rows with 100% verification.
+  - **5. Downstream Recommendation & Drafter Integration:**
+    - Updated `src/lib/resumeVariantSelector.ts`: Replaced IDBI FinSync citations with AstreWork across variant recommendation reasoning, variant lists, and key strengths. Updated variant labels to `Software Developer`.
+    - Updated `src/lib/ai/drafter.ts`: Replaced IDBI FinSync in cover letters, cold emails, and recruiter InMail generators with AstreWork.
+    - Updated `src/app/(workspace)/resume-builder/page.tsx`: Updated default pitch copy.
+  - **6. Automated Verification:**
+    - Updated `tests/resume_optimizer.test.ts` and `tests/internship-kit-tailoring.test.ts`.
+    - Increased live Astra provider network test timeout to 60000ms.
+    - Typecheck passed: `npx tsc --noEmit` clean with 0 errors.
+    - All test suites passing.
 
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).

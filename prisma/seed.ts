@@ -11,7 +11,7 @@ async function main() {
     where: { slug: "roushan" },
     update: {
       fullName: "ROUSHAN KUMAR",
-      title: "Systems Engineer | Backend Architect | AI Developer Tools Specialist",
+      title: "Lead Systems Architect & Full-Stack Developer",
       email: "roushanraut404@gmail.com",
       phone: "+91-9431483512",
       location: "Patna, Bihar, India",
@@ -23,7 +23,7 @@ async function main() {
     create: {
       slug: "roushan",
       fullName: "ROUSHAN KUMAR",
-      title: "Systems Engineer | Backend Architect | AI Developer Tools Specialist",
+      title: "Lead Systems Architect & Full-Stack Developer",
       email: "roushanraut404@gmail.com",
       phone: "+91-9431483512",
       location: "Patna, Bihar, India",
@@ -39,6 +39,19 @@ async function main() {
     data: [
       {
         profileId: roushan.id,
+        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester",
+        techStack: "Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud (OCI), Docker, Caddy",
+        liveDemoUrl: "https://astrework.app",
+        githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
+        architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
+        bulletPoints: JSON.stringify([
+          "Distributed Harvester & Headless Automation: Engineered a high-throughput multi-provider job harvesting pipeline utilizing Playwright, Puppeteer, and Selenium with stealth anti-bot bypasses, scraping and aggregating 14,000+ remote opportunities daily across 7 platforms in < 2.5 minutes.",
+          "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
+          "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%."
+        ]),
+      },
+      {
+        profileId: roushan.id,
         title: "Astra Vision - Developer Sandbox & Code Graph Parser",
         techStack: "FastAPI, Python, Monaco, Tree-Sitter, ChromaDB",
         liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
@@ -48,19 +61,6 @@ async function main() {
           "Product Architecture: Architected an automated code-parsing platform and browser sandbox that allows developers to safely execute untrusted code while visualizing full-stack repository dependency graphs.",
           "Sandbox Runtime Challenge: Built a self-healing Python execution engine with subprocess isolation and security checkpoints to intercept unauthorized OS file system calls and network socket requests in real time.",
           "Indexing Performance: Integrated Tree-Sitter AST compilers and ChromaDB vector search to parse repository syntax nodes, enabling instant code graph dependency analysis under 200ms."
-        ]),
-      },
-      {
-        profileId: roushan.id,
-        title: "IDBI FinSync - AI-Powered Wealth & Financial Management Engine",
-        techStack: "Next.js, React, Fastify, Gemini API, PostgreSQL, Zod",
-        liveDemoUrl: "https://idbi-fin-sync-web.vercel.app/",
-        githubUrl: "https://github.com/Hey-Astreon/IDBI-FinSync",
-        architecture: "Monorepo application unifying bank ledgers and investment streams with Gemini AI wealth consultant.",
-        bulletPoints: JSON.stringify([
-          "Product Architecture: Co-created an intelligent personal financial management web app in a monorepo that unifies bank ledgers, investment portfolios, and expense streams into a live interactive dashboard.",
-          "AI Integration Challenge: Embedded 'Mitra,' an interactive AI wealth consultant leveraging Gemini API to analyze spending habits, detect budget anomalies, and deliver personalized financial guidance.",
-          "Database & Concurrency: Designed PostgreSQL transaction ledgers validated by Zod schemas and Fastify microservice endpoints, handling concurrent balance updates with zero data loss."
         ]),
       },
       {
@@ -117,7 +117,7 @@ async function main() {
     where: { slug: "ayushi" },
     update: {
       fullName: "AYUSHI RAJ",
-      title: "AI-Powered Full Stack Software Engineer | Backend & Systems Specialist",
+      title: "AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist",
       email: "ayushi29507@gmail.com",
       phone: "+91-8709852305",
       location: "Bihar, India",
@@ -129,7 +129,7 @@ async function main() {
     create: {
       slug: "ayushi",
       fullName: "AYUSHI RAJ",
-      title: "AI-Powered Full Stack Software Engineer | Backend & Systems Specialist",
+      title: "AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist",
       email: "ayushi29507@gmail.com",
       phone: "+91-8709852305",
       location: "Bihar, India",
@@ -145,15 +145,15 @@ async function main() {
     data: [
       {
         profileId: ayushi.id,
-        title: "IDBI FinSync - AI-Powered Wealth & Financial Management Engine",
-        techStack: "Next.js, React, Fastify, Gemini API, PostgreSQL, Prisma",
-        liveDemoUrl: "https://idbi-fin-sync-web.vercel.app/",
-        githubUrl: "https://github.com/Silenttears-cloud/IDBI-FinSync",
-        architecture: "Financial tracking dashboard within a TypeScript monorepo connecting Fastify REST routes to a React frontend with Gemini AI consultant.",
+        title: "AstreWork — Autonomous Remote Career Platform & AstrePilot Extension",
+        techStack: "Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension (Manifest V3), Turso LibSQL, Redis 7, TailwindCSS",
+        liveDemoUrl: "https://astrework.app",
+        githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
+        architecture: "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bulletPoints: JSON.stringify([
-          "Product Architecture: Co-developed an intelligent financial tracking dashboard in a TypeScript monorepo, connecting a Fastify backend API to a responsive React frontend client.",
-          "AI Integration Challenge: Implemented application-side integration for 'Mitra' AI advisor using Gemini API to analyze balance and financial metrics, designing custom client-side parsing for streaming AI responses.",
-          "Database & Concurrency: Structured PostgreSQL transaction ledgers with Prisma ORM and Fastify microservice endpoints to process concurrent balance updates reliably."
+          "AI Scoring & ATS Optimization Studio: Architected an intelligent candidate-to-job matching engine and dynamic A4 resume tailoring studio powered by Google Gemini SDK and TF-IDF keyword extraction, evaluating job postings against candidate profiles with sub-second scoring.",
+          "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
+          "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift."
         ]),
       },
       {

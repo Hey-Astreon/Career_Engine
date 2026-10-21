@@ -87,7 +87,7 @@ export function getMasterResumeBaseline(
     return {
       header: {
         fullName: "AYUSHI RAJ",
-        targetHeadline: "AI-Powered Full Stack Software Developer | Backend & Systems Specialist",
+        targetHeadline: "AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist",
         location: "Bihar, India",
         phone: "+91-8709852305",
         email: "ayushi29507@gmail.com",
@@ -96,43 +96,43 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://www.linkedin.com/in/alrya404/",
       },
       summary:
-        "Full-Stack Developer with a strong focus on backend systems, cryptographic security, and AI-integrated web applications. Has independently shipped production-grade projects spanning financial platforms, zero-knowledge vaults, and code-parsing sandboxes — each built to solve a real engineering problem end-to-end. Brings hands-on experience from structured engineering simulations at Commonwealth Bank, YC (Shiptivity), and Walmart, and gravitates toward roles where system design and developer tooling intersect.",
+        "Full-Stack Software Developer specializing in AI-integrated web applications, autonomous browser extensions, and high-craft user interfaces. Co-creator of AstreWork, having engineered its client-side ATS optimization engine, Gemini-powered scoring algorithms, and the AstrePilot Chrome Extension. Combines deep attention to frontend performance and design systems with robust backend APIs, secure state management, and real-world developer tooling.",
       skills: [
         {
-          categoryName: "Backend & Systems",
-          skillsText: "Node.js • Express.js • Fastify • Python (FastAPI) • C# (.NET Core) • Java (Spring Boot) • REST APIs",
+          categoryName: "Full-Stack & UI Architecture",
+          skillsText: "Next.js 16 (App Router) • React 19 • TypeScript • JavaScript • Zustand • TailwindCSS • Monaco Editor • HTML5/CSS3",
         },
         {
-          categoryName: "Databases & Caching",
-          skillsText: "Redis • PostgreSQL • MongoDB • SQLite • Supabase • Schema Design (3NF)",
+          categoryName: "AI Integration & Tooling",
+          skillsText: "Google Gemini API / SDK • Prompt Engineering • ATS Scoring Algorithms • Multi-Model Routing • Vector Search (ChromaDB)",
         },
         {
-          categoryName: "Languages",
-          skillsText: "C • Rust • TypeScript • JavaScript • Python • C# • Java • SQL • HTML5 • CSS3",
+          categoryName: "Browser Extensions & Automation",
+          skillsText: "Chrome Extensions (Manifest V3) • Shadow DOM Injection • Playwright • Puppeteer • DOM Parsing • Cheerio",
         },
         {
-          categoryName: "Frontend UI & Full Stack",
-          skillsText: "React.js • Next.js • Express.js • Redux • Monaco Editor • TailwindCSS • Bootstrap",
+          categoryName: "Backend & APIs",
+          skillsText: "Node.js • Fastify • Express.js • Python (FastAPI) • RESTful APIs • C# (.NET Core) • Java (Spring Boot)",
         },
         {
-          categoryName: "Testing & DevOps",
-          skillsText: "Jest • PyTest • xUnit • Moq • JUnit 5 • Docker • CI/CD • GCP • Git • Vercel • Render",
+          categoryName: "Databases, Caching & Cloud",
+          skillsText: "Turso LibSQL • Redis 7 (LRU) • PostgreSQL • MongoDB • SQLite (WAL) • Prisma ORM • Oracle Cloud (OCI) • Docker",
         },
         {
-          categoryName: "AI Gateway & Security",
-          skillsText: "Multi-Model Routing • Prometheus Telemetry • Web Crypto API (AES-GCM) • PBKDF2 • JWT Auth",
+          categoryName: "Security & Quality Assurance",
+          skillsText: "Web Crypto API (AES-GCM, PBKDF2) • HMAC-SHA256 Auth • JWT • Vitest • Jest • PyTest • xUnit • Moq",
         },
       ],
       projects: [
         {
-          title: "IDBI FinSync - AI-Powered Wealth & Financial Management Engine (Next.js, React, Fastify, Gemini API)",
-          techStack: "Next.js, React, Fastify, Gemini API, PostgreSQL, Prisma",
-          liveDemoUrl: "https://idbi-fin-sync-web.vercel.app/",
-          githubUrl: "https://github.com/Silenttears-cloud/IDBI-FinSync",
+          title: "AstreWork — Autonomous Remote Career Platform & AstrePilot Extension (Next.js 16, React 19, Gemini API, Chrome MV3, Turso, Redis)",
+          techStack: "Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension (Manifest V3), Turso LibSQL, Redis 7, TailwindCSS",
+          liveDemoUrl: "https://astrework.app",
+          githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
           bullets: [
-            "Product Architecture: Co-developed an intelligent financial tracking dashboard in a TypeScript monorepo, connecting a Fastify backend API to a responsive React frontend client.",
-            "AI Integration Challenge: Implemented application-side integration for 'Mitra' AI advisor using Gemini API to analyze balance and financial metrics, designing custom client-side parsing for streaming AI responses.",
-            "Database & Concurrency: Structured PostgreSQL transaction ledgers with Prisma ORM and Fastify microservice endpoints to process concurrent balance updates reliably.",
+            "AI Scoring & ATS Optimization Studio: Architected an intelligent candidate-to-job matching engine and dynamic A4 resume tailoring studio powered by Google Gemini SDK and TF-IDF keyword extraction, evaluating job postings against candidate profiles with sub-second scoring.",
+            "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
+            "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift.",
           ],
         },
         {
@@ -204,7 +204,7 @@ export function getMasterResumeBaseline(
     return {
     header: {
       fullName: "ROUSHAN KUMAR",
-      targetHeadline: "Systems Developer | Backend Architect | AI Developer Tools Specialist",
+      targetHeadline: "Lead Systems Architect & Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
       location: "Patna, Bihar, India",
       phone: "+91-9431483512",
       email: "roushanraut404@gmail.com",
@@ -213,34 +213,45 @@ export function getMasterResumeBaseline(
       linkedinUrl: "https://linkedin.com/in/astreon4547",
     },
     summary:
-      "Backend-focused Developer with hands-on experience building production systems across distributed APIs, cryptographic security, and AI tooling — projects that have reached real users and solved real problems. Has contributed to engineering simulations for Commonwealth Bank, YC (Shiptivity), and Walmart, working through actual codebases and delivering measurable outcomes. Drawn to roles at the intersection of system reliability and developer experience, with a particular interest in how software handles scale, concurrency, and security at the infrastructure layer.",
+      "Full-Stack Systems Developer with hands-on experience designing and operating distributed web scrapers, cloud infrastructure, and developer automation tools. Creator of AstreWork, a live production platform on Oracle Cloud running containerized headless browser pipelines that process tens of thousands of postings daily. Approaches software engineering with a focus on high-throughput reliability, data pipeline concurrency, and pragmatic systems architecture.",
     skills: [
       {
-        categoryName: "Backend & Systems",
-        skillsText: "C# (.NET Core Web API) • Java (Spring Boot) • Python (FastAPI) • Node.js • Fastify • Express.js • REST APIs",
+        categoryName: "Distributed Systems & Automation",
+        skillsText: "Playwright • Puppeteer • Selenium • Web Scraping • Reverse Engineering • REST APIs • Microservices",
+      },
+      {
+        categoryName: "Cloud, DevOps & Containers",
+        skillsText: "Oracle Cloud (OCI ARM64) • Docker • Caddy (HTTP/3) • GitHub Actions CI/CD • Watchtower • Google Cloud SDK • Linux/Bash",
       },
       {
         categoryName: "Databases & Caching",
-        skillsText: "PostgreSQL • MongoDB • Redis • SQLite • Supabase • Schema Design (3NF)",
+        skillsText: "Turso Cloud LibSQL • Redis 7 (LRU) • PostgreSQL • MongoDB • SQLite (WAL) • Prisma ORM • Schema Design (3NF)",
       },
       {
-        categoryName: "Languages",
-        skillsText: "C • Rust • C# • Java • Python • JavaScript • TypeScript • SQL • HTML5 • CSS3",
+        categoryName: "Languages & Runtimes",
+        skillsText: "TypeScript • JavaScript • Python (FastAPI) • C# (.NET Core) • Java (Spring Boot) • C • Rust • SQL",
       },
       {
-        categoryName: "Frontend UI & Full Stack",
-        skillsText: "React.js • Next.js • Express.js • Redux • Monaco Editor • TailwindCSS • Bootstrap",
+        categoryName: "Frontend & State Management",
+        skillsText: "Next.js 16 (App Router) • React 19 • Zustand • Redux • Monaco Editor • TailwindCSS • HTML5/CSS3",
       },
       {
-        categoryName: "Testing & DevOps",
-        skillsText: "xUnit • Moq • JUnit 5 • PyTest • Jest • Docker • CI/CD • GCP • Git • Gradle • Vercel • Render",
-      },
-      {
-        categoryName: "AI Tooling & Security",
-        skillsText: "Gemini API • Tree-Sitter AST • Web Crypto API (AES-GCM) • PBKDF2 • JWT • Prompt Engineering",
+        categoryName: "AI Systems, Testing & Security",
+        skillsText: "Google Gemini API • Tree-Sitter AST • Web Crypto API (AES-GCM, PBKDF2) • HMAC-SHA256 • Vitest • PyTest • xUnit",
       },
     ],
     projects: [
+      {
+        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (Next.js 16, TypeScript, Turso LibSQL, Redis, OCI, Docker)",
+        techStack: "Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud (OCI), Docker, Caddy (HTTP/3)",
+        liveDemoUrl: "https://astrework.app",
+        githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
+        bullets: [
+          "Distributed Harvester & Headless Automation: Engineered a high-throughput multi-provider job harvesting pipeline utilizing Playwright, Puppeteer, and Selenium with stealth anti-bot bypasses, scraping and aggregating 14,000+ remote opportunities daily across 7 platforms in < 2.5 minutes.",
+          "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
+          "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%.",
+        ],
+      },
       {
         title: "Astra Vision - Developer Sandbox & Code Graph Parser (FastAPI, Python, Monaco, Tree-Sitter)",
         techStack: "FastAPI, Python, Monaco, Tree-Sitter, ChromaDB",
@@ -250,17 +261,6 @@ export function getMasterResumeBaseline(
           "Product Architecture: Architected an automated code-parsing platform and browser sandbox that allows developers to safely execute untrusted code while visualizing full-stack repository dependency graphs.",
           "Sandbox Runtime Challenge: Built a self-healing Python execution engine with subprocess isolation and security checkpoints to intercept unauthorized OS file system calls and network socket requests in real time.",
           "Indexing Performance: Integrated Tree-Sitter AST compilers and ChromaDB vector search to parse repository syntax nodes, enabling instant code graph dependency analysis under 200ms.",
-        ],
-      },
-      {
-        title: "IDBI FinSync - AI-Powered Wealth & Financial Management Engine (Next.js, React, Fastify, Gemini API)",
-        techStack: "Next.js, React, Fastify, Gemini API, PostgreSQL, Zod",
-        liveDemoUrl: "https://idbi-fin-sync-web.vercel.app/",
-        githubUrl: "https://github.com/Hey-Astreon/IDBI-FinSync",
-        bullets: [
-          "Product Architecture: Co-created an intelligent personal financial management web app in a monorepo that unifies bank ledgers, investment portfolios, and expense streams into a live interactive dashboard.",
-          "AI Integration Challenge: Embedded \"Mitra,\" an interactive AI wealth consultant leveraging Gemini API to analyze spending habits, detect budget anomalies, and deliver personalized financial guidance.",
-          "Database & Concurrency: Designed PostgreSQL transaction ledgers validated by Zod schemas and Fastify microservice endpoints, handling concurrent balance updates with zero data loss.",
         ],
       },
       {
@@ -556,11 +556,26 @@ export function injectKeywordIntoResume(
   ) {
     targetCategory = resume.skills.some((s) => s.categoryName.includes("AI Tooling"))
       ? "AI Tooling & Security"
-      : "AI Gateway & Security";
+      : "AI Integration & Tooling";
   }
 
+  // Find the best matching category from the candidate's existing categories
+  const targetCatObj = resume.skills.find((c) => {
+    const cName = c.categoryName.toLowerCase();
+    const tName = targetCategory.toLowerCase();
+    if (cName === tName) return true;
+    if (tName.includes("database") && (cName.includes("database") || cName.includes("caching"))) return true;
+    if (tName.includes("devops") && (cName.includes("devops") || cName.includes("cloud") || cName.includes("testing") || cName.includes("assurance") || cName.includes("security"))) return true;
+    if (tName.includes("frontend") && (cName.includes("frontend") || cName.includes("full-stack") || cName.includes("ui"))) return true;
+    if (tName.includes("backend") && (cName.includes("backend") || cName.includes("systems") || cName.includes("apis") || cName.includes("automation"))) return true;
+    if (cName.includes("ai") && (tName.includes("ai") || lower.includes("ai") || lower.includes("gemini") || lower.includes("llm"))) return true;
+    return false;
+  }) || resume.skills[0];
+
+  const matchedCategoryName = targetCatObj ? targetCatObj.categoryName : targetCategory;
+
   const updatedSkills = resume.skills.map((cat) => {
-    if (cat.categoryName.toLowerCase() === targetCategory.toLowerCase()) {
+    if (cat.categoryName.toLowerCase() === matchedCategoryName.toLowerCase()) {
       if (!cat.skillsText.toLowerCase().includes(lower)) {
         return {
           ...cat,
@@ -603,7 +618,7 @@ export const RESUME_STARTER_PRESETS: ResumePreset[] = [
     id: "systems_backend",
     name: "Systems & Backend Architect",
     badge: "TIER-1 CORE",
-    roleTitle: "Systems & Backend Software Engineer",
+    roleTitle: "Systems & Backend Software Developer",
     description: "Tailored for high-throughput microservices, C#/.NET Core, Java Spring, FastAPI, PostgreSQL, and low latency.",
     resume: getMasterResumeBaseline("roushan"),
   },
@@ -611,7 +626,7 @@ export const RESUME_STARTER_PRESETS: ResumePreset[] = [
     id: "ai_fullstack",
     name: "AI & Full-Stack Developer",
     badge: "AI-POWERED",
-    roleTitle: "AI-Powered Full Stack Software Engineer",
+    roleTitle: "AI-Powered Full Stack Software Developer",
     description: "Tailored for modern Next.js/React apps, Fastify/FastAPI backends, Gemini/LLM orchestration, and cryptography.",
     resume: getMasterResumeBaseline("ayushi"),
   },

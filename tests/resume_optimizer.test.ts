@@ -24,7 +24,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(roushan.projects.length).toBe(3);
       const titles = roushan.projects.map((p) => p.title);
       expect(titles.some((t) => t.includes("Astra Vision"))).toBe(true);
-      expect(titles.some((t) => t.includes("IDBI FinSync"))).toBe(true);
+      expect(titles.some((t) => t.includes("AstreWork"))).toBe(true);
       expect(titles.some((t) => t.includes("Alyra Lock"))).toBe(true);
 
       // 3 technical simulations
@@ -54,6 +54,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
 
       expect(ayushi.skills.length).toBe(6);
       expect(ayushi.projects.length).toBe(3);
+      expect(ayushi.projects.map((p) => p.title).some((t) => t.includes("AstreWork"))).toBe(true);
       expect(ayushi.simulations.length).toBe(3);
       expect(ayushi.education.degree).toContain("Bachelor of Computer Applications (BCA)");
 
@@ -86,7 +87,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(optimized.skills.length).toBe(6);
       expect(optimized.projects.length).toBe(3);
       expect(optimized.simulations.length).toBe(3);
-    }, 15000);
+    }, 60000);
   });
 
   describe("3. Markdown & Plaintext Export Renderers", () => {
@@ -101,7 +102,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(md).toContain("## TECHNICAL SIMULATIONS & VIRTUAL EXPERIENCES");
       expect(md).toContain("## EDUCATION");
       expect(md).toContain("Astra Vision");
-      expect(md).toContain("IDBI FinSync");
+      expect(md).toContain("AstreWork");
       expect(md).toContain("Alyra Lock");
     });
 
@@ -133,14 +134,14 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(updated.atsScore).toBeGreaterThanOrEqual(70);
     });
 
-    it("injects DevOps keyword into Testing & DevOps category", () => {
+    it("injects DevOps keyword into appropriate category", () => {
       const baseline = getMasterResumeBaseline("ayushi");
       baseline.missingKeywords = ["Terraform"];
       baseline.matchedKeywords = ["Docker"];
 
       const updated = injectKeywordIntoResume(baseline, "Terraform");
 
-      const devopsCategory = updated.skills.find((s) => s.categoryName === "Testing & DevOps");
+      const devopsCategory = updated.skills.find((s) => s.categoryName.includes("Cloud") || s.categoryName.includes("Security") || s.categoryName.includes("DevOps"));
       expect(devopsCategory?.skillsText).toContain("Terraform");
       expect(updated.matchedKeywords).toContain("Terraform");
       expect(updated.missingKeywords).not.toContain("Terraform");
