@@ -125,7 +125,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!jobs.length) return;
+    if (!jobs.length || !activeProfileSlug) return;
     let cancelled = false;
     async function loadScores() {
       try {
@@ -133,7 +133,7 @@ export default function Home() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            profileSlug: activeProfileSlug || "roushan",
+            profileSlug: activeProfileSlug,
             jobPostingIds: jobs.map((job) => job.id),
           }),
         });
@@ -152,7 +152,7 @@ export default function Home() {
   }, [jobs, activeProfileSlug]);
 
   const handleTriggerScrape = async () => { setIsScraping(true); try { const response = await fetch("/api/jobs/scrape", { method: "POST" }); const data = await response.json(); if (data.success && Array.isArray(data.jobs)) { setJobs(data.jobs); setFeedPage(1); setExperienceRange(DEFAULT_HERO_FILTERS.experienceRange); setMaximumPostedDays(DEFAULT_HERO_FILTERS.maximumPostedDays); setRemoteRoleView(DEFAULT_HERO_FILTERS.remoteRoleView); setLastRun({ totalDiscovered: Number(data.totalDiscovered) || 0, totalRejected: Number(data.totalRejected) || 0, newJobsInserted: Number(data.newJobsInserted) || 0, jobsUpdated: Number(data.jobsUpdated) || 0, completedAt: new Date().toISOString(), providers: Array.isArray(data.providerSummary) ? data.providerSummary : [] }); } await Promise.all([loadSourceHealth(), loadEndpointDiagnostics(), loadSchedulerStatus()]); } catch (error) { console.error("Scraper execution error:", error); } finally { setIsScraping(false); } };
-  const handleGenerateKit = async (job: JobItem) => { try { const response = await fetch("/api/jobs/kit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileSlug: activeProfileSlug || "roushan", jobPostingId: job.id }) }); const data = await response.json(); alert(data.success ? `Application kit generated for ${job.company}. Open Application Kit to review it.` : `Kit generation error: ${data.error || "Please try again."}`); } catch (error) { console.error("Failed to generate kit:", error); } };
+  const handleGenerateKit = async (job: JobItem) => { try { const response = await fetch("/api/jobs/kit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileSlug: activeProfileSlug, jobPostingId: job.id }) }); const data = await response.json(); alert(data.success ? `Application kit generated for ${job.company}. Open Application Kit to review it.` : `Kit generation error: ${data.error || "Please try again."}`); } catch (error) { console.error("Failed to generate kit:", error); } };
   const toggleScheduler = async () => { if (!schedulerStatus) return; const action = schedulerStatus.isRunning ? "stop" : "start"; try { const res = await fetch("/api/scheduler", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }) }); const data = await res.json(); if (data.success) setSchedulerStatus(data.status); } catch (error) { console.error(error); } };
 
   const eligibleJobs = useMemo(() => { const seen = new Set<string>(); return jobs.filter((job) => { if (job.isExpired) return false; const key = job.url || job.id; if (seen.has(key)) return false; seen.add(key); return true; }); }, [jobs]);

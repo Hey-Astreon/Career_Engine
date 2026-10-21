@@ -85,7 +85,7 @@ export default function MatchStudioPage() {
           jobDescription: selectedJob.rawDescription,
           jobTitle: selectedJob.title,
           company: selectedJob.company,
-          profileSlug: activeProfileSlug || "roushan",
+          profileSlug: activeProfileSlug,
         }),
       });
       const data = await response.json();
@@ -115,8 +115,9 @@ export default function MatchStudioPage() {
 
   useEffect(() => {
     async function loadOfficialVariants() {
+      if (!activeProfileSlug) return;
       try {
-        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug || "roushan"}`);
+        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug}`);
         const data = await res.json();
         if (data.success && Array.isArray(data.officialVariants)) {
           setOfficialVariants(data.officialVariants);
@@ -158,7 +159,7 @@ export default function MatchStudioPage() {
       const response = await fetch("/api/jobs/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileSlug: activeProfileSlug || "roushan", jobPostingId: jobId, forceRefresh }),
+        body: JSON.stringify({ profileSlug: activeProfileSlug, jobPostingId: jobId, forceRefresh }),
       });
       const data = await response.json();
       if (data.success && data.matchScore) {
@@ -425,7 +426,7 @@ export default function MatchStudioPage() {
               {/* Action Buttons: 1-Click Download & Preview */}
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--blue)]/20 pt-3">
                 <a
-                  href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(matchData.recommendedResumeVariant.fileName)}&view=attachment`}
+                  href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(matchData.recommendedResumeVariant.fileName)}&view=attachment`}
                   download={matchData.recommendedResumeVariant.fileName}
                   className="ce-button-primary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5 shadow-sm"
                   title={`Download locked official ${matchData.recommendedResumeVariant.fileName}`}
@@ -434,7 +435,7 @@ export default function MatchStudioPage() {
                   Download Tailored PDF
                 </a>
                 <a
-                  href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(matchData.recommendedResumeVariant.fileName)}&view=inline`}
+                  href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(matchData.recommendedResumeVariant.fileName)}&view=inline`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ce-button-secondary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5"
@@ -494,7 +495,7 @@ export default function MatchStudioPage() {
                         </div>
                         <div className="mt-2.5 flex items-center gap-1.5 border-t border-[var(--line)] pt-2">
                           <a
-                            href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
+                            href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="ce-button-secondary !min-h-6 !px-2 text-[9px] inline-flex items-center gap-1 flex-1 justify-center"
@@ -503,7 +504,7 @@ export default function MatchStudioPage() {
                             Preview
                           </a>
                           <a
-                            href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
+                            href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
                             download={v.fileName}
                             className="ce-button-primary !min-h-6 !px-2 text-[9px] inline-flex items-center gap-1 flex-1 justify-center"
                           >

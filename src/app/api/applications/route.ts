@@ -3,14 +3,37 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ApplicationStatus } from "@prisma/client";
+import {
+  canAccessProfile,
+  isDeveloperEmail,
+  getDeveloperDefaultSlug,
+} from "@/lib/authCandidate";
 
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const currentUserId = session?.user?.id || null;
+    const sessionUser = session?.user;
+    const currentUserId = sessionUser?.id || null;
+
+    if (!sessionUser || !currentUserId) {
+      return NextResponse.json({ success: true, applications: [] });
+    }
 
     const { searchParams } = new URL(req.url);
-    const profileSlug = searchParams.get("profileSlug") || "roushan";
+    let profileSlug = searchParams.get("profileSlug");
+
+    if (!profileSlug) {
+      if (isDeveloperEmail(sessionUser.email)) {
+        profileSlug = getDeveloperDefaultSlug(sessionUser.email);
+      } else {
+        const userProf = await db.profile.findFirst({ where: { userId: currentUserId } });
+        profileSlug = userProf?.slug || null;
+      }
+    }
+
+    if (!profileSlug) {
+      return NextResponse.json({ success: true, applications: [] });
+    }
 
     const profile = await db.profile.findUnique({
       where: { slug: profileSlug },
@@ -20,9 +43,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, applications: [] });
     }
 
-    // Allow reading applications if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== currentUserId) {
-      return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
+    // Allow reading applications if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(sessionUser, profile)) {
+      return NextResponse.json({ success: false, error: "Forbidden: You do not have permission to access this candidate profile" }, { status: 403 });
     }
 
     const applications = await db.application.findMany({
@@ -81,7 +104,23 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { profileSlug = "roushan", jobPostingId, company, title, url } = body;
+    let { profileSlug, jobPostingId, company, title, url } = body;
+
+    if (!profileSlug) {
+      if (isDeveloperEmail(session.user.email)) {
+        profileSlug = getDeveloperDefaultSlug(session.user.email);
+      } else {
+        const userProf = await db.profile.findFirst({ where: { userId: session.user.id } });
+        profileSlug = userProf?.slug || null;
+      }
+    }
+
+    if (!profileSlug) {
+      return NextResponse.json(
+        { success: false, error: "Candidate profile not found. Please complete profile setup." },
+        { status: 404 }
+      );
+    }
 
     const profile = await db.profile.findUnique({
       where: { slug: profileSlug },
@@ -94,9 +133,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Allow creating application if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== session.user.id) {
-      return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
+    // Allow creating application if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(session.user, profile)) {
+      return NextResponse.json({ success: false, error: "Forbidden: You do not have permission to access this candidate profile" }, { status: 403 });
     }
 
     let targetJobId = jobPostingId;

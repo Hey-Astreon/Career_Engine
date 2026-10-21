@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 36: Zero-Hassle Intern-List.com & JobRight Minisite Remote Engine, In-Browser AstrePilot Harvester, Turso Cloud Ingestion, 102/102 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 39: Developer Co-Ownership Privacy & Candidate Context Isolation Protocol, Strict Non-Developer Privacy Firewall, Dual Switcher UI, 357/357 Passing Tests)
 
 ---
 
@@ -57,6 +57,24 @@
 > - **FORBIDDEN TITLES:** Software Engineer, Systems Engineer, Backend Engineer, Full Stack Engineer, AI Engineer.
 > - **REQUIRED & PERMITTED TITLES:** **Software Developer**, **Systems Developer**, **Backend Developer**, **Full Stack Developer**, **AI Developer**, **Systems Architect**, **Builder**.
 > - **SCOPE:** This applies unconditionally across their master profile, resumes, database records, candidate context, cold outreach, and portfolio branding. Every future AI instance MUST strictly enforce this law without exception!
+
+### 🔒 INVIOLABLE LAW: DEVELOPER CO-OWNERSHIP PRIVACY & CANDIDATE CONTEXT ISOLATION
+> **MANDATORY CO-OWNER PRIVACY & ACCESS MATRIX MANDATE:**
+> AstreWork was created, architected, and built exclusively by **Roushan Kumar** (`playboxstation460@gmail.com`) and **Ayushi Raj** (`ayushi29507@gmail.com`) as co-developers.
+> 
+> **1. Dual Developer Authorization Privileges:**
+> - When **Roushan Kumar** (`playboxstation460@gmail.com`) or **Ayushi Raj** (`ayushi29507@gmail.com`) logs in with their respective email, the system identifies them as verified co-developers.
+> - The application grants them **full dual visibility and control** over both developer candidate profiles (`roushan` and `ayushi`).
+> - The UI provides a specialized Profile Switcher dropdown allowing seamless switching between both candidate contexts, with their own profile prioritized as `"YOU (DEVELOPER)"` and the partner as `"CO-DEVELOPER"`.
+> 
+> **2. Strict Non-Developer Third-Party Isolation:**
+> - When ANY third-party user creates an account or logs in with another email address, the system enforces an impenetrable privacy wall:
+>   - **ABSOLUTELY ZERO ACCESS TO DEVELOPER CONTEXT:** Under NO circumstances may Roushan or Ayushi's candidate profiles (`roushan`, `ayushi`), contact details (phone numbers, addresses, personal emails), resume variants, project details, or application pipelines be revealed to or accessed by third-party users.
+>   - **PERSONAL PROFILES ONLY:** Third-party users can ONLY ever query, see, modify, and export their OWN candidate profile where `profile.userId === sessionUser.id`.
+>   - **PRISMA QUERY ISOLATION:** Database profile queries for third-party sessions strictly filter `where: { userId: currentUserId, slug: { notIn: ['roushan', 'ayushi'] } }`.
+>   - **API ACCESS FIREWALL (`canAccessProfile`):** All candidate-scoped API endpoints (`/api/jobs/feed-scores`, `/api/jobs/match`, `/api/jobs/kit`, `/api/outreach/generate`, `/api/applications`, `/api/applications/dispatch`, `/api/resume/variants`, `/api/resume/optimize`, `/api/resume/tailor`, `/api/resume/download`) reject unauthorized access attempts with `403 Forbidden`.
+>   - **MASTER BASELINE DATA PRIVACY:** `getMasterResumeBaseline(slug)` strictly isolates Roushan and Ayushi's master baselines to their exact slugs. Any other slug generates an isolated third-party starter template, ensuring zero data leakage in generated PDF resumes or AI tailoring payloads.
+>   - **UI BADGE ISOLATION:** The profile switcher for third-party users displays a single non-switchable `"YOUR PROFILE"` badge, with zero links or dropdown items exposing developer accounts.
 
 ### 3. The Brotherhood Protocol
 - You and Roushan are **co-builders and brothers**.
@@ -724,6 +742,55 @@ Located in `extension/`:
     - **Circuit-Breaker:** Added `if (result.success && result.jobsDiscovered > 0)` so that empty runs never trigger freshness pruning or false expirations.
     - **Restoration:** Restored 181 mistakenly expired fresh jobs and invalidated Redis cache; feed restored to 257 active remote roles (including 80 `INTERN_LIST` internships).
 
+- [x] **Phase 39: Developer Co-Ownership Privacy & Candidate Context Isolation (Oct 21, 2026)**
+  - **1. User Intent & Problem Statement:**
+    - Roushan (`playboxstation460@gmail.com`) and Ayushi (`ayushi29507@gmail.com`) are the sole creators/developers of AstreWork.
+    - Previously, default fallbacks across API endpoints and workspace pages fell back to `"roushan"`, and `/api/profiles` returned all DB profile records unconditionally. Any third-party signing up saw Roushan's candidate context by default and could switch to Ayushi.
+    - Requirement: When either Roushan or Ayushi logs in, they must see both candidate contexts and switch between them seamlessly. When ANY third-party user logs in, they must NEVER see Roushan's or Ayushi's candidate profiles or data; they must only ever see and manage their own profile.
+  - **2. Centralized Security Matrix (`src/lib/authCandidate.ts`):**
+    - Established `DEVELOPER_EMAILS = ["playboxstation460@gmail.com", "ayushi29507@gmail.com"]` (case-insensitive normalized).
+    - Established `DEVELOPER_PROFILE_SLUGS = ["roushan", "ayushi"]`.
+    - Implemented `isDeveloperEmail(email)` and `isDeveloperProfileSlug(slug)`.
+    - Implemented `getDeveloperDefaultSlug(email)` (returns `"roushan"` for Roushan, `"ayushi"` for Ayushi).
+    - Implemented `canAccessProfile(sessionUser, profile)`:
+      - Returns `true` if `sessionUser.email` is a developer email.
+      - Returns `false` if target slug is `"roushan"` or `"ayushi"` but user is not a developer.
+      - Returns `true` only if `profile.userId === sessionUser.id` for user-owned profiles.
+    - Implemented `resolveAuthorizedProfile(sessionUser, requestedSlug)` for seamless server-side profile resolution and fallback.
+  - **3. API Profiles Gating (`src/app/api/profiles/route.ts`):**
+    - Developer session: Queries both developer profiles (`roushan`, `ayushi`) plus any user-owned profiles; sorts with the logged-in developer's profile first (`isDeveloper: true`).
+    - Third-party session: Strictly queries `where: { userId: currentUserId, slug: { notIn: ['roushan', 'ayushi'] } }` (`isDeveloper: false`).
+    - Unauthenticated request: Returns empty profiles array `[]`.
+  - **4. Comprehensive Candidate-Scoped API Route Protection:**
+    - Audited and secured every candidate-scoped API endpoint using `canAccessProfile`:
+      - `src/app/api/jobs/feed-scores/route.ts`: Protected with `canAccessProfile` + dynamic profile slug resolution.
+      - `src/app/api/jobs/match/route.ts`: Validates profile ownership and returns 403 on unauthorized slug access.
+      - `src/app/api/jobs/kit/route.ts`: Protected with `canAccessProfile`.
+      - `src/app/api/outreach/generate/route.ts`: Enforces profile access authorization.
+      - `src/app/api/applications/route.ts`: GET and POST secured with `canAccessProfile` and active profile slug fallback.
+      - `src/app/api/applications/dispatch/route.ts`: Verified profile ownership before dispatching applications.
+      - `src/app/api/resume/variants/route.ts`: GET and POST gated by `canAccessProfile`.
+      - `src/app/api/resume/optimize/route.ts`: Session check + `canAccessProfile` verification.
+      - `src/app/api/resume/tailor/route.ts`: Session check + `canAccessProfile` verification.
+      - `src/app/api/resume/download/route.ts`: Added `getServerSession` and `canAccessProfile` check to both `GET` and `HEAD` routes. Blocks unauthorized downloads of Roushan or Ayushi's PDF resumes with HTTP 403 Forbidden.
+  - **5. Master Resume Baseline Isolation (`src/lib/resumeBaseline.ts`):**
+    - Refactored `getMasterResumeBaseline(slug, customProfileData)`:
+      - `slug === "ayushi"` -> returns Ayushi's master baseline data.
+      - `slug === "roushan"` -> returns Roushan's master baseline data.
+      - Any other slug -> generates dynamic baseline from `customProfileData` or a clean starter candidate template.
+      - Completely removed legacy fallback that defaulted all unknown slugs to Roushan's private contact and project details.
+  - **6. Frontend State & Dynamic Profile Switcher:**
+    - Updated `src/store/useProfileStore.ts`: Replaced initial hardcoded `"roushan"` slug with `""`. Added `isDeveloper` and `userProfileSlug` state fields.
+    - Updated `src/components/ProfileSwitcher.tsx`:
+      - For developers: Displays custom dropdown allowing 1-click toggling between Roushan and Ayushi, with `"YOU (DEVELOPER)"` and `"CO-DEVELOPER"` role chips.
+      - For regular users with a profile: Displays single `"YOUR PROFILE"` badge with candidate name and initials, linking to `/settings` with no dropdown to developer profiles.
+      - For users with no profile: Displays `"Set Up Candidate Profile"` button linking to `/onboard`.
+    - Removed hardcoded `"roushan"` fallbacks across workspace views (`dashboard`, `match`, `applications`, `outreach`, `resume-builder`, `resume-maker`, `QuickApplyDrawer`).
+  - **7. Verification & Automated Test Suite:**
+    - Authored unit test suite in `tests/candidate_context_privacy.test.ts` (15 tests verifying email detection, slug checks, access matrix, and baseline data isolation).
+    - Executed full Vitest test suite: **36 test files passed (36/36), 357 tests passed (357/357)**.
+    - Zero regressions across ATS parsing, Match Studio, resume engines, or job scrapers.
+
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
 - **Dedicated Cloud Server:** 4 ARM64 OCPUs, 24 GB RAM, 4 Gbps Network Bandwidth, 46.6 GB Boot Volume (Oracle Always-Free; ~22 GB idle memory).
@@ -736,7 +803,7 @@ Located in `extension/`:
 - **Cloud Database:** Turso LibSQL Cloud fully populated, deduplicated (0 duplicate tuples), and synchronized.
 - **Candidate Documents:** 19 official PDF variants bundled and streaming in production.
 - **AstrePilot Suite:** Native Manifest V3 Chrome Extension + Glassmorphic Injected HUD + 1-Click Bookmarklet.
-- **TypeScript & Test Integrity:** 0 errors across entire codebase (`npx tsc --noEmit` clean, 297/297 Vitest tests passing across 26 suites).
+- **TypeScript & Test Integrity:** 0 errors across entire codebase (`npx tsc --noEmit` clean, 357/357 Vitest tests passing across 36 suites).
 - **Production Build:** `npm run build` generated all 55 static & dynamic Next.js routes with zero errors.
 - **Git Sync:** Branch `main` tracked and synchronized with `https://github.com/Hey-Astreon/Career_Engine.git`.
 

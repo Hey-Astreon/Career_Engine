@@ -1,8 +1,9 @@
 "use client";
 
 import { useProfileStore } from "@/store/useProfileStore";
-import { UserCheck, ChevronDown } from "lucide-react";
+import { UserCheck, ChevronDown, UserPlus, Settings } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 function getInitials(name: string): string {
   if (!name) return "CA";
@@ -16,6 +17,7 @@ export function ProfileSwitcher() {
     activeProfileSlug,
     activeProfile,
     allProfiles,
+    isDeveloper,
     setAllProfiles,
     setActiveProfileSlug,
   } = useProfileStore();
@@ -28,9 +30,8 @@ export function ProfileSwitcher() {
       try {
         const res = await fetch("/api/profiles");
         const data = await res.json();
-        if (data.success && data.profiles?.length) {
-          setAllProfiles(data.profiles);
-          // If the user owns a profile, auto-select it if not already selected
+        if (data.success) {
+          setAllProfiles(data.profiles || [], data.userProfileSlug, data.isDeveloper);
           if (data.userProfileSlug) {
             setActiveProfileSlug(data.userProfileSlug);
           }
@@ -58,22 +59,55 @@ export function ProfileSwitcher() {
     setIsOpen(false);
   };
 
-  const activeInitials = activeProfile
-    ? getInitials(activeProfile.fullName)
-    : activeProfileSlug === "roushan"
-    ? "RK"
-    : activeProfileSlug === "ayushi"
-    ? "AR"
-    : "CA";
+  // If new user with no profile yet
+  if (!allProfiles.length) {
+    return (
+      <Link
+        href="/onboard"
+        className="flex items-center gap-2 rounded-lg border border-dashed border-[var(--blue)] bg-[var(--blue-soft)] px-2.5 py-1.5 text-left text-[11px] font-bold text-[var(--blue)] transition-all hover:bg-[var(--blue)] hover:text-white"
+      >
+        <UserPlus className="h-4 w-4" />
+        <span>Set Up Candidate Profile</span>
+      </Link>
+    );
+  }
 
+  const activeInitials = activeProfile ? getInitials(activeProfile.fullName) : "CA";
   const isUserOwned = Boolean((activeProfile as unknown as Record<string, unknown>)?.isOwner);
 
+  // If regular user with single profile (hide candidate switching)
+  if (!isDeveloper || allProfiles.length <= 1) {
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <Link
+          href="/settings"
+          className="flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-left shadow-sm transition-all hover:border-[var(--blue)] focus:outline-none"
+          title="Candidate Profile Settings"
+        >
+          <span className="grid h-6 w-6 place-items-center rounded bg-[var(--green-soft)] font-mono text-[9px] font-bold text-[var(--green)]">
+            {activeInitials}
+          </span>
+          <span className="hidden sm:block">
+            <b className="block max-w-36 truncate text-[11px] font-bold text-[var(--ink)] leading-tight">
+              {activeProfile?.fullName || "Your Profile"}
+            </b>
+            <small className="block mt-0.5 font-mono text-[7px] font-bold tracking-wider text-[var(--green)] uppercase">
+              YOUR PROFILE
+            </small>
+          </span>
+          <Settings className="h-3.5 w-3.5 text-[var(--muted)]" />
+        </Link>
+      </div>
+    );
+  }
+
+  // Developer Co-Owner Mode: Roushan & Ayushi Context Switcher
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen((open) => !open)}
         className="flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-left shadow-sm transition-all hover:border-[var(--blue)] focus:outline-none"
-        aria-label="Switch candidate profile"
+        aria-label="Switch developer candidate profile"
       >
         <span
           className={`grid h-6 w-6 place-items-center rounded font-mono text-[9px] font-bold ${
@@ -89,7 +123,7 @@ export function ProfileSwitcher() {
             {activeProfile?.fullName || "Candidate Context"}
           </b>
           <small className="block mt-0.5 font-mono text-[7px] font-bold tracking-wider text-[var(--muted)] uppercase">
-            {isUserOwned ? "YOUR PROFILE" : "CANDIDATE CONTEXT"}
+            {isUserOwned ? "YOU (DEVELOPER)" : "CO-DEVELOPER"}
           </small>
         </span>
         <ChevronDown className="h-3.5 w-3.5 text-[var(--muted)]" />
@@ -98,7 +132,7 @@ export function ProfileSwitcher() {
       {isOpen && (
         <div className="absolute left-0 sm:left-auto sm:right-0 z-50 mt-2 w-72 origin-top-right overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)] shadow-[0_20px_50px_rgba(21,35,56,.18)] animate-in fade-in zoom-in-95 duration-100">
           <div className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--surface-muted)] px-3 py-2 font-mono text-[8px] font-bold tracking-[.12em] text-[var(--muted)]">
-            <span>SWITCH CANDIDATE CONTEXT</span>
+            <span>DEVELOPER CANDIDATE CONTEXT</span>
             <span>{allProfiles.length} PROFILES</span>
           </div>
 
@@ -106,7 +140,7 @@ export function ProfileSwitcher() {
             {allProfiles.map((p) => {
               const isSelected = activeProfileSlug === p.slug;
               const isOwner = Boolean((p as unknown as Record<string, unknown>).isOwner);
-              const isTemplate = Boolean((p as unknown as Record<string, unknown>).isTemplate);
+              const isPartner = Boolean((p as unknown as Record<string, unknown>).isPartner);
               const initials = getInitials(p.fullName);
 
               return (
@@ -122,7 +156,7 @@ export function ProfileSwitcher() {
                       className={`grid h-7 w-7 shrink-0 place-items-center rounded font-mono text-[9px] font-bold ${
                         isOwner
                           ? "bg-[var(--green-soft)] text-[var(--green)]"
-                          : "bg-[var(--surface-muted)] text-[var(--ink)]"
+                          : "bg-[var(--blue-soft)] text-[var(--blue)]"
                       }`}
                     >
                       {initials}
@@ -137,9 +171,9 @@ export function ProfileSwitcher() {
                             YOU
                           </span>
                         )}
-                        {isTemplate && (
-                          <span className="shrink-0 rounded bg-[var(--surface-muted)] px-1 py-0.2 font-mono text-[7px] font-semibold text-[var(--muted)]">
-                            TEMPLATE
+                        {isPartner && (
+                          <span className="shrink-0 rounded bg-[var(--blue-soft)] px-1 py-0.2 font-mono text-[7px] font-bold text-[var(--blue)]">
+                            PARTNER
                           </span>
                         )}
                       </span>

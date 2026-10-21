@@ -8,6 +8,11 @@ import {
   renderResumeMarkdown,
   renderResumePlaintext,
 } from "@/lib/ai/resumeOptimizer";
+import {
+  canAccessProfile,
+  isDeveloperEmail,
+  getDeveloperDefaultSlug,
+} from "@/lib/authCandidate";
 
 export async function POST(req: Request) {
   try {
@@ -28,6 +33,11 @@ export async function POST(req: Request) {
       );
     }
 
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const {
       profileSlug,
       jobPostingId,
@@ -36,7 +46,28 @@ export async function POST(req: Request) {
       customJobDescription,
     } = body || {};
 
-    const slug = typeof profileSlug === "string" && profileSlug.trim() ? profileSlug.trim().toLowerCase() : "roushan";
+    let slug = typeof profileSlug === "string" && profileSlug.trim() ? profileSlug.trim().toLowerCase() : null;
+    if (!slug) {
+      if (isDeveloperEmail(session.user.email)) {
+        slug = getDeveloperDefaultSlug(session.user.email);
+      } else {
+        const userProf = await db.profile.findFirst({ where: { userId: session.user.id } });
+        slug = userProf?.slug || null;
+      }
+    }
+
+    if (!slug) {
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
+    }
+
+    const profile = await db.profile.findUnique({ where: { slug } });
+    if (!profile) {
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
+    }
+
+    if (!canAccessProfile(session.user, profile)) {
+      return NextResponse.json({ success: false, error: "Forbidden: You do not have permission to access this candidate profile" }, { status: 403 });
+    }
 
     let jobTitle = "Full Stack Software Engineer";
     let company = "Global Remote";

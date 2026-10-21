@@ -7,6 +7,7 @@ import {
   generateDeterministicOutreach,
   OutreachTone,
 } from "@/lib/outreachGenerator";
+import { canAccessProfile } from "@/lib/authCandidate";
 
 export async function POST(req: Request) {
   try {
@@ -45,10 +46,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Allow outreach generation if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== session.user.id) {
+    // Allow outreach generation if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(session.user, profile)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden: You do not own this profile" },
+        { success: false, error: "Forbidden: You do not have permission to access this candidate profile" },
         { status: 403 }
       );
     }

@@ -119,7 +119,7 @@ describe("InternListProvider", () => {
     );
     expect(result.jobs[0].opportunitySignals).toContain("NICHE_SOURCE");
     expect(result.jobs[0].metadata?.salary).toBe("$45-$50/hr");
-    expect(result.diagnostics.accepted).toBe(1);
+    expect(result.diagnostics!.accepted).toBe(1);
   });
 
   it("live fetch returns verified remote jobs with valid structure", async () => {

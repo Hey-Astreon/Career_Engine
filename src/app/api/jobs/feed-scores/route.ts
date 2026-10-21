@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeBatchFeedScores, CachedScoreItem } from "@/lib/ai/batchScorer";
 import { cache } from "@/lib/cache/redis";
+import {
+  canAccessProfile,
+  isDeveloperEmail,
+  getDeveloperDefaultSlug,
+} from "@/lib/authCandidate";
 
 const MAX_BATCH_SIZE = 150;
 
@@ -24,7 +29,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const { profileSlug = "roushan", jobPostingIds } = body || {};
+    let { profileSlug, jobPostingIds } = body || {};
+
+    if (!profileSlug && session?.user) {
+      if (isDeveloperEmail(session.user.email)) {
+        profileSlug = getDeveloperDefaultSlug(session.user.email);
+      } else if (currentUserId) {
+        const userProf = await db.profile.findFirst({ where: { userId: currentUserId } });
+        profileSlug = userProf?.slug;
+      }
+    }
 
     // 1. Input Validation: profileSlug
     if (typeof profileSlug !== "string" || !profileSlug.trim() || profileSlug.length > 50) {
@@ -52,10 +66,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Allow evaluation if user owns the profile OR if it is a template/benchmark profile (no owner userId)
-    if (profile.userId && profile.userId !== currentUserId) {
+    // Allow evaluation if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(session?.user, profile)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden: You do not own this profile" },
+        { success: false, error: "Forbidden: You do not have permission to access this candidate profile" },
         { status: 403 }
       );
     }

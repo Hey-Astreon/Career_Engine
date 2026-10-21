@@ -37,17 +37,21 @@ interface ProfileState {
   activeProfile: ProfileData | null;
   allProfiles: ProfileData[];
   isLoading: boolean;
+  isDeveloper: boolean;
+  userProfileSlug: string | null;
   setActiveProfileSlug: (slug: string) => void;
-  setAllProfiles: (profiles: ProfileData[]) => void;
+  setAllProfiles: (profiles: ProfileData[], userProfileSlug?: string | null, isDeveloper?: boolean) => void;
   updateActiveProfile: (data: Partial<ProfileData>) => void;
   setIsLoading: (loading: boolean) => void;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
-  activeProfileSlug: "roushan",
+  activeProfileSlug: "",
   activeProfile: null,
   allProfiles: [],
   isLoading: true,
+  isDeveloper: false,
+  userProfileSlug: null,
 
   setActiveProfileSlug: (slug) =>
     set((state) => {
@@ -55,16 +59,23 @@ export const useProfileStore = create<ProfileState>((set) => ({
       return { activeProfileSlug: slug, activeProfile: matched };
     }),
 
-  setAllProfiles: (profiles) =>
+  setAllProfiles: (profiles, userProfileSlug, isDeveloper) =>
     set((state) => {
+      const targetSlug =
+        userProfileSlug ||
+        state.activeProfileSlug ||
+        profiles[0]?.slug ||
+        "";
       const active =
-        profiles.find((p) => p.slug === state.activeProfileSlug) ||
+        profiles.find((p) => p.slug === targetSlug) ||
         profiles[0] ||
         null;
       return {
         allProfiles: profiles,
         activeProfile: active,
-        activeProfileSlug: active ? active.slug : state.activeProfileSlug,
+        activeProfileSlug: active ? active.slug : "",
+        userProfileSlug: userProfileSlug !== undefined ? userProfileSlug : state.userProfileSlug,
+        isDeveloper: isDeveloper !== undefined ? isDeveloper : state.isDeveloper,
         isLoading: false,
       };
     }),

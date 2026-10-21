@@ -62,7 +62,7 @@ export default function ResumeBuilderPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [selectedJobId, setSelectedJobId] = useState("");
   const [resumeData, setResumeData] = useState<OptimizedResume>(() =>
-    getMasterResumeBaseline(activeProfileSlug || "roushan")
+    getMasterResumeBaseline(activeProfileSlug, activeProfile || undefined)
   );
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [customMode, setCustomMode] = useState(false);
@@ -126,8 +126,9 @@ export default function ResumeBuilderPage() {
   // Load official PDF variants
   useEffect(() => {
     async function loadOfficialVariants() {
+      if (!activeProfileSlug) return;
       try {
-        const res = await fetch(`/api/resume/variants?profileSlug=${activeProfileSlug || "roushan"}`);
+        const res = await fetch(`/api/resume/variants?profileSlug=${encodeURIComponent(activeProfileSlug)}`);
         const data = await res.json();
         if (data.success && Array.isArray(data.officialVariants)) {
           setOfficialVariants(data.officialVariants);
@@ -141,11 +142,10 @@ export default function ResumeBuilderPage() {
 
   // Load baseline when candidate switches
   useEffect(() => {
-    const slug = activeProfileSlug || "roushan";
-    const baseline = getMasterResumeBaseline(slug);
+    const baseline = getMasterResumeBaseline(activeProfileSlug, activeProfile || undefined);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setResumeData(baseline);
-  }, [activeProfileSlug]);
+  }, [activeProfileSlug, activeProfile]);
 
   // Load jobs from discovery API
   useEffect(() => {
@@ -183,7 +183,7 @@ export default function ResumeBuilderPage() {
               // Automatically trigger optimization after state updates
               setTimeout(() => {
                 const payload = {
-                  profileSlug: activeProfileSlug || "roushan",
+                  profileSlug: activeProfileSlug,
                   customJobTitle: data.session.jobTitle,
                   customJobCompany: data.session.company,
                   customJobDescription: data.session.jdText
@@ -287,7 +287,7 @@ ${portfolio}`;
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            profileSlug: activeProfileSlug || "roushan",
+            profileSlug: activeProfileSlug,
             jobPostingId: selectedJobId,
           }),
         });
@@ -313,7 +313,7 @@ ${portfolio}`;
     setIsOptimizing(true);
     try {
       const payload: Record<string, string> = {
-        profileSlug: activeProfileSlug || "roushan",
+        profileSlug: activeProfileSlug,
       };
 
       if (customMode && customDesc.trim()) {
@@ -342,7 +342,7 @@ ${portfolio}`;
   };
 
   const handleResetToMaster = () => {
-    const baseline = getMasterResumeBaseline(activeProfileSlug || "roushan");
+    const baseline = getMasterResumeBaseline(activeProfileSlug, activeProfile || undefined);
     setResumeData(baseline);
   };
 
@@ -358,7 +358,7 @@ ${portfolio}`;
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          profileSlug: activeProfileSlug || "roushan",
+          profileSlug: activeProfileSlug,
           jobPostingId: selectedJobId,
         }),
       });
@@ -577,7 +577,7 @@ ${portfolio}`;
 
                   <div className="flex items-center gap-2 shrink-0">
                     <a
-                      href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
+                      href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(v.fileName)}&view=inline`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ce-button-secondary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1"
@@ -587,7 +587,7 @@ ${portfolio}`;
                       Preview
                     </a>
                     <a
-                      href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
+                      href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(v.fileName)}&view=attachment`}
                       download={v.fileName}
                       className="ce-button-primary !min-h-7 !px-2.5 text-[10px] inline-flex items-center gap-1"
                       title="Download PDF"

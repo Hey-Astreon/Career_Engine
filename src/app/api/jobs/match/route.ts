@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { computeCompositeMatchScore } from "@/lib/ai/scorer";
 import { selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
 import { cache } from "@/lib/cache/redis";
+import { canAccessProfile } from "@/lib/authCandidate";
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -37,10 +38,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Allow evaluation if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== currentUserId) {
+    // Allow evaluation if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(session?.user, profile)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden: You do not own this profile" },
+        { success: false, error: "Forbidden: You do not have permission to access this candidate profile" },
         { status: 403 }
       );
     }

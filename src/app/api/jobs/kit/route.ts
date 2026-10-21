@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { generateTailoredKit } from "@/lib/ai/drafter";
 import { validatePDFExtractability } from "@/lib/ai/ats_validator";
 import { selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
+import { canAccessProfile } from "@/lib/authCandidate";
 
 /**
  * Validates and sanitizes a file path to prevent path traversal attacks.
@@ -79,10 +80,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Allow generating kit if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== session.user.id) {
+    // Allow generating kit if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(session?.user, profile)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden: You do not own this profile" },
+        { success: false, error: "Forbidden: You do not have permission to access this candidate profile" },
         { status: 403 }
       );
     }

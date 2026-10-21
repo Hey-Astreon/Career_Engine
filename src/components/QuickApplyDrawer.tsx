@@ -50,10 +50,11 @@ export function QuickApplyDrawer({ isOpen, onClose, job }: QuickApplyDrawerProps
   const [selectedVariant, setSelectedVariant] = useState<string>("");
 
   useEffect(() => {
+    if (!job || !activeProfileSlug) return;
     async function loadVariants() {
       try {
         const params = new URLSearchParams({
-          profileSlug: activeProfileSlug || "roushan",
+          profileSlug: activeProfileSlug,
           jobTitle: job?.title || "",
           company: job?.company || "",
           platform: job?.platform || "",
@@ -214,7 +215,7 @@ ${candidateEmail} | ${candidatePhone}`;
               {selectedVariant && (
                 <>
                   <a
-                    href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(selectedVariant)}&view=inline`}
+                    href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(selectedVariant)}&view=inline`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ce-button-secondary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5"
@@ -224,7 +225,7 @@ ${candidateEmail} | ${candidatePhone}`;
                     Preview
                   </a>
                   <a
-                    href={`/api/resume/download?slug=${activeProfileSlug || "roushan"}&variant=${encodeURIComponent(selectedVariant)}&view=attachment`}
+                    href={`/api/resume/download?slug=${activeProfileSlug}&variant=${encodeURIComponent(selectedVariant)}&view=attachment`}
                     download={selectedVariant}
                     className="ce-button-primary !min-h-8 !px-3 text-[11px] inline-flex items-center gap-1.5 shadow-sm"
                     title={`Download official ${selectedVariant}`}

@@ -6,6 +6,7 @@ import { generateTailoredKit } from "@/lib/ai/drafter";
 import { validatePDFExtractability } from "@/lib/ai/ats_validator";
 import { selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
 import { ApplicationStatus } from "@prisma/client";
+import { canAccessProfile } from "@/lib/authCandidate";
 
 function sanitizeFilePath(inputPath?: string | null): string {
   if (!inputPath || typeof inputPath !== "string") {
@@ -61,8 +62,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
-    if (profile.userId !== session.user.id) {
-      return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
+    if (!canAccessProfile(session.user, profile)) {
+      return NextResponse.json({ success: false, error: "Forbidden: You do not have permission to access this candidate profile" }, { status: 403 });
     }
 
     let jobTarget;

@@ -65,7 +65,8 @@ export default function ApplicationsPage() {
   const fetchApplications = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/applications?profileSlug=${activeProfileSlug || "roushan"}`);
+      const queryParam = activeProfileSlug ? `?profileSlug=${encodeURIComponent(activeProfileSlug)}` : "";
+      const res = await fetch(`/api/applications${queryParam}`);
       const data = await res.json();
       if (data.success) {
         setApplications(data.applications || []);
@@ -81,7 +82,8 @@ export default function ApplicationsPage() {
     let isMounted = true;
     void (async () => {
       try {
-        const res = await fetch(`/api/applications?profileSlug=${activeProfileSlug || "roushan"}`);
+        const queryParam = activeProfileSlug ? `?profileSlug=${encodeURIComponent(activeProfileSlug)}` : "";
+        const res = await fetch(`/api/applications${queryParam}`);
         const data = await res.json();
         if (isMounted && data.success) {
           setApplications(data.applications || []);

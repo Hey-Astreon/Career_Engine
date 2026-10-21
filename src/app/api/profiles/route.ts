@@ -2,32 +2,80 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  isDeveloperEmail,
+  isDeveloperProfileSlug,
+  getDeveloperDefaultSlug,
+} from "@/lib/authCandidate";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const currentUserId = session?.user?.id || null;
+    const sessionUser = session?.user;
+    const currentUserId = sessionUser?.id || null;
+    const userEmail = sessionUser?.email || null;
 
-    const rawProfiles = await db.profile.findMany({
-      include: {
-        projects: true,
-        virtualExps: true,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
+    if (!sessionUser || !currentUserId) {
+      return NextResponse.json({
+        success: true,
+        profiles: [],
+        currentUserId: null,
+        userProfileSlug: null,
+        isDeveloper: false,
+      });
+    }
+
+    const isDev = isDeveloperEmail(userEmail);
+
+    let rawProfiles;
+    if (isDev) {
+      // Co-developers (Roushan & Ayushi) are authorized to see both developer profiles
+      rawProfiles = await db.profile.findMany({
+        where: {
+          OR: [
+            { slug: { in: ["roushan", "ayushi"] } },
+            { userId: currentUserId },
+          ],
+        },
+        include: {
+          projects: true,
+          virtualExps: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+    } else {
+      // Third-party users ONLY see their own profile, completely scrubbed of developer profiles
+      rawProfiles = await db.profile.findMany({
+        where: {
+          userId: currentUserId,
+          slug: { notIn: ["roushan", "ayushi"] },
+        },
+        include: {
+          projects: true,
+          virtualExps: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+    }
 
     let userProfileSlug: string | null = null;
+    if (isDev) {
+      userProfileSlug = getDeveloperDefaultSlug(userEmail);
+    } else if (rawProfiles.length > 0) {
+      userProfileSlug = rawProfiles[0].slug;
+    }
 
     const profiles = rawProfiles.map((p) => {
       const isOwner = Boolean(currentUserId && p.userId === currentUserId);
-      if (isOwner) {
-        userProfileSlug = p.slug;
-      }
+      const isPartner = Boolean(isDev && isDeveloperProfileSlug(p.slug) && !isOwner);
       return {
         ...p,
         isOwner,
+        isPartner,
         isTemplate: !p.userId,
       };
     });
@@ -41,6 +89,7 @@ export async function GET() {
       profiles,
       currentUserId,
       userProfileSlug,
+      isDeveloper: isDev,
     });
   } catch (error) {
     console.error("Error fetching profiles:", error);

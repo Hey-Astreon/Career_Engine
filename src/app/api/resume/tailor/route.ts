@@ -3,6 +3,11 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
+import {
+  canAccessProfile,
+  isDeveloperEmail,
+  getDeveloperDefaultSlug,
+} from "@/lib/authCandidate";
 
 interface TailorRequestBody {
   jobDescription: string;
@@ -80,16 +85,30 @@ function parseAgentTailorOutput(raw: string, originalBullets: string[]): ParsedT
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const currentUserId = session?.user?.id || null;
+    const sessionUser = session?.user;
+    const currentUserId = sessionUser?.id || null;
+
+    if (!sessionUser || !currentUserId) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
     const body = (await req.json()) as TailorRequestBody;
-    const { jobDescription, profileSlug = "roushan", customBullets } = body;
+    let { jobDescription, profileSlug, customBullets } = body;
 
     if (!jobDescription?.trim()) {
       return NextResponse.json(
         { success: false, error: "jobDescription is required" },
         { status: 400 }
       );
+    }
+
+    if (!profileSlug) {
+      if (isDeveloperEmail(sessionUser.email)) {
+        profileSlug = getDeveloperDefaultSlug(sessionUser.email);
+      } else {
+        const userProf = await db.profile.findFirst({ where: { userId: currentUserId } });
+        profileSlug = userProf?.slug || undefined;
+      }
     }
 
     // 1. Fetch Candidate Profile & Projects for context grounding
@@ -100,9 +119,16 @@ export async function POST(req: Request) {
       include: { projects: true, virtualExps: true },
     });
 
-    if (profile?.userId && currentUserId && profile.userId !== currentUserId) {
+    if (!profile) {
       return NextResponse.json(
-        { success: false, error: "Forbidden: You do not own this profile" },
+        { success: false, error: "Candidate profile not found" },
+        { status: 404 }
+      );
+    }
+
+    if (!canAccessProfile(sessionUser, profile)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not have permission to access this candidate profile" },
         { status: 403 }
       );
     }

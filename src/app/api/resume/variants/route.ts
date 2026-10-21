@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAllResumeVariants, selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
+import { canAccessProfile } from "@/lib/authCandidate";
 
 const MAX_VARIANTS = 20;
 
@@ -32,9 +33,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
-    // Allow reading variants if user owns the profile OR if it is a template/benchmark profile
-    if (profile.userId && profile.userId !== session.user.id) {
-      return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
+    // Allow reading variants if user has authorized access (co-developers or profile owner)
+    if (!canAccessProfile(session.user, profile)) {
+      return NextResponse.json({ success: false, error: "Forbidden: You do not have permission to access this candidate profile" }, { status: 403 });
     }
 
     const variants = await db.resumeVariant.findMany({
@@ -83,8 +84,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
     
-    if (profile.userId !== session.user.id) {
-      return NextResponse.json({ success: false, error: "Forbidden: You do not own this profile" }, { status: 403 });
+    if (!canAccessProfile(session.user, profile)) {
+      return NextResponse.json({ success: false, error: "Forbidden: You do not have permission to access this candidate profile" }, { status: 403 });
     }
 
     const existingCount = await db.resumeVariant.count({

@@ -71,7 +71,7 @@ export default function OutreachPage() {
 
   // Fetch / Generate outreach when selected job or tone changes
   useEffect(() => {
-    if (!selectedJobId) return;
+    if (!selectedJobId || !activeProfileSlug) return;
 
     let cancelled = false;
 
@@ -83,7 +83,7 @@ export default function OutreachPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             jobPostingId: selectedJobId,
-            profileSlug: activeProfileSlug || "roushan",
+            profileSlug: activeProfileSlug,
             tone,
           }),
         });

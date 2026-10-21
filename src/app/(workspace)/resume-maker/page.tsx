@@ -464,7 +464,7 @@ export default function ResumeMakerPage() {
             </div>
             <div className="flex-1 overflow-y-auto">
               <ResumeVariantsSidebar
-                profileSlug={activeProfileSlug || "roushan"}
+                profileSlug={activeProfileSlug}
                 currentResumeData={resumeData}
                 onLoadVariant={(loadedData) => {
                   setResumeData(loadedData);

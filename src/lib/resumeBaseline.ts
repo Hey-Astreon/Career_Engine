@@ -61,8 +61,27 @@ export interface OptimizedResume {
 /**
  * Returns the candidate master baseline resume structure
  */
-export function getMasterResumeBaseline(slug: string): OptimizedResume {
-  const isAyushi = slug.toLowerCase() === "ayushi";
+export function getMasterResumeBaseline(
+  slug: string,
+  customProfileData?: Partial<{
+    fullName: string;
+    title: string;
+    location: string;
+    phone: string | null;
+    email: string;
+    portfolioUrl: string | null;
+    githubUrl: string | null;
+    linkedinUrl: string | null;
+    primarySkills?: string | null;
+    projects?: Array<{
+      title: string;
+      techStack: string;
+      bulletPoints?: string;
+    }>;
+  }>
+): OptimizedResume {
+  const normalized = (slug || "").toLowerCase().trim();
+  const isAyushi = normalized === "ayushi";
 
   if (isAyushi) {
     return {
@@ -180,8 +199,9 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
     };
   }
 
-  // Roushan Kumar Baseline
-  return {
+  // Roushan Kumar Baseline (Strictly for 'roushan' candidate context)
+  if (normalized === "roushan") {
+    return {
     header: {
       fullName: "ROUSHAN KUMAR",
       targetHeadline: "Systems Developer | Backend Architect | AI Developer Tools Specialist",
@@ -293,6 +313,77 @@ export function getMasterResumeBaseline(slug: string): OptimizedResume {
     matchedKeywords: ["C#", "Java", "Python", "FastAPI", "PostgreSQL", "REST APIs", "Docker"],
     missingKeywords: [],
     tailoringNotes: "Master Profile Baseline",
+  };
+}
+
+  // Third-Party Candidate Profile Baseline (Never leaks Roushan's or Ayushi's private data)
+  return {
+    header: {
+      fullName: customProfileData?.fullName || "Candidate",
+      targetHeadline: customProfileData?.title || "Software Developer | Full-Stack & Systems",
+      location: customProfileData?.location || "Remote",
+      phone: customProfileData?.phone || "",
+      email: customProfileData?.email || "",
+      portfolioUrl: customProfileData?.portfolioUrl || "",
+      githubUrl: customProfileData?.githubUrl || "",
+      linkedinUrl: customProfileData?.linkedinUrl || "",
+    },
+    summary:
+      "Dedicated Software Developer with strong foundations in distributed architectures, modern full-stack web applications, and performant backend APIs. Experienced in designing resilient database schemas, automated testing, and shipping clean, maintainable code in agile, remote environments.",
+    skills: [
+      {
+        categoryName: "Core Technologies",
+        skillsText: customProfileData?.primarySkills
+          ? (Array.isArray(customProfileData.primarySkills)
+              ? customProfileData.primarySkills.join(" • ")
+              : String(customProfileData.primarySkills))
+          : "TypeScript • JavaScript • Python • React • Node.js • SQL • Git",
+      },
+      {
+        categoryName: "Frameworks & Databases",
+        skillsText: "Next.js • Express • PostgreSQL • MongoDB • Redis • REST APIs",
+      },
+      {
+        categoryName: "Tools & Practices",
+        skillsText: "Docker • CI/CD • Unit Testing • Clean Architecture • Agile",
+      },
+    ],
+    projects:
+      customProfileData?.projects && customProfileData.projects.length > 0
+        ? customProfileData.projects.map((p) => ({
+            title: p.title,
+            techStack: p.techStack,
+            liveDemoUrl: "",
+            githubUrl: "",
+            bullets: [
+              p.bulletPoints || `Engineered and deployed ${p.title} leveraging ${p.techStack}.`,
+            ],
+          }))
+        : [
+            {
+              title: "Full-Stack Web Application (TypeScript, React, Node.js)",
+              techStack: "TypeScript, React, Node.js, PostgreSQL",
+              liveDemoUrl: "",
+              githubUrl: "",
+              bullets: [
+                "Designed and deployed responsive full-stack features with state management and automated tests.",
+                "Implemented secure RESTful endpoints with authentication and robust database querying.",
+              ],
+            },
+          ],
+    simulations: [],
+    education: {
+      degree: "Bachelor of Computer Applications (BCA)",
+      university: "University",
+      period: "Present",
+      coursework: "Data Structures • Algorithms • Database Systems • Software Engineering",
+    },
+    targetRole: customProfileData?.title || "Software Developer",
+    targetCompany: "Target Company",
+    atsScore: 85,
+    matchedKeywords: ["TypeScript", "React", "Node.js", "SQL", "Git"],
+    missingKeywords: [],
+    tailoringNotes: "Custom Candidate Profile Baseline",
   };
 }
 

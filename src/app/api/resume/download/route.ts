@@ -1,6 +1,14 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import {
+  canAccessProfile,
+  isDeveloperEmail,
+  getDeveloperDefaultSlug,
+} from "@/lib/authCandidate";
 
 export const dynamic = "force-dynamic";
 
@@ -46,11 +54,54 @@ function resolveCandidatePdf(slug: string, rawFileName?: string | null): { resol
 
 export async function GET(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const sessionUser = session?.user;
+    if (!sessionUser || !sessionUser.id) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const fileNameParam = searchParams.get("fileName") || searchParams.get("variant") || searchParams.get("file");
-    const slugParam = searchParams.get("slug") || searchParams.get("profileSlug") || "roushan";
-    const isInline = searchParams.get("view") === "inline" || searchParams.get("preview") === "true";
+    let slugParam = searchParams.get("slug") || searchParams.get("profileSlug");
 
+    if (!slugParam) {
+      if (isDeveloperEmail(sessionUser.email)) {
+        slugParam = getDeveloperDefaultSlug(sessionUser.email);
+      } else {
+        const userProf = await db.profile.findFirst({ where: { userId: sessionUser.id } });
+        slugParam = userProf?.slug || null;
+      }
+    }
+
+    if (!slugParam) {
+      return NextResponse.json(
+        { success: false, error: "Candidate profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const profile = await db.profile.findUnique({
+      where: { slug: slugParam },
+    });
+
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, error: "Candidate profile not found" },
+        { status: 404 }
+      );
+    }
+
+    if (!canAccessProfile(sessionUser, profile)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not have permission to access this candidate's resume" },
+        { status: 403 }
+      );
+    }
+
+    const isInline = searchParams.get("view") === "inline" || searchParams.get("preview") === "true";
     const resolved = resolveCandidatePdf(slugParam, fileNameParam);
 
     if (!resolved) {
@@ -69,7 +120,7 @@ export async function GET(req: Request) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `${dispositionType}; filename="${resolved.fileName}"`,
         "Content-Length": fileBuffer.length.toString(),
-        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        "Cache-Control": "private, max-age=3600",
       },
     });
   } catch (error) {
@@ -83,9 +134,36 @@ export async function GET(req: Request) {
 
 export async function HEAD(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const sessionUser = session?.user;
+    if (!sessionUser || !sessionUser.id) {
+      return new Response(null, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const fileNameParam = searchParams.get("fileName") || searchParams.get("variant") || searchParams.get("file");
-    const slugParam = searchParams.get("slug") || searchParams.get("profileSlug") || "roushan";
+    let slugParam = searchParams.get("slug") || searchParams.get("profileSlug");
+
+    if (!slugParam) {
+      if (isDeveloperEmail(sessionUser.email)) {
+        slugParam = getDeveloperDefaultSlug(sessionUser.email);
+      } else {
+        const userProf = await db.profile.findFirst({ where: { userId: sessionUser.id } });
+        slugParam = userProf?.slug || null;
+      }
+    }
+
+    if (!slugParam) {
+      return new Response(null, { status: 404 });
+    }
+
+    const profile = await db.profile.findUnique({
+      where: { slug: slugParam },
+    });
+
+    if (!profile || !canAccessProfile(sessionUser, profile)) {
+      return new Response(null, { status: 403 });
+    }
 
     const resolved = resolveCandidatePdf(slugParam, fileNameParam);
 
