@@ -1398,6 +1398,38 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+### 🔴 Case 16: Resolving Enterprise ATS (iCIMS) Iframe Blindness & Extract 400 Errors in AstrePilot
+* **What Happened:**
+  - When testing AstrePilot on a live enterprise portal ([`americas-cookmedical.icims.com`](https://americas-cookmedical.icims.com/jobs/19550/intern%2c-applied-ai-%26-full-stack-development/job)), clicking the **"Extract"** button resulted in:
+    `Action Failed`
+    `Server error: 400`
+  - The user experienced immediate anxiety: *"I had a bad feeling about this. My brain was not ready to accept the fact that astrework could run easily without any problem and no bugs."*
+* **The Root Cause / Mistake:**
+  1. **Enterprise ATS Iframe Blindness:** Legacy enterprise ATS platforms (especially iCIMS, embedded Workday, and Taleo) mount the actual job posting description, requirements, and application inputs inside an iframe (e.g. `<iframe id="icims_content_iframe">`).
+  2. In `extension/content.js`, `extractPageContent()` was executing `clone.querySelectorAll('iframe')` and *stripping all iframes*. As a result, the extracted `pageText` sent to the server was essentially empty (only outer navigation header text remained).
+  3. In `src/app/api/autopilot/extract/route.ts`, when the LLM received empty/sparse text without clear requirements, it returned `isJobPosting: false`, triggering a hard `400` error: *"Could not identify a clear job posting on this page"*.
+  4. In `extension/content.js`, `runExtractJD()` was displaying hardcoded `'Server error: ' + res.status` instead of reading the JSON response `errData.error`.
+* **How We Solved It:**
+  1. **Iframe Content & Form Inspection (`extension/content.js`):**
+     - Updated `extractPageContent()` to safely traverse all same-origin iframes (`iframe.contentDocument.body`), clean irrelevant script/style tags, and extract the full job description text with priority.
+     - Updated `scanFields()` to search both `document` and all same-origin iframes so application inputs inside iCIMS frames are detected and classified.
+     - Expanded `findAndClickApplyButton()` with regex `/^(apply|apply now|apply for this job|apply for this job online|apply online|easy apply|submit application)$/i` and multi-document search.
+     - Added `pageTitle: document.title` to the extraction payload and surfaced explicit `errData.error` messages in the HUD.
+  2. **Intelligent Fallback Heuristics (`src/app/api/autopilot/extract/route.ts`):**
+     - Received `pageTitle` in request body and included it in the LLM context prompt.
+     - Added fallback heuristics: if the LLM misses `jobTitle`, parse it from `pageTitle` (e.g. `"Intern, Applied AI & Full Stack Development"`). If it misses `company`, infer it from `pageTitle` or URL subdomain (`americas-cookmedical.icims.com` -> `Cook Medical`).
+     - If the text contains recognized job signals (`intern`, `developer`, `responsibilities`, `qualifications`), salvage the extraction instead of throwing 400.
+  3. **Repackaged AstrePilot Extension:**
+     - Ran `node scripts/package-extension.js` -> updated `public/downloads/astrepilot-extension.zip`.
+  4. **Quality & Validation:**
+     - `npx tsc --noEmit`: 0 errors.
+     - `npm run lint`: 0 errors, 0 warnings.
+     - `npx vitest run`: 36 test files, 357/357 passing.
+* **Engineering Experience Gained:**
+  - **Rule:** Enterprise ATS platforms like iCIMS, Taleo, and Workday frequently embed job content and application forms in same-origin iframes. A production browser extension must always traverse `iframe.contentDocument` for text extraction, field scanning, and button dispatch rather than relying solely on the top-level DOM.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 

@@ -21,9 +21,10 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { pageText, pageUrl, recruiter } = body as {
+    const { pageText, pageUrl, pageTitle, recruiter } = body as {
       pageText?: string;
       pageUrl?: string;
+      pageTitle?: string;
       recruiter?: {
         name?: string;
         title?: string;
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
       };
     };
 
-    if (!pageText || typeof pageText !== "string") {
+    if (!pageText || typeof pageText !== "string" || pageText.trim().length === 0) {
       return NextResponse.json({ error: "pageText is required" }, { status: 400, headers: CORS });
     }
 
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
     const truncatedText = pageText.substring(0, 15000);
 
     const systemPrompt = `You are an AI assistant specialized in extracting job details from web pages.
-The user will provide the raw text of a webpage. Your task is to identify if it is a job posting and extract the company name, the job title, and the core job description/requirements.
+The user will provide the raw text and title of a webpage. Your task is to identify if it is a job posting and extract the company name, the job title, and the core job description/requirements.
 
 Respond ONLY with a valid JSON object in the following format:
 {
@@ -70,11 +71,21 @@ Respond ONLY with a valid JSON object in the following format:
   "astraShieldReason": "Short explanation of the trust score."
 }`;
 
-    const userPrompt = `Page URL: ${pageUrl || 'unknown'}\n\nPage Text:\n${truncatedText}`;
+    const userPrompt = `Page Title: ${pageTitle || 'unknown'}\nPage URL: ${pageUrl || 'unknown'}\n\nPage Text:\n${truncatedText}`;
 
     const response = await queryMultiProviderLLM(systemPrompt, userPrompt, true);
     
-    let extractedData;
+    let extractedData: {
+      isJobPosting?: boolean;
+      company?: string | null;
+      jobTitle?: string | null;
+      description?: string | null;
+      keySkills?: string[];
+      astraShieldLegit?: boolean;
+      astraShieldScore?: number;
+      astraShieldReason?: string;
+    } = {};
+
     try {
       let cleaned = response.text;
       const jsonStart = cleaned.indexOf("{");
@@ -85,15 +96,52 @@ Respond ONLY with a valid JSON object in the following format:
       extractedData = JSON.parse(cleaned);
     } catch {
       console.error("Failed to parse LLM extraction response:", response.text);
-      return NextResponse.json({ error: "Failed to parse extracted data" }, { status: 500, headers: CORS });
     }
 
-    if (!extractedData.isJobPosting || !extractedData.company || !extractedData.jobTitle) {
+    // Resilient Fallback Heuristics for Title & Company
+    let company = extractedData.company?.trim() || null;
+    let jobTitle = extractedData.jobTitle?.trim() || null;
+
+    if (!jobTitle && pageTitle) {
+      // e.g. "Intern, Applied AI & Full Stack Development - Cook Medical" -> "Intern, Applied AI & Full Stack Development"
+      jobTitle = pageTitle.split(/[-|–•]/)[0].trim();
+    }
+
+    if (!company) {
+      if (pageTitle && /[-|–•]/.test(pageTitle)) {
+        const parts = pageTitle.split(/[-|–•]/);
+        if (parts.length > 1) {
+          company = parts[parts.length - 1].trim();
+        }
+      }
+      if (!company && pageUrl) {
+        try {
+          const hostname = new URL(pageUrl).hostname;
+          const sub = hostname.split(".")[0].replace(/^americas-|^emea-|^apac-/, "");
+          if (sub && sub !== "jobs" && sub !== "careers" && sub !== "www") {
+            company = sub.charAt(0).toUpperCase() + sub.slice(1);
+          }
+        } catch {}
+      }
+    }
+
+    // Verify if content contains recognizable job signals
+    const hasJobKeywords = /(responsibilities|qualifications|requirements|intern|engineer|developer|full stack|experience|apply|job description)/i.test(truncatedText);
+
+    if ((!extractedData.isJobPosting && !hasJobKeywords) || !jobTitle) {
       return NextResponse.json(
-        { error: "Could not identify a clear job posting on this page", extractedData }, 
+        { 
+          error: "Could not identify a clear job posting on this page. Please make sure the job description is fully visible.", 
+          extractedData 
+        }, 
         { status: 400, headers: CORS }
       );
     }
+
+    company = company || "Hiring Company";
+    extractedData.company = company;
+    extractedData.jobTitle = jobTitle;
+    extractedData.description = extractedData.description || truncatedText.slice(0, 3000);
 
     // Quick tailored summary (could be better if we ran a second LLM call, but we'll keep it fast)
     const tailoredSummary = `Highly motivated professional applying for the ${extractedData.jobTitle} position at ${extractedData.company}. Experienced in ${extractedData.keySkills?.slice(0, 3).join(", ") || "relevant technologies"}.`;

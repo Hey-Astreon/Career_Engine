@@ -408,6 +408,33 @@
   }
 
   function extractPageContent() {
+    // 1. Gather text from same-origin iframes FIRST (crucial for iCIMS, embedded Workday, Taleo)
+    let iframeTextChunks = [];
+    try {
+      const iframes = document.querySelectorAll('iframe');
+      for (let i = 0; i < iframes.length; i++) {
+        try {
+          const doc = iframes[i].contentDocument || (iframes[i].contentWindow && iframes[i].contentWindow.document);
+          if (doc && doc.body) {
+            const cloneFrame = doc.body.cloneNode(true);
+            const removeSelectors = ['nav', 'footer', 'header', 'script', 'style', 'noscript', 'svg', 'img'];
+            removeSelectors.forEach(s => {
+              const els = cloneFrame.querySelectorAll(s);
+              for (let j = 0; j < els.length; j++) els[j].remove();
+            });
+            const frameText = (cloneFrame.textContent || '').replace(/\s+/g, ' ').trim();
+            if (frameText.length > 80) {
+              iframeTextChunks.push(frameText);
+            }
+          }
+        } catch (frameErr) {
+          // Cross-origin iframe, cannot read directly
+        }
+      }
+    } catch (e) {
+      console.warn('[AstrePilot] iframe text extraction note:', e);
+    }
+
     const clone = document.body.cloneNode(true);
     const removeSelectors = ['nav', 'footer', 'header', 'script', 'style', 'noscript', 'iframe', 'svg', 'img'];
     removeSelectors.forEach(s => {
@@ -418,6 +445,11 @@
     // textContent is safer on disconnected nodes than innerText
     let text = clone.textContent || '';
     text = text.replace(/\s+/g, ' ').trim();
+
+    // If iframe text exists, append it with priority
+    if (iframeTextChunks.length > 0) {
+      text = (text + '\n\n' + iframeTextChunks.join('\n\n')).trim();
+    }
     
     return {
       pageText: text,
@@ -428,14 +460,28 @@
   }
 
   function findAndClickApplyButton() {
-    const keywords = /^(apply|apply now|apply for this job|apply online|easy apply)$/i;
-    const elements = document.querySelectorAll('a, button, [role="button"]');
-    for (let i = 0; i < elements.length; i++) {
-      if (keywords.test(elements[i].innerText.trim())) {
-        try { chrome.runtime.sendMessage({ type: 'NOTIFY_CLICK_APPLY' }); } catch(e) {}
-        sessionStorage.setItem('ap_auto_open', 'true');
-        elements[i].click();
-        return true;
+    const keywords = /^(apply|apply now|apply for this job|apply for this job online|apply online|easy apply|submit application)$/i;
+    const targetDocs = [document];
+    try {
+      const iframes = document.querySelectorAll('iframe');
+      for (let i = 0; i < iframes.length; i++) {
+        try {
+          const doc = iframes[i].contentDocument || (iframes[i].contentWindow && iframes[i].contentWindow.document);
+          if (doc && doc.body) targetDocs.push(doc);
+        } catch (e) {}
+      }
+    } catch (e) {}
+
+    for (const targetDoc of targetDocs) {
+      const elements = targetDoc.querySelectorAll('a, button, [role="button"]');
+      for (let i = 0; i < elements.length; i++) {
+        const txt = (elements[i].innerText || elements[i].textContent || '').trim();
+        if (keywords.test(txt)) {
+          try { chrome.runtime.sendMessage({ type: 'NOTIFY_CLICK_APPLY' }); } catch(e) {}
+          sessionStorage.setItem('ap_auto_open', 'true');
+          elements[i].click();
+          return true;
+        }
       }
     }
     return false;
@@ -518,38 +564,53 @@
   }
 
   function scanFields() {
-    const inputs = document.querySelectorAll(
-      'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="radio"], input[type="checkbox"], input:not([type]), textarea, select'
-    );
+    const targetDocs = [document];
+    try {
+      const iframes = document.querySelectorAll('iframe');
+      for (let i = 0; i < iframes.length; i++) {
+        try {
+          const doc = iframes[i].contentDocument || (iframes[i].contentWindow && iframes[i].contentWindow.document);
+          if (doc && doc.body) targetDocs.push(doc);
+        } catch (e) {}
+      }
+    } catch (e) {}
+
     const results = [];
     const seenTypes = {};
 
-    inputs.forEach(inp => {
-      const rect = inp.getBoundingClientRect();
-      const isCheckOrRadio = inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox');
-      if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio) return;
-      const computed = window.getComputedStyle(inp);
-      if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio) return;
+    targetDocs.forEach(targetDoc => {
+      const inputs = targetDoc.querySelectorAll(
+        'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="radio"], input[type="checkbox"], input:not([type]), textarea, select'
+      );
 
-      const type = classifyField(inp);
-      if (!type) return;
+      inputs.forEach(inp => {
+        const rect = inp.getBoundingClientRect();
+        const isCheckOrRadio = inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox');
+        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio) return;
+        const computed = (targetDoc.defaultView || window).getComputedStyle(inp);
+        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio) return;
 
-      if (type !== 'SCREENING') {
-        if (seenTypes[type]) return;
-        seenTypes[type] = true;
-      }
+        const type = classifyField(inp);
+        if (!type) return;
 
-      const origVal = (inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox'))
-        ? inp.checked
-        : inp.value;
+        if (type !== 'SCREENING') {
+          if (seenTypes[type]) return;
+          seenTypes[type] = true;
+        }
 
-      results.push({
-        element: inp,
-        type,
-        id: 'f' + Math.random().toString(36).slice(2, 7),
-        originalValue: origVal
+        const origVal = (inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox'))
+          ? inp.checked
+          : inp.value;
+
+        results.push({
+          element: inp,
+          type,
+          id: 'f' + Math.random().toString(36).slice(2, 7),
+          originalValue: origVal
+        });
       });
     });
+
     return results;
   }
 
@@ -866,7 +927,7 @@
       hud.setState('extracting', { step: 'Analyzing job requirements...' });
       const res = await apFetch('/extract', {
         method: 'POST',
-        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl, recruiter: data.recruiter })
+        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl, pageTitle: data.pageTitle, recruiter: data.recruiter })
       });
       
       if (res.ok) {
@@ -922,7 +983,8 @@
            return;
         }
       } else {
-        hud.setState('error', { msg: 'Server error: ' + res.status });
+        const errData = await res.json().catch(() => ({}));
+        hud.setState('error', { msg: errData.error || ('Server error: ' + res.status) });
         return;
       }
     } catch (e) {
@@ -985,7 +1047,7 @@
       hud.setState('extracting', { step: 'Analyzing job requirements...' });
       const res = await apFetch('/extract', {
         method: 'POST',
-        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl, recruiter: data.recruiter })
+        body: JSON.stringify({ pageText: safeText, pageUrl: data.pageUrl, pageTitle: data.pageTitle, recruiter: data.recruiter })
       });
       
       if (res.ok) {
@@ -1011,7 +1073,8 @@
            return;
         }
       } else {
-        hud.setState('error', { msg: 'Server error: ' + res.status });
+        const errData = await res.json().catch(() => ({}));
+        hud.setState('error', { msg: errData.error || ('Server error: ' + res.status) });
         return;
       }
     } catch (e) {
