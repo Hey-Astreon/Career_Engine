@@ -1032,8 +1032,32 @@ ${portfolio}`;
                 <h2>TECHNICAL SKILLS</h2>
                 <div style={{ marginTop: "2pt" }}>
                   {resumeData.skills.map((s) => (
-                    <div key={s.categoryName} className="ats-skill-row" style={{ fontSize: "8.35pt", lineHeight: "1.28", color: "#1e293b", marginBottom: "1.6pt" }}>
-                      <b>{s.categoryName}:</b> {renderTextWithHeatmap(s.skillsText)}
+                    <div
+                      key={s.categoryName}
+                      className="ats-skill-row"
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        fontSize: "8.35pt",
+                        lineHeight: "1.28",
+                        color: "#1e293b",
+                        marginBottom: "1.6pt",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "11pt",
+                          flexShrink: 0,
+                          fontWeight: 700,
+                          userSelect: "none",
+                          lineHeight: "1.28",
+                        }}
+                      >
+                        •
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b>{s.categoryName}:</b> {renderTextWithHeatmap(s.skillsText)}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1047,11 +1071,11 @@ ${portfolio}`;
                 <div style={{ marginTop: "2pt" }}>
                   {resumeData.projects.map((proj) => (
                     <div key={proj.title} style={{ marginBottom: "2.8pt" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                        <h3 style={{ fontSize: "8.75pt" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8pt" }}>
+                        <h3 style={{ fontSize: "8.75pt", margin: 0, flex: 1 }}>
                           <b>{renderTextWithHeatmap(proj.title)}</b>
                         </h3>
-                        <span style={{ fontSize: "7.8pt", color: "#475569" }}>
+                        <span style={{ fontSize: "7.8pt", color: "#475569", whiteSpace: "nowrap", flexShrink: 0, marginTop: "1pt" }}>
                           <a href={proj.liveDemoUrl} target="_blank" rel="noreferrer">Live Demo</a> |{" "}
                           <a href={proj.githubUrl} target="_blank" rel="noreferrer">GitHub</a>
                         </span>

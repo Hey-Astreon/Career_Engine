@@ -125,7 +125,7 @@ export function getMasterResumeBaseline(
       ],
       projects: [
         {
-          title: "AstreWork — Autonomous Remote Career Platform & AstrePilot Extension (Next.js 16, React 19, Gemini API, Chrome MV3, Turso, Redis)",
+          title: "AstreWork — Autonomous Career Platform & AstrePilot Extension (Next.js 16, Chrome MV3, Gemini API)",
           techStack: "Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension (Manifest V3), Turso LibSQL, Redis 7, TailwindCSS",
           liveDemoUrl: "https://astrework.app",
           githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
@@ -242,7 +242,7 @@ export function getMasterResumeBaseline(
     ],
     projects: [
       {
-        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (Next.js 16, TypeScript, Turso LibSQL, Redis, OCI, Docker)",
+        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Turso, Redis)",
         techStack: "Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud (OCI), Docker, Caddy (HTTP/3)",
         liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",

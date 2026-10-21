@@ -1391,8 +1391,11 @@ export default function ResumeMakerPage() {
                   <h2>TECHNICAL SKILLS</h2>
                   <div className="mt-1 space-y-0.5 text-[7.8pt] text-slate-800 leading-tight">
                     {resumeData.skills.map((s, idx) => (
-                      <div key={idx} className="ats-skill-row">
-                        <b>{s.categoryName}:</b> {s.skillsText}
+                      <div key={idx} className="ats-skill-row flex items-start">
+                        <span className="w-3 shrink-0 font-bold select-none">•</span>
+                        <div className="flex-1 min-w-0">
+                          <b>{s.categoryName}:</b> {s.skillsText}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1406,14 +1409,14 @@ export default function ResumeMakerPage() {
                   <div className="mt-1 space-y-2">
                     {resumeData.projects.map((proj, pIdx) => (
                       <div key={pIdx}>
-                        <div className="flex items-baseline justify-between text-[8.1pt]">
-                          <div>
+                        <div className="flex items-start justify-between text-[8.1pt] gap-2">
+                          <div className="flex-1 min-w-0">
                             <strong className="text-slate-900">{proj.title}</strong>
                             {proj.techStack && (
                               <span className="text-slate-700 font-medium"> ({proj.techStack})</span>
                             )}
                           </div>
-                          <div className="text-[7.4pt] text-blue-700 space-x-1.5 shrink-0">
+                          <div className="text-[7.4pt] text-blue-700 space-x-1.5 shrink-0 whitespace-nowrap mt-0.5">
                             {proj.liveDemoUrl && (
                               <a
                                 href={proj.liveDemoUrl}
