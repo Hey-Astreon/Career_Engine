@@ -53,4 +53,21 @@ Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Protocol 9926"**,
 2. **ORM & Database:** Prisma 7 with LibSQL adapter (`@prisma/adapter-libsql`) connecting to `file:./prisma/dev.db`.
 3. **Multi-Provider Scraping:** 17+ high-yield discovery scrapers (Greenhouse, Ashby, Lever, Workable, SmartRecruiters, Recruitee, Himalayas, Remotive, Arbeitnow, RemoteOK, Jobicy, Simplify, ArcDev, BuiltIn, LinkedIn, HN Hiring, micro1). All scraped jobs are ingested with multi-signal deduplication and provenance tracking.
 4. **Tier-1 ATS Resume Maker:** Custom client-side resume canvas at `/resume-maker` with real-time audit score calculation and 100% clean A4 print optimization.
-5. **Git Repository Remote:** `https://github.com/Hey-Astreon/CareerAgent.git` on branch `main`. Always author commits as `Hey-Astreon <playboxstation460@gmail.com>`.
+5. **Git Repository Remote:** `https://github.com/Hey-Astreon/Career_Engine.git` on branch `main`. Always author commits as `Hey-Astreon <playboxstation460@gmail.com>`.
+
+---
+
+## ⚠️ SECTION 5: INVIOLABLE LAW — BCA CANDIDATE TITLE REGULATION (DEVELOPER ONLY, NEVER ENGINEER)
+
+Both Roushan Kumar and Ayushi Raj are pursuing a **Bachelor of Computer Applications (BCA)** at Amity University Noida. Under Indian regulatory, academic, and corporate compliance standards, **they are STRICTLY PROHIBITED from using the title "Engineer"** (which is legally reserved for B.Tech / B.E. engineering graduates).
+- **FORBIDDEN TITLES:** Software Engineer, Systems Engineer, Backend Engineer, Full Stack Engineer, AI Engineer.
+- **MANDATORY PERMITTED TITLES:** **Software Developer**, **Full-Stack Developer**, **Backend Developer**, **Systems Architect**, **AI Developer**, **Creator**, **Co-Developer**, **Builder**.
+- **SCOPE:** Strictly enforced across master profiles, resumes, database records, AI optimizer prompts, outreach generation, and portfolio representations.
+
+---
+
+## 🔒 SECTION 6: INVIOLABLE LAW — DEVELOPER CO-OWNERSHIP PRIVACY & CANDIDATE CONTEXT ISOLATION
+
+AstreWork was created, architected, and built exclusively by **Roushan Kumar** (`playboxstation460@gmail.com`) and **Ayushi Raj** (`ayushi29507@gmail.com`) as co-developers.
+1. **Dual Founder Privileges:** Only `playboxstation460@gmail.com` and `ayushi29507@gmail.com` can view and switch between both candidate contexts (`roushan` and `ayushi`).
+2. **Third-Party Isolation:** Any third-party user registering or logging in with any other email address MUST NEVER see, query, or access Roushan's or Ayushi's candidate profiles, resumes, phone numbers, or application pipelines. All candidate-scoped API routes enforce `403 Forbidden` for unauthorized third parties. Third-party users only ever see their own profile (`profile.userId === session.user.id`).

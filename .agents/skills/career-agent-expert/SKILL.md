@@ -18,11 +18,11 @@ description: >-
 
 ## 🏛️ 1. System Identity & Mission
 
-* **Project Name:** CareerAgent / RCMS (AI Career Operating System & Autonomous Job Engine)
-* **Local Workspace Path:** `x:\job_engine\ai_career_engine`
-* **Remote GitHub Repository:** `https://github.com/Hey-Astreon/CareerAgent.git` (`main` branch)
+* **Project Name:** CareerAgent / RCMS / AstreWork (AI Career Operating System & Autonomous Job Engine)
+* **Local Workspace Path:** `x:\Career_Engine\1_RCMS`
+* **Remote GitHub Repository:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)
 * **Founders:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))
-* **Primary Objective:** Deliver a high-speed, autonomous career discovery and application engine that scrapes, filters, scores, matches, and crafts application kits for software engineering roles globally.
+* **Primary Objective:** Deliver a high-speed, autonomous career discovery and application engine that scrapes, filters, scores, matches, and crafts application kits for software developer roles globally.
 
 ---
 
@@ -33,14 +33,16 @@ description: >-
 | **Framework** | Next.js (App Router, Turbopack) | `16.3.0` |
 | **Frontend Core** | React / React DOM | `19.2.8` |
 | **Language** | TypeScript | `5.9.3` |
-| **Database Engine** | SQLite (`prisma/dev.db`) | Local WAL Mode |
+| **Primary Cloud DB** | Turso Cloud LibSQL | `aws-ap-south-1` (Mumbai) Distributed SQLite WAL |
+| **Local Dev DB** | SQLite (`prisma/dev.db`) | Local WAL Mode |
 | **ORM** | Prisma ORM with LibSQL Adapter | `@prisma/client` & `@prisma/adapter-libsql` `7.10.0` |
-| **Styling** | Tailwind CSS v4 + Vanilla CSS Design Tokens | PostCSS v4, Custom A4 Print Engine |
+| **In-Memory Cache** | Redis 7 Alpine (`ioredis`) | 1024 MB LRU cap with fallback in-memory cache |
+| **Cloud Hosting** | Oracle Cloud (OCI Ampere ARM64) | 4 OCPU / 24GB RAM, Caddy (HTTP/3), Docker Watchtower |
+| **Scraping Trinity** | Playwright, Puppeteer, Selenium, Cheerio, Axios | Headless stealth execution, REST & XML feeds |
+| **Autonomous Extension** | AstrePilot | Chrome Manifest V3, Injected Shadow DOM HUD |
+| **Styling** | Tailwind CSS v4 + Vanilla CSS Design Tokens | PostCSS v4, Custom 100% Single-Page A4 Print Engine |
 | **State Management** | Zustand | `5.0.14` |
-| **Data Fetching** | TanStack React Query | `5.101.4` |
-| **Validation** | Zod | `4.4.3` |
-| **Scraping & Parsing** | Playwright, Cheerio, Axios, PDF-Parse | `1.62.1`, `1.2.0`, `1.19.0`, `2.4.5` |
-| **Testing** | Vitest with Coverage | `vitest` `4.1.10` |
+| **Testing** | Vitest with Coverage | `vitest` `4.1.10` (36 suites, 357 passing tests) |
 
 ---
 
@@ -82,15 +84,17 @@ Located in `src/lib/ai/scorer.ts`, `src/lib/ai/drafter.ts`, and `src/app/resume-
 ## 📄 6. Tier-1 ATS Resume Maker Engine
 
 Located in `src/app/resume-maker/page.tsx` & `src/lib/resumeBaseline.ts`:
-- **5 High-Performance Starter Presets**: Systems & Backend Engineer, AI & Full-Stack Engineer, Modern Frontend Architect, CS Fresher / Early Career, and Clean Slate.
+- **5 High-Performance Starter Presets**: Systems & Backend Developer, AI & Full-Stack Developer, Modern Frontend Architect, CS Fresher / Early Career, and Clean Slate.
 - **Live Real-Time ATS Audit Engine**: Evaluates XYZ bullet metrics, skill categorization, summary density, and contact reachability.
-- **A4 Print Engine**: Pure CSS `@media print` isolation ensuring 210mm x 297mm crisp single/multi-page PDF generation without browser clutter.
+- **A4 Print Engine**: Strict single-page A4 sheet (padding `6.0mm 8.5mm 5.0mm`, divider margins `1.5pt 0 1.2pt`, hanging indent flexbox gutter for skill bullets, pinned project links).
 
 ---
 
 ## 🛡️ 7. Core Non-Negotiable Operational Rules
 
-1. **Zero Database Corruption:** Never wipe `dev.db`. All schema alterations must use `npx prisma db push --skip-generate` or verified migration files.
+1. **Zero Database Corruption:** Never wipe `dev.db` or Turso Cloud. All schema alterations must use verified migrations.
 2. **Commit Identity:** Always author Git commits as `Hey-Astreon <playboxstation460@gmail.com>`.
 3. **Proactive Validation:** Always verify with `npm run build` and `npx vitest run` before marking tasks complete.
-4. **Founder Protocol Override:** Respond with immediate full memory restoration upon receiving **Code 9926**.
+4. **BCA Candidate Title Regulation:** STRICTLY PROHIBITED from using the title "Engineer" for Roushan or Ayushi. Mandated titles: "Software Developer", "Full-Stack Developer", "Backend Developer", "Systems Architect", "Creator", "Co-Developer".
+5. **Developer Co-Ownership Privacy:** Only `playboxstation460@gmail.com` and `ayushi29507@gmail.com` have cross-profile visibility into both developer accounts. Third-party users receive 403 Forbidden on developer profiles and see only their personal data.
+6. **Founder Protocol Override:** Respond with immediate full memory restoration upon receiving **Code 9926**.

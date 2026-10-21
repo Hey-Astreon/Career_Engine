@@ -149,14 +149,21 @@
 | **Primary Cloud DB** | Turso Cloud (LibSQL) | `aws-ap-south-1` | Distributed SQLite over HTTP/WebSocket, WAL mode, AWS Mumbai |
 | **Local Dev DB** | SQLite (`prisma/dev.db`) | Local WAL | Offline/fallback local relational persistence |
 | **Prisma ORM** | `@prisma/client`, `@prisma/adapter-libsql` | `7.9.1` / `7.10.0` | Universal driver adapter bridge to Turso Cloud & SQLite |
+| **In-Memory Cache** | Redis 7 Alpine (`ioredis`) | `5.4.1` | 1024 MB LRU caching layer with defensive in-memory fallback |
+| **Scraping Trinity** | `playwright`, `puppeteer-core`, `selenium-webdriver` | Modern | Headless browser automation, anti-bot bypasses, dynamic JS execution |
+| **DOM & Network** | `cheerio`, `axios` | `1.2.0` / `1.19.0` | Fast HTML AST traversal, RSS/XML parsing, REST APIs |
+| **Cloud Infrastructure** | Oracle Cloud (OCI Ampere ARM64) | 4 OCPU / 24GB | High-performance production hosting in Mumbai datacenter |
+| **Containers & CD** | Docker, Docker Compose, Watchtower | Latest | Multi-stage image builds, isolated services, 60s automated CD reload |
+| **Reverse Proxy** | Caddy Server | Modern | Automated Let's Encrypt SSL, HTTP/2 & HTTP/3 (QUIC) termination |
+| **AI SDK & Agents** | Google GenAI SDK (`@google/genai`), Groq, Cerebras, NIM | Modern | Multi-Model LLM routing, ATS match scoring, autonomous agent reasoning |
+| **Cryptography** | Web Crypto API, HMAC-SHA256 | Native | AES-GCM (256-bit) memory isolation, PBKDF2 (100k iters), signed tokens |
 | **CI Headless Runner** | `tsx` | `4.19.3` | Deterministic headless TypeScript execution in GitHub Actions CI |
 | **Autonomous Extension** | AstrePilot | `Manifest V3` | Injected shadow-DOM glassmorphic HUD, ATS autofill, in-browser scraping |
-| **Styling** | `tailwindcss`, `@tailwindcss/postcss` | `4.0` | Tailwind CSS 4, Custom Glassmorphic Tokens |
+| **Styling** | `tailwindcss`, `@tailwindcss/postcss` | `4.0` | Tailwind CSS 4, Custom Glassmorphic Tokens, A4 Sheet Print CSS |
 | **Icons** | `lucide-react` | `1.28.0` | High-density UI iconography |
 | **State Management** | `zustand` | `5.0.14` | Client-side reactive profile & UI store |
-| **Scraping & DOM** | `cheerio`, `axios` | `1.2.0` / `1.19.0` | Headless execution, RSS/XML parsing, JSON REST |
 | **Document Parser** | `pdf-parse` | `2.4.5` | Resume text extraction |
-| **Test Runner** | `vitest`, `@vitest/coverage-v8` | `4.1.10` | 28 test suites, 301+ passing tests |
+| **Test Runner** | `vitest`, `@vitest/coverage-v8` | `4.1.10` | 36 test suites, 357 passing tests |
 
 ---
 
@@ -227,7 +234,7 @@ erDiagram
 
 ### 1. Starter Presets (`src/lib/resumeBaseline.ts`)
 - **Systems & Backend Architect:** Distributed systems, microservices, Rust/Go/Node.js, high-throughput pipelines.
-- **AI & Full-Stack Engineer:** Next.js 16, React 19, LLM multi-model pipelines, Python, Prisma ORM, PyTorch.
+- **AI & Full-Stack Developer:** Next.js 16, React 19, LLM multi-model pipelines, Python, Prisma ORM, PyTorch.
 - **Modern Frontend Architect:** High-performance React, Tailwind CSS, TypeScript, micro-frontends, accessibility.
 - **CS Fresher / Early Career:** Core CS foundations, DSA, full-stack projects, hackathon achievements, certifications.
 - **Clean Slate:** Structured empty baseline ready for manual data entry.
@@ -239,8 +246,12 @@ erDiagram
 - **Experience XYZ Metrics Score (40%):** Audits bullets using the Google XYZ formula (*"Accomplished [X] as measured by [Y], by doing [Z]"*) detecting percentage increases, millisecond reductions, and action verbs.
 
 ### 3. A4 Print Engine Geometry
-- `.ats-a4-sheet`: Strict `210mm x 297mm` bounding box.
+- `.ats-a4-sheet`: Strict `210mm x 297mm` bounding box with optimized padding: `6.0mm 8.5mm 5.0mm` (reclaiming ~28pt vertical space).
 - `.ats-print-container`: Isolated wrapper.
+- `.ats-a4-sheet hr`: Strict `1.5pt 0 1.2pt` divider margin.
+- **Technical Skills Hanging Indent:** Two-column flex gutter (`<span style={{ width: "10pt" }}>•</span>` + `<div style={{ flex: 1 }}><b>{category}:</b> {skills}</div>`), ensuring wrapped skills indent parallel to category titles.
+- **Project Link Header:** `display: flex; justify-content: space-between; align-items: flex-start; gap: 8pt` with `whiteSpace: nowrap; flexShrink: 0` for `Live Demo | GitHub`.
+- `@media print`: Hides `.no-print` elements (navigation rail, header, action bars, audit cards) and applies `@page { size: A4 portrait; margin: 0; }`.
 - `@media print`: Hides `.no-print` elements (navigation rail, header, action bars, audit cards) and applies `@page { size: A4 portrait; margin: 0; }`.
 
 ---
@@ -496,7 +507,7 @@ Located in `extension/`:
 ```
 
 1. **Step 1: Fresh Batch Sourcing (08:00 - 09:00)**
-   - Open [https://astrework.app/dashboard](https://astrework.app/dashboard). Filter for `Remote: Worldwide / India`, `Role: Backend / Full Stack / AI / Software Engineer`, `Tier: Tier 1 Internship / Early Career`.
+   - Open [https://astrework.app/dashboard](https://astrework.app/dashboard). Filter for `Remote: Worldwide / India`, `Role: Backend / Full Stack / AI / Software Developer`, `Tier: Tier 1 Internship / Early Career`.
    - Open 25–30 direct ATS application links in background tabs (`Cmd/Ctrl + Click`).
 2. **Step 2: High-Velocity ATS Ingestion (09:00 - 11:30)**
    - On each job tab, press `Alt + Shift + A` to summon AstrePilot HUD.
