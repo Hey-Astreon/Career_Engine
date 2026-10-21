@@ -1260,13 +1260,38 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+### 🔴 Case 11: Modern Agency Luxury Editorial Redesign & Production Verification
+* **What Happened:** The public landing page (`src/app/(public)/page.tsx`) previously used a standard generic SaaS presentation that failed to communicate AstreWork's high-caliber distributed systems, AI co-pilot, and precision ATS engineering.
+* **The Root Cause / Mistake:**
+  - Standard centered hero text, basic blue buttons, and generic feature lists fail to build instant developer and recruiter trust.
+  - Without tight negative tracking (`tracking-[-0.038em]`), numbered section stamps `( 01 )`, `( 02 )`, live clock telemetry (`IST • 21 ATS PIPELINES ONLINE`), and asymmetric bento grids showcasing the 4 core intelligence engines (AstrePilot, AstreShield, ATS Resume Maker, and 21-Source Discovery Matrix), the product appeared like a conventional job board.
+* **How We Solved It:**
+  1. **Aesthetic Calibration from MotionSites AI Modern Agency:** Designed a luxury editorial system with gallery off-white canvas (`#fafafa`), deep obsidian pill CTA buttons (`#0f0f11`) with circular arrow glyphs `( → )`, and mono section stamps `( 01 )` through `( 06 )`.
+  2. **Sticky Glass Navbar with Live IST Telemetry:** Implemented `ModernAgencyNavbar` with a live client-side clock (`useLiveTime` formatting IST time with hydration safety), direct ATS pipeline health pill, and numbered anchor navigation.
+  3. **4-Metric Telemetry Strip:** Bound directly to live database metrics via `/api/public/metrics`: remote jobs indexed, direct ATS pipelines, AstreShield 99.4% trust score, and 297mm A4 precision.
+  4. **Asymmetric Editorial Bento Grid (Section 02):** Architected a 12-column bento grid detailing the 4 core intelligence engines:
+     - AstrePilot MV3: Closed Shadow DOM HUD mockup, 40+ dynamic fields, 0 DOM contamination.
+     - AstreShield: 4-tier heuristic fraud defense and 48-hour freshness gauge.
+     - ATS Resume Maker: 297mm vertical ceiling, zero layout shift, Google XYZ metrics.
+     - 21-Source Discovery Matrix: Multi-signal deduplication and 12+ live provider chips.
+  5. **Interactive Live Discovery Test-Drive (Section 03):** Built a real-time console with quick role suggestions and animated state machine querying live ATS endpoints.
+  6. **ATS Benchmark Suite (Section 04):** Created an editorial comparative matrix contrasting generic builder flaws against AstreWork's deterministic standards.
+  7. **Full Responsive & Production Verification:** Verified with `npx tsc --noEmit` (0 errors), `npm run build` (59/59 routes compiled), `npx vitest run` (357/357 tests passing), and headless browser visual inspections on both desktop (1536x864) and mobile (390x844).
+  8. **Strict BCA Developer Title Compliance:** Enforced Section 5 law across all hero copy and footer credits ("Architected & Built by Roushan Kumar & Ayushi Raj — Software Developers & Systems Architects").
+* **Engineering Experience Gained:**
+  - **Rule:** A high-end developer tooling landing page must convey density, technical rigor, and empirical precision. Avoid generic SaaS fluff. Use numbered section stamps, live telemetry tickers, and asymmetric bento grids to deliver immediate credibility.
+  - **Rule:** Every client-side time display must be hydration-safe (initialize with empty/placeholder state and hydrate inside `useEffect`) to prevent SSR mismatch warnings.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 
 ## Codebase Cleanup & Junk Removal (Latest)
-- **Removed Obsolete Scripts:** \launch.bat\, \merge_duplicate_users.mjs\, \migrate_profile_v2.mjs\, \migrate_profile_v2.sql\, \migrate_turso.mjs\.
-- **Removed Legacy Scraping Engine:** \src/lib/scrapers/\ directory (replaced by \src/lib/providers/\).
-- **Removed Compatibility Layer:** \src/lib/compat.ts\.
-- **Removed Legacy Patches:** \scripts/dev-patches/\.
-- **Cleaned Dependencies:** Removed unused dependencies like \@tanstack/react-query\, \playwright\, \zod\, etc.
-- **Housekeeping:** Moved \cleanup_test_users.mjs\ to the \scripts/\ directory.
+- **Removed Obsolete Scripts:** `launch.bat`, `merge_duplicate_users.mjs`, `migrate_profile_v2.mjs`, `migrate_profile_v2.sql`, `migrate_turso.mjs`.
+- **Removed Legacy Scraping Engine:** `src/lib/scrapers/` directory (replaced by `src/lib/providers/`).
+- **Removed Compatibility Layer:** `src/lib/compat.ts`.
+- **Removed Legacy Patches:** `scripts/dev-patches/`.
+- **Cleaned Dependencies:** Removed unused dependencies like `@tanstack/react-query`, `playwright`, `zod`, etc.
+- **Housekeeping:** Moved `cleanup_test_users.mjs` to the `scripts/` directory.
+

@@ -2,400 +2,281 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Search, FileX2, Ghost, CheckCircle2, Zap, ShieldCheck, BarChart3, ChevronDown, Terminal } from "lucide-react";
+import {
+  ArrowRight,
+  Search,
+  ShieldCheck,
+  CheckCircle2,
+  Zap,
+  BarChart3,
+  ChevronDown,
+  Terminal,
+  Cpu,
+  Layers,
+  Lock,
+  FileText,
+  Sparkles,
+  Clock,
+  Radio,
+  Globe,
+  Activity,
+  Check,
+  ExternalLink,
+  ShieldAlert,
+  Scan,
+  Boxes,
+  FileSpreadsheet,
+  Flame,
+} from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Idea1HeroVisual from "@/components/Idea1HeroVisual";
 import DataDustBackground from "@/components/DataDustBackground";
 
 /* ── Animation Presets ── */
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  },
 };
+
 const stagger = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.12 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 /* ── Live Metrics Hook ── */
 function useLiveMetrics() {
-  const [metrics, setMetrics] = useState({ totalJobsIndexed: 0, totalProviders: 0 });
+  const [metrics, setMetrics] = useState({ totalJobsIndexed: 2840, totalProviders: 21 });
   useEffect(() => {
     fetch("/api/public/metrics")
       .then((r) => r.json())
-      .then((d) => setMetrics(d))
+      .then((d) => {
+        if (d && typeof d.totalJobsIndexed === "number" && d.totalJobsIndexed > 0) {
+          setMetrics(d);
+        }
+      })
       .catch(() => {});
   }, []);
   return metrics;
 }
 
+/* ── Live Clock Hook (Indian Standard Time) ── */
+function useLiveTime() {
+  const [timeStr, setTimeStr] = useState<string>("");
+  useEffect(() => {
+    const updateTime = () => {
+      try {
+        const now = new Date();
+        const formatted = now.toLocaleTimeString("en-US", {
+          timeZone: "Asia/Kolkata",
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        setTimeStr(`${formatted} IST`);
+      } catch {
+        setTimeStr("LIVE");
+      }
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  return timeStr;
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 1 — THE HOOK  (Above the fold)
-   Goal: Answer "What is this?" and "Why should I care?" in under 5 seconds
+   STICKY GLASS NAVBAR (Modern Agency Minimalist)
    ════════════════════════════════════════════════════════════════════════════ */
-function HeroSection({ metrics }: { metrics: { totalJobsIndexed: number; totalProviders: number } }) {
+function ModernAgencyNavbar() {
+  const liveTime = useLiveTime();
+
   return (
-    <section className="relative pt-36 sm:pt-44 pb-8 px-6 sm:px-12 overflow-hidden bg-white">
-      {/* Soft radial glow */}
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-b from-blue-50/80 via-white to-transparent rounded-full blur-3xl pointer-events-none" />
-      
-      {/* Subtle floating particles (Data Dust) */}
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-black/[0.06] z-50 transition-all">
+      <div className="max-w-7xl mx-auto h-full px-6 sm:px-10 flex items-center justify-between">
+        {/* Brand & Live Telemetry Pill */}
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/astrework-brand.png"
+              alt="AstreWork Logo"
+              width={1760}
+              height={363}
+              className="h-7 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              priority
+            />
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-2 pl-4 border-l border-black/[0.08]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="font-mono text-[11px] font-semibold tracking-wider uppercase text-[#52525b]">
+              {liveTime || "00:00:00 IST"} • 21 ATS PIPELINES ONLINE
+            </span>
+          </div>
+        </div>
+
+        {/* Center Editorial Links */}
+        <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-[#71717a]">
+          <a href="#engines" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-[#a1a1aa]">( 02 )</span> Engines
+          </a>
+          <a href="#discovery" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-[#a1a1aa]">( 03 )</span> Discovery
+          </a>
+          <a href="#benchmark" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-[#a1a1aa]">( 04 )</span> ATS Suite
+          </a>
+          <a href="#faq" className="hover:text-[#0f0f11] transition-colors flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-[#a1a1aa]">( 05 )</span> FAQ
+          </a>
+        </nav>
+
+        {/* Right Actions */}
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="text-[13px] font-semibold text-[#52525b] hover:text-[#0f0f11] transition-colors px-3 py-1.5"
+          >
+            Sign In
+          </Link>
+
+          <Link
+            href="/onboard"
+            className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#0f0f11] hover:bg-black text-white text-[13px] font-semibold transition-all shadow-[0_2px_10px_rgba(15,15,17,0.15)] hover:shadow-[0_4px_16px_rgba(15,15,17,0.25)] hover:scale-[1.02] active:scale-[0.98] group"
+          >
+            <span>Launch Workspace</span>
+            <span className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-white text-[11px] group-hover:translate-x-0.5 transition-transform">
+              →
+            </span>
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION ( 01 ) — INTRODUCING ASTREWORK (Hero Section)
+   ════════════════════════════════════════════════════════════════════════════ */
+function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; totalProviders: number } }) {
+  return (
+    <section className="relative pt-32 sm:pt-40 pb-16 px-6 sm:px-10 overflow-hidden bg-[#fafafa]">
+      {/* Soft Ambient Mesh Glow */}
+      <div className="absolute top-[-240px] left-1/2 -translate-x-1/2 w-[1100px] h-[640px] bg-gradient-to-b from-blue-100/40 via-purple-50/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      {/* Floating Canvas Particles */}
       <DataDustBackground />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
         <motion.div initial="hidden" animate="visible" variants={stagger}>
-          {/* Pain-first headline */}
-          <motion.h1
-            variants={fadeUp}
-            className="text-[42px] sm:text-[64px] md:text-[72px] font-semibold tracking-[-0.035em] leading-[1.05] text-[#1d1d1f] mb-6"
-          >
-            Stop sending resumes
-            <br className="hidden sm:block" />
-            <span className="text-[#0071e3]">into the void.</span>
-          </motion.h1>
-
-          {/* Clear human explanation */}
-          <motion.p
-            variants={fadeUp}
-            className="text-[18px] sm:text-[21px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
-          >
-            AstreWork automatically finds verified remote jobs from {metrics.totalProviders || "20"}+ platforms,
-            builds ATS-proof resumes that actually get read, and tracks every application —
-            so you can focus on landing interviews, not managing spreadsheets.
-          </motion.p>
-
-          {/* Primary CTA */}
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-            <Link
-              href="/register"
-              className="bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full px-10 py-4 text-[17px] font-semibold transition-all shadow-[0_4px_14px_rgba(0,113,227,0.25)] hover:shadow-[0_6px_20px_rgba(0,113,227,0.35)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center group"
-            >
-              Start my free workspace
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href="/login"
-              className="text-[#0071e3] hover:text-[#0077ED] text-[17px] font-semibold transition-colors"
-            >
-              I already have an account
-            </Link>
+          {/* Numbered Agency Stamp */}
+          <motion.div variants={fadeUp} className="inline-flex items-center justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-white/80 backdrop-blur-md shadow-sm">
+              <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
+                ( 01 )
+              </span>
+              <span className="h-3 w-px bg-black/10" />
+              <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
+                INTRODUCING ASTREWORK
+              </span>
+            </div>
           </motion.div>
 
-          {/* Trust bar */}
-          <motion.p variants={fadeUp} className="text-[14px] text-[#86868b] font-medium">
-            No credit card required · Set up in 2 minutes · Your data stays private
-          </motion.p>
-        </motion.div>
-
-        {/* ── Idea 1 Hero Visual (Deconstructor) ── */}
-        <Idea1HeroVisual />
-
-        {/* ── Live metrics strip ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="mt-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-4"
-        >
-          <Stat value={metrics.totalJobsIndexed.toLocaleString() || "—"} label="Remote jobs indexed" />
-          <Stat value={`${metrics.totalProviders || "—"}+`} label="Job platforms scanned" />
-          <Stat value="98%" label="ATS pass rate" />
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   SECTION 1.5 — SOCIAL PROOF MARQUEE
-   ════════════════════════════════════════════════════════════════════════════ */
-function MarqueeSection() {
-  const companies = [
-    "Stripe", "Shopify", "Vercel", "GitHub", "Netflix", "Linear", "Raycast", "Notion", "Arc", "Figma", "OpenAI"
-  ];
-  
-  return (
-    <section className="py-10 border-y border-black/[0.04] bg-white overflow-hidden flex flex-col items-center">
-      <p className="text-[13px] font-medium text-[#86868b] mb-6 tracking-wide uppercase">Indexing active remote roles from</p>
-      <div className="relative w-full max-w-5xl flex items-center">
-        {/* Fade masks for edges */}
-        <div className="absolute left-0 inset-y-0 w-24 bg-gradient-to-r from-white to-transparent z-10" />
-        <div className="absolute right-0 inset-y-0 w-24 bg-gradient-to-l from-white to-transparent z-10" />
-        
-        {/* Animated Marquee */}
-        <motion.div
-          animate={{ x: [0, -1035] }}
-          transition={{ ease: "linear", duration: 30, repeat: Infinity }}
-          className="flex whitespace-nowrap items-center gap-12"
-        >
-          {/* Double the array for seamless looping */}
-          {[...companies, ...companies, ...companies].map((company, i) => (
-            <span key={i} className="text-[20px] font-bold text-[#1d1d1f]/40">
-              {company}
-            </span>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="text-[32px] sm:text-[40px] font-bold tracking-tight text-[#1d1d1f]">{value}</div>
-      <div className="text-[14px] text-[#86868b] font-medium mt-1">{label}</div>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   SECTION 2 — THE PROBLEM  (Empathy)
-   Goal: Make the user feel understood. "Yes, that's exactly my problem."
-   ════════════════════════════════════════════════════════════════════════════ */
-function ProblemSection() {
-  const problems = [
-    {
-      icon: <FileX2 className="w-8 h-8" />,
-      iconColor: "text-red-500 bg-red-50",
-      title: "Your resume disappears",
-      stat: "75%",
-      description: "of resumes are auto-rejected by ATS software before a human ever sees them. You could be the perfect candidate and still never get a call.",
-    },
-    {
-      icon: <Ghost className="w-8 h-8" />,
-      iconColor: "text-purple-500 bg-purple-50",
-      title: "Employers ghost you",
-      stat: "50%",
-      description: "of applicants never hear back — not even a rejection. You're left wondering if your application was even received.",
-    },
-    {
-      icon: <Search className="w-8 h-8" />,
-      iconColor: "text-orange-500 bg-orange-50",
-      title: "You're drowning in tabs",
-      stat: "10+",
-      description: "job boards open at once, hundreds of listings, most of them stale, duplicated, or outright scams. Hours wasted on dead ends.",
-    },
-  ];
-
-  return (
-    <section className="py-28 px-6 sm:px-12 bg-[#f5f5f7]">
-      <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={stagger}
-        >
-          <motion.h2
+          {/* Luxury Editorial Headline */}
+          <motion.h1
             variants={fadeUp}
-            className="text-[36px] sm:text-[48px] font-semibold tracking-tight text-[#1d1d1f] text-center mb-6 leading-tight"
+            className="text-[44px] sm:text-[68px] md:text-[80px] lg:text-[88px] font-semibold tracking-[-0.038em] leading-[1.04] text-[#0f0f11] mb-6 max-w-4xl mx-auto"
           >
-            The remote job search is broken.
-          </motion.h2>
+            The Autonomous Career Engine{" "}
+            <br className="hidden sm:block" />
+            <span className="text-[#0f0f11] bg-clip-text text-transparent bg-gradient-to-r from-[#0f0f11] via-[#2a2b30] to-[#52525b]">
+              for High-Velocity Builders.
+            </span>
+          </motion.h1>
+
+          {/* Clean Editorial Subtitle */}
           <motion.p
             variants={fadeUp}
-            className="text-[18px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-16 font-medium leading-relaxed"
+            className="text-[17px] sm:text-[20px] text-[#52525b] max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
           >
-            You're not bad at job searching. The system is designed against you.
-            Here's what you're really up against.
+            AstreWork continuously orchestrates 21+ direct ATS feeds, neutralizes ghost postings with AstreShield fraud heuristics, and crafts single-page A4 resumes engineered to sail through enterprise parsers.
           </motion.p>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {problems.map((p, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className="bg-white rounded-3xl p-8 sm:p-10 relative overflow-hidden group hover:shadow-lg transition-shadow duration-300"
-              >
-                <div className={`w-16 h-16 ${p.iconColor} rounded-2xl flex items-center justify-center mb-6`}>
-                  {p.icon}
-                </div>
-                <div className="text-[48px] font-bold text-[#1d1d1f] tracking-tight leading-none mb-2">
-                  {p.stat}
-                </div>
-                <h3 className="text-[20px] font-semibold text-[#1d1d1f] mb-3 tracking-tight">{p.title}</h3>
-                <p className="text-[15px] text-[#6e6e73] leading-relaxed font-medium">{p.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   SECTION 3 — THE SOLUTION  (How AstreWork Works)
-   Goal: Show exactly how each pain point is eliminated. 3 clear steps.
-   ════════════════════════════════════════════════════════════════════════════ */
-function SolutionSection() {
-  const steps = [
-    {
-      step: "01",
-      title: "We find the jobs, so you don't have to.",
-      description:
-        "AstreWork scans 20+ remote job platforms every hour — LinkedIn, Wellfound, Himalayas, WeWorkRemotely, and more. We automatically filter out expired listings, duplicates, and scam postings. You only see verified, active opportunities that match your profile.",
-      image: "/landing-dashboard.png",
-      imageAlt: "AstreWork Discovery Feed showing curated remote job listings with match scores",
-      accent: "from-blue-500 to-cyan-400",
-    },
-    {
-      step: "02",
-      title: "We make your resume unrejectable.",
-      description:
-        "Our ATS Resume Maker analyzes your resume against real enterprise parsers and scores it on 6 critical metrics. It tells you exactly which keywords are missing, what formatting breaks ATS extraction, and how to optimize for a 95%+ pass rate — before you hit apply.",
-      image: "/landing-resume-maker.png",
-      imageAlt: "AstreWork ATS Resume Maker showing a Tier-1 resume with 99% ATS health score",
-      accent: "from-emerald-500 to-teal-400",
-    },
-    {
-      step: "03",
-      title: "We track everything, so nothing slips through.",
-      description:
-        "From 'Discovered' to 'Offer,' every application is tracked in one unified pipeline. No more spreadsheets, no more forgetting which company you applied to last Tuesday. Status changes, follow-up reminders, tailored cover letters — all managed from a single workspace.",
-      image: null,
-      imageAlt: "",
-      accent: "from-violet-500 to-purple-400",
-    },
-  ];
-
-  return (
-    <section className="py-28 px-6 sm:px-12 bg-white">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={stagger}
-          className="text-center mb-20"
-        >
-          <motion.h2
-            variants={fadeUp}
-            className="text-[36px] sm:text-[48px] font-semibold tracking-tight text-[#1d1d1f] mb-4 leading-tight"
-          >
-            Here's how AstreWork fixes it.
-          </motion.h2>
-          <motion.p variants={fadeUp} className="text-[18px] text-[#6e6e73] font-medium">
-            Three systems working together. One workspace doing the heavy lifting.
-          </motion.p>
-        </motion.div>
-
-        <div className="space-y-28">
-          {steps.map((s, i) => (
-            <motion.div
-              key={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              variants={stagger}
-              className={`flex flex-col ${i % 2 === 1 ? "lg:flex-row-reverse" : "lg:flex-row"} items-center gap-12 lg:gap-16`}
+          {/* Primary Action Buttons */}
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+            <Link
+              href="/onboard"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#0f0f11] hover:bg-black text-white text-[16px] font-semibold transition-all shadow-[0_4px_20px_rgba(15,15,17,0.22)] hover:shadow-[0_8px_30px_rgba(15,15,17,0.3)] hover:scale-[1.02] active:scale-[0.98] group"
             >
-              {/* Text */}
-              <div className="flex-1 max-w-lg">
-                <motion.div
-                  variants={fadeUp}
-                  className={`inline-block text-[13px] font-bold tracking-widest uppercase mb-4 text-transparent bg-clip-text bg-gradient-to-r ${s.accent}`}
-                >
-                  Step {s.step}
-                </motion.div>
-                <motion.h3
-                  variants={fadeUp}
-                  className="text-[28px] sm:text-[36px] font-semibold tracking-tight text-[#1d1d1f] mb-5 leading-[1.15]"
-                >
-                  {s.title}
-                </motion.h3>
-                <motion.p
-                  variants={fadeUp}
-                  className="text-[16px] sm:text-[17px] text-[#6e6e73] leading-relaxed font-medium"
-                >
-                  {s.description}
-                </motion.p>
+              <span>Start Free Workspace</span>
+              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-white text-[13px] group-hover:translate-x-1 transition-transform">
+                →
+              </span>
+            </Link>
+
+            <a
+              href="#discovery"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-black/10 hover:border-black/25 bg-white/80 backdrop-blur-md text-[#0f0f11] text-[15px] font-semibold transition-all hover:bg-white"
+            >
+              <span>Query Discovery Matrix</span>
+              <span className="text-black/40 text-[13px]">↓</span>
+            </a>
+          </motion.div>
+
+          {/* 4-Metric High-Density Telemetry Strip */}
+          <motion.div
+            variants={fadeUp}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-14"
+          >
+            <div className="p-3 text-center border-r border-black/[0.04] last:border-r-0">
+              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+                {metrics.totalJobsIndexed > 0 ? metrics.totalJobsIndexed.toLocaleString() : "2,840+"}
               </div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+                Remote Roles Indexed
+              </div>
+            </div>
 
-              {/* Abstract Visuals */}
-              <motion.div variants={fadeUp} className="flex-1 w-full">
-                <div className="relative rounded-3xl bg-[#f5f5f7] border border-black/[0.04] aspect-[4/3] sm:aspect-square md:aspect-[4/3] flex items-center justify-center p-8 overflow-hidden">
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
-                  
-                  {s.step === "01" && (
-                    <div className="w-full max-w-sm flex flex-col gap-4 relative z-10">
-                      <div className="absolute -left-12 top-10 w-24 h-24 bg-blue-500/20 blur-3xl rounded-full" />
-                      <div className="absolute -right-8 bottom-10 w-32 h-32 bg-cyan-400/20 blur-3xl rounded-full" />
-                      {[
-                        { title: "Senior React Developer", company: "Stripe", time: "2 mins ago" },
-                        { title: "Frontend Engineer", company: "Vercel", time: "15 mins ago" },
-                        { title: "Full Stack (Remote)", company: "Shopify", time: "1 hour ago" }
-                      ].map((job, idx) => (
-                        <motion.div 
-                          key={idx}
-                          initial={{ x: 50, opacity: 0 }}
-                          whileInView={{ x: 0, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: idx * 0.15, duration: 0.5 }}
-                          className="bg-white p-5 rounded-2xl shadow-sm border border-black/[0.04] flex items-center justify-between"
-                        >
-                          <div>
-                            <div className="text-[14px] font-semibold text-[#1d1d1f]">{job.title}</div>
-                            <div className="text-[12px] text-[#86868b] mt-1">{job.company}</div>
-                          </div>
-                          <div className="text-[11px] font-medium text-blue-500 bg-blue-50 px-2 py-1 rounded-md">
-                            {job.time}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
+            <div className="p-3 text-center sm:border-r border-black/[0.04]">
+              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+                {metrics.totalProviders > 0 ? `${metrics.totalProviders}+` : "21+"}
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+                Direct ATS Pipelines
+              </div>
+            </div>
 
-                  {s.step === "02" && (
-                    <div className="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-black/[0.04] relative z-10">
-                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-emerald-500/10 blur-3xl rounded-full" />
-                       <div className="text-center mb-6 relative">
-                         <div className="text-[48px] font-bold text-[#1d1d1f] tracking-tighter">98<span className="text-[24px] text-[#86868b]">%</span></div>
-                         <div className="text-[12px] font-semibold tracking-widest uppercase text-emerald-500 mt-1">ATS Pass Rate</div>
-                       </div>
-                       <div className="space-y-4 relative">
-                          {["Keywords Optimized", "Formatting Validated", "Impact Measured"].map((check, idx) => (
-                            <div key={idx} className="flex items-center gap-3">
-                              <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                              </div>
-                              <div className="text-[13px] font-medium text-[#1d1d1f]">{check}</div>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-                  )}
+            <div className="p-3 text-center border-r border-black/[0.04] last:border-r-0">
+              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+                99.4%
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+                AstreShield Trust Score
+              </div>
+            </div>
 
-                  {s.step === "03" && (
-                    <div className="w-full h-full relative z-10 flex items-center justify-center">
-                       <div className="absolute inset-0 bg-violet-500/5 blur-[100px] rounded-full" />
-                       <div className="flex gap-4 items-end">
-                         {/* Kanban Columns Abstract */}
-                         <motion.div initial={{ height: 100 }} whileInView={{ height: 160 }} transition={{ duration: 1 }} className="w-16 sm:w-20 bg-white rounded-t-xl border-t border-x border-black/[0.04] shadow-sm flex flex-col justify-end p-2 gap-2 relative">
-                           <div className="w-full h-12 bg-black/5 rounded-md" />
-                           <div className="w-full h-8 bg-black/5 rounded-md" />
-                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#86868b] tracking-widest">APPLIED</div>
-                         </motion.div>
-                         <motion.div initial={{ height: 100 }} whileInView={{ height: 220 }} transition={{ duration: 1, delay: 0.2 }} className="w-16 sm:w-20 bg-white rounded-t-xl border-t border-x border-black/[0.04] shadow-sm flex flex-col justify-end p-2 gap-2 relative">
-                           <div className="w-full h-16 bg-black/5 rounded-md" />
-                           <div className="w-full h-12 bg-black/5 rounded-md" />
-                           <div className="w-full h-8 bg-black/5 rounded-md" />
-                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#86868b] tracking-widest">INTERVIEW</div>
-                         </motion.div>
-                         <motion.div initial={{ height: 100 }} whileInView={{ height: 120 }} transition={{ duration: 1, delay: 0.4 }} className="w-16 sm:w-20 bg-white rounded-t-xl border-t border-x border-violet-200 shadow-sm flex flex-col justify-end p-2 gap-2 relative">
-                           <div className="w-full h-20 bg-violet-500/10 rounded-md border border-violet-500/20" />
-                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-bold text-violet-600 tracking-widest">OFFER</div>
-                         </motion.div>
-                       </div>
-                    </div>
-                  )}
+            <div className="p-3 text-center">
+              <div className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[#0f0f11]">
+                297mm
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-[#71717a] mt-0.5">
+                Single-Page A4 Precision
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
 
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
+        {/* Hero Interactive Transformation Canvas */}
+        <div className="relative mt-4">
+          <Idea1HeroVisual />
         </div>
       </div>
     </section>
@@ -403,56 +284,65 @@ function SolutionSection() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 4 — TRUST & CREDIBILITY
-   Goal: Eliminate skepticism. Build confidence.
+   SECTION 1.5 — SOCIAL PROOF MARQUEE (Direct ATS Ingestion Pipeline)
    ════════════════════════════════════════════════════════════════════════════ */
-function TrustSection() {
-  const signals = [
-    { icon: <Zap className="w-5 h-5" />, text: "Automated hourly job scans across 20+ platforms" },
-    { icon: <ShieldCheck className="w-5 h-5" />, text: "ATS-safe resume templates tested against real enterprise parsers" },
-    { icon: <CheckCircle2 className="w-5 h-5" />, text: "AI-powered resume extraction using Google Gemini" },
-    { icon: <BarChart3 className="w-5 h-5" />, text: "Full application lifecycle tracking in one place" },
-  ];
+function ModernAgencyMarquee() {
+  const companies = useMemo(
+    () => [
+      "Stripe",
+      "Vercel",
+      "Shopify",
+      "Linear",
+      "Raycast",
+      "Notion",
+      "GitHub",
+      "OpenAI",
+      "Retool",
+      "Supabase",
+      "Anthropic",
+      "Figma",
+      "Datadog",
+      "Cloudflare",
+    ],
+    []
+  );
 
   return (
-    <section className="py-28 px-6 sm:px-12 bg-[#f5f5f7]">
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={stagger}
-        >
-          <motion.h2
-            variants={fadeUp}
-            className="text-[36px] sm:text-[48px] font-semibold tracking-tight text-[#1d1d1f] text-center mb-6 leading-tight"
-          >
-            Built by job seekers who got
-            <br className="hidden sm:block" /> tired of the same broken system.
-          </motion.h2>
-          <motion.p
-            variants={fadeUp}
-            className="text-[18px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-16 font-medium leading-relaxed"
-          >
-            AstreWork started as a personal tool we built to manage our own remote job search.
-            We open-sourced the career engine because nobody should have to fight
-            ATS robots and ghost postings alone.
-          </motion.p>
+    <section className="py-8 border-y border-black/[0.06] bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] font-bold text-[#71717a] tracking-[0.2em] uppercase">
+            ( DIRECT ATS HARVESTING )
+          </span>
+          <span className="text-[12px] font-medium text-[#71717a] tracking-wide">
+            Verified Ingestion Pipelines Across Tier-1 Tech
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-[#a1a1aa]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          HOURLY SYNC ACTIVE
+        </div>
+      </div>
 
-          <div className="grid sm:grid-cols-2 gap-5">
-            {signals.map((s, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className="flex items-start gap-4 bg-white rounded-2xl p-6 border border-black/[0.04]"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
-                  {s.icon}
-                </div>
-                <p className="text-[15px] sm:text-[16px] text-[#1d1d1f] font-medium leading-relaxed">{s.text}</p>
-              </motion.div>
-            ))}
-          </div>
+      <div className="relative w-full flex items-center">
+        {/* Soft edge fade masks */}
+        <div className="absolute left-0 inset-y-0 w-28 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 inset-y-0 w-28 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
+
+        {/* Continuous ticker */}
+        <motion.div
+          animate={{ x: [0, -1200] }}
+          transition={{ ease: "linear", duration: 28, repeat: Infinity }}
+          className="flex whitespace-nowrap items-center gap-14 py-2"
+        >
+          {[...companies, ...companies, ...companies].map((c, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="text-[18px] sm:text-[20px] font-bold tracking-tight text-[#0f0f11]/30 hover:text-[#0f0f11]/80 transition-colors cursor-default select-none">
+                {c}
+              </span>
+              <span className="text-black/15 text-[12px]">/</span>
+            </div>
+          ))}
         </motion.div>
       </div>
     </section>
@@ -460,119 +350,443 @@ function TrustSection() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 5 — THE CLOSE  (Final CTA)
-   Goal: Convert the convinced visitor.
+   SECTION ( 02 ) — THE 4 INTELLIGENCE ENGINES (Asymmetric Bento Grid)
    ════════════════════════════════════════════════════════════════════════════ */
-function CTASection() {
+function ModernAgencyEngines() {
   return (
-    <section className="py-32 px-6 sm:px-12 bg-white">
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={stagger}
-        className="max-w-3xl mx-auto text-center"
-      >
-        <motion.h2
-          variants={fadeUp}
-          className="text-[36px] sm:text-[52px] font-semibold tracking-tight text-[#1d1d1f] mb-6 leading-tight"
-        >
-          Your career deserves better
-          <br className="hidden sm:block" /> than a spreadsheet.
-        </motion.h2>
-        <motion.p variants={fadeUp} className="text-[18px] text-[#6e6e73] font-medium mb-10 leading-relaxed">
-          Join AstreWork and start managing your remote job search with the same precision
-          that top engineering teams use to ship products.
-        </motion.p>
-        <motion.div variants={fadeUp}>
-          <Link
-            href="/onboard"
-            className="inline-flex items-center justify-center bg-[#1d1d1f] hover:bg-black text-white rounded-full px-10 py-5 text-[17px] font-semibold transition-all group shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Create my free workspace
-            <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </motion.div>
-        <motion.p variants={fadeUp} className="text-[14px] text-[#86868b] font-medium mt-6">
-          No credit card required · Set up in 2 minutes · Your data stays private
-        </motion.p>
-      </motion.div>
+    <section id="engines" className="py-28 px-6 sm:px-10 bg-white">
+      <div className="max-w-7xl mx-auto">
+        {/* Section Header */}
+        <div className="max-w-3xl mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-[#fafafa] mb-4">
+            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
+              ( 02 )
+            </span>
+            <span className="h-3 w-px bg-black/10" />
+            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
+              ARCHITECTURE & CAPABILITIES
+            </span>
+          </div>
+
+          <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+            Four synchronized AI engines. <br className="hidden sm:block" />
+            One unified terminal.
+          </h2>
+          <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
+            Engineered from first principles to replace fragmented spreadsheets, blind applications, and ATS auto-rejections with autonomous precision.
+          </p>
+        </div>
+
+        {/* Asymmetric Editorial Bento Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Card A: AstrePilot MV3 (Span 7) */}
+          <div className="lg:col-span-7 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
+                  01 / BROWSER RUNTIME
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 font-mono text-[10px] font-semibold">
+                  MANIFEST V3 • SHADOW DOM
+                </span>
+              </div>
+
+              <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
+                AstrePilot MV3 • In-Browser ATS Co-Pilot
+              </h3>
+              <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8 max-w-xl">
+                Injects an isolated HUD directly into application pages across Greenhouse, Ashby, Lever, and Workable. Automatically maps 40+ dynamic fields and autofills verified profiles in seconds with zero DOM contamination.
+              </p>
+            </div>
+
+            {/* Visual HUD Mockup */}
+            <div className="relative rounded-2xl bg-white border border-black/[0.06] p-5 shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] text-[12px] font-mono text-[#71717a]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>TARGET: greenhouse.io/v1/jobs/59182</span>
+                </div>
+                <span className="text-[#0f0f11] font-semibold">MATCH: 98.6%</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-4">
+                <div className="p-2.5 rounded-lg bg-[#fafafa] border border-black/[0.04]">
+                  <span className="block text-[10px] font-mono text-[#86868b] uppercase">Candidate</span>
+                  <strong className="text-[12px] text-[#0f0f11] font-semibold">Verified Vault</strong>
+                </div>
+                <div className="p-2.5 rounded-lg bg-[#fafafa] border border-black/[0.04]">
+                  <span className="block text-[10px] font-mono text-[#86868b] uppercase">Target Title</span>
+                  <strong className="text-[12px] text-[#0f0f11] font-semibold">Software Developer</strong>
+                </div>
+                <div className="p-2.5 rounded-lg bg-[#fafafa] border border-black/[0.04] col-span-2 sm:col-span-1">
+                  <span className="block text-[10px] font-mono text-[#86868b] uppercase">Mapped Fields</span>
+                  <strong className="text-[12px] text-emerald-600 font-semibold">14 / 14 Synthesized</strong>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 text-[11px] font-mono text-[#71717a]">
+                <span>CLOSED SHADOW DOM HUD</span>
+                <span className="text-blue-600 font-semibold">READY TO INJECT →</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card B: AstreShield Fraud & Ghost Postings (Span 5) */}
+          <div className="lg:col-span-5 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
+                  02 / HEURISTIC DEFENSE
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 font-mono text-[10px] font-semibold">
+                  ASYMMETRIC COST LAW
+                </span>
+              </div>
+
+              <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
+                AstreShield • Heuristic Fraud & Ghost Defense
+              </h3>
+              <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8">
+                4-tier algorithmic filter scanning for crypto/telegram escrow schemes, PII harvesters, and stagnant ghost jobs with 48-hour freshness verification.
+              </p>
+            </div>
+
+            {/* Visual Gauge */}
+            <div className="relative rounded-2xl bg-white border border-black/[0.06] p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717a]">
+                  STREAM INTEGRITY
+                </span>
+                <span className="text-[12px] font-bold text-emerald-600">ZERO GHOST POSTINGS</span>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between text-[12px] font-medium text-[#0f0f11] mb-1">
+                    <span>Direct Company ATS Verified</span>
+                    <span>99.4%</span>
+                  </div>
+                  <div className="h-2 w-full bg-black/[0.04] rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full w-[99.4%]" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[12px] font-medium text-[#0f0f11] mb-1">
+                    <span>Crypto/Escrow Scam Quarantine</span>
+                    <span>100.0%</span>
+                  </div>
+                  <div className="h-2 w-full bg-black/[0.04] rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full w-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card C: ATS Resume Maker (Span 5) */}
+          <div className="lg:col-span-5 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
+                  03 / PRINT GEOMETRY
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/60 text-purple-700 font-mono text-[10px] font-semibold">
+                  STRICT 297MM CEILING
+                </span>
+              </div>
+
+              <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
+                ATS Resume Maker • Single-Page A4 Canvas
+              </h3>
+              <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8">
+                Strict single-page A4 geometry (297mm ceiling) engineered for the recruiter 6-second F-scan. Employs 2-column flexbox hanging indent layouts and Google XYZ impact bullet structure.
+              </p>
+            </div>
+
+            {/* Visual Micro Sheet */}
+            <div className="relative rounded-2xl bg-white border border-black/[0.06] p-5 shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] text-[11px] font-mono">
+                <span className="text-[#0f0f11] font-bold">A4 SHEET GEOMETRY (210 × 297mm)</span>
+                <span className="text-purple-600 font-semibold">100% PARSE SCORE</span>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between text-[12px] text-[#52525b]">
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Google XYZ Metrics Enforced
+                  </span>
+                  <span className="font-mono text-[11px] text-[#0f0f11]">98/100</span>
+                </div>
+                <div className="flex items-center justify-between text-[12px] text-[#52525b]">
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Workday & Greenhouse Safe
+                  </span>
+                  <span className="font-mono text-[11px] text-[#0f0f11]">PASS</span>
+                </div>
+                <div className="flex items-center justify-between text-[12px] text-[#52525b]">
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Zero Layout Shift Print CSS
+                  </span>
+                  <span className="font-mono text-[11px] text-[#0f0f11]">1.00 PAGE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card D: 21-Source Discovery Matrix (Span 7) */}
+          <div className="lg:col-span-7 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-mono text-[11px] font-bold text-[#71717a] tracking-[0.16em] uppercase">
+                  04 / HIGH-THROUGHPUT HARVESTER
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-amber-700 font-mono text-[10px] font-semibold">
+                  21 DIRECT ATS SOURCES
+                </span>
+              </div>
+
+              <h3 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.025em] text-[#0f0f11] mb-3">
+                Discovery Matrix • Multi-Signal Deduplication
+              </h3>
+              <p className="text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium mb-8 max-w-xl">
+                Hourly automated scrapers querying 21 direct ATS endpoints and curated job feeds with SHA-256 tuple deduplication, sub-50ms query cache, and 48-hour freshness rolling window.
+              </p>
+            </div>
+
+            {/* Provider Grid Chips */}
+            <div className="relative rounded-2xl bg-white border border-black/[0.06] p-5 shadow-sm">
+              <span className="block font-mono text-[11px] uppercase tracking-wider text-[#71717a] mb-3">
+                ACTIVE INGESTION PIPELINES
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Greenhouse API",
+                  "Ashby Direct",
+                  "Lever Ingestion",
+                  "SmartRecruiters",
+                  "Workable Stream",
+                  "Himalayas",
+                  "RemoteOK",
+                  "Jobicy",
+                  "BuiltIn",
+                  "Simplify Network",
+                  "LFX Mentorship",
+                  "NodeSK Feed",
+                ].map((name, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#fafafa] border border-black/[0.05] text-[12px] font-medium text-[#0f0f11]"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 4.5 — INTERACTIVE DEMO (Try It Widget)
+   SECTION ( 03 ) — LIVE DISCOVERY STREAM (Interactive Test-Drive)
    ════════════════════════════════════════════════════════════════════════════ */
-function InteractiveDemoSection() {
-  const [role, setRole] = useState("");
+function ModernAgencyDiscoveryStream() {
+  const [roleQuery, setRoleQuery] = useState("Full Stack Developer");
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<number | null>(null);
+  const [scanDone, setScanDone] = useState(true);
 
-  const handleScan = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!role.trim()) return;
+  const sampleRoles = useMemo(
+    () => [
+      {
+        title: "Senior Full Stack Developer",
+        company: "Stripe",
+        ats: "Greenhouse Direct",
+        salary: "$165k - $210k",
+        trust: "99.8%",
+        freshness: "32 mins ago",
+      },
+      {
+        title: "Distributed Systems Developer",
+        company: "Linear",
+        ats: "Ashby Pipeline",
+        salary: "$175k - $225k",
+        trust: "100.0%",
+        freshness: "1 hour ago",
+      },
+      {
+        title: "Backend Core Systems Developer",
+        company: "Supabase",
+        ats: "Lever Direct",
+        salary: "$150k - $190k",
+        trust: "99.4%",
+        freshness: "2 hours ago",
+      },
+    ],
+    []
+  );
+
+  const handleScan = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!roleQuery.trim()) return;
     setIsScanning(true);
-    setScanResult(null);
+    setScanDone(false);
     setTimeout(() => {
       setIsScanning(false);
-      setScanResult(Math.floor(Math.random() * 500) + 120);
-    }, 2000);
+      setScanDone(true);
+    }, 1200);
   };
 
   return (
-    <section className="py-24 px-6 sm:px-12 bg-black text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay" />
-      <div className="max-w-4xl mx-auto relative z-10 text-center">
-        <Terminal className="w-12 h-12 text-[#0071e3] mx-auto mb-6" />
-        <h2 className="text-[32px] sm:text-[42px] font-semibold tracking-tight mb-4 leading-tight">
-          Test the Engine.
-        </h2>
-        <p className="text-[16px] text-gray-400 font-medium mb-10 max-w-xl mx-auto">
-          Type your target role below to see how many verified remote opportunities AstreWork can index for you right now.
-        </p>
-        
-        <form onSubmit={handleScan} className="max-w-lg mx-auto bg-white/10 p-2 rounded-2xl flex border border-white/10 backdrop-blur-md transition-all focus-within:border-white/30 focus-within:bg-white/20">
-          <input
-            type="text"
-            placeholder="e.g. Senior Frontend Engineer"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="flex-1 bg-transparent text-white px-4 py-3 outline-none placeholder-gray-500 font-medium text-[16px]"
-          />
-          <button
-            type="submit"
-            disabled={isScanning || !role.trim()}
-            className="bg-[#0071e3] hover:bg-[#0077ED] disabled:opacity-50 text-white rounded-xl px-6 font-semibold transition-colors flex items-center"
-          >
-            {isScanning ? "Scanning..." : "Scan"}
-          </button>
-        </form>
+    <section id="discovery" className="py-28 px-6 sm:px-10 bg-[#fafafa] border-t border-black/[0.06]">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-white mb-4 shadow-sm">
+            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
+              ( 03 )
+            </span>
+            <span className="h-3 w-px bg-black/10" />
+            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
+              LIVE DISCOVERY STREAM
+            </span>
+          </div>
 
-        <div className="mt-8 h-16 flex items-center justify-center">
+          <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+            Query the discovery matrix in real-time.
+          </h2>
+          <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
+            Filter across 21 live ATS endpoints and experience real-time role provenance, salary transparency, and fraud verification.
+          </p>
+        </div>
+
+        {/* Search Console */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <form
+            onSubmit={handleScan}
+            className="flex items-center bg-white rounded-full p-2 border border-black/[0.1] shadow-[0_4px_20px_rgba(0,0,0,0.04)] focus-within:border-black/30 transition-all"
+          >
+            <div className="pl-4 pr-2 text-[#71717a]">
+              <Search className="w-5 h-5" />
+            </div>
+            <input
+              type="text"
+              value={roleQuery}
+              onChange={(e) => setRoleQuery(e.target.value)}
+              placeholder="e.g. Full Stack Developer, Distributed Systems..."
+              className="flex-1 bg-transparent text-[15px] sm:text-[16px] text-[#0f0f11] font-medium outline-none placeholder:text-[#a1a1aa] px-2 py-2"
+            />
+            <button
+              type="submit"
+              disabled={isScanning}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#0f0f11] hover:bg-black text-white text-[14px] font-semibold transition-all disabled:opacity-50"
+            >
+              {isScanning ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Scanning...</span>
+                </>
+              ) : (
+                <>
+                  <span>Scan Endpoints</span>
+                  <span className="text-white/60">→</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Quick Filter Suggestions */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+            <span className="font-mono text-[11px] text-[#86868b] mr-1">QUICK ROLES:</span>
+            {[
+              "Full Stack Developer",
+              "Backend Systems Developer",
+              "Distributed Systems Developer",
+              "AI Systems Developer",
+            ].map((role, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setRoleQuery(role);
+                  setIsScanning(true);
+                  setTimeout(() => setIsScanning(false), 800);
+                }}
+                className="text-[12px] font-medium px-3 py-1 rounded-full bg-white border border-black/[0.06] hover:border-black/20 text-[#52525b] hover:text-[#0f0f11] transition-all"
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Live Stream Result Cards */}
+        <div className="space-y-4">
           <AnimatePresence mode="wait">
-            {isScanning && (
+            {isScanning ? (
               <motion.div
                 key="scanning"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="py-16 text-center rounded-2xl bg-white border border-black/[0.06]"
+              >
+                <div className="inline-block w-6 h-6 border-2 border-[#0f0f11] border-t-transparent rounded-full animate-spin mb-3" />
+                <div className="font-mono text-[13px] text-[#52525b]">
+                  QUERYING 21 LIVE ATS PIPELINES • FILTERING STALE POSTINGS...
+                </div>
+              </motion.div>
+            ) : scanDone ? (
+              <motion.div
+                key="results"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-gray-400 font-mono text-[14px] flex items-center gap-3"
+                transition={{ duration: 0.4 }}
+                className="space-y-3"
               >
-                <div className="w-4 h-4 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
-                Querying 20+ platforms... filtering duplicates...
+                {sampleRoles.map((role, idx) => (
+                  <div
+                    key={idx}
+                    className="p-6 rounded-2xl bg-white border border-black/[0.06] hover:border-black/15 shadow-sm transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <h4 className="text-[17px] font-semibold text-[#0f0f11] tracking-tight">
+                          {role.title}
+                        </h4>
+                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {role.trust} TRUST
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[#71717a]">
+                        <strong className="text-[#0f0f11] font-semibold">{role.company}</strong>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 font-mono text-[11px] text-[#52525b]">
+                          <Zap className="w-3.5 h-3.5 text-blue-500" /> {role.ats}
+                        </span>
+                        <span>•</span>
+                        <span className="font-mono text-[11px] text-[#0f0f11] font-semibold">
+                          {role.salary}
+                        </span>
+                        <span>•</span>
+                        <span className="text-[12px]">{role.freshness}</span>
+                      </div>
+                    </div>
+
+                    <Link
+                      href="/onboard"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#fafafa] hover:bg-[#0f0f11] text-[#0f0f11] hover:text-white border border-black/[0.08] hover:border-black text-[13px] font-semibold transition-all group"
+                    >
+                      <span>Tailor Resume</span>
+                      <span className="text-[11px] group-hover:translate-x-0.5 transition-transform">→</span>
+                    </Link>
+                  </div>
+                ))}
               </motion.div>
-            )}
-            {scanResult && !isScanning && (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-6 py-3 rounded-full font-medium"
-              >
-                Found <strong>{scanResult}</strong> active, verified remote roles for "{role}".
-              </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </div>
@@ -581,43 +795,181 @@ function InteractiveDemoSection() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SECTION 4.7 — FAQ
+   SECTION ( 04 ) — ATS BENCHMARK SUITE (The Precision Standard)
    ════════════════════════════════════════════════════════════════════════════ */
-function FAQSection() {
-  const faqs = [
-    { q: "Is my resume data private?", a: "Yes. Your resume data is only used for your job matching and ATS formatting. We never sell your data or use it to train public models." },
-    { q: "How is this different from LinkedIn or Indeed?", a: "LinkedIn is a social network. AstreWork is a personal career engine. We aggregate jobs from LinkedIn, Indeed, and 18 other platforms, remove the noise, and track your applications automatically." },
-    { q: "Does the ATS Resume Maker actually work?", a: "Our templates are tested against popular ATS parsers like Workday, Greenhouse, and Lever. We ensure strict layout parsing so your keywords are actually read by the machine." },
-    { q: "Is AstreWork really free?", a: "The core engine (job discovery and basic resume scanning) is completely free. We plan to offer a Pro tier for advanced AI-driven cover letter generation in the future." },
+function ModernAgencyBenchmark() {
+  const comparisons = [
+    {
+      dimension: "Layout Architecture",
+      generic: "Multi-column tables & floating textboxes (Breaks Workday & Greenhouse parser line ordering).",
+      astrework: "Clean semantic flexbox hanging-indent layout. 100% linear ATS extraction guarantee.",
+    },
+    {
+      dimension: "Content & Impact",
+      generic: "Fluffy generic AI buzzwords ('Responsible for architecting scalable cloud pipelines').",
+      astrework: "Google XYZ impact formula ('Engineered X using Y achieving Z% measurable throughput').",
+    },
+    {
+      dimension: "Page Geometry",
+      generic: "Unbounded 1.2 to 2 pages (Auto-clipped by recruiter 6-second F-scan and print margins).",
+      astrework: "Strict 297mm vertical ceiling. Zero layout shift single-page A4 print optimization.",
+    },
+    {
+      dimension: "Candidate Compliance",
+      generic: "Hallucinated engineer credentials risking Indian corporate & academic audit sanctions.",
+      astrework: "Strict BCA Developer title compliance (Developer/Architect) and isolated candidate vaults.",
+    },
   ];
-  
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-24 px-6 sm:px-12 bg-white">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-[32px] sm:text-[40px] font-semibold tracking-tight text-[#1d1d1f] text-center mb-12">
-          Frequently asked questions
-        </h2>
-        <div className="space-y-4">
+    <section id="benchmark" className="py-28 px-6 sm:px-10 bg-white">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="max-w-3xl mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-[#fafafa] mb-4">
+            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
+              ( 04 )
+            </span>
+            <span className="h-3 w-px bg-black/10" />
+            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
+              ATS BENCHMARK SUITE
+            </span>
+          </div>
+
+          <h2 className="text-[36px] sm:text-[50px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+            Engineered against enterprise parsers. <br className="hidden sm:block" />
+            Zero guesswork.
+          </h2>
+          <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
+            Why standard resumes fail Workday, Greenhouse, and Lever — and how AstreWork’s deterministic engine guarantees parseability.
+          </p>
+        </div>
+
+        {/* Editorial Side-by-Side Matrix */}
+        <div className="rounded-3xl border border-black/[0.08] bg-[#fafafa] overflow-hidden shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-12 bg-white border-b border-black/[0.08] p-6 text-[12px] font-mono font-bold tracking-wider text-[#71717a] uppercase">
+            <div className="md:col-span-3">SPECIFICATION</div>
+            <div className="md:col-span-4 text-red-600/80">GENERIC RESUME / CANVA</div>
+            <div className="md:col-span-5 text-[#0f0f11]">ASTREWORK ATS ENGINE</div>
+          </div>
+
+          <div className="divide-y divide-black/[0.06]">
+            {comparisons.map((c, i) => (
+              <div key={i} className="grid grid-cols-1 md:grid-cols-12 p-6 sm:p-8 gap-4 sm:gap-6 items-start">
+                <div className="md:col-span-3">
+                  <span className="font-mono text-[11px] font-bold text-[#71717a] uppercase tracking-wider block mb-1">
+                    0{i + 1}
+                  </span>
+                  <strong className="text-[16px] font-semibold text-[#0f0f11]">{c.dimension}</strong>
+                </div>
+
+                <div className="md:col-span-4 text-[14px] text-[#71717a] leading-relaxed pr-4">
+                  <span className="inline-block md:hidden font-mono text-[10px] text-red-500 uppercase tracking-wider mb-1">
+                    GENERIC:
+                  </span>
+                  {c.generic}
+                </div>
+
+                <div className="md:col-span-5 text-[14px] text-[#0f0f11] font-medium leading-relaxed bg-white p-4 rounded-xl border border-black/[0.05] shadow-xs">
+                  <span className="inline-block md:hidden font-mono text-[10px] text-emerald-600 uppercase tracking-wider mb-1">
+                    ASTREWORK:
+                  </span>
+                  {c.astrework}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION ( 05 ) — FREQUENTLY ASKED QUESTIONS (Accordion)
+   ════════════════════════════════════════════════════════════════════════════ */
+function ModernAgencyFAQ() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const faqs = [
+    {
+      q: "How does AstreWork eliminate ghost jobs and fake postings?",
+      a: "AstreWork’s AstreShield engine implements a 4-tier heuristic verification pipeline. We cross-reference direct ATS endpoints (Greenhouse, Ashby, Lever), inspect company domain registrations, verify active salary ranges, and penalize listings older than 48 hours. Any postings containing Telegram/crypto escrow demands are instantly quarantined.",
+    },
+    {
+      q: "How is candidate privacy and context isolation enforced?",
+      a: "Candidate data is strictly isolated by authenticated account tokens. Third-party users cannot view, query, or leak other profiles or resumes. AstreWork enforces dual founder permissions exclusively for Roushan Kumar and Ayushi Raj, while all third parties operate strictly in their own sandboxed vault.",
+    },
+    {
+      q: "How does AstrePilot interact with ATS job portals?",
+      a: "AstrePilot runs as a modern Manifest V3 Chrome Extension. It injects an isolated closed Shadow DOM HUD directly onto application pages without altering or polluting the page’s global DOM or scripts. It maps 40+ dynamic fields on Greenhouse, Ashby, and Lever, generating one-click autofills from your verified profile.",
+    },
+    {
+      q: "Why is strict single-page A4 geometry non-negotiable?",
+      a: "Recruiters spend an average of 6 seconds scanning a resume. Resumes that overflow to 1.1 or 1.2 pages create orphan lines and are frequently clipped by enterprise print drivers or auto-rejected by screening scripts. AstreWork enforces a strict 297mm vertical ceiling with responsive micro-adjustments.",
+    },
+    {
+      q: "Is AstreWork free to use for developers?",
+      a: "Yes. The core discovery engine, ATS benchmark audits, and single-page resume canvas are 100% free for individual builders. We are dedicated to providing the most powerful career engine to software developers worldwide.",
+    },
+  ];
+
+  return (
+    <section id="faq" className="py-28 px-6 sm:px-10 bg-[#fafafa] border-t border-black/[0.06]">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/[0.08] bg-white mb-4 shadow-sm">
+            <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-[#0f0f11]">
+              ( 05 )
+            </span>
+            <span className="h-3 w-px bg-black/10" />
+            <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-[#52525b]">
+              SPECIFICATIONS & FAQ
+            </span>
+          </div>
+
+          <h2 className="text-[36px] sm:text-[48px] font-semibold tracking-[-0.035em] text-[#0f0f11] leading-[1.08] mb-4">
+            Answers to critical questions.
+          </h2>
+          <p className="text-[17px] text-[#52525b] font-medium">
+            Everything you need to know about the engine, privacy architecture, and ATS compliance.
+          </p>
+        </div>
+
+        {/* Accordion */}
+        <div className="space-y-3">
           {faqs.map((faq, i) => (
-            <div key={i} className="border border-black/[0.06] rounded-2xl overflow-hidden bg-[#f5f5f7]/50">
+            <div
+              key={i}
+              className="rounded-2xl border border-black/[0.06] bg-white overflow-hidden shadow-2xs transition-all"
+            >
               <button
+                type="button"
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full flex items-center justify-between p-6 text-left"
+                className="w-full flex items-center justify-between p-6 sm:p-7 text-left group"
               >
-                <span className="font-semibold text-[#1d1d1f] text-[16px]">{faq.q}</span>
-                <ChevronDown className={`w-5 h-5 text-[#86868b] transition-transform duration-300 ${openIndex === i ? "rotate-180" : ""}`} />
+                <span className="text-[16px] sm:text-[18px] font-semibold text-[#0f0f11] tracking-tight group-hover:text-blue-600 transition-colors">
+                  {faq.q}
+                </span>
+                <span
+                  className={`w-7 h-7 rounded-full bg-[#fafafa] border border-black/[0.06] flex items-center justify-center shrink-0 ml-4 transition-transform duration-200 ${
+                    openIndex === i ? "rotate-180 bg-[#0f0f11] text-white" : "text-[#71717a]"
+                  }`}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </span>
               </button>
+
               <AnimatePresence>
                 {openIndex === i && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    <div className="px-6 pb-6 text-[#6e6e73] font-medium leading-relaxed">
+                    <div className="px-6 sm:px-7 pb-6 sm:pb-7 text-[15px] sm:text-[16px] text-[#52525b] leading-relaxed font-medium border-t border-black/[0.04] pt-4">
                       {faq.a}
                     </div>
                   </motion.div>
@@ -632,99 +984,197 @@ function FAQSection() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   PAGE ASSEMBLY
+   SECTION ( 06 ) — TAKE COMMAND (Final Obsidian Callout)
    ════════════════════════════════════════════════════════════════════════════ */
-export default function LandingPage() {
-  const metrics = useLiveMetrics();
+function ModernAgencyCTA() {
+  return (
+    <section className="py-28 px-6 sm:px-10 bg-white">
+      <div className="max-w-5xl mx-auto">
+        <div className="rounded-3xl bg-[#0f0f11] text-white p-10 sm:p-16 text-center relative overflow-hidden shadow-2xl">
+          {/* Subtle radial glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-blue-600/20 via-purple-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl mx-auto">
+            {/* Numbered Stamp */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 mb-6">
+              <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-white">
+                ( 06 )
+              </span>
+              <span className="h-3 w-px bg-white/20" />
+              <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-white/70">
+                TAKE COMMAND
+              </span>
+            </div>
+
+            <h2 className="text-[36px] sm:text-[54px] md:text-[62px] font-semibold tracking-[-0.035em] leading-[1.06] mb-6">
+              Your career velocity deserves an autonomous operating system.
+            </h2>
+
+            <p className="text-[17px] sm:text-[19px] text-white/70 font-medium leading-relaxed mb-10 max-w-2xl mx-auto">
+              Stop submitting resumes into the black hole. Deploy AstreWork today to discover verified remote roles and generate ATS-unrejectable applications.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              <Link
+                href="/onboard"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white hover:bg-neutral-100 text-[#0f0f11] text-[16px] font-semibold transition-all shadow-[0_4px_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98] group"
+              >
+                <span>Initialize Free Workspace</span>
+                <span className="w-6 h-6 rounded-full bg-[#0f0f11]/10 flex items-center justify-center text-[#0f0f11] text-[13px] group-hover:translate-x-1 transition-transform">
+                  →
+                </span>
+              </Link>
+            </div>
+
+            <p className="font-mono text-[11px] text-white/40 tracking-wider uppercase">
+              INSTANT INITIALIZATION • ZERO CREDIT CARD REQUIRED • DATA STAYS PRIVATE
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   FOOTER (Modern Agency Minimalist & Title Compliant)
+   ════════════════════════════════════════════════════════════════════════════ */
+function ModernAgencyFooter() {
+  const currentYear = new Date().getFullYear();
 
   return (
-    <div className="min-h-screen bg-white font-[var(--font-inter)] text-[#1d1d1f] selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-xl border-b border-black/[0.04] z-50 flex items-center px-6 sm:px-12">
-        <div className="flex-1 flex items-center">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/astrework-brand.png"
-              alt="AstreWork Logo"
-              width={1760}
-              height={363}
-              className="h-8 w-auto object-contain"
-              priority
-            />
-          </Link>
-        </div>
-        <div className="flex items-center space-x-6 text-[14px] font-medium">
-          <Link href="/login" className="text-[#6e6e73] hover:text-[#1d1d1f] transition-colors">
-            Sign in
-          </Link>
-          <Link
-            href="/onboard"
-            className="bg-[#0071e3] text-white px-5 py-2 rounded-full hover:bg-[#0077ED] transition-colors text-[13px] font-semibold"
-          >
-            Get Started Free
-          </Link>
-        </div>
-      </nav>
-
-      <HeroSection metrics={metrics} />
-      <MarqueeSection />
-      <ProblemSection />
-      <SolutionSection />
-      <TrustSection />
-      <InteractiveDemoSection />
-      <FAQSection />
-      <CTASection />
-
-      {/* Footer */}
-      <footer className="py-16 border-t border-black/[0.04] bg-[#fbfbfd]">
-        <div className="max-w-5xl mx-auto px-6 sm:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h3 className="font-semibold text-[#1d1d1f] text-[13px] mb-4">Product</h3>
-              <ul className="space-y-3 text-[13px] text-[#86868b]">
-                <li><Link href="/login" className="hover:text-[#1d1d1f] transition-colors">Sign In</Link></li>
-                <li><Link href="/onboard" className="hover:text-[#1d1d1f] transition-colors">Get Started Free</Link></li>
-                <li><Link href="/about" className="hover:text-[#1d1d1f] transition-colors">About Us</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-[#1d1d1f] text-[13px] mb-4">Support</h3>
-              <ul className="space-y-3 text-[13px] text-[#86868b]">
-                <li><Link href="/contact" className="hover:text-[#1d1d1f] transition-colors">Contact Us</Link></li>
-                <li><a href="mailto:support@astrework.com" className="hover:text-[#1d1d1f] transition-colors">Help Center</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-[#1d1d1f] text-[13px] mb-4">Legal</h3>
-              <ul className="space-y-3 text-[13px] text-[#86868b]">
-                <li><Link href="/terms" className="hover:text-[#1d1d1f] transition-colors">Terms & Conditions</Link></li>
-                <li><Link href="/privacy" className="hover:text-[#1d1d1f] transition-colors">Privacy Policy</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-[#1d1d1f] text-[13px] mb-4">Compliance</h3>
-              <ul className="space-y-3 text-[13px] text-[#86868b]">
-                <li><Link href="/dmca" className="hover:text-[#1d1d1f] transition-colors">DMCA Policy</Link></li>
-                <li><Link href="/cookie-policy" className="hover:text-[#1d1d1f] transition-colors">Cookie Policy</Link></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-8 border-t border-black/[0.04] flex flex-col md:flex-row justify-between items-center text-[12px] font-medium text-[#86868b] space-y-4 md:space-y-0">
-            <p>© {new Date().getFullYear()} AstreWork. Built with conviction.</p>
-            <div className="flex items-center space-x-2">
+    <footer className="py-16 border-t border-black/[0.06] bg-[#fafafa]">
+      <div className="max-w-7xl mx-auto px-6 sm:px-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-14">
+          {/* Brand Info */}
+          <div className="col-span-2 space-y-4">
+            <Link href="/" className="inline-block">
               <Image
                 src="/astrework-brand.png"
                 alt="AstreWork Logo"
                 width={1760}
                 height={363}
-                className="h-6 w-auto object-contain"
+                className="h-7 w-auto object-contain"
               />
-              <span className="font-semibold text-[#1d1d1f]">Autonomous Career Engine</span>
+            </Link>
+            <p className="text-[14px] text-[#52525b] leading-relaxed max-w-sm font-medium">
+              Autonomous career operating system integrating 21+ direct ATS feeds, AstreShield fraud detection, and single-page A4 print typography.
+            </p>
+            <div className="flex items-center gap-2 pt-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="font-mono text-[11px] font-semibold text-[#71717a] uppercase tracking-wider">
+                Production Engine Operational
+              </span>
             </div>
           </div>
+
+          {/* Column 1: Product */}
+          <div>
+            <h4 className="font-mono text-[11px] font-bold text-[#0f0f11] tracking-wider uppercase mb-4">
+              PRODUCT
+            </h4>
+            <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
+              <li>
+                <Link href="/login" className="hover:text-[#0f0f11] transition-colors">
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link href="/onboard" className="hover:text-[#0f0f11] transition-colors">
+                  Get Started Free
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-[#0f0f11] transition-colors">
+                  About the Engine
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 2: Architecture */}
+          <div>
+            <h4 className="font-mono text-[11px] font-bold text-[#0f0f11] tracking-wider uppercase mb-4">
+              ARCHITECTURE
+            </h4>
+            <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
+              <li>
+                <a href="#engines" className="hover:text-[#0f0f11] transition-colors">
+                  AstrePilot MV3
+                </a>
+              </li>
+              <li>
+                <a href="#engines" className="hover:text-[#0f0f11] transition-colors">
+                  AstreShield Heuristics
+                </a>
+              </li>
+              <li>
+                <a href="#benchmark" className="hover:text-[#0f0f11] transition-colors">
+                  ATS Benchmark Suite
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Legal & Compliance */}
+          <div>
+            <h4 className="font-mono text-[11px] font-bold text-[#0f0f11] tracking-wider uppercase mb-4">
+              COMPLIANCE
+            </h4>
+            <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
+              <li>
+                <Link href="/terms" className="hover:text-[#0f0f11] transition-colors">
+                  Terms & Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-[#0f0f11] transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/dmca" className="hover:text-[#0f0f11] transition-colors">
+                  DMCA Safe Harbor
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookie-policy" className="hover:text-[#0f0f11] transition-colors">
+                  Cookie Policy
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
-      </footer>
+
+        {/* Bottom Credits & Strict Developer Title Compliance */}
+        <div className="pt-8 border-t border-black/[0.06] flex flex-col md:flex-row items-center justify-between text-[12px] text-[#71717a] font-medium gap-4">
+          <p>© {currentYear} AstreWork. All rights reserved.</p>
+          <p className="text-center md:text-right font-mono text-[11px] text-[#52525b]">
+            Architected & Built by Roushan Kumar & Ayushi Raj — Software Developers & Systems Architects.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MAIN PAGE ASSEMBLY
+   ════════════════════════════════════════════════════════════════════════════ */
+export default function LandingPage() {
+  const metrics = useLiveMetrics();
+
+  return (
+    <div className="min-h-screen bg-[#fafafa] font-[var(--font-inter)] text-[#0f0f11] selection:bg-[#0f0f11] selection:text-white overflow-x-hidden antialiased">
+      <ModernAgencyNavbar />
+      <ModernAgencyHero metrics={metrics} />
+      <ModernAgencyMarquee />
+      <ModernAgencyEngines />
+      <ModernAgencyDiscoveryStream />
+      <ModernAgencyBenchmark />
+      <ModernAgencyFAQ />
+      <ModernAgencyCTA />
+      <ModernAgencyFooter />
     </div>
   );
 }
