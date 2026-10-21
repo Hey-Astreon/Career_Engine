@@ -857,6 +857,35 @@ Located in `extension/`:
     - `tests/internship-kit-tailoring.test.ts`: PASS (3/3).
     - `npx tsc --noEmit`: PASS (0 errors).
 
+- [x] **Phase 42: Resume A4 Layout, Alignment & Spacing Overhaul (Oct 21, 2026)**
+  - **1. Technical Skills Bullet Dots & Hanging Indent:**
+    - Restored bold bullet dots (`•`) before every skill category name.
+    - Implemented two-column flex layout (`<span style={{ width: "10pt", flexShrink: 0, fontWeight: 700, color: "#0f172a" }}>•</span>` + `<div style={{ flex: 1, minWidth: 0 }}><b>{category}:</b> {skills}</div>`).
+    - When skills wrap across multiple lines, text wraps inside column 2 creating a clean hanging indent parallel to the category title without wrapping beneath the bullet point.
+  - **2. Project Links Alignment & Wrapping Fix:**
+    - Shortened AstreWork title from 130 to 92 characters: `AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)` (matching Astra Vision's 91 characters).
+    - Enforced `alignItems: "flex-start"`, `whiteSpace: "nowrap"`, `flexShrink: 0`, and `gap: 8pt` on the project header.
+    - Prevents `Live Demo | GitHub` from breaking onto two vertical lines; pins both links cleanly to the top-right of the title row.
+  - **3. Streamlined AstreWork Project Bullet 1:**
+    - Replaced 36-word verbose bullet with 22-word Google XYZ metric-backed achievement:
+      `Creator & Lead Backend Developer: Engineered distributed scrapers on Oracle Cloud (OCI ARM64) aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.`
+    - Updated Ayushi's AstreWork Bullet 1 to 20 words:
+      `Co-Developer & Lead Frontend Architect: Engineered client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, achieving sub-second evaluation across live postings.`
+  - **4. 100% Single-Page A4 Sheet Fit & Education Overflow Resolution:**
+    - Applied user's recommendation: Reduced `.ats-a4-sheet` top padding to `6.0mm` and bottom padding to `5.0mm` (reclaiming ~28pt vertical space).
+    - Tightened `<hr />` divider margins to `1.5pt 0 1.2pt` (saving ~11.5pt).
+    - Tightened list margins (`ul: 1.0pt 0 1.6pt`, `li: 1.0pt`, `line-height: 1.23`).
+    - Tightened section container margins (`marginBottom: 2.0pt`).
+    - Total height reclaimed: ~60+ points, ensuring the entire Education section (degree, university, period, and coursework) sits comfortably 15-20mm above the bottom page edge with 0% risk of clipping.
+  - **5. Production Database Synchronization:**
+    - Executed `scripts/sync-master-profiles.cjs` against Turso Cloud LibSQL (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`), updating both Roushan Kumar and Ayushi Raj profiles and AstreWork projects.
+  - **6. Automated Verification:**
+    - `tests/resume_optimizer.test.ts`: PASS (7/7).
+    - `tests/candidate_context_privacy.test.ts`: PASS (15/15).
+    - `tests/internship-kit-tailoring.test.ts`: PASS (3/3).
+    - `npx tsc --noEmit`: PASS (0 errors).
+    - `npm run build`: PASS (59/59 routes compiled, Turbopack verified).
+
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
 - **Dedicated Cloud Server:** 4 ARM64 OCPUs, 24 GB RAM, 4 Gbps Network Bandwidth, 46.6 GB Boot Volume (Oracle Always-Free; ~22 GB idle memory).

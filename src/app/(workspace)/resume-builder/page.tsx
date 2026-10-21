@@ -994,12 +994,12 @@ ${portfolio}`;
               )}
 
               {/* HEADER */}
-              <div style={{ textAlign: "center", marginBottom: "2pt" }}>
+              <div style={{ textAlign: "center", marginBottom: "1.2pt" }}>
                 <h1>{resumeData.header.fullName}</h1>
-                <div style={{ fontSize: "9.0pt", fontWeight: 700, color: "#1e293b", marginTop: "1.5pt" }}>
+                <div style={{ fontSize: "9.0pt", fontWeight: 700, color: "#1e293b", marginTop: "1.2pt" }}>
                   {renderTextWithHeatmap(resumeData.header.targetHeadline)}
                 </div>
-                <div style={{ fontSize: "8.0pt", color: "#334155", marginTop: "2pt" }}>
+                <div style={{ fontSize: "8.0pt", color: "#334155", marginTop: "1.5pt" }}>
                   {resumeData.header.location} | {resumeData.header.phone} | {resumeData.header.email} |{" "}
                   <a href={resumeData.header.portfolioUrl} target="_blank" rel="noreferrer">
                     {resumeData.header.portfolioUrl.replace(/^https?:\/\//, "")}
@@ -1020,7 +1020,7 @@ ${portfolio}`;
               {/* PROFESSIONAL SUMMARY */}
               <div>
                 <h2>PROFESSIONAL SUMMARY</h2>
-                <div style={{ fontSize: "8.65pt", lineHeight: "1.28", color: "#1e293b", marginTop: "2pt", textAlign: "justify" }}>
+                <div style={{ fontSize: "8.65pt", lineHeight: "1.28", color: "#1e293b", marginTop: "1.5pt", textAlign: "justify" }}>
                   {renderTextWithHeatmap(resumeData.summary)}
                 </div>
               </div>
@@ -1030,7 +1030,7 @@ ${portfolio}`;
               {/* TECHNICAL SKILLS */}
               <div>
                 <h2>TECHNICAL SKILLS</h2>
-                <div style={{ marginTop: "2pt" }}>
+                <div style={{ marginTop: "1.5pt" }}>
                   {resumeData.skills.map((s) => (
                     <div
                       key={s.categoryName}
@@ -1041,14 +1041,15 @@ ${portfolio}`;
                         fontSize: "8.35pt",
                         lineHeight: "1.28",
                         color: "#1e293b",
-                        marginBottom: "1.6pt",
+                        marginBottom: "1.4pt",
                       }}
                     >
                       <span
                         style={{
-                          width: "11pt",
+                          width: "10pt",
                           flexShrink: 0,
                           fontWeight: 700,
+                          color: "#0f172a",
                           userSelect: "none",
                           lineHeight: "1.28",
                         }}
@@ -1068,9 +1069,9 @@ ${portfolio}`;
               {/* TECHNICAL PROJECTS */}
               <div>
                 <h2>TECHNICAL PROJECTS</h2>
-                <div style={{ marginTop: "2pt" }}>
+                <div style={{ marginTop: "1.5pt" }}>
                   {resumeData.projects.map((proj) => (
-                    <div key={proj.title} style={{ marginBottom: "2.8pt" }}>
+                    <div key={proj.title} style={{ marginBottom: "2.0pt" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8pt" }}>
                         <h3 style={{ fontSize: "8.75pt", margin: 0, flex: 1 }}>
                           <b>{renderTextWithHeatmap(proj.title)}</b>
@@ -1103,9 +1104,9 @@ ${portfolio}`;
               {/* TECHNICAL SIMULATIONS */}
               <div>
                 <h2>TECHNICAL SIMULATIONS & VIRTUAL EXPERIENCES</h2>
-                <div style={{ marginTop: "2pt" }}>
+                <div style={{ marginTop: "1.5pt" }}>
                   {resumeData.simulations.map((sim) => (
-                    <div key={sim.company} style={{ marginBottom: "2.8pt" }}>
+                    <div key={sim.company} style={{ marginBottom: "2.0pt" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                         <h3 style={{ fontSize: "8.75pt" }}>
                           <b>{sim.company} - {sim.roleTitle}</b>
@@ -1133,7 +1134,7 @@ ${portfolio}`;
               {/* EDUCATION */}
               <div>
                 <h2>EDUCATION</h2>
-                <div style={{ marginTop: "2pt" }}>
+                <div style={{ marginTop: "1.5pt" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                     <h3 style={{ fontSize: "8.75pt" }}>
                       <b>{resumeData.education.degree}</b> - {resumeData.education.university}

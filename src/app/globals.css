@@ -107,12 +107,12 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   height: 297mm;
   min-height: 297mm;
   max-height: 297mm;
-  padding: 10.5mm 9mm;
+  padding: 6.0mm 8.5mm 5.0mm;
   background: #ffffff;
   color: #111827;
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   font-size: 8.8pt;
-  line-height: 1.28;
+  line-height: 1.25;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   box-sizing: border-box;
@@ -121,21 +121,21 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
 .ats-a4-sheet hr {
   border: 0;
   border-top: 0.75pt solid #cbd5e1;
-  margin: 2.8pt 0 2.2pt;
+  margin: 1.5pt 0 1.2pt;
 }
 
 .ats-a4-sheet h1 {
-  font-size: 16.5pt;
+  font-size: 16.0pt;
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0;
-  line-height: 1.08;
+  line-height: 1.05;
   color: #0f172a;
   text-transform: uppercase;
 }
 
 .ats-a4-sheet h2 {
-  font-size: 9.2pt;
+  font-size: 9.0pt;
   font-weight: 800;
   letter-spacing: 0.04em;
   margin: 0;
@@ -149,27 +149,27 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   font-weight: 750;
   margin: 0;
   color: #0f172a;
-  line-height: 1.18;
+  line-height: 1.16;
 }
 
 .ats-a4-sheet ul {
-  margin: 1.5pt 0 2.5pt;
-  padding-left: 11.5pt;
+  margin: 1.0pt 0 1.6pt;
+  padding-left: 11.0pt;
   list-style-type: disc;
 }
 
 .ats-a4-sheet li {
-  margin-bottom: 1.4pt;
+  margin-bottom: 1.0pt;
   font-size: 8.15pt;
-  line-height: 1.26;
+  line-height: 1.23;
   color: #273444;
 }
 
 .ats-skill-row {
-  font-size: 8.35pt;
-  line-height: 1.28;
+  font-size: 8.25pt;
+  line-height: 1.25;
   color: #1e293b;
-  margin-bottom: 1.6pt;
+  margin-bottom: 1.4pt;
   word-break: normal;
 }
 

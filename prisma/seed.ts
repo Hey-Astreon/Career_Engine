@@ -39,13 +39,13 @@ async function main() {
     data: [
       {
         profileId: roushan.id,
-        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester",
+        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)",
         techStack: "Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud (OCI), Docker, Caddy",
         liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bulletPoints: JSON.stringify([
-          "Creator & Lead Backend Developer: Conceived and engineered the distributed harvesting engine and containerized infrastructure operating live on Oracle Cloud (https://astrework.app), aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
+          "Creator & Lead Backend Developer: Engineered distributed scrapers on Oracle Cloud (OCI ARM64) aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
           "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
           "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%."
         ]),
@@ -145,13 +145,13 @@ async function main() {
     data: [
       {
         profileId: ayushi.id,
-        title: "AstreWork — Autonomous Remote Career Platform & AstrePilot Extension",
+        title: "AstreWork — Autonomous Career Platform & AstrePilot Extension (Next.js 16, Chrome MV3, Gemini API)",
         techStack: "Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension (Manifest V3), Turso LibSQL, Redis 7, TailwindCSS",
         liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
         architecture: "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bulletPoints: JSON.stringify([
-          "Co-Developer & Lead Frontend Architect: Co-developed the production career platform operating live on Oracle Cloud (https://astrework.app), architecting the client-side ATS optimization engine and Gemini-powered scoring algorithms with sub-second matching latency.",
+          "Co-Developer & Lead Frontend Architect: Engineered client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, achieving sub-second evaluation across live postings.",
           "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
           "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift."
         ]),
