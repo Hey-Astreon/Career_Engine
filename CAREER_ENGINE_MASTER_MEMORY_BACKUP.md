@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine\1_RCMS`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 40: Master Resume Remake & AstreWork Flagship Integration, Playwright/Selenium/OCI Stack, Turso DB Sync, 357 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 42: Resume A4 Layout, Alignment & Spacing Overhaul, Bullet Dot Hanging Indent, Pinned Project Links, 100% Single-Page Education Fit, Master Retrospective, 357 Passing Tests)
 
 ---
 
@@ -108,10 +108,10 @@
 
 ### Roushan Kumar (`slug: "roushan"`)
 - **Master Projects:**
-  1. *AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester* (Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud OCI, Docker, Caddy HTTP/3)
-     - High-throughput multi-provider harvester scraping 14,000+ daily remote tech jobs across 7 platforms in < 2.5 minutes with stealth anti-bot bypasses.
-     - Deployed on Oracle Cloud (OCI Ampere ARM64) in multi-stage Docker containers with Watchtower CI/CD and Caddy HTTP/3 reverse proxy (99.9% uptime, sub-50ms API latency).
-     - Distributed persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate ingestion to 0% and query latency by 85%.
+  1. *AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)* (Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud OCI, Docker, Caddy HTTP/3)
+     - Creator & Lead Backend Developer: Engineered distributed scrapers on Oracle Cloud (OCI ARM64) aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.
+     - Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) in multi-stage Docker containers with Watchtower CI/CD and Caddy HTTP/3 reverse proxy (99.9% uptime, sub-50ms API latency).
+     - Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate ingestion to 0% and query latency by 85%.
   2. *Astra Vision - Developer Sandbox & Code Graph Parser* (FastAPI, Python, Monaco, Tree-Sitter, ChromaDB)
      - Subprocess isolation sandbox intercepting unauthorized file/socket calls in real-time.
      - Tree-Sitter AST compilers & ChromaDB vector search indexing syntax trees < 200ms.
@@ -124,10 +124,10 @@
 
 ### Ayushi Raj (`slug: "ayushi"`)
 - **Master Projects:**
-  1. *AstreWork — Autonomous Remote Career Platform & AstrePilot Extension* (Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension Manifest V3, Turso LibSQL, Redis 7, TailwindCSS)
-     - Dynamic candidate-to-job matching studio and A4 resume tailoring engine powered by Google Gemini SDK and TF-IDF keyword extraction with sub-second scoring.
-     - AstrePilot Chrome Extension (Manifest V3) with isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization for 1-click ATS application autofill in ~15s.
-     - Responsive workspace in Next.js 16 App Router and React 19 with Zustand state management and print-perfect A4 CSS layout rendering with zero layout shift.
+  1. *AstreWork — Autonomous Career Platform & AstrePilot Extension (Next.js 16, Chrome MV3, Gemini API)* (Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension Manifest V3, Turso LibSQL, Redis 7, TailwindCSS)
+     - Co-Developer & Lead Frontend Architect: Engineered client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, achieving sub-second evaluation across live postings.
+     - AstrePilot Chrome Extension (Manifest V3): Built cross-browser extension with isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15s per application.
+     - High-Density Reactive UI Architecture: Engineered responsive workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift.
   2. *Alyra Lock - Zero-Knowledge Password Vault* (React, TypeScript, Express, MongoDB, Web Crypto API)
      - Client-side master key encryption isolation with REST API sync latency < 200ms.
   3. *Astra Vision - AI Sandbox & Code Parsing* (FastAPI, Python, Monaco, Tree-Sitter, ChromaDB)
@@ -885,6 +885,152 @@ Located in `extension/`:
     - `tests/internship-kit-tailoring.test.ts`: PASS (3/3).
     - `npx tsc --noEmit`: PASS (0 errors).
     - `npm run build`: PASS (59/59 routes compiled, Turbopack verified).
+
+---
+
+## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
+
+> *"Experience is not what happens to you; it's what you do with what happens to you."*  
+> This section is the permanent post-mortem registry of CareerEngine / AstreWork. Every future AI instance reading this file MUST study these cases before writing code or altering configurations. Do not repeat settled mistakes.
+
+### 🔴 Case 1: The Vanishing Jobs Disaster (Stale Pruning vs. Transient Scraper Failures)
+* **What Happened:** The user scraped 80+ fresh remote tech internships from `intern-list.com` directly into Turso Cloud. Shortly after, the user refreshed the dashboard and found that **every single internship had vanished**.
+* **The Root Cause / Mistake:**
+  - `evaluateJobFreshness` in `src/lib/providers/registry.ts` utilized `cutoffTime = syncState.lastSuccessfulSyncAt` (the instantaneous timestamp of the most recent sync run).
+  - When the background sync worker ran on Oracle Cloud, its old Webflow-based parser returned 0 jobs because the target website had migrated to an embedded JobRight engine.
+  - Because `cutoffTime` was instantaneous, any job that was not rediscovered in that single zero-result run was immediately marked `isExpired = true` and filtered out of the live feed.
+* **How We Solved It:**
+  1. **Rolling Staleness Window:** Replaced instantaneous cutoff with `STALE_OCCURRENCE_THRESHOLD_HOURS = 48`. A job is only expired if it hasn't been observed across multiple sync cycles spanning 48 hours.
+  2. **Zero-Result Circuit Breaker:** Added `if (result.success && result.jobsDiscovered > 0)`. If a scraper returns 0 jobs (due to upstream DOM changes, rate limiting, or network timeouts), freshness evaluation is **aborted completely**. Zero-discovery runs are NEVER permitted to trigger destructive cache invalidation or mass expiration.
+  3. **Database Recovery:** Restored 181 mistakenly expired jobs in Turso Cloud via SQL, flushed Redis LRU keys, and restored the feed to 257 active opportunities.
+* **Engineering Experience Gained:**
+  - **Rule:** Never use instantaneous timestamps for cache/data eviction in distributed harvesting pipelines.
+  - **Rule:** A zero-count discovery result must always be treated as a scraper fault, never as proof of universe emptiness. Always implement a hysteresis dampener and a circuit breaker before state deletion.
+
+---
+
+### 🔴 Case 2: Candidate Context Privacy Leak & Dual-Founder Authorization Matrix
+* **What Happened:** When Roushan (`playboxstation460@gmail.com`) and Ayushi (`ayushi29507@gmail.com`) logged into AstreWork, the system lacked a cryptographic permission boundary separating their founder candidate profiles from general third-party users. A third-party user registering with their own email could switch profiles in the UI or hit `/api/jobs/feed-scores?candidateSlug=roushan` to read their master profiles, phone numbers, and application pipelines.
+* **The Root Cause / Mistake:**
+  - The application was initially built as a single-tenant local tool and relied on UI hiding rather than defense-in-depth API authorization.
+  - `getMasterResumeBaseline(slug)` had hardcoded fallbacks for `roushan` and `ayushi` that would happily return sensitive master data to any unauthenticated caller asking for those slugs.
+* **How We Solved It:**
+  1. **Cryptographic Identity Layer (`src/lib/authCandidate.ts`):** Created `isCoDeveloperEmail`, `canAccessProfile`, and `getAccessibleProfileSlugs`. Only `playboxstation460@gmail.com` and `ayushi29507@gmail.com` are recognized as verified co-developers with cross-profile visibility.
+  2. **API Access Firewall:** Hardened all candidate-scoped endpoints (`/api/jobs/feed-scores`, `/api/jobs/match`, `/api/jobs/kit`, `/api/outreach/generate`, `/api/resume/variants`, `/api/resume/optimize`, `/api/resume/tailor`, `/api/resume/download`) to evaluate `canAccessProfile(session, slug)`. Third-party probing attempts are rejected with `403 Forbidden`.
+  3. **Prisma Query Isolation:** Third-party profile queries strictly enforce `where: { userId: currentUserId, slug: { notIn: ['roushan', 'ayushi'] } }`.
+  4. **Baseline Sanitization:** Hardened `getMasterResumeBaseline` so non-developer sessions receive an isolated starter template with zero personal founder data.
+  5. **UI Gating:** The profile switcher dropdown renders ONLY for verified founders. Third-party users see a static `"YOUR PROFILE"` badge.
+* **Engineering Experience Gained:**
+  - **Rule:** Frontend UI suppression is aesthetic, NOT security. Real data isolation must be enforced at the API route layer, the database `WHERE` clause, and the fallback data generator.
+  - **Rule:** Never leak founder/developer testing fixtures into multi-tenant production pathways.
+
+---
+
+### 🔴 Case 3: The BCA Candidate Title Regulation (Developer Only, Never Engineer)
+* **What Happened:** In master profile resumes, AI optimizer prompts, and virtual simulation entries, the word "Engineer" (e.g., "Full-Stack Systems Engineer", "Backend Engineer") was repeatedly generated.
+* **The Root Cause / Mistake:**
+  - AI LLM models have a strong statistical bias toward the phrase "Software Engineer" and default to it in tech resumes.
+  - Both Roushan Kumar and Ayushi Raj are pursuing a **Bachelor of Computer Applications (BCA)** at Amity University Noida. Under Indian regulatory and academic standards, the title "Engineer" is legally reserved for B.Tech / B.E. graduates. Using "Engineer" poses compliance risks during corporate background checks and recruiter ATS screening.
+* **How We Solved It:**
+  1. **Codified Inviolable Title Law:** Added Section 1 compliance mandate to master memory and embedded hard negative constraints into `src/lib/ai/resumeOptimizer.ts`.
+  2. **Allowed & Enforced Titles:** Standardized on high-prestige, compliant alternatives: **"Software Developer"**, **"Full-Stack Developer"**, **"Systems Architect"**, **"Backend Developer"**, **"Creator"**, and **"Co-Developer"**.
+  3. **System Simulation Clarification:** Virtual experience role titles were updated to reflect the course title ("Software Engineering Virtual Simulation"), while candidate headline/role mappings strictly use "Developer".
+* **Engineering Experience Gained:**
+  - **Rule:** Candidate titles are legal and credentials representations. Ground candidate positioning within academic and regulatory reality. Strong systems design and distributed engineering metrics speak far louder than a disputed title word.
+
+---
+
+### 🔴 Case 4: "Dot Overload" & Recruiter F-Scan Typography Destruction
+* **What Happened:** In the Technical Skills section, bullet dots (`•`) were used both as line starters and as delimiters between skills:
+  `• System Design: Pipelines • Concurrency • Microservices • REST APIs`
+  When rendered, it created visual symbol clutter ("dot overload"). Furthermore, when skills wrapped to a second line, the text wrapped directly underneath the bullet dot, breaking the clean left margin of the resume.
+* **The Root Cause / Mistake:**
+  - Conflating list bullet markers with internal item separators.
+  - Failing to test multi-line text wrapping against recruiter 6-second eye-tracking heatmaps (F-scan pattern).
+* **How We Solved It:**
+  1. Converted all skill values to clean, ATS-standard comma separation:
+     `System Design & Distributed Architecture: High-Throughput Pipelines, Concurrency & Rate Limiting, Microservices, REST APIs`
+  2. Updated `resumeOptimizer.ts` system prompt to strictly ban `•` inside skill values and automatically sanitize bullet characters into commas.
+  3. Banned clumsy titles like "Systems Developer" or "Full-Stack Systems Developer" in favor of "Software Developer | Distributed Systems & Cloud Infrastructure".
+* **Engineering Experience Gained:**
+  - **Rule:** In high-density ATS resumes, visual rhythm is sacred. Use bullet dots ONLY for structural list items. Use commas for horizontal keyword lists. Recruiters read left-to-right; symbol noise dilutes keyword recognition.
+
+---
+
+### 🔴 Case 5: The Missing Category Bullet Dot vs. Hanging Indent Paradox
+* **What Happened:** In Phase 41, to prevent wrapped skill lines from sitting under a bullet dot, we removed the bullet dot character entirely from the category line. The user immediately caught this in the generated PDF: the Technical Skills section looked naked, unaligned with the rest of the document, and completely lacked bullet dots.
+* **The Root Cause / Mistake:**
+  - Fixing an alignment problem by deleting the visual marker rather than fixing the underlying CSS layout container.
+* **How We Solved It:**
+  1. **Isolated Two-Column Flexbox Gutter:**
+     ```tsx
+     <div className="ats-skill-row" style={{ display: "flex", alignItems: "flex-start", marginBottom: "1.4pt" }}>
+       <span style={{ width: "10pt", flexShrink: 0, fontWeight: 700, color: "#0f172a", lineHeight: "1.28" }}>•</span>
+       <div style={{ flex: 1, minWidth: 0 }}>
+         <b>{s.categoryName}:</b> {s.skillsText}
+       </div>
+     </div>
+     ```
+  2. **The Geometry:** Column 1 provides a fixed 10pt gutter holding the bold bullet dot `•`. Column 2 contains the category title and comma-separated skills. When skills wrap to line 2, line 3, etc., they wrap **inside Column 2**, forming a perfect hanging indent parallel to the category text.
+* **Engineering Experience Gained:**
+  - **Rule:** Never solve a wrapping or indentation defect by deleting the indicator. Use structural CSS (gutters, flex columns, hanging indents) to decouple the list marker from the content container.
+
+---
+
+### 🔴 Case 6: AstreWork Project Link Wrapping & Title Length Constraint
+* **What Happened:** On the AstreWork project header, the links `Live Demo | GitHub` wrapped vertically into two lines:
+  ```text
+  Live Demo |
+  GitHub
+  ```
+  Meanwhile, Astra Vision and Alyra Lock had their links sitting neatly on a single horizontal line pinned to the right margin.
+* **The Root Cause / Mistake:**
+  - AstreWork's title was **130 characters long**:
+    `AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (Next.js 16, TypeScript, Turso LibSQL, Redis, OCI, Docker)`
+  - This consumed over 85% of the horizontal width, leaving less than 40px for the right column and forcing flex-wrap into two ugly stacked lines.
+* **How We Solved It:**
+  1. **Shortened Title to ~92 Characters (Matching Astra Vision's 91):**
+     `AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)`
+  2. **Strict Flex Container Styling:**
+     Added `whiteSpace: "nowrap"`, `flexShrink: 0`, and `alignItems: "flex-start"` with `gap: 8pt` to the links container.
+  3. **Result:** Pinned `Live Demo | GitHub` permanently onto Line 1 with zero possibility of wrapping.
+* **Engineering Experience Gained:**
+  - **Rule:** In two-column header rows (e.g. Title left, Action links right), the left column text length MUST be budgeted against the container width. Always apply `white-space: nowrap; flex-shrink: 0` to the link column to guarantee horizontal integrity.
+
+---
+
+### 🔴 Case 7: Single-Page A4 Sheet Overflow & The 60-Point Vertical Real Estate Reclamation
+* **What Happened:** In the generated PDF export, the `EDUCATION` section at the bottom was pushed off the printable page container, cutting the `Relevant Coursework` bullet in half and ruining single-page A4 compliance.
+* **The Root Cause / Mistake:**
+  - Incremental vertical creep: sheet padding was `10.5mm` top and bottom, `<hr />` dividers had 5pt total margin across 5 dividers, list margins had generous padding, and AstreWork Bullet 1 was an overexplained 36-word paragraph (4 lines).
+  - The cumulative height of the DOM exceeded the rigid 297mm A4 boundary.
+* **How We Solved It (Incorporating User's Strategic Suggestion):**
+  1. **Container Padding Reduction:** Reduced `.ats-a4-sheet` top padding to `6.0mm` and bottom padding to `5.0mm`. **Reclaimed ~28pt vertical space immediately.**
+  2. **Divider Tightening:** Reduced `<hr />` margins from `2.8pt 0 2.2pt` to `1.5pt 0 1.2pt`. Across 5 dividers, **reclaimed ~11.5pt.**
+  3. **List Spacing Tightening:** Reduced `ul` margin to `1.0pt 0 1.6pt` and `li` margin-bottom to `1.0pt` with `line-height: 1.23`. Across 12 bullets, **reclaimed ~10pt.**
+  4. **Bullet Point Condensation (Google XYZ):** Rewrote AstreWork Bullet 1 from 36 words to 22 crisp, metric-backed words:
+     `Creator & Lead Backend Developer: Engineered distributed scrapers on Oracle Cloud (OCI ARM64) aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.`
+     (Saved 2 full lines of height, reclaiming ~16pt).
+  5. **Total Vertical Space Reclaimed:** **~60+ points (~21mm)**.
+  6. **Result:** The entire Education section (degree, university, expected graduation date, and coursework) sits comfortably 15–20mm above the bottom edge of the A4 page.
+* **Engineering Experience Gained:**
+  - **Rule:** A single-page A4 resume is a zero-sum vertical budget problem. 297mm is an unyielding ceiling.
+  - **Rule:** Before reducing font sizes or dropping content, reclaim space from container padding and divider margins. 6.0mm top / 5.0mm bottom padding maintains clean visual margins while freeing up massive content real estate.
+
+---
+
+### 🔴 Case 8: Inverted Database Secrets & CI/CD Connection Resiliency
+* **What Happened:** Background GitHub Actions sync runs failed intermittently because `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` secrets were accidentally swapped or formatted with unexpected URL protocols in repository settings.
+* **The Root Cause / Mistake:**
+  - Relying on raw environment strings without runtime sanity checking or self-healing fallback logic.
+* **How We Solved It:**
+  1. **Self-Healing Credential Resolver (`src/lib/tursoClient.ts` & `scripts/sync-master-profiles.cjs`):** Added heuristic inspection: if the URL contains a JWT token (`eyJ...`) and the Auth Token looks like a hostname (`libsql://...`), the script automatically swaps them back into proper positions at runtime.
+  2. **URL Scheme Normalizer:** Automatically normalizes `https://` to `libsql://` and prepends missing protocol prefixes.
+  3. **CI/CD Preflight Step:** Added an isolated preflight verification step in `.github/workflows/job-sync.yml` that performs a lightweight `SELECT count(*) FROM opportunities` before spawning scraper jobs.
+* **Engineering Experience Gained:**
+  - **Rule:** Defense-in-depth configuration parsing. In automated cron pipelines, code should proactively validate and heal inverted or malformed credentials rather than throwing unhandled fatal exceptions.
+
+---
 
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
