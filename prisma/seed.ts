@@ -11,7 +11,7 @@ async function main() {
     where: { slug: "roushan" },
     update: {
       fullName: "ROUSHAN KUMAR",
-      title: "Lead Systems Architect & Full-Stack Developer",
+      title: "Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
       email: "roushanraut404@gmail.com",
       phone: "+91-9431483512",
       location: "Patna, Bihar, India",
@@ -23,7 +23,7 @@ async function main() {
     create: {
       slug: "roushan",
       fullName: "ROUSHAN KUMAR",
-      title: "Lead Systems Architect & Full-Stack Developer",
+      title: "Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
       email: "roushanraut404@gmail.com",
       phone: "+91-9431483512",
       location: "Patna, Bihar, India",
@@ -45,7 +45,7 @@ async function main() {
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bulletPoints: JSON.stringify([
-          "Distributed Harvester & Headless Automation: Engineered a high-throughput multi-provider job harvesting pipeline utilizing Playwright, Puppeteer, and Selenium with stealth anti-bot bypasses, scraping and aggregating 14,000+ remote opportunities daily across 7 platforms in < 2.5 minutes.",
+          "Creator & Lead Backend Developer: Conceived and engineered the distributed harvesting engine and containerized infrastructure operating live on Oracle Cloud (https://astrework.app), aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
           "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
           "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%."
         ]),
@@ -117,7 +117,7 @@ async function main() {
     where: { slug: "ayushi" },
     update: {
       fullName: "AYUSHI RAJ",
-      title: "AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist",
+      title: "Full-Stack Developer | AI Systems & Interactive Web Applications",
       email: "ayushi29507@gmail.com",
       phone: "+91-8709852305",
       location: "Bihar, India",
@@ -129,7 +129,7 @@ async function main() {
     create: {
       slug: "ayushi",
       fullName: "AYUSHI RAJ",
-      title: "AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist",
+      title: "Full-Stack Developer | AI Systems & Interactive Web Applications",
       email: "ayushi29507@gmail.com",
       phone: "+91-8709852305",
       location: "Bihar, India",
@@ -151,7 +151,7 @@ async function main() {
         githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
         architecture: "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bulletPoints: JSON.stringify([
-          "AI Scoring & ATS Optimization Studio: Architected an intelligent candidate-to-job matching engine and dynamic A4 resume tailoring studio powered by Google Gemini SDK and TF-IDF keyword extraction, evaluating job postings against candidate profiles with sub-second scoring.",
+          "Co-Developer & Lead Frontend Architect: Co-developed the production career platform operating live on Oracle Cloud (https://astrework.app), architecting the client-side ATS optimization engine and Gemini-powered scoring algorithms with sub-second matching latency.",
           "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
           "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift."
         ]),

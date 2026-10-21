@@ -48,7 +48,7 @@ STRICT WRITING & RECRUITING RULES:
 1. CAREER STAGE CALIBRATION & BCA TITLE LAW (CRITICAL MANDATE):
    - Analyze the candidate's education timeline and credentials.
    - For BCA candidates (Roushan Kumar & Ayushi Raj), you are STRICTLY PROHIBITED from using the title "Engineer" anywhere in their headline or profile (Indian regulatory & academic mandate).
-   - MANDATORY ALLOWED TITLES: "Software Developer", "Systems Developer", "Backend Developer", "Full Stack Developer", "AI Developer", "Systems Architect", "Builder".
+   - MANDATORY ALLOWED TITLES: "Software Developer", "Backend Developer", "Full Stack Developer", "AI Developer", "Systems Architect", "Builder". Never use "Systems Developer" or "Full-Stack Systems Developer".
    - NEVER use titles implying decades of corporate tenure like "Senior Engineer", "Director", "Executive", "Expert", or "Seasoned".
    - Do NOT mention the candidate's university or college in the summary. Recruiters do not evaluate candidates based on institution name at the summary-scan stage.
    - Do NOT frame virtual simulations or structured engineering programs as "no experience". They are real, verifiable engineering contributions and should be acknowledged as such.
@@ -60,7 +60,7 @@ STRICT WRITING & RECRUITING RULES:
    - Write in clean, human narrative prose. The summary answers: WHO is this person, WHAT kind of problems do they solve, and WHAT makes them worth reading further.
    - Technologies belong in the Skills and Projects sections. The summary should reference a domain or problem space, not name-drop individual tools.
    - 3 sentences maximum. Each sentence must carry independent meaning.
-   - ALLOWED: "Full-Stack Systems Developer with a focus on distributed web scrapers, cloud infrastructure, and developer automation tools."
+   - ALLOWED: "Full-Stack Software Developer specializing in distributed web scrapers, cloud infrastructure, and developer automation tools."
    - ALLOWED: "Drawn to roles where system reliability and developer tooling intersect — particularly at scale."
 
 3. FACTUAL INTEGRITY & STRICT FACT-ANCHORING (ZERO HALLUCINATIONS):
@@ -81,14 +81,15 @@ STRICT WRITING & RECRUITING RULES:
 
 6. ATS FORMATTING & GEOMETRY:
    - Strictly maintain the 6 standard sections (Header, Professional Summary, 6 Categorized Skill Groups, 3 Flagship Projects, 3 Virtual Simulations, Education).
+   - Under skills, categories must NOT have bullet prefixes and items must be separated by standard commas, e.g. "Category: Item 1, Item 2, Item 3". NEVER use bullet characters "•" within skills.
    - Keep the summary to exactly 3 impactful sentences (no fluff, no tech dumps).
    - Ensure standard capitalization: PostgreSQL, FastAPI, TypeScript, Node.js, xUnit, Web Crypto API (AES-GCM 256-bit), PBKDF2, OCI, Docker.
    - NEVER mention Coco AI.
 
 Return ONLY a valid JSON object with keys:
-- "targetHeadline": string (Punchy 1-line tailored professional title, e.g. "Software Developer | Backend, Systems & Distributed Architecture")
+- "targetHeadline": string (Punchy 1-line tailored professional title, e.g. "Full-Stack Developer | Distributed Systems & Cloud Infrastructure")
 - "summary": string (3-sentence narrative prose summary. NO comma-separated tech lists. Describes WHO they are and WHAT they build, not WHICH tools they use.)
-- "skills": array of 6 objects { "categoryName": string, "skillsText": string } (Front-load matching skills in each category)
+- "skills": array of 6 objects { "categoryName": string, "skillsText": string } (Front-load matching skills in each category. Comma-separated, e.g. "Skill 1, Skill 2, Skill 3". NO bullets.)
 - "projects": array of 3 objects { "title": string, "techStack": string, "liveDemoUrl": string, "githubUrl": string, "bullets": [string, string, string] } (Google XYZ bullet points)
 `;
 
@@ -120,7 +121,11 @@ TASKS:
 
       const tailoredHeadline = parsed.targetHeadline || baseline.header.targetHeadline;
       const tailoredSummary = sanitizeAiSlop(parsed.summary || baseline.summary);
-      const tailoredSkills = Array.isArray(parsed.skills) && parsed.skills.length === 6 ? parsed.skills : baseline.skills;
+      const rawSkills = Array.isArray(parsed.skills) && parsed.skills.length === 6 ? parsed.skills : baseline.skills;
+      const tailoredSkills = rawSkills.map((s: { categoryName: string; skillsText: string }) => ({
+        categoryName: s.categoryName.replace(/^[•\s\-\*]+/, "").trim(),
+        skillsText: s.skillsText.replace(/•/g, ",").replace(/\s*,\s*/g, ", ").trim(),
+      }));
       
       const rawProjects = Array.isArray(parsed.projects) && parsed.projects.length === 3 ? parsed.projects : baseline.projects;
       const tailoredProjects = rawProjects.map((p: { title: string; techStack: string; liveDemoUrl?: string; githubUrl?: string; bullets?: string[] }) => ({

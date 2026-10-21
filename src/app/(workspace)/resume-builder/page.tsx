@@ -1032,8 +1032,8 @@ ${portfolio}`;
                 <h2>TECHNICAL SKILLS</h2>
                 <div style={{ marginTop: "2pt" }}>
                   {resumeData.skills.map((s) => (
-                    <div key={s.categoryName} style={{ fontSize: "8.35pt", lineHeight: "1.25", color: "#1e293b", marginBottom: "1.4pt" }}>
-                      <b>• {s.categoryName}:</b> {renderTextWithHeatmap(s.skillsText)}
+                    <div key={s.categoryName} className="ats-skill-row" style={{ fontSize: "8.35pt", lineHeight: "1.28", color: "#1e293b", marginBottom: "1.6pt" }}>
+                      <b>{s.categoryName}:</b> {renderTextWithHeatmap(s.skillsText)}
                     </div>
                   ))}
                 </div>

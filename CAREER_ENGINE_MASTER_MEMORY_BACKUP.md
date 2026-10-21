@@ -829,6 +829,34 @@ Located in `extension/`:
     - Typecheck passed: `npx tsc --noEmit` clean with 0 errors.
     - All test suites passing.
 
+- [x] **Phase 41: Resume Style, Typography & ATS Engineering Overhaul (Oct 21, 2026)**
+  - **1. User Intent & Objections Resolved:**
+    - **Google ADK & Cloud SDK:** Explicitly featured `Google GenAI / Agent SDK (ADK)` under Autonomous AI Agents & Security, and `Google Cloud SDK` under Cloud Infrastructure.
+    - **System Design & AI Agents Prominence:** Dedicated prominent, front-loaded technical categories for `System Design & Distributed Architecture` and `Autonomous AI Agents & Web Scraping` (multi-agent routing, autonomous scrapers with circuit breakers, AST parsing, RAG).
+    - **Eliminated "Full Stack Systems Developer":** Fixed non-standard hybrid title. Standardized on `Full-Stack Developer | Distributed Systems & Cloud Infrastructure` for Roushan and `Full-Stack Developer | AI Systems & Interactive Web Applications` for Ayushi, fully compliant with the BCA Title Law (no "Engineer").
+    - **Ayushi's Formal Role:** Officially formalized Ayushi's role as **Co-Developer of AstreWork** (and Roushan as **Creator & Lead Backend Developer**) across professional summaries, project bullet prefixes, and database records.
+    - **ATS Parseability & Delimiter Standardization:** Eliminated dot separators (` • `) within skill groups. Replaced them with gold-standard commas (`, `), guaranteeing 100% tokenization by Workday, Greenhouse, Taleo, Lever, and iCIMS without unicode character corruption.
+    - **Eliminated Line-Wrapping / Hanging Indent Flaws:** Removed the prepended `• ` from category names (`<b>Category:</b>` instead of `<b>• Category:</b>`). Added `.ats-skill-row` styling in `src/app/globals.css` and character-balanced categories to eliminate awkward orphan words (`Microservices`, `(3NF)`).
+    - **Eliminated "Dot Overload":** Removed all bullet characters from headings and values, reserving bullet points (`disc`) strictly for Technical Projects and Technical Simulations achievement lists.
+  - **2. Master Resume Baselines (`src/lib/resumeBaseline.ts`):**
+    - Updated `ROUSHAN_MASTER_BASELINE` and `AYUSHI_MASTER_BASELINE` with comma-separated skills, System Design, AI Agents, and official Creator/Co-Developer role titles.
+    - Updated `RESUME_STARTER_PRESETS` and custom candidate fallbacks to comma-separated skills.
+    - Updated `injectKeywordIntoResume` to append `, ${kw}` rather than ` • ${kw}`.
+  - **3. Preview DOM & CSS Updates:**
+    - Updated `src/app/(workspace)/resume-builder/page.tsx` and `src/app/(workspace)/resume-maker/page.tsx` to remove category bullet dots and use `.ats-skill-row`.
+    - Added `.ats-skill-row` class to `src/app/globals.css`.
+  - **4. AI Resume Optimizer Hardening (`src/lib/ai/resumeOptimizer.ts`):**
+    - System prompt strictly bans `•` within skills and enforces comma-separated format.
+    - System prompt forbids "Systems Developer" or "Full-Stack Systems Developer".
+    - Added sanitization pipeline that strips leading bullets and converts internal bullets to commas automatically.
+  - **5. Live Database Synchronization (`scripts/sync-master-profiles.cjs` & `prisma/seed.ts`):**
+    - Executed live sync to Turso Cloud LibSQL (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`): Updated profile titles and AstreWork bullet prefixes (`Creator & Lead Backend Developer` and `Co-Developer & Lead Frontend Architect`).
+  - **6. Automated Verification:**
+    - `tests/resume_optimizer.test.ts`: PASS (7/7).
+    - `tests/candidate_context_privacy.test.ts`: PASS (15/15).
+    - `tests/internship-kit-tailoring.test.ts`: PASS (3/3).
+    - `npx tsc --noEmit`: PASS (0 errors).
+
 ### Current System Health Status
 - **Production Status:** LIVE in Production on Oracle Cloud (Mumbai) at `https://astrework.app` (HTTP/2, HTTP/3, Let's Encrypt SSL, Caddy reverse proxy to Next.js 15).
 - **Dedicated Cloud Server:** 4 ARM64 OCPUs, 24 GB RAM, 4 Gbps Network Bandwidth, 46.6 GB Boot Volume (Oracle Always-Free; ~22 GB idle memory).

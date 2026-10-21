@@ -1391,8 +1391,8 @@ export default function ResumeMakerPage() {
                   <h2>TECHNICAL SKILLS</h2>
                   <div className="mt-1 space-y-0.5 text-[7.8pt] text-slate-800 leading-tight">
                     {resumeData.skills.map((s, idx) => (
-                      <div key={idx}>
-                        <b>• {s.categoryName}:</b> {s.skillsText}
+                      <div key={idx} className="ats-skill-row">
+                        <b>{s.categoryName}:</b> {s.skillsText}
                       </div>
                     ))}
                   </div>

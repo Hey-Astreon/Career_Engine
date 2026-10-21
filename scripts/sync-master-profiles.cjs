@@ -56,7 +56,7 @@ async function run() {
     sql: `UPDATE profiles 
           SET title = ?, fullName = ? 
           WHERE slug = ?`,
-    args: ['Lead Systems Architect & Full-Stack Developer', 'ROUSHAN KUMAR', 'roushan']
+    args: ['Full-Stack Developer | Distributed Systems & Cloud Infrastructure', 'ROUSHAN KUMAR', 'roushan']
   });
 
   const roushanRow = await client.execute({
@@ -73,7 +73,7 @@ async function run() {
     });
 
     const roushanAstreWorkBullets = JSON.stringify([
-      "Distributed Harvester & Headless Automation: Engineered a high-throughput multi-provider job harvesting pipeline utilizing Playwright, Puppeteer, and Selenium with stealth anti-bot bypasses, scraping and aggregating 14,000+ remote opportunities daily across 7 platforms in < 2.5 minutes.",
+      "Creator & Lead Backend Developer: Conceived and engineered the distributed harvesting engine and containerized infrastructure operating live on Oracle Cloud (https://astrework.app), aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
       "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
       "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%."
     ]);
@@ -101,7 +101,7 @@ async function run() {
     sql: `UPDATE profiles 
           SET title = ?, fullName = ? 
           WHERE slug = ?`,
-    args: ['AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist', 'AYUSHI RAJ', 'ayushi']
+    args: ['Full-Stack Developer | AI Systems & Interactive Web Applications', 'AYUSHI RAJ', 'ayushi']
   });
 
   const ayushiRow = await client.execute({
@@ -118,7 +118,7 @@ async function run() {
     });
 
     const ayushiAstreWorkBullets = JSON.stringify([
-      "AI Scoring & ATS Optimization Studio: Architected an intelligent candidate-to-job matching engine and dynamic A4 resume tailoring studio powered by Google Gemini SDK and TF-IDF keyword extraction, evaluating job postings against candidate profiles with sub-second scoring.",
+      "Co-Developer & Lead Frontend Architect: Co-developed the production career platform operating live on Oracle Cloud (https://astrework.app), architecting the client-side ATS optimization engine and Gemini-powered scoring algorithms with sub-second matching latency.",
       "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
       "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift."
     ]);

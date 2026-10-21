@@ -165,6 +165,14 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
   color: #273444;
 }
 
+.ats-skill-row {
+  font-size: 8.35pt;
+  line-height: 1.28;
+  color: #1e293b;
+  margin-bottom: 1.6pt;
+  word-break: normal;
+}
+
 .ats-a4-sheet b, .ats-a4-sheet strong {
   font-weight: 700;
   color: #0f172a;

@@ -87,7 +87,7 @@ export function getMasterResumeBaseline(
     return {
       header: {
         fullName: "AYUSHI RAJ",
-        targetHeadline: "AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist",
+        targetHeadline: "Full-Stack Developer | AI Systems & Interactive Web Applications",
         location: "Bihar, India",
         phone: "+91-8709852305",
         email: "ayushi29507@gmail.com",
@@ -96,31 +96,31 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://www.linkedin.com/in/alrya404/",
       },
       summary:
-        "Full-Stack Software Developer specializing in AI-integrated web applications, autonomous browser extensions, and high-craft user interfaces. Co-creator of AstreWork, having engineered its client-side ATS optimization engine, Gemini-powered scoring algorithms, and the AstrePilot Chrome Extension. Combines deep attention to frontend performance and design systems with robust backend APIs, secure state management, and real-world developer tooling.",
+        "Full-Stack Software Developer and Co-Developer of AstreWork, specializing in AI-integrated web applications, autonomous browser extensions, and high-craft user interfaces. Architected AstreWork's client-side ATS optimization engine, Gemini-powered scoring algorithms, and the AstrePilot Chrome Extension. Combines deep attention to frontend performance and design systems with robust backend APIs, secure state management, and real-world developer tooling.",
       skills: [
         {
-          categoryName: "Full-Stack & UI Architecture",
-          skillsText: "Next.js 16 (App Router) • React 19 • TypeScript • JavaScript • Zustand • TailwindCSS • Monaco Editor • HTML5/CSS3",
+          categoryName: "Autonomous AI Agents & Intelligent Systems",
+          skillsText: "Autonomous Browser Agents, Google GenAI SDK, Multi-Model LLM Routing (Groq/Gemini), Dynamic Job-Tailoring Algorithms, ATS Scoring Systems",
         },
         {
-          categoryName: "AI Integration & Tooling",
-          skillsText: "Google Gemini API / SDK • Prompt Engineering • ATS Scoring Algorithms • Multi-Model Routing • Vector Search (ChromaDB)",
+          categoryName: "System Design & Full-Stack Architecture",
+          skillsText: "Next.js 16 (App Router), React 19, Server Components (RSC), Server Actions, RESTful APIs, State Machines (Zustand), Turso LibSQL, Redis 7 Caching",
         },
         {
-          categoryName: "Browser Extensions & Automation",
-          skillsText: "Chrome Extensions (Manifest V3) • Shadow DOM Injection • Playwright • Puppeteer • DOM Parsing • Cheerio",
+          categoryName: "Browser Automation & Extensions",
+          skillsText: "Chrome Extensions (Manifest V3), Shadow DOM Injection, Content Script Orchestration, Playwright, Puppeteer, DOM Parsing, Web Workers",
         },
         {
-          categoryName: "Backend & APIs",
-          skillsText: "Node.js • Fastify • Express.js • Python (FastAPI) • RESTful APIs • C# (.NET Core) • Java (Spring Boot)",
+          categoryName: "Languages & Core Runtimes",
+          skillsText: "TypeScript, JavaScript, Python, C# (.NET Core), Java (Spring Boot), Node.js, Fastify, SQL",
         },
         {
-          categoryName: "Databases, Caching & Cloud",
-          skillsText: "Turso LibSQL • Redis 7 (LRU) • PostgreSQL • MongoDB • SQLite (WAL) • Prisma ORM • Oracle Cloud (OCI) • Docker",
+          categoryName: "UI Engineering & Design Systems",
+          skillsText: "Tailwind CSS, Vanilla CSS (Glassmorphism & Design Tokens), Monaco Editor, Lucide Icons, Print-Perfect A4 Layouts, Responsive Design",
         },
         {
-          categoryName: "Security & Quality Assurance",
-          skillsText: "Web Crypto API (AES-GCM, PBKDF2) • HMAC-SHA256 Auth • JWT • Vitest • Jest • PyTest • xUnit • Moq",
+          categoryName: "Security, Testing & Cloud",
+          skillsText: "Web Crypto API (AES-GCM, PBKDF2), HMAC-SHA256, JWT, Vitest, Jest, PyTest, Oracle Cloud (OCI), Docker, Git/GitHub",
         },
       ],
       projects: [
@@ -130,7 +130,7 @@ export function getMasterResumeBaseline(
           liveDemoUrl: "https://astrework.app",
           githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
           bullets: [
-            "AI Scoring & ATS Optimization Studio: Architected an intelligent candidate-to-job matching engine and dynamic A4 resume tailoring studio powered by Google Gemini SDK and TF-IDF keyword extraction, evaluating job postings against candidate profiles with sub-second scoring.",
+            "Co-Developer & Lead Frontend Architect: Co-developed the production career platform operating live on Oracle Cloud (https://astrework.app), architecting the client-side ATS optimization engine and Gemini-powered scoring algorithms with sub-second matching latency.",
             "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
             "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift.",
           ],
@@ -204,7 +204,7 @@ export function getMasterResumeBaseline(
     return {
     header: {
       fullName: "ROUSHAN KUMAR",
-      targetHeadline: "Lead Systems Architect & Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
+      targetHeadline: "Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
       location: "Patna, Bihar, India",
       phone: "+91-9431483512",
       email: "roushanraut404@gmail.com",
@@ -213,31 +213,31 @@ export function getMasterResumeBaseline(
       linkedinUrl: "https://linkedin.com/in/astreon4547",
     },
     summary:
-      "Full-Stack Systems Developer with hands-on experience designing and operating distributed web scrapers, cloud infrastructure, and developer automation tools. Creator of AstreWork, a live production platform on Oracle Cloud running containerized headless browser pipelines that process tens of thousands of postings daily. Approaches software engineering with a focus on high-throughput reliability, data pipeline concurrency, and pragmatic systems architecture.",
+      "Full-Stack Software Developer and Creator of AstreWork, with hands-on experience designing and operating distributed web scrapers, cloud infrastructure, and developer automation tools. Operates a live production platform on Oracle Cloud running containerized headless browser pipelines that process tens of thousands of postings daily. Approaches software engineering with a focus on high-throughput reliability, data pipeline concurrency, and pragmatic systems architecture.",
     skills: [
       {
-        categoryName: "Distributed Systems & Automation",
-        skillsText: "Playwright • Puppeteer • Selenium • Web Scraping • Reverse Engineering • REST APIs • Microservices",
+        categoryName: "System Design & Distributed Architecture",
+        skillsText: "High-Throughput Pipelines, Concurrency & Rate Limiting, Microservices, Event-Driven Systems, REST APIs, System Reliability",
       },
       {
-        categoryName: "Cloud, DevOps & Containers",
-        skillsText: "Oracle Cloud (OCI ARM64) • Docker • Caddy (HTTP/3) • GitHub Actions CI/CD • Watchtower • Google Cloud SDK • Linux/Bash",
+        categoryName: "Autonomous AI Agents & Web Scraping",
+        skillsText: "Autonomous Scraper Agents, Multi-Agent Routing, Playwright, Puppeteer, Selenium, Stealth HTTP/3 Headers, Anti-Bot Bypasses, Circuit Breakers",
+      },
+      {
+        categoryName: "Cloud Infrastructure & DevOps",
+        skillsText: "Oracle Cloud (OCI ARM64), Docker, Docker Compose, Caddy (HTTP/3), GitHub Actions CI/CD, Watchtower, Google Cloud SDK, Linux/Bash",
       },
       {
         categoryName: "Databases & Caching",
-        skillsText: "Turso Cloud LibSQL • Redis 7 (LRU) • PostgreSQL • MongoDB • SQLite (WAL) • Prisma ORM • Schema Design (3NF)",
+        skillsText: "Turso Cloud LibSQL (WAL), Redis 7 (LRU), PostgreSQL, MongoDB, SQLite, Prisma ORM, Relational Schema Design (3NF)",
       },
       {
-        categoryName: "Languages & Runtimes",
-        skillsText: "TypeScript • JavaScript • Python (FastAPI) • C# (.NET Core) • Java (Spring Boot) • C • Rust • SQL",
+        categoryName: "Languages & Core Runtimes",
+        skillsText: "TypeScript, JavaScript, Python (FastAPI), C# (.NET Core), Java (Spring Boot), C, Rust, SQL",
       },
       {
-        categoryName: "Frontend & State Management",
-        skillsText: "Next.js 16 (App Router) • React 19 • Zustand • Redux • Monaco Editor • TailwindCSS • HTML5/CSS3",
-      },
-      {
-        categoryName: "AI Systems, Testing & Security",
-        skillsText: "Google Gemini API • Tree-Sitter AST • Web Crypto API (AES-GCM, PBKDF2) • HMAC-SHA256 • Vitest • PyTest • xUnit",
+        categoryName: "Frontend, Testing & Security",
+        skillsText: "Next.js 16 (App Router), React 19, Google GenAI / Agent SDK, Web Crypto API (AES-GCM, PBKDF2), HMAC-SHA256 Auth, Vitest, PyTest, xUnit",
       },
     ],
     projects: [
@@ -247,7 +247,7 @@ export function getMasterResumeBaseline(
         liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         bullets: [
-          "Distributed Harvester & Headless Automation: Engineered a high-throughput multi-provider job harvesting pipeline utilizing Playwright, Puppeteer, and Selenium with stealth anti-bot bypasses, scraping and aggregating 14,000+ remote opportunities daily across 7 platforms in < 2.5 minutes.",
+          "Creator & Lead Backend Developer: Conceived and engineered the distributed harvesting engine and containerized infrastructure operating live on Oracle Cloud (https://astrework.app), aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
           "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
           "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%.",
         ],
@@ -335,17 +335,17 @@ export function getMasterResumeBaseline(
         categoryName: "Core Technologies",
         skillsText: customProfileData?.primarySkills
           ? (Array.isArray(customProfileData.primarySkills)
-              ? customProfileData.primarySkills.join(" • ")
-              : String(customProfileData.primarySkills))
-          : "TypeScript • JavaScript • Python • React • Node.js • SQL • Git",
+              ? customProfileData.primarySkills.join(", ")
+              : String(customProfileData.primarySkills).replace(/•/g, ","))
+          : "TypeScript, JavaScript, Python, React, Node.js, SQL, Git",
       },
       {
         categoryName: "Frameworks & Databases",
-        skillsText: "Next.js • Express • PostgreSQL • MongoDB • Redis • REST APIs",
+        skillsText: "Next.js, Express, PostgreSQL, MongoDB, Redis, REST APIs",
       },
       {
         categoryName: "Tools & Practices",
-        skillsText: "Docker • CI/CD • Unit Testing • Clean Architecture • Agile",
+        skillsText: "Docker, CI/CD, Unit Testing, Clean Architecture, Agile",
       },
     ],
     projects:
@@ -579,7 +579,7 @@ export function injectKeywordIntoResume(
       if (!cat.skillsText.toLowerCase().includes(lower)) {
         return {
           ...cat,
-          skillsText: `${cat.skillsText} • ${kw}`,
+          skillsText: cat.skillsText ? `${cat.skillsText}, ${kw}` : kw,
         };
       }
     }
@@ -616,18 +616,18 @@ export interface ResumePreset {
 export const RESUME_STARTER_PRESETS: ResumePreset[] = [
   {
     id: "systems_backend",
-    name: "Systems & Backend Architect",
+    name: "Distributed Systems & Cloud Developer",
     badge: "TIER-1 CORE",
-    roleTitle: "Systems & Backend Software Developer",
-    description: "Tailored for high-throughput microservices, C#/.NET Core, Java Spring, FastAPI, PostgreSQL, and low latency.",
+    roleTitle: "Full-Stack Developer | Distributed Systems",
+    description: "Tailored for high-throughput distributed scrapers, OCI containerization, Redis 7 caching, and microservices architecture.",
     resume: getMasterResumeBaseline("roushan"),
   },
   {
     id: "ai_fullstack",
     name: "AI & Full-Stack Developer",
     badge: "AI-POWERED",
-    roleTitle: "AI-Powered Full Stack Software Developer",
-    description: "Tailored for modern Next.js/React apps, Fastify/FastAPI backends, Gemini/LLM orchestration, and cryptography.",
+    roleTitle: "Full-Stack Developer | AI Systems",
+    description: "Tailored for Gemini SDK orchestration, Chrome extensions (MV3), client-side ATS optimization, and modern React 19 / Next.js.",
     resume: getMasterResumeBaseline("ayushi"),
   },
   {
