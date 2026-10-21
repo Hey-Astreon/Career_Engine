@@ -6,7 +6,7 @@ import { Search, Zap, CheckCircle2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import HeroInteractiveShowcase from "@/components/HeroInteractiveShowcase";
-import DataDustBackground from "@/components/DataDustBackground";
+import HeroInteractiveBackground from "@/components/HeroInteractiveBackground";
 
 /* ── Animation Presets ── */
 const fadeUp: Variants = {
@@ -144,11 +144,8 @@ function ModernAgencyNavbar() {
 function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; totalProviders: number } }) {
   return (
     <section className="relative pt-32 sm:pt-40 pb-16 px-6 sm:px-10 overflow-hidden bg-[#fafafa]">
-      {/* Soft Ambient Mesh Glow */}
-      <div className="absolute top-[-240px] left-1/2 -translate-x-1/2 w-[1100px] h-[640px] bg-gradient-to-b from-blue-100/40 via-purple-50/20 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-      {/* Floating Canvas Particles */}
-      <DataDustBackground />
+      {/* Next-Gen Living Terminal Hero Background */}
+      <HeroInteractiveBackground />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
         <motion.div initial="hidden" animate="visible" variants={stagger}>
