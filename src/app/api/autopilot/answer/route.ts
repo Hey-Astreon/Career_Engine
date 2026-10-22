@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
+import { detectProceduralAnswer } from "@/lib/ai/screeningHelper";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "question is required" }, { status: 400, headers: CORS });
     }
 
+    // 0. Procedural / Compliance fast-path (e.g. relatives, conflicts, "Type NA")
+    const proceduralAnswer = detectProceduralAnswer(question);
+    if (proceduralAnswer) {
+      return NextResponse.json(
+        {
+          answer: proceduralAnswer,
+          wordCount: 1,
+        },
+        { headers: CORS }
+      );
+    }
+
     // Fetch profile for system prompt context
     const profile = await db.profile.findFirst({
       where: { userId },
@@ -68,23 +81,29 @@ export async function POST(req: Request) {
 ${contextString}
 
 RULES FOR YOUR ANSWER:
-- Write in first person as the candidate
-- Keep it to 2-4 sentences maximum (form fields have character limits)
-- Be specific and genuine — reference real projects or experiences when relevant
+- CRITICAL: Write strictly in the FIRST PERSON ("I", "my"). NEVER refer to the candidate by name or in the third person.
+- NEVER start with "After reviewing the information for...", "Based on the candidate's profile...", or similar third-person meta-phrases.
+- Keep it to 2-3 sentences maximum (concise, direct, authentic).
+- Be specific and genuine — reference real projects or experiences when relevant.
 - CRITICAL: Do NOT hallucinate. If you lack specific experience for the question, answer truthfully by focusing on transferable skills and eagerness to learn.
 - Never invent past job titles, years of experience, certifications, or company names not provided in the context.
-- Never start with "I am excited to..." or sycophantic openers
-- ${company ? `Tailor the answer to ${company} and their engineering culture` : "Tailor to the role"}
-- Sound human, not like a cover letter template`;
+- Never start with "I am excited to..." or sycophantic openers.
+- If the question asks a simple procedural or yes/no question, reply directly with 1 phrase or word (e.g. "N/A" or "Yes").
+- Sound human, natural, and confident.`;
 
-    const userPrompt = `Answer this job application screening question:\n\n"${question}"${jobTitle ? `\n\nRole being applied to: ${jobTitle}` : ""}${company ? `\nCompany: ${company}` : ""}`;
+    const userPrompt = `Answer this job application screening question directly as ${profile?.fullName ?? "the candidate"}:\n\n"${question}"${jobTitle ? `\n\nRole being applied to: ${jobTitle}` : ""}${company ? `\nCompany: ${company}` : ""}`;
 
     const response = await queryMultiProviderLLM(systemPrompt, userPrompt, false);
 
+    let answer = response.text.trim();
+    if (answer.toLowerCase().startsWith("after reviewing") || answer.toLowerCase().startsWith("based on")) {
+      answer = answer.replace(/^(?:after reviewing|based on)[^.]*\.\s*/i, "").trim();
+    }
+
     return NextResponse.json(
       {
-        answer: response.text.trim(),
-        wordCount: response.text.trim().split(/\s+/).length,
+        answer: answer || "N/A",
+        wordCount: answer.split(/\s+/).length,
       },
       { headers: CORS }
     );

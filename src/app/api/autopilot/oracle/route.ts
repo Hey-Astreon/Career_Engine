@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
+import { detectProceduralAnswer, buildScreeningSystemPrompt } from "@/lib/ai/screeningHelper";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -36,6 +37,16 @@ export async function POST(req: Request) {
 
     if (!question?.trim()) {
       return NextResponse.json({ error: "question is required" }, { status: 400, headers: CORS });
+    }
+
+    // 0. Procedural / Compliance fast-path (e.g. relatives, conflicts, "Type NA")
+    const proceduralAnswer = detectProceduralAnswer(question);
+    if (proceduralAnswer) {
+      return NextResponse.json({
+        answer: proceduralAnswer,
+        source: "procedural-guardrail",
+        thoughts: ["Procedural/compliance question intercepted with direct standard input."],
+      }, { headers: CORS });
     }
 
     // 1. Fetch Candidate Profile & Projects for deep grounding
@@ -98,18 +109,17 @@ export async function POST(req: Request) {
       // Gateway unreachable or timed out -> proceed to fallback
     }
 
-    // 3. Graceful Fallback: Internal Multi-Provider LLM
-    const systemPrompt = "You are a professional job application assistant. Generate an authentic, professional response.";
-    const userPrompt = `
-Candidate: ${profile?.fullName ?? "Applicant"} (${profile?.title ?? "Software Engineer"})
-Target Role: ${jobTitle ?? "Role"} at ${company ?? "Company"}
-Question: ${question}
+    // 3. Graceful Fallback: Internal Multi-Provider LLM with Strict First-Person Prompt
+    const candidateName = profile?.fullName ?? "Applicant";
+    const candidateTitle = profile?.title ?? "Full-Stack Developer";
+    const location = profile?.location ?? "Patna, Bihar, India";
 
-Instructions:
-- Write an authentic, professional 1-2 paragraph response.
-- Do not make up achievements not in the profile.
-- Return ONLY the final response text.
-`;
+    const systemPrompt = buildScreeningSystemPrompt(candidateName, candidateTitle, location);
+    const userPrompt = `Answer this job application screening question directly as ${candidateName}:
+Question: "${question}"
+${jobTitle ? `Target Role: ${jobTitle}` : ""}
+${company ? `Target Company: ${company}` : ""}
+${profileContext ? `Relevant Projects & Experience Context:\n${JSON.stringify(profileContext)}` : ""}`;
 
     const fallbackResponse = await queryMultiProviderLLM(
       systemPrompt,
@@ -117,8 +127,14 @@ Instructions:
       false
     );
 
+    let answer = (fallbackResponse.text || "").trim();
+    // Strip accidental third-person meta-chatter if LLM hallucinates opener
+    if (answer.toLowerCase().startsWith("after reviewing") || answer.toLowerCase().startsWith("based on")) {
+      answer = answer.replace(/^(?:after reviewing|based on)[^.]*\.\s*/i, "").trim();
+    }
+
     return NextResponse.json({
-      answer: (fallbackResponse.text || "").trim(),
+      answer: answer || "N/A",
       source: "internal-fallback-llm",
       thoughts: [],
     }, { headers: CORS });

@@ -679,6 +679,12 @@
 
     const results = [];
     const seenTypes = {};
+    const SINGLETON_TYPES = new Set([
+      'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'PHONE_TYPE',
+      'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
+      'LINKEDIN', 'GITHUB', 'PORTFOLIO', 'TITLE', 'SUMMARY', 'NOTICE_PERIOD',
+      'EDUCATION', 'GENDER', 'PRONOUNS'
+    ]);
 
     targetDocs.forEach(targetDoc => {
       const inputs = targetDoc.querySelectorAll(
@@ -695,7 +701,7 @@
         const type = classifyField(inp);
         if (!type) return;
 
-        if (type !== 'SCREENING') {
+        if (SINGLETON_TYPES.has(type)) {
           if (seenTypes[type]) return;
           seenTypes[type] = true;
         }
@@ -911,7 +917,21 @@
       case 'WORK_AUTH':    return profile.workAuthorized ? 'Yes' : 'No';
       case 'VISA':         return profile.requiresVisa ? 'Yes' : 'No';
       case 'COVER_LETTER': return null;
-      case 'SCREENING':    return null;
+      case 'SCREENING': {
+        const labelText = getLabelText(field.element).toLowerCase();
+        if (
+          labelText.includes('relative') ||
+          labelText.includes('family member') ||
+          labelText.includes('conflict of interest') ||
+          labelText.includes('non-compete') ||
+          labelText.includes('criminal') ||
+          /type\s*["']?na["']?/i.test(labelText) ||
+          /if\s*["']?yes["']?,?\s*please/i.test(labelText)
+        ) {
+          return 'N/A';
+        }
+        return null;
+      }
       default: return null;
     }
   }
@@ -979,6 +999,21 @@
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
         const question = labelText.slice(0, 300) || (field.type === 'COVER_LETTER' ? 'Write a cover letter' : 'Tell us about yourself');
+        const qLower = question.toLowerCase();
+
+        // Immediate procedural question interceptor (relatives, compliance, "Type NA")
+        if (
+          qLower.includes('relative') ||
+          qLower.includes('family member') ||
+          qLower.includes('conflict of interest') ||
+          qLower.includes('non-compete') ||
+          qLower.includes('criminal') ||
+          /type\s*["']?na["']?/i.test(qLower) ||
+          /if\s*["']?yes["']?,?\s*please/i.test(qLower)
+        ) {
+          return 'N/A';
+        }
+
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
         const jobTitle = session && session.jobTitle ? session.jobTitle : '';
         try {
@@ -1112,8 +1147,8 @@
         id: f.id,
         type: f.type.toLowerCase().replace(/_/g, ''),
         label: TYPE_LABELS[f.type] || f.type,
-        preview: isAI ? 'AI-generated on fill' : (preview || '-'),
-        source: isAI ? 'ai' : (isSession ? 'session' : 'profile'),
+        preview: preview || (isAI ? 'AI-generated on fill' : '-'),
+        source: preview ? (isAI ? 'profile' : (isSession ? 'session' : 'profile')) : (isAI ? 'ai' : (isSession ? 'session' : 'profile')),
         status: ''
       };
     });
@@ -1179,7 +1214,7 @@
                        id: f.id,
                        type: f.type.toLowerCase().replace(/_/g, ''),
                        label: TYPE_LABELS[f.type] || f.type,
-                       preview: isAI ? 'AI-generated on fill' : (preview || '-'),
+                       preview: preview || (isAI ? 'AI-generated on fill' : '-'),
                        source: isAI ? 'ai' : (isSession ? 'session' : 'profile'),
                        status: ''
                      };
@@ -1374,7 +1409,7 @@
           id: f.id,
           type: f.type.toLowerCase().replace(/_/g, ''),
           label: TYPE_LABELS[f.type] || f.type,
-          preview: isAI ? 'AI-generated on fill' : (preview || '-'),
+          preview: preview || (isAI ? 'AI-generated on fill' : '-'),
           source: isAI ? 'ai' : 'profile',
           status: ''
         };

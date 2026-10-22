@@ -1535,6 +1535,45 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never invoke a headless browser runtime (like Puppeteer or Chromium) on an HTTP request path in containerized production when pre-compiled or static assets can be streamed directly from disk. Instant streaming is 1000x faster, consumes zero memory, and eliminates container library mismatch failures.
   - **Rule:** When injecting into enterprise ATS forms with masked or reactive fields, always call `.focus()`, set value through the prototype descriptor, dispatch an `InputEvent` with `inputType: 'insertText'`, and defer `.blur()` until typing is completely finished. For heavily masked numeric fields like ZIP codes, set the complete formatted string natively rather than typing chunk-by-chunk.
 
+
+### 🔴 Case 20: Eliminating AI Screening Slop (Third-Person Hallucination) & Multi-Instance Question Scanning
+
+* **What Happened:**
+  - On Cook Medical's iCIMS candidate questions page, the form asked:
+    *"Please identify any relatives currently employed by a Cook company. Do not include any information or identification of marital status. Type "NA" if not applicable"*
+  - AstrePilot filled the textarea with an inappropriate robotic paragraph:
+    *"After reviewing the information provided for Roushan Kumar, there are no relatives currently employed by Cook Medical LLC or any other Cook-affiliated company. na"*
+  - Simultaneously, the second visa question directly below it (*"Will you require sponsorship in the future?"*) was completely left unselected on `— Make a Selection —`.
+
+* **The Root Cause / Mistake:**
+  1. **Generic "1-2 Paragraph" Instruction for Compliance Questions:** `src/app/api/autopilot/oracle/route.ts` instructed the LLM: *"Write an authentic, professional 1-2 paragraph response"*, treating simple compliance/nepotism/procedural disclosures identically to open-ended behavioral questions.
+  2. **Missing First-Person Constraint & Meta-Commentary Leakage:** The system prompt did not enforce first-person perspective, allowing the LLM to hallucinate meta-phrases referring to Roushan in the third person (*"After reviewing the information provided for Roushan Kumar..."*).
+  3. **Ignored Explicit Form Instructions:** The prompt told the applicant to `Type "NA" if not applicable`. Human applicants type `N/A`. Writing a paragraph and tacking on `na` is an immediate disqualifying red flag for recruiters.
+  4. **Singleton Deduplication Dropping Second Visa Question:** `extension/content.js` used a blanket `seenTypes[type] = true` rule for all non-screening fields. When the first question (*"Will you require sponsorship now?"*) was classified as `VISA`, `seenTypes['VISA']` was locked, discarding the second question (*"Will you require sponsorship in the future?"*).
+
+* **How We Solved It:**
+  1. **Dedicated Procedural Question Interceptor (`src/lib/ai/screeningHelper.ts`):**
+     - Implemented `detectProceduralAnswer(question)` that intercepts questions regarding: (1) relatives/nepotism, (2) explicit instructions to type "NA", (3) conditional "If Yes" follow-ups, (4) conflicts of interest / non-competes, (5) criminal/disciplinary background, and (6) former employment disclosures.
+     - Automatically returns clean, human inputs (`N/A` or `None` or `No`) instantly with zero LLM hallucinations or network latency.
+  2. **Strict First-Person & Anti-Robot Guardrails (`oracle/route.ts`, `answer/route.ts`):**
+     - Strictly enforced first-person perspective (`I`, `my`).
+     - Banned all third-person meta-commentary (*"After reviewing..."*, *"Based on the profile of..."*), stripping accidental prefix hallucination.
+     - Fixed fallback candidate title to `Full-Stack Developer` in strict compliance with Section 5 Title Law.
+  3. **Client-Side Fast-Path & HUD Preview Support (`extension/content.js`):**
+     - In `resolvePreview` & `resolveValue`, procedural screening questions immediately resolve to `'N/A'`.
+     - HUD displays `N/A` preview with `source: profile` before autofill runs, giving the user 100% confidence.
+  4. **Multi-Instance Question Scanning (`extension/content.js`):**
+     - Replaced blanket `seenTypes` deduplication with an explicit `SINGLETON_TYPES` set (`FIRST_NAME`, `LAST_NAME`, `EMAIL`, `PHONE`, etc.).
+     - Allowed non-singleton question types (`VISA`, `WORK_AUTH`, `SCREENING`, `RELOCATE`) to be scanned multiple times so both current and future sponsorship questions are captured and filled with `No`.
+  5. **Automated Testing & Extension Repackaging:**
+     - Created `tests/screening-procedural-guardrail.test.ts` (5 unit tests passing).
+     - Repackaged extension to `public/downloads/astrepilot-extension.zip`.
+     - Validated entire suite: **38 test files passed (366/366 tests passing green)**, `npx tsc --noEmit` clean with 0 errors.
+
+* **Engineering Experience Gained:**
+  - **Rule:** Never send procedural compliance questions (relatives, criminal history, conflicts of interest, conditional "If Yes" follow-ups) to an open-ended LLM generator. Intercept them with deterministic rule-based guardrails that return standard institutional inputs (`N/A`, `None`).
+  - **Rule:** Never apply blanket field-type deduplication across an entire application form. Multi-question categories like visa sponsorship (current vs future) and work authorization must be allowed multiple instances.
+
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
