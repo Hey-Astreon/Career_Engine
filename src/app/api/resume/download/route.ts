@@ -31,6 +31,8 @@ function resolveCandidatePdf(slug: string, rawFileName?: string | null): { resol
   }
 
   const candidateBasePath = path.join(process.cwd(), "public", "candidates", folder);
+
+  // 1. Try exact requested fileName
   const targetPath = path.join(candidateBasePath, safeFileName);
   if (fs.existsSync(/*turbopackIgnore: true*/ targetPath)) {
     return {
@@ -39,6 +41,19 @@ function resolveCandidatePdf(slug: string, rawFileName?: string | null): { resol
     };
   }
 
+  // 2. Try Developer alias if Engineer was requested
+  if (safeFileName.includes("_Engineer_")) {
+    const devAlias = safeFileName.replace("_Engineer_", "_Developer_");
+    const devPath = path.join(candidateBasePath, devAlias);
+    if (fs.existsSync(/*turbopackIgnore: true*/ devPath)) {
+      return {
+        resolvedPath: devPath.replace(/\\/g, "/"),
+        fileName: devAlias,
+      };
+    }
+  }
+
+  // 3. Fallback to default canonical resume
   const fallbackPath = path.join(candidateBasePath, defaultFileName);
   if (fs.existsSync(/*turbopackIgnore: true*/ fallbackPath)) {
     return {

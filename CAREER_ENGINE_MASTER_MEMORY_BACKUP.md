@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 21, 2026 (Phase 46: Root Codebase Consolidation, Git Resurrection & Total Legacy Architecture Eradication, 357 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 48: Total Candidate PDF Regeneration, Section 5 BCA Title Compliance, AstreWork Flagship Restoration, 401 Passing Tests)
 
 ---
 
@@ -1574,6 +1574,47 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never send procedural compliance questions (relatives, criminal history, conflicts of interest, conditional "If Yes" follow-ups) to an open-ended LLM generator. Intercept them with deterministic rule-based guardrails that return standard institutional inputs (`N/A`, `None`).
   - **Rule:** Never apply blanket field-type deduplication across an entire application form. Multi-question categories like visa sponsorship (current vs future) and work authorization must be allowed multiple instances.
 
+
+### 🔴 Case 21: Stale September Binary PDFs in Public Candidates Folder, BCA Title Law Breach, and Flagship Project AstreWork Restoration
+
+* **What Happened:**
+  - When the candidate clicked "Download Resume" in AstrePilot during an active internship application (Cook Medical on iCIMS) and submitted the form, inspecting the submitted PDF revealed critical blunders:
+    1. The candidate title was displayed as **"Full Stack Engineer"** (a direct breach of Section 5 BCA Title Regulation).
+    2. The professional summary was an outdated, generic boilerplate from September.
+    3. **AstreWork**—the flagship production platform—was completely missing! Instead, the resume listed the deprecated project `IDBI FinSync`.
+    4. Virtual simulations listed "Software Engineering Virtual Simulation" and "Engineering Outcome".
+
+* **The Root Cause / Mistake:**
+  1. **Ancient Static Disk Artifacts Un-Audited:** In Case 19, when replacing the failing runtime Puppeteer execution with instantaneous disk streaming (`/api/resume/download/latest/route.ts`), we wired it to stream the files from `public/candidates/3_Roushan_Kumar/`. However, we failed to audit the physical binary `.pdf` files residing in that directory.
+  2. **Timestamp Disconnect:** Git history revealed that every `.pdf` in `public/candidates/3_Roushan_Kumar/` and `public/candidates/2_Ayushi_Raj/` was committed on **September 24, 2026** (commit `28ac429ef8`), weeks before AstreWork was architected and before the Section 5 BCA Title Law ("Developer only, NEVER Engineer") was codified.
+  3. **Baseline vs Disk Divergence:** While `src/lib/resumeBaseline.ts` and `/resume-maker` had been updated to reflect AstreWork and "Developer" titles, nobody had ever re-compiled the physical binary `.pdf` files on disk. AstrePilot faithfully streamed the stale September 24 files.
+
+* **How We Solved It:**
+  1. **Playwright Headless Single-Page A4 PDF Generator (`scripts/generate-all-candidate-resumes.mjs`):**
+     - Architected an automated, pixel-perfect compiler using Playwright and Chromium.
+     - Implemented the exact `.ats-a4-sheet` arithmetic geometry (297mm height, 210mm width, 5.2mm top / 4.2mm bottom margins) with 2-column hanging indent for technical skills and horizontal header pinning for project links.
+     - Recompiled all 19 unique variants across both candidates (33 files total):
+       - **Roushan Kumar:** Master (`Roushan_Kumar_Resume.pdf`), `Full_Stack_Developer`, `Backend_Developer`, `AI_Developer`, `Python_Developer`, `Product_Developer`, `Software_Developer`, `Startup_Developer`, and `AI_Training_Specialist`.
+       - **Ayushi Raj:** Master (`Ayushi_Raj_Resume.pdf`), `AI_Product_Developer`, `Full_Stack_Developer`, `Backend_Developer`, `AI_Developer`, `Python_Developer`, `Product_Developer`, `Software_Developer`, `Startup_Developer`, and `AI_Training_Specialist`.
+     - Mirrored new clean developer resumes to legacy `*_Engineer_Resume.pdf` aliases so ANY legacy link or cache physically streams the updated AstreWork developer resume.
+  2. **100% Elimination of Forbidden "Engineer" Titles & AstreWork Flagship Placement:**
+     - Enforced strictly permitted titles (**Full-Stack Developer**, **Backend Developer**, **Systems Architect**, **AI Developer**, **Creator**, **Co-Developer**).
+     - Flagship Project #1 across all resumes is **`AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)`** with live URL `https://astrework.app`.
+     - Eliminated `IDBI FinSync`.
+     - Converted simulation role titles to **`Software Development Virtual Simulation`** and simulation bullets to **`Key Outcome`**.
+  3. **Automated Verification Test Suite (`tests/candidate_resumes_audit.test.ts`):**
+     - Created a dedicated Vitest suite that parses all 33 physical `.pdf` files with `pdf-parse`.
+     - Programmatically asserts: (1) `pageCount === 1` (zero overflow), (2) `hasAstreWork === true`, (3) `idbiFinSync === false`, (4) `engineerCount === 0`, and (5) file size > 40KB. All 35 tests passed green.
+  4. **API Route Harmonization (`latest/route.ts` & `download/route.ts`):**
+     - Updated `/api/resume/download/latest/route.ts` to target `*_Developer_Resume.pdf` variants.
+     - Added smart alias resolution in `resolveCandidatePdf()` in `/api/resume/download/route.ts` so `_Engineer_` queries automatically resolve to `_Developer_` and vice versa.
+  5. **Updated Candidate Application Guides (`usecase.md`):**
+     - Completely rewrote `public/candidates/3_Roushan_Kumar/usecase.md` and `2_Ayushi_Raj/usecase.md` with BCA title compliance and AstreWork flagship highlights.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never stream static binary files from disk without automated CI/CD test assertions verifying their internal text content against the codebase's baseline laws. Every binary file in `public/candidates/` must be audited for page count, prohibited words, and project currency on every build.
+  - **Rule:** When modifying baseline data in code (`resumeBaseline.ts`), compile and update the binary distribution artifacts (`.pdf`) in the exact same atomic commit.
+
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
@@ -1586,4 +1627,5 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 - **Removed Legacy Patches:** `scripts/dev-patches/`.
 - **Cleaned Dependencies:** Removed unused dependencies like `@tanstack/react-query`, `playwright`, `zod`, etc.
 - **Housekeeping:** Moved `cleanup_test_users.mjs` to the `scripts/` directory.
+
 

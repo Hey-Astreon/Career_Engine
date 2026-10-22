@@ -142,7 +142,7 @@ export function getMasterResumeBaseline(
           githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
           bullets: [
             "Product Architecture: Engineered a client-side zero-knowledge password vault ensuring master encryption keys remain entirely isolated inside user browser memory, mitigating cloud database leak risks.",
-            "Cryptographic Engineering: Implemented Web Crypto API primitives utilizing AES-GCM (256-bit) payload encryption and PBKDF2 key derivation over 100,000 hashing iterations for key security.",
+            "Cryptographic Architecture: Implemented Web Crypto API primitives utilizing AES-GCM (256-bit) payload encryption and PBKDF2 key derivation over 100,000 hashing iterations for key security.",
             "Performance & Security: Developed high-throughput Express.js REST API sync endpoints with JWT authentication and strict CORS headers, keeping vault database sync latency under 200ms.",
           ],
         },
@@ -161,7 +161,7 @@ export function getMasterResumeBaseline(
       simulations: [
         {
           company: "Commonwealth Bank (CommBank)",
-          roleTitle: "Software Engineering Virtual Simulation",
+          roleTitle: "Software Development Virtual Simulation",
           period: "June 2026",
           problemScope: "Diagnosed and resolved silent data overwrite bugs across high-traffic C#/.NET Core financial API controllers handling MongoDB document updates across financial services endpoints.",
           actionTaken: "Extended C# Web API controllers with $set atomic operators for partial payload updates and modernized an interactive React/Redux Goal Manager UI component for banking clients.",
@@ -169,7 +169,7 @@ export function getMasterResumeBaseline(
         },
         {
           company: "Y Combinator (YC Startup - Shiptivity)",
-          roleTitle: "Software Engineering Virtual Simulation",
+          roleTitle: "Software Development Virtual Simulation",
           period: "June 2026",
           problemScope: "Fixed key constraint collisions and slow re-rendering performance on a real-time drag-and-drop Kanban workflow board used by engineering teams to track task state transitions.",
           actionTaken: "Architected dynamic SQLite priority reordering logic using atomic transactions to update priority ranks sequentially and integrated Dragula drag-and-drop state hooks in React.",
@@ -177,7 +177,7 @@ export function getMasterResumeBaseline(
         },
         {
           company: "Walmart USA",
-          roleTitle: "Advanced Software Engineering Virtual Simulation",
+          roleTitle: "Advanced Software Development Virtual Simulation",
           period: "May 2026",
           problemScope: "Solved indexing overhead and performance bottlenecks in high-volume retail inventory processing queues handling unnormalized data ingestion from legacy spreadsheets.",
           actionTaken: "Implemented a generic K-ary Max Heap structure in Java using fast bitwise shift operators (<<, >>>) and built 3NF database schemas with design pattern abstractions.",
@@ -213,7 +213,7 @@ export function getMasterResumeBaseline(
       linkedinUrl: "https://linkedin.com/in/astreon4547",
     },
     summary:
-      "Full-Stack Software Developer and Creator of AstreWork, with hands-on experience designing and operating distributed web scrapers, cloud infrastructure, and developer automation tools. Operates a live production platform on Oracle Cloud running containerized headless browser pipelines that process tens of thousands of postings daily. Approaches software engineering with a focus on high-throughput reliability, data pipeline concurrency, and pragmatic systems architecture.",
+      "Full-Stack Software Developer and Creator of AstreWork, with hands-on experience designing and operating distributed web scrapers, cloud infrastructure, and developer automation tools. Operates a live production platform on Oracle Cloud running containerized headless browser pipelines that process tens of thousands of postings daily. Approaches software development with a focus on high-throughput reliability, data pipeline concurrency, and pragmatic systems architecture.",
     skills: [
       {
         categoryName: "System Design & Distributed Architecture",
@@ -270,7 +270,7 @@ export function getMasterResumeBaseline(
         githubUrl: "https://github.com/Hey-Astreon/Zero-Knowledge-Password-Manager",
         bullets: [
           "Product Architecture: Engineered a client-side zero-knowledge password vault ensuring master encryption keys remain entirely isolated inside user browser memory, mitigating cloud database leak risks.",
-          "Cryptographic Engineering: Implemented Web Crypto API primitives utilizing AES-GCM (256-bit) payload encryption and PBKDF2 key derivation over 100,000 hashing iterations for key security.",
+          "Cryptographic Architecture: Implemented Web Crypto API primitives utilizing AES-GCM (256-bit) payload encryption and PBKDF2 key derivation over 100,000 hashing iterations for key security.",
           "Performance & Security: Developed high-throughput Express.js REST API sync endpoints with JWT authentication and strict CORS headers, keeping vault database sync latency under 200ms.",
         ],
       },
@@ -278,7 +278,7 @@ export function getMasterResumeBaseline(
     simulations: [
       {
         company: "Commonwealth Bank (CommBank)",
-        roleTitle: "Software Engineering Virtual Simulation",
+        roleTitle: "Software Development Virtual Simulation",
         period: "June 2026",
         problemScope: "Diagnosed and resolved silent data overwrite bugs across high-traffic C#/.NET Core financial API controllers handling MongoDB document updates across financial services endpoints.",
         actionTaken: "Extended C# Web API controllers with $set atomic operators for partial payload updates and modernized an interactive React/Redux Goal Manager UI component for banking clients.",
@@ -286,7 +286,7 @@ export function getMasterResumeBaseline(
       },
       {
         company: "Y Combinator (YC Startup - Shiptivity)",
-        roleTitle: "Software Engineering Virtual Simulation",
+        roleTitle: "Software Development Virtual Simulation",
         period: "June 2026",
         problemScope: "Fixed key constraint collisions and slow re-rendering performance on a real-time drag-and-drop Kanban workflow board used by engineering teams to track task state transitions.",
         actionTaken: "Architected dynamic SQLite priority reordering logic using atomic transactions to update priority ranks sequentially and integrated Dragula drag-and-drop state hooks in React.",
@@ -294,7 +294,7 @@ export function getMasterResumeBaseline(
       },
       {
         company: "Walmart USA",
-        roleTitle: "Advanced Software Engineering Virtual Simulation",
+        roleTitle: "Advanced Software Development Virtual Simulation",
         period: "May 2026",
         problemScope: "Solved indexing overhead and performance bottlenecks in high-volume retail inventory processing queues handling unnormalized data ingestion from legacy spreadsheets.",
         actionTaken: "Implemented a generic K-ary Max Heap structure in Java using fast bitwise shift operators (<<, >>>) and built 3NF database schemas with design pattern abstractions.",

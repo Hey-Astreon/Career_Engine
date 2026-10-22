@@ -40,11 +40,11 @@ export async function GET(req: Request) {
 
     if (normalizedSlug === "roushan") {
       if (jobTitle.includes("full stack") || jobTitle.includes("frontend") || jobTitle.includes("web")) {
-        targetFileName = "Roushan_Kumar_Full_Stack_Engineer_Resume.pdf";
+        targetFileName = "Roushan_Kumar_Full_Stack_Developer_Resume.pdf";
       } else if (jobTitle.includes("backend") || jobTitle.includes("distributed") || jobTitle.includes("system") || jobTitle.includes("cloud")) {
-        targetFileName = "Roushan_Kumar_Backend_Engineer_Resume.pdf";
+        targetFileName = "Roushan_Kumar_Backend_Developer_Resume.pdf";
       } else if (jobTitle.includes("ai") || jobTitle.includes("machine learning") || jobTitle.includes("llm") || jobTitle.includes("deep learning")) {
-        targetFileName = "Roushan_Kumar_AI_Engineer_Resume.pdf";
+        targetFileName = "Roushan_Kumar_AI_Developer_Resume.pdf";
       } else if (jobTitle.includes("python")) {
         targetFileName = "Roushan_Kumar_Python_Developer_Resume.pdf";
       }
@@ -52,9 +52,9 @@ export async function GET(req: Request) {
       if (jobTitle.includes("ai") || jobTitle.includes("product") || jobTitle.includes("machine learning")) {
         targetFileName = "Ayushi_Raj_AI_Product_Developer_Resume.pdf";
       } else if (jobTitle.includes("full stack") || jobTitle.includes("frontend")) {
-        targetFileName = "Ayushi_Raj_Full_Stack_Engineer_Resume.pdf";
+        targetFileName = "Ayushi_Raj_Full_Stack_Developer_Resume.pdf";
       } else if (jobTitle.includes("backend")) {
-        targetFileName = "Ayushi_Raj_Backend_Engineer_Resume.pdf";
+        targetFileName = "Ayushi_Raj_Backend_Developer_Resume.pdf";
       }
     }
 
