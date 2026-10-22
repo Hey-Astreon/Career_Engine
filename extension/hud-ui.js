@@ -39,7 +39,15 @@ window.AstrePilotHUD = (function () {
     'visa': 'Visa/Sponsorship', 'salary': 'Expected Salary', 'noticeperiod': 'Notice Period',
     'relocate': 'Relocate', 'education': 'Highest Education',
     'veteran': 'Veteran Status', 'disability': 'Disability Status',
-    'race': 'Race/Ethnicity', 'gender': 'Gender', 'pronouns': 'Pronouns', 'unknown': 'Custom Field'
+    'race': 'Race/Ethnicity', 'gender': 'Gender', 'pronouns': 'Pronouns', 'unknown': 'Custom Field',
+    'age18': 'Legal Age (18+)', 'previousemployed': 'Prior Employment', 'privacyconsent': 'Privacy Agreement',
+    'aiconsent': 'AI Processing Consent', 'aiusage': 'AI Tools Usage', 'govtofficial': 'Government Official',
+    'govtrelative': 'Government Relative', 'conflictinterest': 'Conflict of Interest',
+    'referredbyleader': 'Senior Referral', 'hispaniclatino': 'Hispanic / Latino',
+    'raceethnicity': 'Race / Ethnicity', 'company': 'Company Name', 'employmenttitle': 'Job Title',
+    'startmonth': 'Start Month', 'startyear': 'Start Year', 'endmonth': 'End Month',
+    'endyear': 'End Year', 'currentrole': 'Current Role', 'school': 'School / University',
+    'degree': 'Degree', 'discipline': 'Discipline / Major', 'screeningselect': 'Screening Question'
   };
   // Everything interpolated into innerHTML that originates outside this file
   // (profile, session, AI answers, page labels) MUST pass through this.
@@ -66,13 +74,13 @@ window.AstrePilotHUD = (function () {
   }
 
   function getIconForType(type) {
-    if (['firstname', 'lastname', 'fullname', 'race', 'gender', 'pronouns', 'veteran', 'disability'].includes(type)) return ICONS.user;
+    if (['firstname', 'lastname', 'fullname', 'race', 'raceethnicity', 'gender', 'pronouns', 'veteran', 'disability'].includes(type)) return ICONS.user;
     if (type === 'email') return ICONS.mail;
     if (['phone', 'phonetype'].includes(type)) return ICONS.phone;
-    if (['location', 'city', 'state', 'country', 'address', 'apt', 'zip'].includes(type)) return ICONS.briefcase;
+    if (['location', 'city', 'state', 'country', 'address', 'apt', 'zip', 'company', 'employmenttitle', 'school', 'degree', 'discipline'].includes(type)) return ICONS.briefcase;
     if (['linkedin', 'github', 'portfolio'].includes(type)) return ICONS.link;
-    if (['resume', 'coverletter', 'summary', 'screening'].includes(type)) return ICONS.text;
-    if (['visa', 'salary', 'noticeperiod', 'relocate', 'education', 'hearabout', 'hearaboutdetail'].includes(type)) return ICONS.briefcase;
+    if (['resume', 'coverletter', 'summary', 'screening', 'screeningselect', 'aiusage'].includes(type)) return ICONS.text;
+    if (['visa', 'salary', 'noticeperiod', 'relocate', 'education', 'hearabout', 'hearaboutdetail', 'age18', 'previousemployed', 'privacyconsent', 'aiconsent', 'govtofficial', 'govtrelative', 'conflictinterest', 'referredbyleader', 'hispaniclatino', 'startmonth', 'startyear', 'endmonth', 'endyear', 'currentrole'].includes(type)) return ICONS.briefcase;
     return ICONS.text;
   }
 

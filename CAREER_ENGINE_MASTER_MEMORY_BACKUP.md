@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 48: Full System Health Audit, Database Seeding Synchronization, Scraper Timeout Defense, AstrePilot Multi-Step Form Hardening, 41-Check Diagnostic CLI, 401 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 49: AstrePilot Full ATS Form Coverage, React-Select Modern ATS Combobox Automation Engine, Section & Screening Heuristics, Profile Enrichment, 41-Check Diagnostic CLI, 401 Passing Tests)
 
 ---
 
@@ -1680,6 +1680,46 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never assume relational database tables are populated just because the parent entity exists. Always verify relational foreign key child models (`Project`, `VirtualExperience`) with live queries.
   - **Rule:** Always inspect `Content-Type` before calling `.json()` on public web scraping endpoints that sit behind Cloudflare or WAFs.
   - **Rule:** Multi-step ATS application forms require navigation event listening and `sessionStorage` flag propagation to maintain agent continuity across steps.
+
+### 🔴 Case 23: AstrePilot Full ATS Form Coverage, React-Select Combobox Automation Engine, and Section/Compliance Heuristics
+
+* **What Happened:**
+  The user was applying to Coinbase via Greenhouse (`https://job-boards.greenhouse.io/embed/job_app?token=8241522&for=coinbase`) and reported:
+  *"It has lots of field to fill but astrepilot only filling 12 fields"*.
+  Screenshots revealed over 20 unfilled fields across Voluntary Self-Identification (Gender, Hispanic/Latino, Veteran, Disability, Race), Employment history (Company, Title, Start Month/Year, End Month/Year, Current Role), Education (School, Degree, Discipline), and compliance / screening questions (Age 18+, Prior Employment, Privacy agreement, AI tools usage and consent, Conflict of interest, Government official status).
+
+* **The Root Causes / Mistake:**
+  1. **React-Select Was Not Recognized as `<select>`:** Greenhouse embeds modern React-Select (`remix-css`) components using `<input class="select__input" role="combobox" />` inside `.select__control`. Because `input.tagName === 'SELECT'` evaluated to `false`, all fast select heuristics were bypassed, and `setNativeValue` tried setting `.value` on the combobox filter input rather than opening the flyout and selecting an option.
+  2. **Missing Patterns & Singleton Drops:** `FIELD_PATTERNS` lacked patterns for `COMPANY`, `SCHOOL`, `DEGREE`, `DISCIPLINE`, `START_MONTH`, `START_YEAR`, `END_MONTH`, `END_YEAR`, and standard compliance questions. Additionally, `TITLE` and `EDUCATION` were registered in `SINGLETON_TYPES`, meaning once the headline job title and highest education were detected, subsequent employment titles and school/degree fields were dropped.
+  3. **Non-Textarea Screening Questions Ignored:** `classifyField` returned `null` for fields scoring < 3 unless `input.tagName === 'TEXTAREA'`. Every single dropdown question scored 0 and was dropped.
+  4. **Candidate Profile Endpoint Lacked ATS Compliance & History Fields:** `src/app/api/autopilot/profile/route.ts` only returned basic contact details without standard ATS compliance fields (18+, prior employment, AI consent, government official, etc.), employment history dates, and school/degree fields.
+
+* **How We Solved It:**
+  1. **Engineered React-Select Automation Engine (`fillReactSelect` in `extension/content.js`):**
+     - Dispatches full `mousedown` -> `mouseup` -> `click` sequence on `.select__indicators button` or `.select__control` to open flyout.
+     - For filterable comboboxes (e.g. School, Major), types target value and dispatches input events to filter options.
+     - Queries available options in active document and portal containers (`.select__option`, `[role="option"]`).
+     - Matches options across exact text, substring, synonym dictionaries (`syns`), and Yes/No boolean fallbacks.
+     - Dispatches full selection mouse event sequence to update React state cleanly.
+  2. **Deep Field Classifier & Section Heuristics (`classifyField`):**
+     - Added `isReactSelect(input)` detector.
+     - Added section-aware heuristics for Employment (`COMPANY`, `EMPLOYMENT_TITLE`, `START_MONTH`, `START_YEAR`, `END_MONTH`, `END_YEAR`, `CURRENT_ROLE`) and Education (`SCHOOL`, `DEGREE`, `DISCIPLINE`).
+     - Added dedicated question heuristics for all standard ATS compliance questions.
+     - Added `SCREENING_SELECT` fallback for any unclassified dropdowns with questions.
+  3. **Granular Singletons (`SINGLETON_TYPES`):**
+     - Refined `SINGLETON_TYPES` so employment and education subfields are tracked accurately without colliding with top-level headline titles.
+  4. **Enriched Candidate Profile Payload (`src/app/api/autopilot/profile/route.ts`):**
+     - Added education (`school`, `degree`, `discipline`), employment history (`company`, `employmentTitle`, `startMonth`, `startYear`, `endMonth`, `endYear`, `currentRole`), and standard ATS compliance / EEO answers (`is18OrOlder`, `previouslyEmployed`, `privacyConsent`, `aiConsent`, `aiUsage`, `governmentOfficial`, `relativeGovernmentOfficial`, `conflictOfInterest`, `referredByLeader`, `hispanicLatino`, `veteranStatus`, `disabilityStatus`, `race`).
+  5. **HUD UI & Repackaging (`extension/hud-ui.js` & `scripts/package-extension.js`):**
+     - Added lowercase labels and icons for all 20+ new types; repackaged `public/downloads/astrepilot-extension.zip`.
+  6. **Complete Verification:**
+     - All 41 system diagnostic checks passed green (`npx tsx scripts/diagnose-full-pipeline.ts`).
+     - Full Vitest test suite: all 39 test files and 401 tests passed green (`npx vitest run`).
+     - TypeScript compiler check: `npx tsc --noEmit` exited clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never assume an ATS dropdown is a native HTML `<select>`. Modern ATS platforms (Greenhouse, Lever, Ashby, Workable) almost universally use React-Select comboboxes (`input.select__input[role="combobox"]`). Always support custom synthetic dropdown interaction cycles with portal option traversal.
+  - **Rule:** Never drop unclassified dropdowns in job applications. If an element is a select or combobox inside a question container, classify it as `SCREENING_SELECT` with contextual sentiment evaluation (Yes/No).
 
 ---
 

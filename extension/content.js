@@ -541,6 +541,32 @@
     { type: 'EDUCATION',    kw: ['highest_education', 'highest education', 'degree', 'education level', 'education'] },
     { type: 'GENDER',       kw: ['gender', 'sex', 'identify as'] },
     { type: 'PRONOUNS',     kw: ['pronouns', 'preferred pronouns'] },
+    // Employment granular patterns
+    { type: 'COMPANY',      kw: ['company_name', 'company name', 'employer', 'organization', 'company'] },
+    { type: 'EMPLOYMENT_TITLE', kw: ['employment_title', 'role_title', 'position title'] },
+    { type: 'START_MONTH',  kw: ['start_date_month', 'start date month', 'start month', 'start_month'] },
+    { type: 'START_YEAR',   kw: ['start_date_year', 'start date year', 'start year', 'start_year'] },
+    { type: 'END_MONTH',    kw: ['end_date_month', 'end date month', 'end month', 'end_month'] },
+    { type: 'END_YEAR',     kw: ['end_date_year', 'end date year', 'end year', 'end_year'] },
+    { type: 'CURRENT_ROLE', kw: ['current_role', 'current role', 'currently work here', 'i currently work here'] },
+    // Education granular patterns
+    { type: 'SCHOOL',       kw: ['school_name', 'school name', 'university', 'college', 'institution', 'school'] },
+    { type: 'DEGREE',       kw: ['degree_type', 'degree level', 'degree'] },
+    { type: 'DISCIPLINE',   kw: ['discipline', 'major', 'field of study', 'specialization', 'branch'] },
+    // Compliance & Voluntary self-identification
+    { type: 'AGE_18',       kw: ['18 years', '18 years of age', 'at least 18', 'age 18', 'legal age', '18 or older'] },
+    { type: 'PREVIOUS_EMPLOYED', kw: ['previously been employed', 'previously employed', 'prior employment', 'former employee', 'worked here before', 'worked for coinbase'] },
+    { type: 'PRIVACY_CONSENT', kw: ['privacy notice', 'privacy policy', 'arbitration agreement', 'global data privacy', 'receipt of the above linked'] },
+    { type: 'AI_CONSENT',   kw: ['may use ai tools', 'use ai tools to assist', 'ai tools assist'] },
+    { type: 'AI_USAGE',     kw: ['how you use ai tools', 'use ai tools today', 'describe how you use ai'] },
+    { type: 'GOVT_OFFICIAL',kw: ['government official', 'civil service position', 'holder of public office'] },
+    { type: 'GOVT_RELATIVE',kw: ['relative of a government official', 'relative of a government', 'close relative of a government'] },
+    { type: 'CONFLICT_INTEREST', kw: ['conflict of interest', 'perceived conflict', 'actual or perceived conflict'] },
+    { type: 'REFERRED_BY_LEADER', kw: ['referred to this position by a senior', 'senior leader or decision-maker'] },
+    { type: 'HISPANIC_LATINO', kw: ['hispanic/latino', 'hispanic or latino', 'hispanic', 'latino'] },
+    { type: 'VETERAN',      kw: ['veteran status', 'protected veteran', 'veterans act', 'vevraa'] },
+    { type: 'DISABILITY',   kw: ['disability status', 'have a disability', 'disability'] },
+    { type: 'RACE_ETHNICITY', kw: ['race & ethnicity', 'race and ethnicity', 'race/ethnicity', 'ethnicity', 'race'] },
   ];
 
   function parseLocation(loc) {
@@ -597,6 +623,14 @@
     return new RegExp('(^|[^a-z])' + kw + '($|[^a-z])').test(signal);
   }
 
+  function isReactSelect(el) {
+    if (!el || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return false;
+    if (el.classList && (el.classList.contains('select__input') || el.classList.contains('select-shell') || el.classList.contains('react-select__input'))) return true;
+    if (el.getAttribute('role') === 'combobox') return true;
+    if (el.closest && el.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"]')) return true;
+    return false;
+  }
+
   function classifyField(input) {
     const attrSignal = [
       (input.getAttribute('name') || '').toLowerCase(),
@@ -621,7 +655,8 @@
     }
     contextSignal = contextSignal.toLowerCase();
 
-    const isSelect = input.tagName === 'SELECT';
+    const isRS = isReactSelect(input);
+    const isSelect = input.tagName === 'SELECT' || isRS;
 
     // 1. SELECT-SPECIFIC FAST HEURISTICS
     if (isSelect) {
@@ -670,6 +705,41 @@
       }
     }
 
+    // 3. SECTION-AWARE FAST HEURISTICS: Employment
+    const isEmploymentSection = contextSignal.includes('employment') || contextSignal.includes('experience') || attrSignal.includes('employment') || attrSignal.includes('job_history');
+    if (isEmploymentSection) {
+      if (labelSignal.includes('company') || attrSignal.includes('company')) return 'COMPANY';
+      if ((labelSignal.includes('title') || attrSignal.includes('title')) && !labelSignal.includes('degree')) return 'EMPLOYMENT_TITLE';
+      if ((labelSignal.includes('month') || attrSignal.includes('month')) && (labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from'))) return 'START_MONTH';
+      if ((labelSignal.includes('year') || attrSignal.includes('year')) && (labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from'))) return 'START_YEAR';
+      if ((labelSignal.includes('month') || attrSignal.includes('month')) && (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to'))) return 'END_MONTH';
+      if ((labelSignal.includes('year') || attrSignal.includes('year')) && (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to'))) return 'END_YEAR';
+      if (input.type === 'checkbox' && (labelSignal.includes('current') || attrSignal.includes('current'))) return 'CURRENT_ROLE';
+    }
+
+    // 4. SECTION-AWARE FAST HEURISTICS: Education
+    const isEducationSection = contextSignal.includes('education') || contextSignal.includes('school') || attrSignal.includes('education') || attrSignal.includes('school');
+    if (isEducationSection) {
+      if (labelSignal.includes('school') || labelSignal.includes('university') || labelSignal.includes('college') || labelSignal.includes('institution') || attrSignal.includes('school')) return 'SCHOOL';
+      if (labelSignal.includes('degree') || attrSignal.includes('degree')) return 'DEGREE';
+      if (labelSignal.includes('discipline') || labelSignal.includes('major') || labelSignal.includes('field of study') || attrSignal.includes('discipline') || attrSignal.includes('major')) return 'DISCIPLINE';
+    }
+
+    // 5. SPECIFIC QUESTIONS & COMPLIANCE HEURISTICS
+    if (labelSignal.includes('18 years') || labelSignal.includes('at least 18') || attrSignal.includes('18_years') || attrSignal.includes('age_18')) return 'AGE_18';
+    if (labelSignal.includes('previously been employed') || labelSignal.includes('previously employed') || labelSignal.includes('employed by coinbase') || labelSignal.includes('prior employment')) return 'PREVIOUS_EMPLOYED';
+    if (labelSignal.includes('privacy notice') || labelSignal.includes('arbitration agreement') || labelSignal.includes('global data privacy') || labelSignal.includes('receipt of the above linked')) return 'PRIVACY_CONSENT';
+    if (labelSignal.includes('may use ai tools') || labelSignal.includes('use ai tools to assist')) return 'AI_CONSENT';
+    if (labelSignal.includes('how you use ai') || labelSignal.includes('use ai tools today') || labelSignal.includes('describes how you use ai')) return 'AI_USAGE';
+    if (labelSignal.includes('close relative') && (labelSignal.includes('government') || labelSignal.includes('official'))) return 'GOVT_RELATIVE';
+    if ((labelSignal.includes('government official') || labelSignal.includes('civil service') || labelSignal.includes('holder of public office')) && !labelSignal.includes('relative')) return 'GOVT_OFFICIAL';
+    if (labelSignal.includes('conflict of interest') || labelSignal.includes('perceived conflict') || labelSignal.includes('actual or perceived conflict')) return 'CONFLICT_INTEREST';
+    if (labelSignal.includes('referred to this position by a senior') || labelSignal.includes('senior leader or decision-maker') || labelSignal.includes('institutional client, business partner, or vendor')) return 'REFERRED_BY_LEADER';
+    if (labelSignal.includes('hispanic') || labelSignal.includes('latino')) return 'HISPANIC_LATINO';
+    if (labelSignal.includes('veteran') || labelSignal.includes('vevraa')) return 'VETERAN';
+    if (labelSignal.includes('disability') || labelSignal.includes('impairment')) return 'DISABILITY';
+    if ((labelSignal.includes('race') || labelSignal.includes('ethnicity')) && !labelSignal.includes('hispanic')) return 'RACE_ETHNICITY';
+
     let best = { type: null, score: 0 };
     FIELD_PATTERNS.forEach(p => {
       if (isSelect && p.type === 'PHONE') return;
@@ -682,8 +752,16 @@
       if (score > best.score) best = { type: p.type, score };
     });
 
-    if (!best.type && input.tagName === 'TEXTAREA') return 'SCREENING';
-    if (best.score < 3) return null;
+    if (!best.type || best.score < 3) {
+      if (input.tagName === 'TEXTAREA') return 'SCREENING';
+      if (isSelect) {
+        if (labelSignal.includes('?') || input.getAttribute('aria-required') === 'true' || attrSignal.includes('question') || Boolean(input.closest && input.closest('.field, .question, [class*="question"], [class*="field"]'))) {
+          return 'SCREENING_SELECT';
+        }
+      }
+      if (input.type === 'text' && (labelSignal.includes('?') || input.getAttribute('aria-required') === 'true')) return 'SCREENING';
+      return null;
+    }
     return best.type;
   }
 
@@ -704,8 +782,13 @@
     const SINGLETON_TYPES = new Set([
       'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'PHONE_TYPE',
       'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
-      'LINKEDIN', 'GITHUB', 'PORTFOLIO', 'TITLE', 'SUMMARY', 'NOTICE_PERIOD',
-      'EDUCATION', 'GENDER', 'PRONOUNS'
+      'LINKEDIN', 'GITHUB', 'PORTFOLIO', 'SUMMARY', 'NOTICE_PERIOD',
+      'GENDER', 'PRONOUNS', 'RELOCATE', 'WORK_AUTH', 'VISA',
+      'AGE_18', 'PREVIOUS_EMPLOYED', 'PRIVACY_CONSENT', 'AI_CONSENT', 'AI_USAGE',
+      'GOVT_OFFICIAL', 'GOVT_RELATIVE', 'CONFLICT_INTEREST', 'REFERRED_BY_LEADER',
+      'HISPANIC_LATINO', 'VETERAN', 'DISABILITY', 'RACE_ETHNICITY',
+      'COMPANY', 'EMPLOYMENT_TITLE', 'START_MONTH', 'START_YEAR', 'END_MONTH', 'END_YEAR', 'CURRENT_ROLE',
+      'SCHOOL', 'DEGREE', 'DISCIPLINE'
     ]);
 
     targetDocs.forEach(targetDoc => {
@@ -716,9 +799,10 @@
       inputs.forEach(inp => {
         const rect = inp.getBoundingClientRect();
         const isCheckOrRadio = inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox');
-        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio) return;
+        const isRS = isReactSelect(inp);
+        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio && !isRS) return;
         const computed = (targetDoc.defaultView || window).getComputedStyle(inp);
-        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio) return;
+        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isRS) return;
 
         const type = classifyField(inp);
         if (!type) return;
@@ -752,8 +836,138 @@
   }
 
 
+  /* -- REACT-SELECT & MODERN ATS COMBOBOX AUTOMATION ENGINE -- */
+  async function fillReactSelect(inputEl, targetVal) {
+    if (!inputEl || !targetVal) return false;
+    const targetValLower = String(targetVal).toLowerCase().trim();
+    const container = (inputEl.closest && inputEl.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"]')) || inputEl.parentElement;
+    if (!container) return false;
+
+    // 1. Locate the dropdown open trigger
+    const toggleBtn = container.querySelector('.select__indicators button, [aria-label*="Toggle flyout"], .select__indicator, [class*="indicatorContainer"], [class*="dropdown-indicator"]') ||
+                      container.querySelector('.select__control') ||
+                      container;
+
+    // Dispatch mousedown/mouseup/click sequence to trigger flyout
+    toggleBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+    toggleBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+    toggleBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+
+    await new Promise(r => setTimeout(r, 60));
+
+    // For filterable comboboxes (e.g. School, Major), type into the input to filter options
+    if (inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+      try {
+        if (document.activeElement !== inputEl) inputEl.focus();
+        const proto = window.HTMLInputElement.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value');
+        if (setter && setter.set) { setter.set.call(inputEl, targetVal); } else { inputEl.value = targetVal; }
+        inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: String(targetVal) }));
+      } catch (e) {}
+      await new Promise(r => setTimeout(r, 80));
+    }
+
+    // 2. Query available options in active document & portals
+    function getAvailableOptions() {
+      const doc = inputEl.ownerDocument || document;
+      return Array.from(doc.querySelectorAll('.select__option, [role="option"], [class*="option"], [id*="-option-"]'))
+        .filter(opt => {
+          const rect = opt.getBoundingClientRect();
+          return (rect.width > 0 && rect.height > 0) || opt.offsetParent !== null;
+        });
+    }
+
+    let options = getAvailableOptions();
+    if (options.length === 0) {
+      toggleBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      await new Promise(r => setTimeout(r, 80));
+      options = getAvailableOptions();
+    }
+
+    if (options.length === 0) return false;
+
+    let matchedOption = null;
+
+    const syns = {
+      'male': ['man', 'm'],
+      'female': ['woman', 'f'],
+      'yes': ['true', '1', 'i agree', 'i confirm', 'yes, i am', 'yes, i do', 'yes, i have', 'acknowledge'],
+      'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't"],
+      'immediate': ['immediately', 'now', '0 weeks', '1 week', '2 weeks'],
+      'bachelor of computer applications (bca)': ['bachelor of computer applications', 'bachelor', 'bachelors', 'undergraduate', 'bca', 'computer applications', 'b.c.a'],
+      'i am not a protected veteran': ['not a protected veteran', 'not a veteran', 'i am not a veteran', 'no'],
+      'no, i don\'t have a disability': ['no, i do not have a disability', "no, i don't have", 'i do not have a disability', 'no disability', 'no'],
+      'asian': ['asian (not hispanic or latino)', 'asian / pacific islander', 'south asian', 'asian - non hispanic'],
+      'linkedin': ['linkedin', 'job board', 'online job board', 'social network'],
+    };
+
+    // Stage A: Exact text match
+    for (const opt of options) {
+      const optText = (opt.textContent || '').trim().toLowerCase();
+      if (optText === targetValLower) { matchedOption = opt; break; }
+    }
+
+    // Stage B: Contains match
+    if (!matchedOption) {
+      for (const opt of options) {
+        const optText = (opt.textContent || '').trim().toLowerCase();
+        if (optText.includes(targetValLower) || targetValLower.includes(optText)) {
+          matchedOption = opt; break;
+        }
+      }
+    }
+
+    // Stage C: Synonyms
+    if (!matchedOption) {
+      const synList = syns[targetValLower] || [];
+      for (const syn of synList) {
+        for (const opt of options) {
+          const optText = (opt.textContent || '').trim().toLowerCase();
+          if (optText === syn || optText.includes(syn)) {
+            matchedOption = opt; break;
+          }
+        }
+        if (matchedOption) break;
+      }
+    }
+
+    // Stage D: Boolean fallback for Yes/No questions
+    if (!matchedOption) {
+      if (targetValLower === 'yes') {
+        matchedOption = options.find(o => /^(yes|agree|confirm)/i.test((o.textContent || '').trim()));
+      } else if (targetValLower === 'no') {
+        matchedOption = options.find(o => /^(no|disagree|decline)/i.test((o.textContent || '').trim()));
+      }
+    }
+
+    // Stage E: AI tools usage heuristics
+    if (!matchedOption && targetValLower.includes('ai')) {
+      matchedOption = options.find(o => /daily|frequently|regularly|extensively|advanced/i.test((o.textContent || '').trim()));
+    }
+
+    // Stage F: First valid option if required
+    if (!matchedOption && options.length > 0) {
+      matchedOption = options.find(o => !/select|choose|placeholder|optional/i.test((o.textContent || '').trim())) || options[0];
+    }
+
+    if (matchedOption) {
+      matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+      matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+      matchedOption.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      await new Promise(r => setTimeout(r, 50));
+      return true;
+    }
+
+    return false;
+  }
+
   /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
   function setNativeValue(el, value, isFinal = true) {
+    if (isReactSelect(el)) {
+      fillReactSelect(el, value).catch(() => {});
+      return;
+    }
+
     if (el.tagName === 'INPUT' && el.type === 'radio') {
       const radios = el.name
         ? document.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
@@ -899,6 +1113,15 @@
     NOTICE_PERIOD: 'Notice Period', RELOCATE: 'Relocate', EDUCATION: 'Highest Education',
     GENDER: 'Gender', PRONOUNS: 'Pronouns', ADDRESS: 'Street Address', APT: 'Apartment/Suite', ZIP: 'ZIP Code',
     HEAR_ABOUT: 'Referral Source', HEAR_ABOUT_DETAIL: 'Source Detail',
+    AGE_18: 'Legal Age (18+)', PREVIOUS_EMPLOYED: 'Prior Employment', PRIVACY_CONSENT: 'Privacy Agreement',
+    AI_CONSENT: 'AI Processing Consent', AI_USAGE: 'AI Tools Usage', GOVT_OFFICIAL: 'Government Official',
+    GOVT_RELATIVE: 'Government Relative', CONFLICT_INTEREST: 'Conflict of Interest',
+    REFERRED_BY_LEADER: 'Senior Referral', HISPANIC_LATINO: 'Hispanic / Latino',
+    VETERAN: 'Veteran Status', DISABILITY: 'Disability Status', RACE_ETHNICITY: 'Race / Ethnicity',
+    COMPANY: 'Company Name', EMPLOYMENT_TITLE: 'Job Title', START_MONTH: 'Start Month', START_YEAR: 'Start Year',
+    END_MONTH: 'End Month', END_YEAR: 'End Year', CURRENT_ROLE: 'Current Role',
+    SCHOOL: 'School / University', DEGREE: 'Degree', DISCIPLINE: 'Discipline / Major',
+    SCREENING_SELECT: 'Screening Question'
   };
 
   /* -- RESOLVE PREVIEW -- */
@@ -938,6 +1161,34 @@
       case 'PRONOUNS':     return profile.pronouns || 'He/Him';
       case 'WORK_AUTH':    return profile.workAuthorized ? 'Yes' : 'No';
       case 'VISA':         return profile.requiresVisa ? 'Yes' : 'No';
+      case 'AGE_18':       return profile.is18OrOlder || 'Yes';
+      case 'PREVIOUS_EMPLOYED': return profile.previouslyEmployed || 'No';
+      case 'PRIVACY_CONSENT': return profile.privacyConsent || 'Yes';
+      case 'AI_CONSENT':   return profile.aiConsent || 'Yes';
+      case 'AI_USAGE':     return profile.aiUsage ? 'Daily AI Copilot' : 'Daily AI Copilot';
+      case 'GOVT_OFFICIAL': return profile.governmentOfficial || 'No';
+      case 'GOVT_RELATIVE': return profile.relativeGovernmentOfficial || 'No';
+      case 'CONFLICT_INTEREST': return profile.conflictOfInterest || 'No';
+      case 'REFERRED_BY_LEADER': return profile.referredByLeader || 'No';
+      case 'HISPANIC_LATINO': return profile.hispanicLatino || 'No';
+      case 'VETERAN':      return profile.veteranStatus || 'I am not a protected veteran';
+      case 'DISABILITY':   return profile.disabilityStatus || "No, I don't have a disability";
+      case 'RACE_ETHNICITY': return profile.race || 'Asian';
+      case 'COMPANY':      return profile.company || 'AstreWork';
+      case 'EMPLOYMENT_TITLE': return profile.employmentTitle || profile.title || 'Full-Stack Developer';
+      case 'START_MONTH':  return profile.startMonth || 'January';
+      case 'START_YEAR':   return profile.startYear || '2024';
+      case 'END_MONTH':    return profile.endMonth || 'Present';
+      case 'END_YEAR':     return profile.endYear || '2026';
+      case 'CURRENT_ROLE': return profile.currentRole !== false ? 'Yes' : 'No';
+      case 'SCHOOL':       return profile.school || 'Amity University';
+      case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
+      case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
+      case 'SCREENING_SELECT': {
+        const labelText = getLabelText(field.element).toLowerCase();
+        if (labelText.includes('sponsor') || labelText.includes('felony') || labelText.includes('criminal') || labelText.includes('relative') || labelText.includes('conflict')) return 'No';
+        return 'Yes';
+      }
       case 'COVER_LETTER': return null;
       case 'SCREENING': {
         const labelText = getLabelText(field.element).toLowerCase();
@@ -1017,6 +1268,34 @@
       case 'GENDER':      return profile.gender || 'Male';
       case 'PRONOUNS':    return profile.pronouns || 'He/Him';
       case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
+      case 'AGE_18':       return profile.is18OrOlder || 'Yes';
+      case 'PREVIOUS_EMPLOYED': return profile.previouslyEmployed || 'No';
+      case 'PRIVACY_CONSENT': return profile.privacyConsent || 'Yes';
+      case 'AI_CONSENT':   return profile.aiConsent || 'Yes';
+      case 'AI_USAGE':     return profile.aiUsage || 'I use generative AI and developer copilots daily to maximize development throughput and code reliability.';
+      case 'GOVT_OFFICIAL': return profile.governmentOfficial || 'No';
+      case 'GOVT_RELATIVE': return profile.relativeGovernmentOfficial || 'No';
+      case 'CONFLICT_INTEREST': return profile.conflictOfInterest || 'No';
+      case 'REFERRED_BY_LEADER': return profile.referredByLeader || 'No';
+      case 'HISPANIC_LATINO': return profile.hispanicLatino || 'No';
+      case 'VETERAN':      return profile.veteranStatus || 'I am not a protected veteran';
+      case 'DISABILITY':   return profile.disabilityStatus || "No, I don't have a disability";
+      case 'RACE_ETHNICITY': return profile.race || 'Asian';
+      case 'COMPANY':      return profile.company || 'AstreWork';
+      case 'EMPLOYMENT_TITLE': return profile.employmentTitle || profile.title || 'Full-Stack Developer';
+      case 'START_MONTH':  return profile.startMonth || 'January';
+      case 'START_YEAR':   return profile.startYear || '2024';
+      case 'END_MONTH':    return profile.endMonth || 'Present';
+      case 'END_YEAR':     return profile.endYear || '2026';
+      case 'CURRENT_ROLE': return profile.currentRole !== false ? 'Yes' : 'No';
+      case 'SCHOOL':       return profile.school || 'Amity University';
+      case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
+      case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
+      case 'SCREENING_SELECT': {
+        const labelText = getLabelText(field.element).toLowerCase();
+        if (labelText.includes('sponsor') || labelText.includes('felony') || labelText.includes('criminal') || labelText.includes('relative') || labelText.includes('conflict')) return 'No';
+        return 'Yes';
+      }
       case 'COVER_LETTER':
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
@@ -1394,7 +1673,10 @@
       const skipped = !val || String(val).trim() === '';
 
       if (!skipped) {
-        if (f.element.tagName === 'SELECT' || f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
+        if (isReactSelect(f.element)) {
+          AstrePilotHUD.highlight(f.element);
+          await fillReactSelect(f.element, val);
+        } else if (f.element.tagName === 'SELECT' || f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
           setNativeValue(f.element, val, true);
         } else {
           AstrePilotHUD.highlight(f.element);
