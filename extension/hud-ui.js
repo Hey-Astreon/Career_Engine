@@ -30,11 +30,16 @@ window.AstrePilotHUD = (function () {
 
   const TYPE_LABELS = {
     'firstname': 'First Name', 'lastname': 'Last Name', 'fullname': 'Full Name',
-    'email': 'Email', 'phone': 'Phone', 'linkedin': 'LinkedIn', 'github': 'GitHub',
-    'portfolio': 'Portfolio', 'resume': 'Resume/CV', 'coverletter': 'Cover Letter',
-    'location': 'Location', 'visa': 'Visa/Sponsorship', 'salary': 'Expected Salary',
+    'email': 'Email', 'phonetype': 'Phone Type', 'phone': 'Phone',
+    'linkedin': 'LinkedIn', 'github': 'GitHub', 'portfolio': 'Portfolio',
+    'resume': 'Resume/CV', 'coverletter': 'Cover Letter', 'summary': 'Summary',
+    'location': 'Location', 'city': 'City', 'state': 'State / Province', 'country': 'Country',
+    'address': 'Street Address', 'apt': 'Apartment/Suite', 'zip': 'ZIP Code',
+    'hearabout': 'Referral Source', 'hearaboutdetail': 'Source Detail',
+    'visa': 'Visa/Sponsorship', 'salary': 'Expected Salary', 'noticeperiod': 'Notice Period',
+    'relocate': 'Relocate', 'education': 'Highest Education',
     'veteran': 'Veteran Status', 'disability': 'Disability Status',
-    'race': 'Race/Ethnicity', 'gender': 'Gender', 'unknown': 'Custom Field'
+    'race': 'Race/Ethnicity', 'gender': 'Gender', 'pronouns': 'Pronouns', 'unknown': 'Custom Field'
   };
   // Everything interpolated into innerHTML that originates outside this file
   // (profile, session, AI answers, page labels) MUST pass through this.
@@ -61,12 +66,13 @@ window.AstrePilotHUD = (function () {
   }
 
   function getIconForType(type) {
-    if (['firstname', 'lastname', 'fullname', 'race', 'gender', 'veteran', 'disability'].includes(type)) return ICONS.user;
+    if (['firstname', 'lastname', 'fullname', 'race', 'gender', 'pronouns', 'veteran', 'disability'].includes(type)) return ICONS.user;
     if (type === 'email') return ICONS.mail;
-    if (type === 'phone') return ICONS.phone;
+    if (['phone', 'phonetype'].includes(type)) return ICONS.phone;
+    if (['location', 'city', 'state', 'country', 'address', 'apt', 'zip'].includes(type)) return ICONS.briefcase;
     if (['linkedin', 'github', 'portfolio'].includes(type)) return ICONS.link;
-    if (['resume', 'coverletter'].includes(type)) return ICONS.text;
-    if (['visa', 'salary'].includes(type)) return ICONS.briefcase;
+    if (['resume', 'coverletter', 'summary', 'screening'].includes(type)) return ICONS.text;
+    if (['visa', 'salary', 'noticeperiod', 'relocate', 'education', 'hearabout', 'hearaboutdetail'].includes(type)) return ICONS.briefcase;
     return ICONS.text;
   }
 

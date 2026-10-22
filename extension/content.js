@@ -488,31 +488,50 @@
   }
 
   /* -- FIELD CLASSIFIER -- */
+  /* -- FIELD CLASSIFIER -- */
   const FIELD_PATTERNS = [
     { type: 'FIRST_NAME',   kw: ['first_name', 'firstname', 'fname', 'given_name', 'first-name', 'first name', 'givenname'] },
     { type: 'LAST_NAME',    kw: ['last_name', 'lastname', 'lname', 'family_name', 'surname', 'last-name', 'last name', 'familyname'] },
     { type: 'FULL_NAME',    kw: ['full_name', 'fullname', 'legal_name', 'full-name', 'full-legal', 'full legal'] },
     { type: 'EMAIL',        kw: ['email', 'e-mail', 'email_address', 'emailaddress'] },
-    { type: 'PHONE',        kw: ['phone', 'telephone', 'mobile', 'cell', 'contact_number', 'phone_number', 'phonenumber'] },
-    { type: 'LOCATION',     kw: ['location', 'current_location', 'city_state', 'city_country', 'current location', 'city'] },
+    { type: 'PHONE_TYPE',   kw: ['phone_type', 'phone type', 'phonetype', 'number_type', 'number type', 'telephone_type', 'telephonetype'] },
+    { type: 'PHONE',        kw: ['phone', 'telephone', 'mobile', 'cell', 'contact_number', 'phone_number', 'phonenumber', 'phone number', 'contact number', 'mobile number'] },
+    { type: 'APT',          kw: ['apartment', 'suite', 'apt', 'address line 2', 'address_line_2', 'address2', 'address 2', 'line 2', 'line2', 'address_2'] },
+    { type: 'ADDRESS',      kw: ['street_address', 'street address', 'address line 1', 'address_line_1', 'address 1', 'address_1', 'address1', 'street', 'address'] },
+    { type: 'CITY',         kw: ['city', 'town', 'municipality'] },
+    { type: 'STATE',        kw: ['state', 'province', 'state_province', 'state/province', 'region', 'state or province'] },
+    { type: 'COUNTRY',      kw: ['country', 'nation', 'country_region', 'country/region'] },
+    { type: 'ZIP',          kw: ['zip', 'zip_code', 'zip code', 'postal code', 'postal_code', 'postal', 'postcode', 'pin code', 'pincode'] },
+    { type: 'LOCATION',     kw: ['current_location', 'city_state', 'city_country', 'current location', 'location'] },
+    { type: 'HEAR_ABOUT_DETAIL', kw: ['specify further', 'please specify', 'source detail', 'referral detail', 'specify'] },
+    { type: 'HEAR_ABOUT',   kw: ['how did you hear', 'hear about us', 'source', 'referral_source', 'how_did_you_hear', 'hear_about', 'hear about', 'referral'] },
     { type: 'LINKEDIN',     kw: ['linkedin', 'linkedin_url', 'linkedin_profile'] },
     { type: 'GITHUB',       kw: ['github', 'github_url', 'github_profile'] },
-    { type: 'PORTFOLIO',    kw: ['portfolio', 'portfolio_url', 'personal_website', 'personal_site'] },
+    { type: 'PORTFOLIO',    kw: ['portfolio', 'portfolio_url', 'personal_website', 'personal_site', 'website'] },
     { type: 'TITLE',        kw: ['headline', 'current_title', 'job_title', 'current_role', 'current_position'] },
     { type: 'COVER_LETTER', kw: ['cover_letter', 'coverletter', 'cover letter', 'motivation_letter', 'brief summary', 'cover note'] },
     { type: 'SUMMARY',      kw: ['summary', 'about_yourself', 'professional_summary', 'about you'] },
-    { type: 'WORK_AUTH',    kw: ['work_auth', 'work_authorization', 'authorized to work', 'legally authorized'] },
-    { type: 'VISA',         kw: ['visa', 'sponsorship', 'require sponsorship'] },
+    { type: 'WORK_AUTH',    kw: ['work_auth', 'work_authorization', 'authorized to work', 'legally authorized', 'authorized'] },
+    { type: 'VISA',         kw: ['visa', 'sponsorship', 'require sponsorship', 'sponsor'] },
     { type: 'SALARY',       kw: ['salary', 'expected_salary', 'desired_salary', 'salary_expectation', 'compensation'] },
     { type: 'NOTICE_PERIOD',kw: ['notice_period', 'notice period', 'availability', 'start date', 'how soon'] },
     { type: 'RELOCATE',     kw: ['relocate', 'willing to relocate', 'relocation'] },
-    { type: 'EDUCATION',    kw: ['highest_education', 'highest education', 'degree', 'education level'] },
+    { type: 'EDUCATION',    kw: ['highest_education', 'highest education', 'degree', 'education level', 'education'] },
     { type: 'GENDER',       kw: ['gender', 'sex', 'identify as'] },
     { type: 'PRONOUNS',     kw: ['pronouns', 'preferred pronouns'] },
-    { type: 'ADDRESS',      kw: ['street_address', 'street address', 'address line 1'] },
-    { type: 'APT',          kw: ['apartment', 'suite', 'apt', 'address line 2'] },
-    { type: 'ZIP',          kw: ['zip', 'zip_code', 'zip code', 'postal code', 'postal_code'] },
   ];
+
+  function parseLocation(loc) {
+    if (!loc) return { city: '', state: '', country: '' };
+    const parts = String(loc).split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length >= 3) {
+      return { city: parts[0], state: parts[1], country: parts[parts.length - 1] };
+    }
+    if (parts.length === 2) {
+      return { city: parts[0], state: parts[1], country: parts[1] };
+    }
+    return { city: parts[0] || '', state: '', country: parts[0] || '' };
+  }
 
   function getLabelText(input) {
     const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
@@ -530,7 +549,7 @@
 
   // Short keywords that appear inside unrelated words ("excellent", "electricity", "advisable")
   // must match on word boundaries; longer, specific keywords keep substring matching.
-  const BOUNDARY_KW = new Set(['cell', 'city', 'visa']);
+  const BOUNDARY_KW = new Set(['cell', 'city', 'visa', 'apt']);
   function kwMatch(signal, kw) {
     if (!BOUNDARY_KW.has(kw)) return signal.includes(kw);
     return new RegExp('(^|[^a-z])' + kw + '($|[^a-z])').test(signal);
@@ -540,15 +559,76 @@
     const attrSignal = [
       (input.getAttribute('name') || '').toLowerCase(),
       (input.getAttribute('id') || '').toLowerCase(),
+      (input.getAttribute('placeholder') || '').toLowerCase(),
     ].join(' ');
 
     const labelSignal = getLabelText(input);
 
-    const parentEl = input.parentElement;
-    const contextSignal = parentEl ? ((parentEl.getAttribute('class') || '') + ' ' + (parentEl.id || '')).toLowerCase() : '';
+    let contextSignal = '';
+    let curr = input.parentElement;
+    for (let depth = 0; depth < 4 && curr; depth++) {
+      const cls = curr.getAttribute('class') || '';
+      const id = curr.id || '';
+      const ariaLabel = curr.getAttribute('aria-label') || '';
+      const heading = curr.querySelector('h1, h2, h3, h4, legend, .section-title, .form-title');
+      const headingText = heading ? (heading.textContent || '') : '';
+      contextSignal += ' ' + cls + ' ' + id + ' ' + ariaLabel + ' ' + headingText;
+      curr = curr.parentElement;
+    }
+    contextSignal = contextSignal.toLowerCase();
+
+    const isSelect = input.tagName === 'SELECT';
+
+    // 1. SELECT-SPECIFIC FAST HEURISTICS
+    if (isSelect) {
+      if (labelSignal.includes('type') && (contextSignal.includes('phone') || attrSignal.includes('phone'))) return 'PHONE_TYPE';
+      if (attrSignal.includes('phone_type') || attrSignal.includes('phonetype')) return 'PHONE_TYPE';
+      if (labelSignal.includes('country') || attrSignal.includes('country')) return 'COUNTRY';
+      if (labelSignal.includes('state') || labelSignal.includes('province') || attrSignal.includes('state') || attrSignal.includes('province')) return 'STATE';
+      if (labelSignal.includes('hear about') || labelSignal.includes('how did you hear') || labelSignal.includes('source') || attrSignal.includes('source') || attrSignal.includes('referral')) {
+        if (labelSignal.includes('further') || labelSignal.includes('specify') || attrSignal.includes('specify') || attrSignal.includes('detail')) {
+          return 'HEAR_ABOUT_DETAIL';
+        }
+        return 'HEAR_ABOUT';
+      }
+      if (labelSignal.includes('gender') || attrSignal.includes('gender') || labelSignal.includes('sex')) return 'GENDER';
+      if (labelSignal.includes('pronoun') || attrSignal.includes('pronoun')) return 'PRONOUNS';
+      if (labelSignal.includes('education') || labelSignal.includes('degree') || attrSignal.includes('education')) return 'EDUCATION';
+      if (labelSignal.includes('relocate') || attrSignal.includes('relocate')) return 'RELOCATE';
+      if (labelSignal.includes('authorized') || labelSignal.includes('work auth') || attrSignal.includes('work_auth')) return 'WORK_AUTH';
+      if (labelSignal.includes('sponsorship') || labelSignal.includes('visa') || attrSignal.includes('visa')) return 'VISA';
+      if (labelSignal.includes('phone') || attrSignal.includes('phone')) return 'PHONE_TYPE'; // A select with phone is ALWAYS a phone type!
+    }
+
+    // 2. INPUT-SPECIFIC FAST HEURISTICS
+    if (!isSelect) {
+      if (input.type === 'tel') return 'PHONE';
+      if ((labelSignal.includes('number') || attrSignal.includes('number')) && (contextSignal.includes('phone') || attrSignal.includes('phone'))) {
+        return 'PHONE';
+      }
+      if (labelSignal.includes('address 2') || labelSignal.includes('address line 2') || attrSignal.includes('address2') || attrSignal.includes('address_2') || attrSignal.includes('line2') || attrSignal.includes('line_2') || labelSignal.includes('apartment') || labelSignal.includes('suite') || labelSignal.includes('apt')) {
+        return 'APT';
+      }
+      if ((labelSignal.includes('address') || attrSignal.includes('address') || labelSignal.includes('street') || attrSignal.includes('street')) && !labelSignal.includes('email') && !attrSignal.includes('email') && !labelSignal.includes('web') && !attrSignal.includes('url')) {
+        return 'ADDRESS';
+      }
+      if (labelSignal.includes('zip') || labelSignal.includes('postal') || attrSignal.includes('zip') || attrSignal.includes('postal') || labelSignal.includes('pin code') || labelSignal.includes('pincode')) {
+        return 'ZIP';
+      }
+      if (labelSignal.includes('city') || attrSignal.includes('city') || labelSignal.includes('town')) {
+        return 'CITY';
+      }
+      if (labelSignal.includes('state') || labelSignal.includes('province') || attrSignal.includes('state') || attrSignal.includes('province')) {
+        return 'STATE';
+      }
+      if (labelSignal.includes('country') || attrSignal.includes('country')) {
+        return 'COUNTRY';
+      }
+    }
 
     let best = { type: null, score: 0 };
     FIELD_PATTERNS.forEach(p => {
+      if (isSelect && p.type === 'PHONE') return;
       let score = 0;
       p.kw.forEach(k => {
         if (kwMatch(attrSignal, k)) score += 10;
@@ -611,6 +691,13 @@
       });
     });
 
+    // Ensure COUNTRY is processed before STATE so dependent options load
+    results.sort((a, b) => {
+      if (a.type === 'COUNTRY' && b.type === 'STATE') return -1;
+      if (a.type === 'STATE' && b.type === 'COUNTRY') return 1;
+      return 0;
+    });
+
     return results;
   }
 
@@ -650,22 +737,78 @@
     }
 
     if (el.tagName === 'SELECT') {
-      const valLower = String(value).toLowerCase();
+      const valLower = String(value).toLowerCase().trim();
       let targetOpt = null;
+
+      // 1. Exact match (value or text)
       for (let i = 0; i < el.options.length; i++) {
         const opt = el.options[i];
-        const oVal = opt.value.toLowerCase();
-        const oText = opt.text.toLowerCase();
-        if (oVal === valLower || oText.includes(valLower) ||
-           (valLower === 'yes' && (oVal === 'true' || oVal === '1')) ||
-           (valLower === 'no' && (oVal === 'false' || oVal === '0'))) {
+        if (!opt.value && opt.text.includes('—') || opt.disabled) continue;
+        const oVal = opt.value.toLowerCase().trim();
+        const oText = opt.text.toLowerCase().trim();
+        if (oVal === valLower || oText === valLower) {
           targetOpt = opt; break;
         }
       }
+
+      // 2. Contains match
+      if (!targetOpt) {
+        for (let i = 0; i < el.options.length; i++) {
+          const opt = el.options[i];
+          if (!opt.value || opt.disabled || opt.text.startsWith('—') || opt.text.startsWith('Select')) continue;
+          const oVal = opt.value.toLowerCase().trim();
+          const oText = opt.text.toLowerCase().trim();
+          if (oVal.includes(valLower) || oText.includes(valLower) ||
+             (valLower === 'yes' && (oVal === 'true' || oVal === '1')) ||
+             (valLower === 'no' && (oVal === 'false' || oVal === '0'))) {
+            targetOpt = opt; break;
+          }
+        }
+      }
+
+      // 3. Synonym dictionary matching
+      if (!targetOpt) {
+        const synonyms = {
+          'mobile': ['cell', 'cellular', 'personal', 'primary'],
+          'india': ['in', 'ind'],
+          'united states': ['usa', 'us', 'u.s.'],
+          'linkedin': ['job board', 'online', 'internet', 'social media', 'website', 'other'],
+          'male': ['man', 'm'],
+          'female': ['woman', 'f'],
+          'he/him': ['he / him', 'male', 'he'],
+          'she/her': ['she / her', 'female', 'she'],
+        };
+        const synList = synonyms[valLower] || [];
+        for (const syn of synList) {
+          for (let i = 0; i < el.options.length; i++) {
+            const opt = el.options[i];
+            if (!opt.value || opt.disabled || opt.text.startsWith('—') || opt.text.startsWith('Select')) continue;
+            const oVal = opt.value.toLowerCase().trim();
+            const oText = opt.text.toLowerCase().trim();
+            if (oVal === syn || oText === syn || oVal.includes(syn) || oText.includes(syn)) {
+              targetOpt = opt; break;
+            }
+          }
+          if (targetOpt) break;
+        }
+      }
+
+      // 4. Fallback for required dropdown: choose first non-placeholder option
+      if (!targetOpt && el.options.length > 1) {
+        for (let i = 0; i < el.options.length; i++) {
+          const opt = el.options[i];
+          if (opt.value && !opt.disabled && !opt.text.includes('—') && !opt.text.toLowerCase().includes('select')) {
+            targetOpt = opt; break;
+          }
+        }
+      }
+
       if (targetOpt) {
         el.value = targetOpt.value;
+        targetOpt.selected = true;
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new Event('blur', { bubbles: true }));
       }
       return;
     }
@@ -680,42 +823,52 @@
     }
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('blur', { bubbles: true }));
   }
 
   /* -- TYPE LABELS -- */
   const TYPE_LABELS = {
     FIRST_NAME: 'First Name', LAST_NAME: 'Last Name', FULL_NAME: 'Full Name',
-    EMAIL: 'Email Address', PHONE: 'Phone Number', LOCATION: 'Location',
+    EMAIL: 'Email Address', PHONE_TYPE: 'Phone Type', PHONE: 'Phone Number',
+    LOCATION: 'Location', CITY: 'City', STATE: 'State / Province', COUNTRY: 'Country',
     LINKEDIN: 'LinkedIn URL', GITHUB: 'GitHub URL', PORTFOLIO: 'Portfolio URL',
     TITLE: 'Job Title', COVER_LETTER: 'Cover Letter', SUMMARY: 'Summary',
     WORK_AUTH: 'Work Authorization', VISA: 'Visa Sponsorship', SALARY: 'Salary', SCREENING: 'Screening Q',
     NOTICE_PERIOD: 'Notice Period', RELOCATE: 'Relocate', EDUCATION: 'Highest Education',
     GENDER: 'Gender', PRONOUNS: 'Pronouns', ADDRESS: 'Street Address', APT: 'Apartment/Suite', ZIP: 'ZIP Code',
+    HEAR_ABOUT: 'Referral Source', HEAR_ABOUT_DETAIL: 'Source Detail',
   };
 
   /* -- RESOLVE PREVIEW -- */
   function resolvePreview(field, profile, session) {
+    const loc = parseLocation(profile.location);
     switch (field.type) {
       case 'FIRST_NAME':   return profile.firstName || null;
       case 'LAST_NAME':    return profile.lastName || null;
       case 'FULL_NAME':    return profile.fullName || null;
       case 'EMAIL':        return profile.email || null;
+      case 'PHONE_TYPE':   return profile.phoneType || 'Mobile';
       case 'PHONE':        return profile.phone || null;
       case 'LOCATION':     return profile.location || null;
+      case 'CITY':         return profile.city || loc.city || null;
+      case 'STATE':        return profile.state || loc.state || null;
+      case 'COUNTRY':      return profile.country || loc.country || null;
+      case 'ADDRESS':      return profile.streetAddress || profile.city || loc.city || null;
+      case 'APT':          return profile.apartment || null;
+      case 'ZIP':          return profile.zipCode || '800020';
+      case 'HEAR_ABOUT':   return profile.referralSource || 'LinkedIn';
+      case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
       case 'LINKEDIN':     return profile.linkedinUrl || null;
       case 'GITHUB':       return profile.githubUrl || null;
       case 'PORTFOLIO':    return profile.portfolioUrl || null;
       case 'TITLE':        return session ? session.jobTitle : (profile.title || null);
       case 'SUMMARY':      return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
       case 'SALARY':       return session ? (session.salaryRange || null) : (profile.salaryRange || null);
-      case 'NOTICE_PERIOD':return profile.noticePeriod || null;
+      case 'NOTICE_PERIOD':return profile.noticePeriod || 'Immediate';
       case 'RELOCATE':     return profile.willingnessToRelocate ? 'Yes' : 'No';
-      case 'EDUCATION':    return profile.highestEducation || null;
-      case 'GENDER':       return profile.gender || null;
-      case 'PRONOUNS':     return profile.pronouns || null;
-      case 'ADDRESS':      return profile.streetAddress || null;
-      case 'APT':          return profile.apartment || null;
-      case 'ZIP':          return profile.zipCode || null;
+      case 'EDUCATION':    return profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
+      case 'GENDER':       return profile.gender || 'Male';
+      case 'PRONOUNS':     return profile.pronouns || 'He/Him';
       case 'WORK_AUTH':    return profile.workAuthorized ? 'Yes' : 'No';
       case 'VISA':         return profile.requiresVisa ? 'Yes' : 'No';
       case 'COVER_LETTER': return null;
@@ -726,13 +879,30 @@
 
   /* -- RESOLVE VALUE (async, calls AI for COVER_LETTER/SCREENING) -- */
   async function resolveValue(field, profile, session) {
+    const loc = parseLocation(profile.location);
     switch (field.type) {
       case 'FIRST_NAME':  return profile.firstName;
       case 'LAST_NAME':   return profile.lastName;
       case 'FULL_NAME':   return profile.fullName;
       case 'EMAIL':       return profile.email;
-      case 'PHONE':       return profile.phone;
+      case 'PHONE_TYPE':  return profile.phoneType || 'Mobile';
+      case 'PHONE': {
+        const rawPhone = profile.phone || '';
+        if (!rawPhone) return '';
+        const phoneDigits = rawPhone.replace(/\D/g, '');
+        if (field.element && field.element.maxLength === 10) return phoneDigits.slice(-10);
+        if (field.element && (field.element.type === 'number' || field.element.inputMode === 'numeric')) return phoneDigits;
+        return rawPhone;
+      }
       case 'LOCATION':    return profile.location;
+      case 'CITY':        return profile.city || loc.city || '';
+      case 'STATE':       return profile.state || loc.state || '';
+      case 'COUNTRY':     return profile.country || loc.country || '';
+      case 'ADDRESS':     return profile.streetAddress || profile.city || loc.city || '';
+      case 'APT':         return profile.apartment || '';
+      case 'ZIP':         return profile.zipCode || '800020';
+      case 'HEAR_ABOUT':  return profile.referralSource || 'LinkedIn';
+      case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
       case 'LINKEDIN':    return profile.linkedinUrl;
       case 'GITHUB':      return profile.githubUrl;
       case 'PORTFOLIO':   return profile.portfolioUrl;
@@ -749,13 +919,12 @@
         }
         return rawSal;
       }
+      case 'NOTICE_PERIOD': return profile.noticePeriod || 'Immediate';
       case 'RELOCATE':    return profile.willingnessToRelocate ? 'Yes' : 'No';
-      case 'EDUCATION':   return profile.highestEducation;
-      case 'GENDER':      return profile.gender;
-      case 'PRONOUNS':    return profile.pronouns;
-      case 'ADDRESS':     return profile.streetAddress;
-      case 'APT':         return profile.apartment;
-      case 'ZIP':         return profile.zipCode;
+      case 'EDUCATION':   return profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
+      case 'GENDER':      return profile.gender || 'Male';
+      case 'PRONOUNS':    return profile.pronouns || 'He/Him';
+      case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
       case 'COVER_LETTER':
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
@@ -1094,6 +1263,11 @@
       hud.markRow(f.id, 'active');
 
       if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') hadAI = true;
+
+      // Allow dependent dropdowns (e.g. State depending on Country) time to populate options
+      if (f.type === 'STATE' && f.element.tagName === 'SELECT') {
+        await new Promise(r => setTimeout(r, 250));
+      }
 
       const val = await resolveValue(f, userProfile, activeSession);
       const skipped = !val || String(val).trim() === '';

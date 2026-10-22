@@ -54,9 +54,26 @@ async function run() {
   console.log('Syncing Roushan Kumar profile...');
   await client.execute({
     sql: `UPDATE profiles 
-          SET title = ?, fullName = ? 
+          SET title = ?, fullName = ?, location = ?, streetAddress = ?, apartment = ?, zipCode = ?,
+              highestEducation = ?, gender = ?, pronouns = ?, careerStage = ?, workType = ?,
+              noticePeriod = ?, willingnessToRelocate = ?
           WHERE slug = ?`,
-    args: ['Full-Stack Developer | Distributed Systems & Cloud Infrastructure', 'ROUSHAN KUMAR', 'roushan']
+    args: [
+      'Full-Stack Developer | Distributed Systems & Cloud Infrastructure',
+      'ROUSHAN KUMAR',
+      'Patna, Bihar, India',
+      'Kankarbagh, Patna',
+      'Flat 204',
+      '800020',
+      'Bachelor of Computer Applications (BCA)',
+      'Male',
+      'He/Him',
+      'student',
+      'remote',
+      'Immediate',
+      1,
+      'roushan'
+    ]
   });
 
   const roushanRow = await client.execute({
@@ -99,9 +116,26 @@ async function run() {
   console.log('Syncing Ayushi Raj profile...');
   await client.execute({
     sql: `UPDATE profiles 
-          SET title = ?, fullName = ? 
+          SET title = ?, fullName = ?, location = ?, streetAddress = ?, apartment = ?, zipCode = ?,
+              highestEducation = ?, gender = ?, pronouns = ?, careerStage = ?, workType = ?,
+              noticePeriod = ?, willingnessToRelocate = ?
           WHERE slug = ?`,
-    args: ['Full-Stack Developer | AI Systems & Interactive Web Applications', 'AYUSHI RAJ', 'ayushi']
+    args: [
+      'Full-Stack Developer | AI Systems & Interactive Web Applications',
+      'AYUSHI RAJ',
+      'Patna, Bihar, India',
+      'Boring Road, Patna',
+      '',
+      '800001',
+      'Bachelor of Computer Applications (BCA)',
+      'Female',
+      'She/Her',
+      'student',
+      'remote',
+      'Immediate',
+      1,
+      'ayushi'
+    ]
   });
 
   const ayushiRow = await client.execute({

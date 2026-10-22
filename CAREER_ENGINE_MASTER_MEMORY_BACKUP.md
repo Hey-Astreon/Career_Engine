@@ -1457,6 +1457,43 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** When running with a dual-database architecture (local SQLite vs remote Turso Cloud LibSQL), `prisma db push` only applies to the datasource specified in `prisma.config.ts`. Any new schema columns on models queried by Prisma must always be synchronized to Turso Cloud via `scripts/migrate-turso-columns.mjs` before deploying or testing runtime API endpoints.
   - **Rule:** Database insertion blocks in production API handlers should always employ defensive column degradation to ensure that minor telemetry or optional metadata columns never fail the core user operation.
 
+### 🔴 Case 18: Resolving Enterprise ATS (iCIMS) Form Autofill Gaps & Field Classification Architecture
+* **What Happened:**
+  - After extracting the job posting on Cook Medical's iCIMS portal, the user triggered **Autofill** on the candidate application profile page.
+  - While `First Name`, `Last Name`, and `Email` filled correctly, several core fields were completely skipped or misaligned:
+    1. `Phones (1)*`: The `Type*` dropdown was untouched, and `Number*` input was completely blank, despite the HUD showing a green checkmark next to `Phone: +91-9431483512`.
+    2. `Addresses (1)*`: `Address*` and `Address 2` inputs remained completely blank.
+    3. `City*`: Received the entire unsplit string `"Patna, Bihar, India"`.
+    4. `Zip/Postal Code*`: Displayed as skipped (`-`) in the HUD.
+    5. `Country*` & `State/Province*`: Dropdowns remained unselected on "— Make a Selection —".
+    6. `How did you hear about us?*` & `Please specify further*`: Dropdowns remained unselected.
+* **The Root Cause / Mistake:**
+  1. **Select Hijacking on Phone Type:** In iCIMS, the phone block contains a `<select name="phone_type">` followed by `<input name="phone_number">`. `classifyField()` saw the word `"phone"` in `phone_type` and mapped the `<select>` to `PHONE`. Because `seenTypes['PHONE'] = true` was locked, the real `<input>` was discarded. During autofill, `setNativeValue` tried setting `+91-9431483512` on the `<select>`, which failed silently, while the real `<input>` was never touched.
+  2. **Missing Granular Field Patterns:** `FIELD_PATTERNS` lacked dedicated patterns for `PHONE_TYPE`, `CITY`, `STATE`, `COUNTRY`, `HEAR_ABOUT`, and `HEAR_ABOUT_DETAIL`. `City*` matched `LOCATION`, causing the entire `"Patna, Bihar, India"` string to be typed into the city box.
+  3. **Address Pattern Keywords Too Rigid:** `ADDRESS` only had `['street_address', 'street address', 'address line 1']`, failing on literal `"Address*"`. `APT` only had `'address line 2'` with spaces, failing on literal `"Address 2"`.
+  4. **Server Profile Route Serialization Omission:** `GET /api/autopilot/profile` never serialized `streetAddress`, `apartment`, `zipCode`, `gender`, or `pronouns` from the database. In addition, the database rows for `roushan` had `null` for these newly added columns.
+  5. **Select Dispatcher Lacked Synonym & Dynamic Dependency Support:** `setNativeValue` lacked synonym dictionaries (e.g. matching `Mobile` to `Cell`, `India` to `IN`, `LinkedIn` to `Job Board`), and `Country` selection requires triggering `change` and pausing for `State` options to populate.
+* **How We Solved It:**
+  1. **Comprehensive Database & API Profile Sync:**
+     - Updated `scripts/sync-master-profiles.cjs` and executed update on Turso Cloud: populated Roushan's master record with `streetAddress: 'Kankarbagh, Patna'`, `apartment: 'Flat 204'`, `zipCode: '800020'`, `highestEducation: 'Bachelor of Computer Applications (BCA)'`, `gender: 'Male'`, `pronouns: 'He/Him'`.
+     - In `src/app/api/autopilot/profile/route.ts`, added automatic parsing of `location` into `city`, `state`, `country`, and serialized all address, zip, education, and demographic fields with defaults.
+  2. **Multi-Tier Field Classification (`extension/content.js`):**
+     - Introduced `parseLocation(loc)` and added distinct `PHONE_TYPE`, `CITY`, `STATE`, `COUNTRY`, `HEAR_ABOUT`, `HEAR_ABOUT_DETAIL` patterns.
+     - Upgraded `classifyField(input)` to inspect up to 4 levels of ancestor context (capturing section titles like `"Phones (1)*"` and `"Addresses (1)*"`).
+     - Explicitly forbade `<select>` elements from matching raw `PHONE`, routing them strictly to `PHONE_TYPE`.
+     - Added boundary rules: `Address 2` routes to `APT`; generic `Address` routes to `ADDRESS`.
+  3. **High-Resilience `SELECT` Dispatcher & Dynamic Timing:**
+     - Upgraded `setNativeValue` for `SELECT` with: (1) exact value/text match, (2) contains match, (3) domain synonym mapping (`Mobile` -> `Cell`, `India` -> `IN`, `LinkedIn` -> `Job Board`), (4) non-placeholder fallback.
+     - Dispatched `input`, `change`, and `blur` events so framework-level event bindings (iCIMS jQuery / React) trigger properly.
+     - Sorted scanned fields so `COUNTRY` always executes before `STATE`, and added a 250ms wait before filling `STATE` to allow dynamic dropdown population.
+  4. **HUD & Extension Repackage:**
+     - Updated `extension/hud-ui.js` `TYPE_LABELS` and `getIconForType` with labels and icons for all new field types.
+     - Ran `node scripts/package-extension.js` to refresh `public/downloads/astrepilot-extension.zip`.
+     - Verified: `npx tsc --noEmit` 0 errors; `npx vitest run` 36 files passed (357/357 tests green).
+* **Engineering Experience Gained:**
+  - **Rule:** Never allow a `<select>` element to match an unstructured scalar field (like `PHONE`). When forms group a dropdown and an input together (e.g. `Type` + `Number`), separate them into distinct semantic types (`PHONE_TYPE` and `PHONE`) and inspect ancestor section headers to resolve ambiguous labels like `"Number*"`.
+  - **Rule:** Always parse composite geographic fields (`"City, State, Country"`) into dedicated granular properties so ATS platforms with split address inputs never receive concatenated strings.
+
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
