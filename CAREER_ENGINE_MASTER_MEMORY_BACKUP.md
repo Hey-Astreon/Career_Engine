@@ -1853,6 +1853,44 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+### 🔴 Case 27: Calibrating Typography, Font Scales & Tier-1 Linear Aesthetics in Application Pipeline Tracker
+* **The Exact Challenge & Mistake Encountered:**
+  - After deploying the tracking pipeline, the UI on `/applications` had oversized, bulky, and disproportionate elements ("gigantic looking text looks weirds and losing the aura of tier 1 design"):
+    1. Header had an oversized `text-xl font-bold` with heavy rounded border wrappers (`p-4 bg-white border rounded-xl shadow-xs`).
+    2. Five standalone metric cards had chunky colored borders (`border-blue-200/70`, `border-amber-200/80`), large `w-9 h-9` icon boxes, and large uppercase tracking labels, floating awkwardly in white space.
+    3. Filter buttons looked like generic form elements (`px-2.5 py-1 rounded-md`).
+    4. Empty state was dominated by an oversized `40px` suitcase icon and plain bold text.
+* **Deep Root Cause Diagnosis:**
+  - In our haste to wire up the new tracking backend, we used ad-hoc Tailwind utilities (`rounded-xl`, `border-blue-200`, `w-9 h-9`, `text-xl`) instead of AstreWork's established design tokens (`--surface`, `--surface-muted`, `--line`, `.ce-page-eyebrow`, `.ce-chip`, and unified segmented metric bars from `dashboard/page.tsx`).
+  - Without the JetBrains Mono micro-eyebrow scale (`font-mono text-[8px] font-bold uppercase tracking-[.12em]`) and tight letter-spacing (`tracking-[-.045em]`), the typography lost the refined, authoritative, high-density look of Linear, Raycast, and Apple.
+* **The Concrete Surgical Fix:**
+  1. **Header Elevation:**
+     - Added `.ce-page-eyebrow` (`APPLICATION INTELLIGENCE / ASTREPILOT HARVESTER ACTIVE`).
+     - Calibrated title to `text-[22px] sm:text-[24px] font-bold tracking-[-.045em] text-[var(--ink)]` with inline `.ce-chip ce-chip-blue` (`LIVE TRACKER`).
+     - Added low-profile segmented view switcher (`Detailed Table` vs. `Kanban Board`) with `text-[11px] font-semibold`.
+     - Replaced generic button classes with standard `.ce-button-secondary` and `.ce-button-primary`.
+  2. **Unified 5-Segment Telemetry Strip (`TelemetryCell`):**
+     - Transformed the 5 isolated floating cards into a single continuous segmented bar:
+       `grid grid-cols-2 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)] sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-[var(--line)] shadow-2xs`
+     - Compact 28px icon badge (`w-7 h-7 rounded-md`), micro-eyebrow (`font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)]`), crisp number (`text-[22px] font-bold tracking-[-.05em] text-[var(--ink)]`), and subnote (`text-[9px] text-[var(--muted)]`).
+  3. **Filter Ergonomics:**
+     - Upgraded filter buttons to **rounded-full pill tabs** (`rounded-full px-3 py-1 text-[11px] font-medium`) with active blue styling (`bg-[var(--blue)] text-white shadow-2xs font-semibold`).
+  4. **Table & Kanban Density:**
+     - Calibrated table headers to JetBrains Mono (`font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)]`), 24px initial avatars, compact `py-2.5 px-3` rows, and `.ce-chip` badges.
+     - Refactored Kanban columns to `w-72` with mono headers and count badges.
+  5. **Empty State & Modal Polish:**
+     - Replaced the bulky empty state with a compact Linear-style centered component (`w-8 h-8` circular icon badge, `text-[13px] font-bold` title, `text-[11px]` subtext).
+     - Applied `.ce-drawer-backdrop` to the Follow-up Studio modal.
+  6. **Automated & Visual Verification:**
+     - `npx tsc --noEmit`: 0 errors.
+     - `npx vitest run`: 41 test files passed, 419/419 unit tests passing.
+     - Chrome subagent screenshot confirmed Tier-1 visual excellence.
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never use ad-hoc colored borders (`border-blue-200`, `border-amber-200`) on dashboard KPI cards. Tier-1 design achieves authority through unified structural containers (`divide-x divide-[var(--line)]`), curated soft icon backgrounds (`--blue-soft`, `--amber-soft`), and monospace metadata labels.
+  - **Rule:** In high-density developer tools, uppercase labels must be small and widely tracked (`font-mono text-[8px] font-bold uppercase tracking-[.12em]`), while headline numbers must be tight and optical (`tracking-[-.05em]`). Anything above 10px uppercase feels like screaming and destroys visual balance.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 

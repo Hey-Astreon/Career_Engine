@@ -328,34 +328,36 @@ export default function ApplicationsPage() {
   }, [applications, searchTerm, filterStage]);
 
   return (
-    <div className="flex h-full flex-col space-y-4">
-      {/* ── Top Header & Telemetry ────────────────────────────────────────── */}
-      <div className="ce-action-bar flex flex-wrap items-center justify-between gap-3 p-4 bg-white border border-[var(--line)] rounded-xl shadow-xs">
+    <div className="flex h-full flex-col space-y-5">
+      {/* ── Top Header & Workspace Title ─────────────────────────────────── */}
+      <section className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end pb-1">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold flex items-center gap-2 text-[var(--ink)]">
-              <Briefcase className="w-5 h-5 text-[var(--blue)]" />
+          <div className="ce-page-eyebrow">
+            Application Intelligence <span className="mx-2 text-[var(--line-strong)]">/</span> AstrePilot Harvester Active
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-2.5">
+            <h1 className="text-[22px] sm:text-[24px] font-bold tracking-[-.045em] text-[var(--ink)]">
               Application Pipeline &amp; AstrePilot Tracker
             </h1>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[var(--blue)] border border-blue-200">
-              Live Tracker
+            <span className="ce-chip ce-chip-blue !min-h-5 !px-2 !text-[8px]">
+              LIVE TRACKER
             </span>
           </div>
-          <p className="text-xs text-[var(--muted)] mt-0.5">
-            Structured tracking report of every remote opportunity form applied via AstrePilot or tracked manually.
+          <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--muted)]">
+            Structured tracking report of every remote opportunity form applied via AstrePilot or tracked manually. Real-time telemetry, stage progression, and export suite.
           </p>
         </div>
 
-        {/* View Switcher & Action Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Action Controls & View Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* View Mode Switcher */}
-          <div className="flex items-center p-0.5 bg-gray-100 rounded-lg border border-[var(--line)]">
+          <div className="inline-flex items-center p-0.5 rounded-md border border-[var(--line)] bg-[var(--surface-muted)]">
             <button
               onClick={() => handleSetViewMode("table")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
                 viewMode === "table"
-                  ? "bg-white text-[var(--ink)] shadow-xs"
-                  : "text-gray-500 hover:text-gray-900"
+                  ? "bg-[var(--surface)] text-[var(--ink)] shadow-2xs font-bold"
+                  : "text-[var(--muted)] hover:text-[var(--ink)]"
               }`}
               title="Structured Detailed Table Report"
             >
@@ -364,10 +366,10 @@ export default function ApplicationsPage() {
             </button>
             <button
               onClick={() => handleSetViewMode("kanban")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
                 viewMode === "kanban"
-                  ? "bg-white text-[var(--ink)] shadow-xs"
-                  : "text-gray-500 hover:text-gray-900"
+                  ? "bg-[var(--surface)] text-[var(--ink)] shadow-2xs font-bold"
+                  : "text-[var(--muted)] hover:text-[var(--ink)]"
               }`}
               title="Visual Kanban Pipeline"
             >
@@ -380,9 +382,10 @@ export default function ApplicationsPage() {
           <div className="relative">
             <button
               onClick={() => setShowExportMenu((v) => !v)}
-              className="ce-btn ce-btn-primary text-xs flex items-center gap-1.5 shadow-xs"
+              className="ce-button-secondary !min-h-[30px] !py-1 !px-2.5 !text-[11px]"
+              aria-label="Export report"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-[var(--blue)]" />
               <span>Export Report</span>
               <ChevronDown className="w-3 h-3 opacity-70" />
             </button>
@@ -393,49 +396,49 @@ export default function ApplicationsPage() {
                   className="fixed inset-0 z-40"
                   onClick={() => setShowExportMenu(false)}
                 />
-                <div className="absolute right-0 mt-1.5 w-60 bg-white rounded-xl border border-[var(--line)] shadow-lg p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-2.5 py-1.5 text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider border-b border-[var(--line)]/60 mb-1">
+                <div className="absolute right-0 mt-1.5 w-64 bg-[var(--surface)] rounded-lg border border-[var(--line)] shadow-lg p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-2.5 py-1.5 font-mono text-[8px] font-bold text-[var(--muted)] uppercase tracking-[.12em] border-b border-[var(--line)] mb-1">
                     Spreadsheet &amp; Data Exports
                   </div>
                   <button
                     onClick={() => handleExport("csv")}
-                    className="w-full text-left px-2.5 py-2 text-xs font-semibold text-[var(--ink)] hover:bg-gray-50 rounded-lg flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-2 text-[11px] font-semibold text-[var(--ink)] hover:bg-[var(--surface-muted)] rounded flex items-center gap-2 transition-colors"
                   >
-                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
                     <div>
                       <div>Download CSV (.csv)</div>
-                      <div className="text-[10px] text-gray-400 font-normal">Excel &amp; Google Sheets ready (UTF-8 BOM)</div>
+                      <div className="text-[9px] text-[var(--muted)] font-normal">Excel &amp; Google Sheets ready (UTF-8 BOM)</div>
                     </div>
                   </button>
                   <button
                     onClick={() => handleExport("excel")}
-                    className="w-full text-left px-2.5 py-2 text-xs font-semibold text-[var(--ink)] hover:bg-gray-50 rounded-lg flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-2 text-[11px] font-semibold text-[var(--ink)] hover:bg-[var(--surface-muted)] rounded flex items-center gap-2 transition-colors"
                   >
-                    <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                    <FileSpreadsheet className="w-4 h-4 text-blue-600 shrink-0" />
                     <div>
                       <div>Download Excel (.xls)</div>
-                      <div className="text-[10px] text-gray-400 font-normal">Pre-styled Excel worksheet</div>
+                      <div className="text-[9px] text-[var(--muted)] font-normal">Pre-styled Excel worksheet</div>
                     </div>
                   </button>
                   <button
                     onClick={() => handleExport("xml")}
-                    className="w-full text-left px-2.5 py-2 text-xs font-semibold text-[var(--ink)] hover:bg-gray-50 rounded-lg flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-2 text-[11px] font-semibold text-[var(--ink)] hover:bg-[var(--surface-muted)] rounded flex items-center gap-2 transition-colors"
                   >
-                    <FileText className="w-4 h-4 text-amber-600" />
+                    <FileText className="w-4 h-4 text-amber-600 shrink-0" />
                     <div>
                       <div>Download XML (.xml)</div>
-                      <div className="text-[10px] text-gray-400 font-normal">Semantic XML data schema</div>
+                      <div className="text-[9px] text-[var(--muted)] font-normal">Semantic XML data schema</div>
                     </div>
                   </button>
-                  <div className="border-t border-[var(--line)]/60 my-1" />
+                  <div className="border-t border-[var(--line)] my-1" />
                   <button
                     onClick={handleCopyTsv}
-                    className="w-full text-left px-2.5 py-2 text-xs font-semibold text-[var(--ink)] hover:bg-blue-50 hover:text-[var(--blue)] rounded-lg flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-2.5 py-2 text-[11px] font-semibold text-[var(--ink)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue)] rounded flex items-center gap-2 transition-colors"
                   >
-                    <Copy className="w-4 h-4 text-[var(--blue)]" />
+                    <Copy className="w-4 h-4 text-[var(--blue)] shrink-0" />
                     <div>
                       <div>Copy as TSV (Clipboard)</div>
-                      <div className="text-[10px] text-gray-400 font-normal">Ctrl+V paste into Sheets or Excel</div>
+                      <div className="text-[9px] text-[var(--muted)] font-normal">Ctrl+V paste directly into Sheets or Excel</div>
                     </div>
                   </button>
                 </div>
@@ -445,85 +448,70 @@ export default function ApplicationsPage() {
 
           <button
             onClick={fetchApplications}
-            className="ce-btn ce-btn-secondary text-xs flex items-center gap-1.5"
+            disabled={isLoading}
+            className="ce-button-secondary !min-h-[30px] !py-1 !px-2.5 !text-[11px]"
             title="Refresh application data"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[var(--blue)]" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
+      </section>
+
+      {/* ── Unified 5-Segment Telemetry Stats Strip ─────────────────────── */}
+      <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)] sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-[var(--line)] shadow-2xs">
+        <TelemetryCell
+          icon={<Briefcase className="w-3.5 h-3.5" />}
+          label="Total Applications"
+          value={stats.total}
+          note="all tracked opportunities"
+        />
+        <TelemetryCell
+          icon={<Zap className="w-3.5 h-3.5" />}
+          label="AstrePilot Autofills"
+          value={stats.astrepilot}
+          note="form automations logged"
+          blue
+        />
+        <TelemetryCell
+          icon={<Clock className="w-3.5 h-3.5" />}
+          label="In-Flight"
+          value={stats.inFlight}
+          note="in active review"
+        />
+        <TelemetryCell
+          icon={<AlertCircle className="w-3.5 h-3.5" />}
+          label="Quiet Attention"
+          value={stats.quietAlerts}
+          note="5+ days without update"
+          amber
+        />
+        <TelemetryCell
+          icon={<Trophy className="w-3.5 h-3.5" />}
+          label="Offers"
+          value={stats.offers}
+          note="pipeline victories"
+          green
+        />
       </div>
 
-      {/* ── Telemetry Stats Bar ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-        <div className="p-3 bg-white border border-[var(--line)] rounded-xl shadow-2xs flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0">
-            <Briefcase className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Total Applications</div>
-            <div className="text-base font-extrabold text-[var(--ink)]">{stats.total}</div>
-          </div>
-        </div>
-
-        <div className="p-3 bg-white border border-blue-200/70 rounded-xl shadow-2xs flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-50 text-[var(--blue)] flex items-center justify-center flex-shrink-0">
-            <Zap className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--blue)]">AstrePilot Autofills</div>
-            <div className="text-base font-extrabold text-[var(--blue)]">{stats.astrepilot}</div>
-          </div>
-        </div>
-
-        <div className="p-3 bg-white border border-[var(--line)] rounded-xl shadow-2xs flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">In-Flight</div>
-            <div className="text-base font-extrabold text-[var(--ink)]">{stats.inFlight}</div>
-          </div>
-        </div>
-
-        <div className="p-3 bg-white border border-amber-200/80 rounded-xl shadow-2xs flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center flex-shrink-0">
-            <AlertCircle className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Quiet Attention</div>
-            <div className="text-base font-extrabold text-amber-800">{stats.quietAlerts}</div>
-          </div>
-        </div>
-
-        <div className="p-3 bg-white border border-emerald-200/80 rounded-xl shadow-2xs flex items-center gap-3 col-span-2 sm:col-span-1">
-          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
-            <Trophy className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Offers</div>
-            <div className="text-base font-extrabold text-emerald-800">{stats.offers}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Filters and Search Controls ─────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+      {/* ── Filters and Search Toolbar ──────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-y border-[var(--line)] py-3">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--muted)]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search company, title, or link..."
-              className="w-full text-xs pl-8 pr-3 py-1.5 border border-[var(--line)] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[var(--blue)] shadow-2xs"
+              className="ce-field !min-h-8 pl-8 pr-3 text-[11px] rounded-md"
             />
           </div>
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+              className="ce-button-quiet !min-h-8 !px-2 text-[11px] text-[var(--muted)] hover:text-[var(--ink)]"
             >
               Clear
             </button>
@@ -531,7 +519,9 @@ export default function ApplicationsPage() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-[var(--muted)] font-medium mr-1">Filter:</span>
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)] mr-1">
+            Filter:
+          </span>
           {(
             [
               { id: "ALL", label: `All (${applications.length})` },
@@ -544,10 +534,10 @@ export default function ApplicationsPage() {
             <button
               key={tab.id}
               onClick={() => setFilterStage(tab.id)}
-              className={`text-xs px-2.5 py-1 rounded-md font-medium transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
                 filterStage === tab.id
-                  ? "bg-[var(--blue)] text-white shadow-xs"
-                  : "bg-white border border-[var(--line)] text-gray-600 hover:bg-gray-50 shadow-2xs"
+                  ? "bg-[var(--blue)] text-white shadow-2xs font-semibold"
+                  : "bg-[var(--surface-muted)] text-[var(--ink)] hover:bg-[var(--line)] border border-[var(--line)]"
               }`}
             >
               {tab.label}
@@ -558,8 +548,8 @@ export default function ApplicationsPage() {
 
       {/* ── Toast for TSV Copy ─────────────────────────────────────────── */}
       {copiedTsv && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[var(--ink)] text-white text-[11px] font-semibold px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle2 className="w-4 h-4 text-[var(--green)]" />
           <span>Table copied to clipboard! Paste directly into Google Sheets or Excel.</span>
         </div>
       )}
@@ -567,40 +557,45 @@ export default function ApplicationsPage() {
       {/* ── Main Content: Table View OR Kanban View ─────────────────────── */}
       {viewMode === "table" ? (
         /* ══════════════════════════════════════════════════════════════════ */
-        /* STRUCTURED DETAILED TABLE REPORT                                  */
+        /* STRUCTURED DETAILED TABLE REPORT (Tier-1 Spreadsheet)             */
         /* ══════════════════════════════════════════════════════════════════ */
-        <div className="flex-1 bg-white rounded-xl border border-[var(--line)] shadow-xs overflow-hidden flex flex-col">
+        <div className="flex-1 bg-[var(--surface)] rounded-lg border border-[var(--line)] shadow-2xs overflow-hidden flex flex-col">
           {isLoading ? (
-            <div className="flex h-64 items-center justify-center text-sm text-[var(--muted)]">
+            <div className="flex h-64 items-center justify-center text-[12px] text-[var(--muted)]">
+              <RefreshCw className="w-4 h-4 animate-spin text-[var(--blue)] mr-2" />
               Loading structured application report...
             </div>
           ) : filteredApps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-2">
-              <Briefcase className="w-10 h-10 text-gray-300" />
-              <div className="text-sm font-semibold text-[var(--ink)]">No applications found</div>
-              <p className="text-xs text-[var(--muted)] max-w-sm">
+            <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--blue-soft)] text-[var(--blue)] mb-3">
+                <Briefcase className="w-4 h-4" />
+              </span>
+              <b className="text-[13px] font-bold text-[var(--ink)] tracking-[-.02em]">
+                No applications found
+              </b>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)] max-w-sm">
                 {searchTerm || filterStage !== "ALL"
-                  ? "No applications matched your filter criteria."
+                  ? "No applications matched your active search or filter criteria."
                   : "Autofill application forms with AstrePilot or track jobs directly from the AstreWork Feed."}
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="sticky top-0 bg-gray-50/90 backdrop-blur-xs border-b border-[var(--line)] text-[var(--muted)] text-[10px] font-bold uppercase tracking-wider z-10">
+                <thead className="sticky top-0 bg-[var(--surface-muted)] border-b border-[var(--line)] font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)] z-10">
                   <tr>
-                    <th className="py-3 px-3 w-12 text-center">#</th>
-                    <th className="py-3 px-4">Company Name</th>
-                    <th className="py-3 px-4">Position / Role</th>
-                    <th className="py-3 px-4">Date of Apply</th>
-                    <th className="py-3 px-4">Application Form</th>
-                    <th className="py-3 px-4">Engine / Source</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Days Silent</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-2.5 px-3 w-10 text-center">#</th>
+                    <th className="py-2.5 px-3">Company</th>
+                    <th className="py-2.5 px-3">Position / Role</th>
+                    <th className="py-2.5 px-3">Date Applied</th>
+                    <th className="py-2.5 px-3">Application Form</th>
+                    <th className="py-2.5 px-3">Engine / Source</th>
+                    <th className="py-2.5 px-3">Stage / Status</th>
+                    <th className="py-2.5 px-3">Days Silent</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 font-normal">
+                <tbody className="divide-y divide-[var(--line)] font-normal">
                   {filteredApps.map((app, idx) => {
                     const isNeedsAttention =
                       app.status === "QUIET" || (app.status === "APPLIED" && app.daysSilent >= 5);
@@ -610,34 +605,34 @@ export default function ApplicationsPage() {
                     return (
                       <tr
                         key={app.id}
-                        className="hover:bg-blue-50/30 transition-colors group"
+                        className="hover:bg-[var(--surface-muted)]/60 transition-colors group"
                       >
                         {/* Sl No. */}
-                        <td className="py-3 px-3 text-center font-mono font-semibold text-gray-500">
+                        <td className="py-2.5 px-3 text-center font-mono text-[10px] text-[var(--muted)]">
                           {idx + 1}
                         </td>
 
                         {/* Company Name */}
-                        <td className="py-3 px-4 font-semibold text-[var(--ink)]">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-gray-100 border border-[var(--line)] flex items-center justify-center font-bold text-[10px] text-gray-700 flex-shrink-0">
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-2">
+                            <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-[var(--blue-soft)] font-mono text-[9px] font-bold text-[var(--blue)]">
                               {initials}
-                            </div>
-                            <span className="truncate max-w-[150px]" title={app.company}>
+                            </span>
+                            <span className="font-bold text-[12px] text-[var(--ink)] truncate max-w-[150px]" title={app.company}>
                               {app.company}
                             </span>
                           </div>
                         </td>
 
                         {/* Position / Role Title */}
-                        <td className="py-3 px-4 font-medium text-[var(--ink)]">
+                        <td className="py-2.5 px-3">
                           <div className="flex items-center gap-1.5">
-                            <span className="truncate max-w-[180px]" title={app.title}>
+                            <span className="font-semibold text-[11px] text-[var(--ink)] truncate max-w-[190px]" title={app.title}>
                               {app.title}
                             </span>
                             {app.atsExtractabilityScore && (
                               <span
-                                className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-[var(--blue)] border border-blue-200/60"
+                                className="ce-chip ce-chip-blue !min-h-4 !px-1.5 !text-[8px]"
                                 title={`ATS Score: ${app.atsExtractabilityScore}`}
                               >
                                 {app.atsExtractabilityScore}
@@ -647,35 +642,35 @@ export default function ApplicationsPage() {
                         </td>
 
                         {/* Date Applied */}
-                        <td className="py-3 px-4 text-gray-600 whitespace-nowrap">
-                          <div title={app.appliedDateFull || app.appliedDate}>
+                        <td className="py-2.5 px-3 font-mono text-[10px] text-[var(--muted)] whitespace-nowrap">
+                          <span title={app.appliedDateFull || app.appliedDate}>
                             {app.appliedDate}
-                          </div>
+                          </span>
                         </td>
 
                         {/* Application Form Link */}
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-3">
                           {app.jobUrl ? (
                             <a
                               href={app.jobUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-50 hover:bg-blue-50 text-[var(--blue)] hover:text-blue-700 border border-gray-200 hover:border-blue-200 text-[11px] font-medium transition-colors"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--blue)] hover:underline"
                               title={app.jobUrl}
                             >
                               <span>Open Form</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           ) : (
-                            <span className="text-gray-400">—</span>
+                            <span className="text-[var(--muted)] text-[10px]">—</span>
                           )}
                         </td>
 
                         {/* Engine / Source */}
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-3">
                           {isAstrePilot ? (
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[var(--blue)] text-[11px] font-semibold whitespace-nowrap">
-                              <Zap className="w-3 h-3 fill-[var(--blue)]" />
+                            <span className="ce-chip ce-chip-blue whitespace-nowrap">
+                              <Zap className="w-2.5 h-2.5 fill-[var(--blue)]" />
                               <span>AstrePilot</span>
                               {app.fieldsFilled != null && (
                                 <span className="font-mono font-bold">
@@ -683,25 +678,25 @@ export default function ApplicationsPage() {
                                 </span>
                               )}
                               {app.hasAiAnswers && (
-                                <span className="ml-0.5 px-1 rounded bg-blue-600 text-white text-[9px] font-bold">
+                                <span className="ml-0.5 px-1 rounded bg-[var(--blue)] text-white text-[8px] font-bold">
                                   AI
                                 </span>
                               )}
-                            </div>
+                            </span>
                           ) : (
-                            <span className="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-[11px] font-medium border border-gray-200 whitespace-nowrap">
+                            <span className="ce-chip whitespace-nowrap">
                               {app.source || "Direct Portal"}
                             </span>
                           )}
                         </td>
 
                         {/* Status (Interactive dropdown & Confirmation Badge) */}
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-2.5 px-3 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <select
                               value={app.status}
                               onChange={(e) => updateStatus(app.id, e.target.value)}
-                              className="text-xs font-semibold border border-[var(--line)] rounded-md px-2 py-1 bg-white hover:border-[var(--blue)] focus:outline-none focus:ring-1 focus:ring-[var(--blue)] shadow-2xs"
+                              className="text-[10px] font-semibold border border-[var(--line)] rounded px-2 py-0.5 bg-[var(--surface)] hover:border-[var(--blue)] focus:outline-none focus:ring-1 focus:ring-[var(--blue)] shadow-2xs text-[var(--ink)]"
                             >
                               {STATUS_COLUMNS.map((col) => (
                                 <option key={col.id} value={col.id}>
@@ -714,10 +709,10 @@ export default function ApplicationsPage() {
                             {app.confirmed === false && (
                               <button
                                 onClick={() => confirmApplication(app.id)}
-                                className="px-1.5 py-1 rounded bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                                className="ce-chip ce-chip-amber hover:opacity-90 transition-opacity !cursor-pointer"
                                 title="Click to confirm this autofill was officially submitted"
                               >
-                                <Check className="w-3 h-3 text-amber-600" />
+                                <Check className="w-2.5 h-2.5 text-[var(--amber)]" />
                                 <span>Confirm</span>
                               </button>
                             )}
@@ -725,38 +720,34 @@ export default function ApplicationsPage() {
                         </td>
 
                         {/* Days Silent */}
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-2.5 px-3 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                              isNeedsAttention
-                                ? "bg-amber-100 text-amber-800 font-semibold"
-                                : "bg-gray-100 text-gray-600"
-                            }`}
+                            className={`ce-chip ${isNeedsAttention ? "ce-chip-amber" : ""}`}
                           >
-                            <Clock className="w-3 h-3" />
-                            {app.daysSilent > 0 ? `${app.daysSilent}d silent` : "Applied today"}
+                            <Clock className="w-2.5 h-2.5" />
+                            {app.daysSilent > 0 ? `${app.daysSilent}d silent` : "Today"}
                           </span>
                         </td>
 
                         {/* Actions */}
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => openFollowupModal(app)}
-                              className={`px-2 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors ${
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                                 isNeedsAttention
-                                  ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                                  : "bg-blue-50 text-[var(--blue)] hover:bg-blue-100"
+                                  ? "bg-[var(--amber-soft)] text-[var(--amber)] hover:bg-[var(--amber-soft)]/80"
+                                  : "bg-[var(--blue-soft)] text-[var(--blue)] hover:bg-[var(--blue-soft)]/80"
                               }`}
                               title="Draft AI follow-up email"
                             >
-                              <Sparkles className="w-3 h-3" />
-                              <span>{isNeedsAttention ? "⚡ Nudge" : "Follow-up"}</span>
+                              <Sparkles className="w-2.5 h-2.5" />
+                              <span>{isNeedsAttention ? "Nudge" : "Follow-up"}</span>
                             </button>
 
                             <button
                               onClick={() => deleteApplication(app.id)}
-                              className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              className="p-1 rounded text-[var(--muted)] hover:text-[var(--red)] hover:bg-[var(--red-soft)] transition-colors"
                               title="Delete tracked application"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -773,31 +764,32 @@ export default function ApplicationsPage() {
         </div>
       ) : (
         /* ══════════════════════════════════════════════════════════════════ */
-        /* VISUAL KANBAN PIPELINE VIEW                                       */
+        /* VISUAL KANBAN PIPELINE VIEW (Tier-1 Visual Ergonomics)             */
         /* ══════════════════════════════════════════════════════════════════ */
-        <div className="flex-1 overflow-x-auto p-4 bg-gray-50/50 rounded-xl border border-[var(--line)]">
+        <div className="flex-1 overflow-x-auto p-3 bg-[var(--surface-muted)]/50 rounded-lg border border-[var(--line)]">
           {isLoading ? (
-            <div className="flex h-64 items-center justify-center text-sm text-[var(--muted)]">
+            <div className="flex h-64 items-center justify-center text-[12px] text-[var(--muted)]">
+              <RefreshCw className="w-4 h-4 animate-spin text-[var(--blue)] mr-2" />
               Loading pipeline applications...
             </div>
           ) : (
-            <div className="flex h-full gap-4 min-w-max">
+            <div className="flex h-full gap-3 min-w-max">
               {STATUS_COLUMNS.map((col) => {
                 const colApps = filteredApps.filter((app) => app.status === col.id);
                 return (
                   <div
                     key={col.id}
-                    className="w-80 flex flex-col bg-white rounded-xl border border-[var(--line)] shadow-xs"
+                    className="w-72 flex flex-col bg-[var(--surface)] rounded-lg border border-[var(--line)] shadow-2xs"
                   >
-                    <div className="p-3 border-b border-[var(--line)] flex justify-between items-center bg-gray-50/60 rounded-t-xl">
-                      <h3 className="font-semibold text-xs uppercase tracking-wider text-[var(--text-primary)]">
+                    <div className="px-3 py-2 border-b border-[var(--line)] flex justify-between items-center bg-[var(--surface-muted)] rounded-t-lg">
+                      <h3 className="font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">
                         {col.label}
                       </h3>
-                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-mono font-medium">
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--surface)] border border-[var(--line)] text-[var(--ink)]">
                         {colApps.length}
                       </span>
                     </div>
-                    <div className="flex-1 p-2.5 space-y-2.5 overflow-y-auto min-h-[220px]">
+                    <div className="flex-1 p-2 space-y-2 overflow-y-auto min-h-[220px]">
                       {colApps.map((app) => {
                         const isNeedsAttention =
                           app.status === "QUIET" || (app.status === "APPLIED" && app.daysSilent >= 5);
@@ -806,68 +798,68 @@ export default function ApplicationsPage() {
                         return (
                           <div
                             key={app.id}
-                            className="p-3 bg-white border border-[var(--line)] rounded-lg shadow-2xs hover:border-[var(--blue)] transition-colors group space-y-2.5"
+                            className="p-2.5 bg-[var(--surface)] border border-[var(--line)] rounded-md shadow-2xs hover:border-[var(--blue)] transition-colors group space-y-2"
                           >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-semibold text-sm text-[var(--ink)]">
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="min-w-0">
+                                <div className="font-bold text-[12px] text-[var(--ink)] truncate" title={app.company}>
                                   {app.company}
                                 </div>
-                                <div className="text-xs text-gray-500 line-clamp-1" title={app.title}>
+                                <div className="text-[11px] text-[var(--muted)] line-clamp-1" title={app.title}>
                                   {app.title}
                                 </div>
                               </div>
                               <button
                                 onClick={() => deleteApplication(app.id)}
-                                className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                                className="text-[var(--muted)] hover:text-[var(--red)] opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
                                 title="Delete tracked application"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-3 h-3" />
                               </button>
                             </div>
 
                             {/* AstrePilot Telemetry Badge */}
                             {isAstrePilot && (
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[var(--blue)] text-[10px] font-semibold">
-                                <Zap className="w-3 h-3 fill-[var(--blue)]" />
+                              <div className="ce-chip ce-chip-blue">
+                                <Zap className="w-2.5 h-2.5 fill-[var(--blue)]" />
                                 <span>AstrePilot Filled</span>
                                 {app.fieldsFilled != null && (
                                   <span>
-                                    ({app.fieldsFilled}/{app.fieldsTotal})
+                                    ({app.fieldsFilled}/{app.fieldsTotal || app.fieldsFilled})
                                   </span>
                                 )}
                               </div>
                             )}
 
-                            <div className="text-xs text-gray-500 flex justify-between items-center pt-1 border-t border-gray-100">
+                            <div className="text-[10px] text-[var(--muted)] flex justify-between items-center pt-1 border-t border-[var(--line)]">
                               <span
-                                className={`flex items-center gap-1 ${
-                                  isNeedsAttention ? "text-amber-700 font-semibold" : "text-gray-500"
+                                className={`flex items-center gap-1 font-mono ${
+                                  isNeedsAttention ? "text-[var(--amber)] font-bold" : "text-[var(--muted)]"
                                 }`}
                                 title={`Applied on: ${app.appliedDate}`}
                               >
-                                <Clock className="w-3 h-3" />
-                                {app.daysSilent > 0 ? `${app.daysSilent}d silent` : "Applied today"}
+                                <Clock className="w-2.5 h-2.5" />
+                                {app.daysSilent > 0 ? `${app.daysSilent}d silent` : "Today"}
                               </span>
                               {app.atsExtractabilityScore && (
-                                <span className="bg-[var(--blue-light)] text-[var(--blue)] px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold">
+                                <span className="ce-chip ce-chip-blue !min-h-4 !px-1.5 !text-[8px]">
                                   ATS: {app.atsExtractabilityScore}
                                 </span>
                               )}
                             </div>
 
                             {/* Quick Follow-up & Action Row */}
-                            <div className="flex items-center justify-between gap-1 pt-1">
+                            <div className="flex items-center justify-between gap-1 pt-0.5">
                               <button
                                 onClick={() => openFollowupModal(app)}
-                                className={`text-[11px] font-semibold px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+                                className={`text-[10px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 transition-colors ${
                                   isNeedsAttention
-                                    ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                                    : "bg-blue-50 text-[var(--blue)] hover:bg-blue-100"
+                                    ? "bg-[var(--amber-soft)] text-[var(--amber)] hover:bg-[var(--amber-soft)]/80"
+                                    : "bg-[var(--blue-soft)] text-[var(--blue)] hover:bg-[var(--blue-soft)]/80"
                                 }`}
                               >
-                                <Sparkles className="w-3 h-3" />
-                                {isNeedsAttention ? "⚡ Send Nudge" : "Draft Follow-up"}
+                                <Sparkles className="w-2.5 h-2.5" />
+                                {isNeedsAttention ? "Nudge" : "Follow-up"}
                               </button>
 
                               {app.jobUrl && (
@@ -875,18 +867,18 @@ export default function ApplicationsPage() {
                                   href={app.jobUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="p-1 border border-gray-200 rounded text-gray-500 hover:text-[var(--blue)] hover:border-[var(--blue)] transition-colors"
+                                  className="p-1 border border-[var(--line)] rounded text-[var(--muted)] hover:text-[var(--blue)] hover:border-[var(--blue)] transition-colors"
                                   title="Open original job posting"
                                 >
-                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  <ExternalLink className="w-3 h-3" />
                                 </a>
                               )}
                             </div>
 
                             {/* Stage Transition Selector */}
-                            <div className="pt-1">
+                            <div className="pt-0.5">
                               <select
-                                className="text-xs border border-gray-200 rounded p-1 w-full bg-gray-50 hover:bg-white text-gray-700 focus:outline-none"
+                                className="text-[10px] font-semibold border border-[var(--line)] rounded px-1.5 py-0.5 w-full bg-[var(--surface-muted)] hover:bg-[var(--surface)] text-[var(--ink)] focus:outline-none"
                                 value={app.status}
                                 onChange={(e) => updateStatus(app.id, e.target.value)}
                               >
@@ -901,7 +893,7 @@ export default function ApplicationsPage() {
                         );
                       })}
                       {colApps.length === 0 && (
-                        <div className="text-center py-6 text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg">
+                        <div className="text-center py-6 text-[10px] text-[var(--muted)] border border-dashed border-[var(--line)] rounded-md">
                           No applications
                         </div>
                       )}
@@ -916,37 +908,40 @@ export default function ApplicationsPage() {
 
       {/* ── Follow-up Studio Interactive Modal ────────────────────────────── */}
       {followupApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl border border-[var(--line)] shadow-xl max-w-xl w-full p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="ce-drawer-backdrop" role="dialog" aria-modal="true">
+          <div className="bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-2xl max-w-lg w-full p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-[var(--line)] pb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--blue)] bg-blue-50 px-2 py-0.5 rounded">
-                    ⚡ Follow-up Studio
+                  <span className="ce-chip ce-chip-blue">
+                    ⚡ FOLLOW-UP STUDIO
                   </span>
                   {followupApp.daysSilent >= 5 && (
-                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-                      {followupApp.daysSilent} Days Silent
+                    <span className="ce-chip ce-chip-amber">
+                      {followupApp.daysSilent} DAYS SILENT
                     </span>
                   )}
                 </div>
-                <h2 className="text-base font-bold text-[var(--ink)] mt-1">
+                <h2 className="text-[16px] font-bold tracking-[-.03em] text-[var(--ink)] mt-2">
                   Follow-up with {followupApp.company}
                 </h2>
-                <p className="text-xs text-[var(--muted)]">{followupApp.title}</p>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5">{followupApp.title}</p>
               </div>
               <button
                 onClick={() => setFollowupApp(null)}
-                className="text-gray-400 hover:text-gray-600 p-1"
+                className="ce-button-quiet !min-h-7 !px-1.5 text-[var(--muted)] hover:text-[var(--ink)]"
+                aria-label="Close modal"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Tone Selector Pills */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[var(--ink)]">Select Tone / Intent:</label>
+              <label className="font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">
+                Select Tone / Intent:
+              </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: "nudge", label: "Gentle Nudge", desc: "Friendly 1-week check-in" },
@@ -956,14 +951,14 @@ export default function ApplicationsPage() {
                   <button
                     key={t.id}
                     onClick={() => changeFollowupTone(t.id as any)}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
+                    className={`p-2.5 rounded-md border text-left transition-all ${
                       followupTone === t.id
-                        ? "border-[var(--blue)] bg-blue-50/50 shadow-xs"
-                        : "border-[var(--line)] hover:bg-gray-50"
+                        ? "border-[var(--blue)] bg-[var(--blue-soft)] shadow-2xs"
+                        : "border-[var(--line)] hover:bg-[var(--surface-muted)]"
                     }`}
                   >
-                    <div className="text-xs font-bold text-[var(--ink)]">{t.label}</div>
-                    <div className="text-[10px] text-[var(--muted)] mt-0.5">{t.desc}</div>
+                    <div className="text-[11px] font-bold text-[var(--ink)]">{t.label}</div>
+                    <div className="text-[9px] text-[var(--muted)] mt-0.5 leading-snug">{t.desc}</div>
                   </button>
                 ))}
               </div>
@@ -971,31 +966,31 @@ export default function ApplicationsPage() {
 
             {/* AI Generated Content Area */}
             {isGeneratingFollowup ? (
-              <div className="h-44 flex flex-col items-center justify-center space-y-2 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                <Sparkles className="w-6 h-6 text-[var(--blue)] animate-spin" />
-                <span className="text-xs text-[var(--muted)]">Crafting tailored follow-up draft...</span>
+              <div className="h-40 flex flex-col items-center justify-center space-y-2 bg-[var(--surface-muted)] rounded-md border border-dashed border-[var(--line)]">
+                <Sparkles className="w-5 h-5 text-[var(--blue)] animate-spin" />
+                <span className="text-[11px] text-[var(--muted)]">Crafting tailored follow-up draft...</span>
               </div>
             ) : followupDraft ? (
               <div className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded-lg border border-[var(--line)] space-y-2">
-                  <div className="text-xs">
-                    <span className="font-semibold text-gray-500">Subject: </span>
-                    <span className="font-medium text-[var(--ink)]">{followupDraft.subject}</span>
+                <div className="p-3 bg-[var(--surface-muted)] rounded-md border border-[var(--line)] space-y-2">
+                  <div className="text-[11px]">
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--muted)]">Subject: </span>
+                    <span className="font-bold text-[var(--ink)]">{followupDraft.subject}</span>
                   </div>
-                  <div className="border-t border-gray-200 pt-2 text-xs text-gray-700 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                  <div className="border-t border-[var(--line)] pt-2 text-[11px] text-[var(--ink-soft)] whitespace-pre-wrap leading-relaxed max-h-44 overflow-y-auto font-sans">
                     {followupDraft.body}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 pt-2">
+                <div className="flex items-center justify-between gap-2 pt-1">
                   <button
                     onClick={() => copyToClipboard(followupDraft.fullDraft)}
-                    className="ce-btn ce-btn-secondary text-xs flex items-center gap-1.5"
+                    className="ce-button-secondary !min-h-8 !px-3 !text-[11px] flex items-center gap-1.5"
                   >
                     {copiedFollowup ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-700 font-semibold">Copied to Clipboard!</span>
+                        <Check className="w-3.5 h-3.5 text-[var(--green)]" />
+                        <span className="text-[var(--green)] font-bold">Copied to Clipboard!</span>
                       </>
                     ) : (
                       <>
@@ -1007,7 +1002,7 @@ export default function ApplicationsPage() {
 
                   <a
                     href={followupDraft.mailtoUrl}
-                    className="ce-btn ce-btn-primary text-xs flex items-center gap-1.5"
+                    className="ce-button-primary !min-h-8 !px-3 !text-[11px] flex items-center gap-1.5"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Open in Email App</span>
@@ -1021,3 +1016,48 @@ export default function ApplicationsPage() {
     </div>
   );
 }
+
+/** ── Segmented Telemetry Metric Cell ─────────────────────────────────────── */
+function TelemetryCell({
+  icon,
+  label,
+  value,
+  note,
+  blue,
+  amber,
+  green,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  note: string;
+  blue?: boolean;
+  amber?: boolean;
+  green?: boolean;
+}) {
+  const iconColor = blue
+    ? "bg-[var(--blue-soft)] text-[var(--blue)]"
+    : amber
+    ? "bg-[var(--amber-soft)] text-[var(--amber)]"
+    : green
+    ? "bg-[var(--green-soft)] text-[var(--green)]"
+    : "bg-[var(--surface-muted)] text-[var(--muted)]";
+
+  return (
+    <div className="flex min-h-20 items-center gap-3 p-3.5 transition-colors hover:bg-[var(--surface-muted)]/50">
+      <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${iconColor}`}>
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <span className="block font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[var(--muted)] truncate">
+          {label}
+        </span>
+        <strong className="mt-1 block text-[22px] font-bold leading-none tracking-[-.05em] text-[var(--ink)]">
+          {value}
+        </strong>
+        <small className="mt-1.5 block text-[9px] text-[var(--muted)] truncate">{note}</small>
+      </div>
+    </div>
+  );
+}
+
