@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnConnect = document.getElementById('btn-connect');
   const btnAutoToken = document.getElementById('btn-auto-token');
   const btnSettingsToggle = document.getElementById('btn-settings-toggle');
+  const btnEnvProd = document.getElementById('btn-env-prod');
+  const btnEnvLocal = document.getElementById('btn-env-local');
 
   const inputOrigin = document.getElementById('input-origin');
   const inputToken = document.getElementById('input-token');
@@ -157,7 +159,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       setConnectedBadge(true);
       userName.textContent = profile.fullName || 'AstreWork Candidate';
-      userTitle.textContent = profile.title || 'Engineer';
+      userTitle.textContent = profile.title || 'Developer';
+
+      // Highlight active environment pill
+      const isLocal = cleanOrigin.includes('localhost') || cleanOrigin.includes('127.0.0.1');
+      if (btnEnvProd && btnEnvLocal) {
+        btnEnvProd.classList.toggle('active', !isLocal);
+        btnEnvLocal.classList.toggle('active', isLocal);
+      }
 
       // Initials
       const parts = (profile.fullName || 'AW').trim().split(/\s+/);
@@ -191,6 +200,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       setConnectedBadge(false);
       showView(viewSetup);
     }
+  }
+
+  // 1-Click Environment Switcher
+  if (btnEnvProd) {
+    btnEnvProd.addEventListener('click', async () => {
+      const { token } = await getStoredConfig();
+      inputOrigin.value = 'https://astrework.app';
+      await saveConfig(token, 'https://astrework.app');
+      initialize();
+    });
+  }
+
+  if (btnEnvLocal) {
+    btnEnvLocal.addEventListener('click', async () => {
+      const { token } = await getStoredConfig();
+      inputOrigin.value = 'http://localhost:3000';
+      await saveConfig(token, 'http://localhost:3000');
+      initialize();
+    });
   }
 
   // Launch HUD

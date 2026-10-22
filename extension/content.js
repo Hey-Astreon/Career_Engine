@@ -535,13 +535,33 @@
 
   function getLabelText(input) {
     const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
-    const labelEl = input.labels && input.labels[0];
     let labelText = '';
+    const labelEl = input.labels && input.labels[0];
     if (labelEl) {
       for (let n = 0; n < labelEl.childNodes.length; n++) {
         if (labelEl.childNodes[n].nodeType === 3) labelText += labelEl.childNodes[n].textContent;
       }
-      if (!labelText) labelText = labelEl.textContent;
+      if (!labelText) labelText = labelEl.textContent || '';
+    }
+    // Check aria-labelledby if label is empty
+    if (!labelText && input.getAttribute('aria-labelledby')) {
+      const labelledByEl = document.getElementById(input.getAttribute('aria-labelledby'));
+      if (labelledByEl) labelText = labelledByEl.textContent || '';
+    }
+    // Check explicit label[for="id"]
+    if (!labelText && input.id && input.ownerDocument) {
+      try {
+        const forLabel = input.ownerDocument.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+        if (forLabel) labelText = forLabel.textContent || '';
+      } catch (e) {}
+    }
+    // Check parent or sibling container label (crucial for iCIMS, Workday, Taleo table rows)
+    if (!labelText) {
+      const container = input.closest('.form-group, .field, .form-row, tr, div');
+      if (container) {
+        const nearLabel = container.querySelector('label, .iCIMS_Label, .field-label, [class*="label" i]');
+        if (nearLabel) labelText = nearLabel.textContent || '';
+      }
     }
     const placeholder = (input.placeholder || '').toLowerCase();
     return [ariaLabel, labelText.toLowerCase(), placeholder].join(' ').replace(/\s+/g, ' ');
@@ -560,6 +580,8 @@
       (input.getAttribute('name') || '').toLowerCase(),
       (input.getAttribute('id') || '').toLowerCase(),
       (input.getAttribute('placeholder') || '').toLowerCase(),
+      (input.getAttribute('autocomplete') || '').toLowerCase(),
+      (input.getAttribute('data-automation-id') || '').toLowerCase(),
     ].join(' ');
 
     const labelSignal = getLabelText(input);
@@ -612,7 +634,7 @@
       if ((labelSignal.includes('address') || attrSignal.includes('address') || labelSignal.includes('street') || attrSignal.includes('street')) && !labelSignal.includes('email') && !attrSignal.includes('email') && !labelSignal.includes('web') && !attrSignal.includes('url')) {
         return 'ADDRESS';
       }
-      if (labelSignal.includes('zip') || labelSignal.includes('postal') || attrSignal.includes('zip') || attrSignal.includes('postal') || labelSignal.includes('pin code') || labelSignal.includes('pincode')) {
+      if (labelSignal.includes('zip') || labelSignal.includes('postal') || attrSignal.includes('zip') || attrSignal.includes('postal') || labelSignal.includes('pin code') || labelSignal.includes('pincode') || attrSignal.includes('postalcode') || attrSignal.includes('postal_code') || attrSignal.includes('postal-code')) {
         return 'ZIP';
       }
       if (labelSignal.includes('city') || attrSignal.includes('city') || labelSignal.includes('town')) {
@@ -703,7 +725,7 @@
 
 
   /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
-  function setNativeValue(el, value) {
+  function setNativeValue(el, value, isFinal = true) {
     if (el.tagName === 'INPUT' && el.type === 'radio') {
       const radios = el.name
         ? document.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
@@ -813,6 +835,12 @@
       return;
     }
 
+    try {
+      if (document.activeElement !== el) {
+        el.focus();
+      }
+    } catch (e) {}
+
     const proto = el.tagName === 'TEXTAREA'
       ? window.HTMLTextAreaElement.prototype
       : window.HTMLInputElement.prototype;
@@ -821,9 +849,15 @@
     if (el._valueTracker) {
       try { el._valueTracker.setValue(''); } catch(e) {}
     }
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-    el.dispatchEvent(new Event('blur', { bubbles: true }));
+    try {
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: String(value) }));
+    } catch (e) {
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (isFinal) {
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('blur', { bubbles: true }));
+    }
   }
 
   /* -- TYPE LABELS -- */
@@ -855,7 +889,12 @@
       case 'COUNTRY':      return profile.country || loc.country || null;
       case 'ADDRESS':      return profile.streetAddress || profile.city || loc.city || null;
       case 'APT':          return profile.apartment || null;
-      case 'ZIP':          return profile.zipCode || '800020';
+      case 'ZIP': {
+        const rawZip = String(profile.zipCode || '800020').trim();
+        const el = field.element;
+        if (el && el.maxLength === 5) return rawZip.slice(0, 5);
+        return rawZip;
+      }
       case 'HEAR_ABOUT':   return profile.referralSource || 'LinkedIn';
       case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
       case 'LINKEDIN':     return profile.linkedinUrl || null;
@@ -900,7 +939,18 @@
       case 'COUNTRY':     return profile.country || loc.country || '';
       case 'ADDRESS':     return profile.streetAddress || profile.city || loc.city || '';
       case 'APT':         return profile.apartment || '';
-      case 'ZIP':         return profile.zipCode || '800020';
+      case 'ZIP': {
+        const rawZip = String(profile.zipCode || '800020').trim();
+        const el = field.element;
+        if (el) {
+          if (el.maxLength === 5) return rawZip.slice(0, 5);
+          const pattern = el.getAttribute('pattern') || '';
+          if (pattern.includes('{5}') || pattern === '\\d{5}') return rawZip.slice(0, 5);
+          const placeholder = (el.placeholder || '').trim();
+          if (/^\d{5}$/.test(placeholder) || placeholder.toLowerCase() === '12345') return rawZip.slice(0, 5);
+        }
+        return rawZip;
+      }
       case 'HEAR_ABOUT':  return profile.referralSource || 'LinkedIn';
       case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
       case 'LINKEDIN':    return profile.linkedinUrl;
@@ -1273,11 +1323,11 @@
       const skipped = !val || String(val).trim() === '';
 
       if (!skipped) {
-        if (f.element.tagName === 'SELECT' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
-          setNativeValue(f.element, val);
+        if (f.element.tagName === 'SELECT' || f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
+          setNativeValue(f.element, val, true);
         } else {
           AstrePilotHUD.highlight(f.element);
-          await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v) => setNativeValue(el, v));
+          await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
         }
         filled++;
       }

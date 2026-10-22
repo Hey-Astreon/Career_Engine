@@ -666,12 +666,12 @@ window.AstrePilotHUD = (function () {
         const type = () => {
           if (i < value.length) {
             const nextChunk = value.substring(0, i + chunkSize);
-            setNativeValue(inputEl, nextChunk);
+            setNativeValue(inputEl, nextChunk, false);
             if (onTick) onTick();
             i += chunkSize;
             setTimeout(type, delay);
           } else {
-            setNativeValue(inputEl, value);
+            setNativeValue(inputEl, value, true);
             resolve();
           }
         };
