@@ -16,7 +16,7 @@ import { ASHBY_BOARDS, classifyAtsResponse } from "./ats_directory";
 export class AshbyProvider implements JobSourceProvider {
   name = "Ashby ATS";
   providerKey = PlatformSource.ASHBY;
-  timeoutMs = 15000;
+  timeoutMs = 25000;
 
   async fetch(): Promise<ProviderResult> {
     const startTime = Date.now();

@@ -74,10 +74,32 @@
   };
   window.addEventListener('keydown', keydownListener);
 
+  /* -- MULTI-STEP NAVIGATION TRACKER -- */
+  const STEP_BUTTON_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|submit\s*and\s*continue)$/i;
+
+  const clickNavListener = (e) => {
+    const target = e.target && e.target.closest ? e.target.closest('button, a, input[type="submit"], input[type="button"]') : null;
+    if (!target) return;
+    const txt = (target.innerText || target.textContent || target.value || '').trim();
+    if (STEP_BUTTON_REGEX.test(txt) || (activeHud && (target.type === 'submit' || target.getAttribute('role') === 'button'))) {
+      try { sessionStorage.setItem('ap_auto_open', 'true'); } catch (err) {}
+      // If HUD is currently mounted and active, check for in-page SPA transition after a short delay
+      if (activeHud) {
+        setTimeout(() => {
+          if (activeHud && !isFilling) {
+            rescanFields();
+          }
+        }, 1200);
+      }
+    }
+  };
+  document.addEventListener('click', clickNavListener, true);
+
   const oldCleanup = window.__ASTREPILOT_CLEANUP__;
   window.__ASTREPILOT_CLEANUP__ = () => {
     if (oldCleanup) try { oldCleanup(); } catch(e) {}
     window.removeEventListener('keydown', keydownListener);
+    document.removeEventListener('click', clickNavListener, true);
   };
 
   /* -- HELPERS -- */
@@ -688,7 +710,7 @@
 
     targetDocs.forEach(targetDoc => {
       const inputs = targetDoc.querySelectorAll(
-        'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="radio"], input[type="checkbox"], input:not([type]), textarea, select'
+        'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="radio"], input[type="checkbox"], input[type="search"], input:not([type]), textarea, select'
       );
 
       inputs.forEach(inp => {
@@ -1085,6 +1107,7 @@
       onExtractJD: runExtractJD,
       onDownloadResume: runDownloadResume,
       onSyncHarvester: runSyncHarvester,
+      onRescan: rescanFields,
       onClose: () => {
         if (detectedFields) {
           detectedFields.forEach(f => f.element.classList.remove('ap-field-active', 'ap-field-done'));
@@ -1117,7 +1140,6 @@
     });
 
     activeHud.setState('scanning');
-    detectedFields = scanFields();
 
     // Check for catalog jobs (Wellfound / Jobright)
     const catalogData = extractCatalogJobs();
@@ -1130,8 +1152,16 @@
       });
     }
 
+    applyDetectedFields(scanFields(), catalogData);
+  }
+
+  function applyDetectedFields(fields, catalogData) {
+    if (!activeHud) return;
+    detectedFields = fields || [];
+
     if (detectedFields.length === 0) {
-      if (catalogData && catalogData.jobs.length > 0) {
+      const cat = catalogData || extractCatalogJobs();
+      if (cat && cat.jobs.length > 0) {
         activeHud.setState('catalog');
       } else {
         activeHud.setState('no-fields');
@@ -1156,6 +1186,12 @@
     activeHud.setFields(hudFields);
     activeHud.setProgress(0, detectedFields.length);
     activeHud.setState('ready');
+  }
+
+  function rescanFields() {
+    if (!activeHud || isFilling) return;
+    const fields = scanFields();
+    applyDetectedFields(fields);
   }
 
   async function runAutofill() {
@@ -1421,11 +1457,17 @@
     }
   }
 
-  // Auto-launch if we just clicked an apply button and stayed on the same domain
+  // Auto-launch if we just clicked an apply button or next/continue step and navigated
   if (sessionStorage.getItem('ap_auto_open') === 'true') {
     sessionStorage.removeItem('ap_auto_open');
-    setTimeout(() => {
-      toggleAstrePilotHUD();
+    setTimeout(async () => {
+      await toggleAstrePilotHUD();
+      // If dynamic ATS loaded fields with a slight delay, trigger a re-scan
+      setTimeout(() => {
+        if (activeHud && detectedFields.length === 0 && !isFilling) {
+          rescanFields();
+        }
+      }, 1000);
     }, 1000);
   }
 })();

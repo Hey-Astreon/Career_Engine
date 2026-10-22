@@ -52,7 +52,7 @@ export class JobrightProvider implements JobSourceProvider {
           remoteOnly: true,
           maxJobs: 25,
         },
-        { timeout: 12000 }
+        { timeout: 2500 }
       );
 
       if (res.data && Array.isArray(res.data.jobs)) {

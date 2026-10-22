@@ -16,7 +16,7 @@ import { GREENHOUSE_BOARDS, classifyAtsResponse } from "./ats_directory";
 export class GreenhouseProvider implements JobSourceProvider {
   name = "Greenhouse ATS";
   providerKey = PlatformSource.GREENHOUSE;
-  timeoutMs = 12000;
+  timeoutMs = 25000;
 
   async fetch(): Promise<ProviderResult> {
     const startTime = Date.now();

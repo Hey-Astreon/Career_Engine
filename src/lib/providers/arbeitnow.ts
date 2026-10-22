@@ -23,7 +23,7 @@ interface ArbeitnowItem {
 export class ArbeitnowProvider implements JobSourceProvider {
   name = "Arbeitnow";
   providerKey = PlatformSource.ARBEITNOW;
-  timeoutMs = 8000;
+  timeoutMs = 15000;
 
   async fetch(): Promise<ProviderResult> {
     const startTime = Date.now();
@@ -34,7 +34,8 @@ export class ArbeitnowProvider implements JobSourceProvider {
     try {
       const response = await fetch("https://www.arbeitnow.com/api/job-board-api", {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          Accept: "application/json",
         },
         signal: AbortSignal.timeout(this.timeoutMs),
       });
@@ -51,7 +52,34 @@ export class ArbeitnowProvider implements JobSourceProvider {
         };
       }
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("json")) {
+        return {
+          providerKey: this.providerKey,
+          jobs: [],
+          success: false,
+          error: `Arbeitnow returned non-JSON payload (${contentType.slice(0, 30)})`,
+          durationMs: Date.now() - startTime,
+          jobsDiscovered: 0,
+          jobsRejected: 0,
+        };
+      }
+
+      let data: any;
+      try {
+        data = await response.json();
+      } catch (jsonErr: any) {
+        return {
+          providerKey: this.providerKey,
+          jobs: [],
+          success: false,
+          error: `Failed to parse Arbeitnow JSON: ${jsonErr.message}`,
+          durationMs: Date.now() - startTime,
+          jobsDiscovered: 0,
+          jobsRejected: 0,
+        };
+      }
+
       const items: ArbeitnowItem[] = data.data || [];
 
       for (const item of items) {

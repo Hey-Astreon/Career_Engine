@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 48: Total Candidate PDF Regeneration, Section 5 BCA Title Compliance, AstreWork Flagship Restoration, 401 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 48: Full System Health Audit, Database Seeding Synchronization, Scraper Timeout Defense, AstrePilot Multi-Step Form Hardening, 41-Check Diagnostic CLI, 401 Passing Tests)
 
 ---
 
@@ -1038,6 +1038,31 @@ Located in `extension/`:
     - Typecheck: `npx tsc --noEmit` exited with 0 errors.
     - Production Build: Next.js 16 (Turbopack) successfully compiled all 59 production routes (`59/59`).
 
+- [x] **Phase 47: Candidate PDF Regeneration, AstreWork Flagship Placement & Section 5 BCA Title Compliance (Oct 22, 2026)**
+  - Recompiled all 19 unique variants across both candidates (33 files total) using Playwright headless compiler (`scripts/generate-all-candidate-resumes.mjs`).
+  - Enforced 100% single-page A4 geometry (297mm height, 210mm width, 5.2mm top / 4.2mm bottom margins) with 2-column hanging indent for technical skills and horizontal header pinning for project links.
+  - Eliminated deprecated `IDBI FinSync` project and elevated **`AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester`** as Project #1 across all resumes.
+  - Strictly purged forbidden "Engineer" titles in compliance with Section 5 BCA Title Regulation across all master profiles, resumes, and routes.
+  - Created automated Vitest suite (`tests/candidate_resumes_audit.test.ts`) with 35 assertions parsing all 33 physical `.pdf` files with `pdf-parse`, verifying single-page geometry, AstreWork presence, and zero Engineer occurrences.
+
+- [x] **Phase 48: Full System Health Audit, Database Seeding Synchronization, Scraper Timeout Defense & AstrePilot Multi-Step Form Hardening (Oct 22, 2026)**
+  - **1. Database Relational Seeding Synchronization:**
+    - Executed `scripts/seed-candidate-profiles.ts` populating relational `Project` records (`AstreWork`, `Astra Vision`, `Alyra Lock`) and `VirtualExperience` records (`CommBank`, `Shiptivity`, `Walmart`) in Turso Cloud LibSQL.
+  - **2. Scraper Timeout Resilience & Cloudflare Hardening:**
+    - Hardened `Arbeitnow` with HTTP `Content-Type` inspection and safe JSON parse fallback against Cloudflare HTML challenges; expanded timeout to 15s.
+    - Calibrated `Greenhouse` and `Ashby` timeouts to 25s for large asynchronous job board ingestion.
+    - Added 2.5s fast-fail standby for `Jobright` and `Wellfound` local agent core to prevent 12s hangs when offline.
+  - **3. AstrePilot Extension Multi-Step Form Persistence:**
+    - Added `input[type="search"]` to `scanFields` selector to capture comboboxes and searchable selects.
+    - Added delegated click listener for multi-step navigation buttons (`Next`, `Continue`, `Save & Continue`, `Save and Continue`, `Next Step`, `Proceed`, `Review Application`), setting `sessionStorage.setItem('ap_auto_open', 'true')` for automatic re-opening across steps.
+    - Added dynamic `rescanFields()` with in-page observer for SPA step transitions without full page reload.
+    - Repackaged extension into `public/downloads/astrepilot-extension.zip`.
+  - **4. Comprehensive System Diagnostic CLI (`scripts/diagnose-full-pipeline.ts`):**
+    - Built and executed 41-check end-to-end diagnostic runner checking DB profiles, relational projects, job postings volume, candidate PDF page count and prohibited word audit, extension HMAC token verification, extension zip distribution, and scraper defenses. All 41 checks passed green (41/41).
+  - **5. Automated Verification:**
+    - Vitest: All 39 test files and 401 tests passed green (`npx vitest run`).
+    - Typecheck: `npx tsc --noEmit` clean with 0 errors.
+
 ---
 
 ## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
@@ -1614,6 +1639,47 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 * **Hard-Won Engineering Experience & Rules:**
   - **Rule:** Never stream static binary files from disk without automated CI/CD test assertions verifying their internal text content against the codebase's baseline laws. Every binary file in `public/candidates/` must be audited for page count, prohibited words, and project currency on every build.
   - **Rule:** When modifying baseline data in code (`resumeBaseline.ts`), compile and update the binary distribution artifacts (`.pdf`) in the exact same atomic commit.
+
+### 🔴 Case 22: Full System Health Audit, Database-Disk Synchronization, Scraper Timeout Defense, and AstrePilot Multi-Step Form Hardening
+
+* **What Happened:**
+  Following the discovery of the stale candidate PDFs in Case 21, the user invoked `/plan` demanding an end-to-end, root-cause health audit and hardening across the entire system (scrapers, database, extension, and pipelines)—refusing superficial "code compiled so it works" assumptions.
+
+* **The Root Causes / Mistake:**
+  1. **Database Relational Models Unseeded:** Turso Cloud database had candidate `Profile` rows, but candidate `Project` relational rows (`AstreWork`, `Astra Vision`, `Alyra Lock`) and `VirtualExperience` relational rows (`CommBank`, `Shiptivity`, `Walmart`) were empty in Turso Cloud. This meant API queries that joined relations didn't return the candidate's actual projects.
+  2. **Transient Scraper Hangs on Cloudflare / Offline Agent Core:**
+     - `Arbeitnow` API calls threw unhandled JSON parse errors when Cloudflare returned HTML error challenge pages.
+     - `Jobright` and `Wellfound` scrapers attempted to contact a local Python agent core on `127.0.0.1:8000` with 12s timeouts, delaying scrapers when the local agent core is in standby.
+     - `Greenhouse` and `Ashby` scrapers on high-volume runs hit 15s timeouts when aggregating large job boards.
+  3. **AstrePilot Multi-Step ATS Forms Dropouts:**
+     - Modern ATS platforms (Workday, iCIMS, Taleo, Greenhouse multi-page questionnaires) break single applications into multiple steps with "Next", "Continue", or "Save & Continue" buttons.
+     - When navigating to Step 2, AstrePilot HUD closed without persisting state.
+     - Dynamic searchable combo-boxes (`input[type="search"]`) for countries, states, degrees, and phone codes were omitted from `scanFields` query selectors.
+
+* **How We Solved It:**
+  1. **Candidate Profile Database Seeding (`scripts/seed-candidate-profiles.ts`):**
+     - Upserted relational `Project` records (AstreWork flagship, Astra Vision, Alyra Lock) with live URLs, tech stacks, and bullet points for both Roushan Kumar and Ayushi Raj in Turso Cloud LibSQL.
+     - Upserted relational `VirtualExperience` records (CommBank, Shiptivity, Walmart) with problem scope, action taken, and outcome metrics.
+  2. **Scraper Resilience & Timeout Calibration:**
+     - `src/lib/providers/arbeitnow.ts`: Added HTTP `Content-Type` header verification and safe JSON parse fallback against Cloudflare HTML blocks; expanded timeout to 15s.
+     - `src/lib/providers/greenhouse.ts` & `ashby.ts`: Expanded fetch timeout to 25s for large boards.
+     - `src/lib/providers/jobright.ts` & `wellfound.ts`: Calibrated local agent core standby timeout to 2500ms fast-fail with graceful logging.
+  3. **AstrePilot Extension Multi-Step Hardening (`extension/content.js`):**
+     - Added `input[type="search"]` to `scanFields` selector to capture comboboxes and searchable selects.
+     - Added global delegated click listener on multi-step buttons matching `STEP_BUTTON_REGEX` (`Next`, `Continue`, `Save & Continue`, `Save and Continue`, `Next Step`, `Proceed`, `Review Application`, etc.), writing `sessionStorage.setItem('ap_auto_open', 'true')` so AstrePilot automatically re-opens on the next step.
+     - Added dynamic `rescanFields()` hook with in-page observer for SPA step transitions.
+     - Repackaged extension into `public/downloads/astrepilot-extension.zip`.
+  4. **Comprehensive System Diagnostic CLI (`scripts/diagnose-full-pipeline.ts`):**
+     - Built a 41-check end-to-end diagnostic runner checking database profiles, relational projects, job postings volume, candidate PDF page count and prohibited word audit, extension HMAC token verification, extension zip distribution, and scraper defenses in <2s.
+  5. **Complete Verification:**
+     - All 41 system diagnostic checks passed green (41/41).
+     - Full Vitest test suite: all 39 test files and 401 tests passed green (`npx vitest run`).
+     - TypeScript compiler check: `npx tsc --noEmit` exited clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never assume relational database tables are populated just because the parent entity exists. Always verify relational foreign key child models (`Project`, `VirtualExperience`) with live queries.
+  - **Rule:** Always inspect `Content-Type` before calling `.json()` on public web scraping endpoints that sit behind Cloudflare or WAFs.
+  - **Rule:** Multi-step ATS application forms require navigation event listening and `sessionStorage` flag propagation to maintain agent continuity across steps.
 
 ---
 
