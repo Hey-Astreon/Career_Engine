@@ -7,7 +7,7 @@
 > **OVERRIDE SECURITY CODE:** `9926`  
 > **WORKSPACE ROOT:** `X:\Career_Engine`  
 > **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 49: AstrePilot Full ATS Form Coverage, React-Select Modern ATS Combobox Automation Engine, Section & Screening Heuristics, Profile Enrichment, 41-Check Diagnostic CLI, 401 Passing Tests)
+> **LAST COGNITIVE SYNC:** October 22, 2026 (Phase 50: AstrePilot Active Menu Scoping, Indian-to-Asian EEO Mapping, School 'Other' Fallback, Synthetic Checkbox State Synchronization, 41-Check Diagnostic CLI)
 
 ---
 
@@ -1720,6 +1720,47 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 * **Hard-Won Engineering Experience & Rules:**
   - **Rule:** Never assume an ATS dropdown is a native HTML `<select>`. Modern ATS platforms (Greenhouse, Lever, Ashby, Workable) almost universally use React-Select comboboxes (`input.select__input[role="combobox"]`). Always support custom synthetic dropdown interaction cycles with portal option traversal.
   - **Rule:** Never drop unclassified dropdowns in job applications. If an element is a select or combobox inside a question container, classify it as `SCREENING_SELECT` with contextual sentiment evaluation (Yes/No).
+
+### 🔴 Case 24: AstrePilot Active Menu Scoping, Indian-to-Asian EEO Mapping, School 'Other' Fallback, and Synthetic Checkbox State Synchronization
+
+* **What Happened:**
+  While AstrePilot achieved a major milestone by detecting and processing 46 fields on Coinbase Greenhouse (up from 12), live testing revealed a few subtle dropdowns that remained unselected:
+  - "Please identify your race": Stayed at `Select...` with the menu open. Candidate from India noted that Indian falls under Asian in US EEO standards.
+  - "School": Amity University was not in Greenhouse's hardcoded university dictionary, so the field stayed empty instead of selecting "0 - Other" / "Other".
+  - "Please confirm receipt of Privacy Agreement": Coinbase options were "Confirmed" rather than "Yes/No", causing standard boolean matching to miss it.
+  - "Which of the following best describes how you use AI tools today?": Required option matching "regularly use AI tools", but candidate profile was passing a long 100-character description that didn't match dropdown option text.
+  - "Current role": Checkbox remained unchecked because programmatic `el.checked = true` didn't dispatch a native `click` event required by React's synthetic event handler.
+
+* **The Root Causes / Mistake:**
+  1. **Fixed 60ms Menu Mount Race Condition:** Heavy React-Select dropdowns with large option trees (like School or Race) took >60ms to mount in the DOM. The static 60ms timeout caused `getAvailableOptions()` to return empty, triggering an errant second toggle click that closed/hung the menu.
+  2. **Global Option Collision:** Searching `document.querySelectorAll('.select__option')` queried lingering options from other dropdowns instead of scoping to the currently active `.select__menu`.
+  3. **Subtle Race Option Trap:** In US EEO-1 standards, Indian candidates fall under `Asian`. Substring searching for "Indian" accidentally matched "American Indian or Alaskan Native" (indigenous North American), which is incorrect for South Asian candidates.
+  4. **Lack of Fallback for Unlisted Schools:** Most ATS platforms maintain a fixed university dictionary. When a candidate's university (e.g. Amity University) is not in the list, platforms provide a universal `"0 - Other"` or `"Other"` escape hatch which was not utilized.
+  5. **React Checkbox Synthetic Event Desynchronization:** Directly setting `el.checked = true` on React-controlled checkbox inputs bypassed React's internal fiber tracker unless a native `click` event or `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'checked').set` was invoked.
+
+* **How We Solved It:**
+  1. **Adaptive Menu Polling & Active Menu Scoping (`extension/content.js`):**
+     - Replaced static 60ms wait with an adaptive polling loop (`while (Date.now() - startTime < 650)`) waiting for `.select__menu` to render.
+     - Scoped option queries strictly to `activeMenu` so options from previously opened dropdowns never collide.
+  2. **Indian-to-Asian EEO Protection:**
+     - Explicitly mapped Indian/India to `Asian` in synonym dictionaries.
+     - Enforced strict matching: `(t === 'asian' || t.startsWith('asian')) && !t.includes('american indian')`, guaranteeing Indian candidates select `Asian` with 100% precision.
+  3. **School 'Other' Fallback:**
+     - Added Stage B in `fillReactSelect`: if `fieldType === 'SCHOOL'` and candidate's university is not in the options list, automatically matches and selects `0 - Other` / `Other` / `Not Listed`.
+  4. **Exact Coinbase Compliance Options:**
+     - `PRIVACY_CONSENT`: mapped to `'Confirmed'`.
+     - `AI_USAGE`: mapped to `'regularly use AI tools'` (matching *"I regularly use AI tools to speed up existing tasks..."*).
+  5. **Synthetic Checkbox State Synchronization (`setNativeValue`):**
+     - In `setNativeValue`, checked if `el.checked !== shouldCheck`, invoked `el.click()`, and synchronized with `HTMLInputElement.prototype.checked.set`.
+  6. **Repackaged Extension & Health Check:**
+     - Repackaged `public/downloads/astrepilot-extension.zip`.
+     - Verified all 41 diagnostic checks pass (`npx tsx scripts/diagnose-full-pipeline.ts`).
+     - Verified TypeScript compiles clean with 0 errors (`npx tsc --noEmit`).
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never use static timeouts for portal-mounted dropdown menus. Always use adaptive polling (`while (Date.now() - startTime < maxWait)`) to detect DOM mounting.
+  - **Rule:** When matching demographic race for candidates from the Indian subcontinent under US EEO regulations, strictly map to `Asian` and actively exclude `American Indian`.
+  - **Rule:** For university/school dropdowns on modern ATS platforms, always provide an intelligent fallback to `0 - Other` / `Other` when the candidate's university is not in the platform's proprietary dictionary.
 
 ---
 

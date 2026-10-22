@@ -837,25 +837,24 @@
 
 
   /* -- REACT-SELECT & MODERN ATS COMBOBOX AUTOMATION ENGINE -- */
-  async function fillReactSelect(inputEl, targetVal) {
+  /* -- REACT-SELECT & MODERN ATS COMBOBOX AUTOMATION ENGINE -- */
+  async function fillReactSelect(inputEl, targetVal, fieldType = '') {
     if (!inputEl || !targetVal) return false;
     const targetValLower = String(targetVal).toLowerCase().trim();
     const container = (inputEl.closest && inputEl.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"]')) || inputEl.parentElement;
     if (!container) return false;
 
     // 1. Locate the dropdown open trigger
-    const toggleBtn = container.querySelector('.select__indicators button, [aria-label*="Toggle flyout"], .select__indicator, [class*="indicatorContainer"], [class*="dropdown-indicator"]') ||
-                      container.querySelector('.select__control') ||
-                      container;
+    const indicatorBtn = container.querySelector('.select__indicators button, [aria-label*="Toggle flyout"], .select__indicator, [class*="indicatorContainer"], [class*="dropdown-indicator"]') ||
+                         container.querySelector('.select__control') ||
+                         container;
 
     // Dispatch mousedown/mouseup/click sequence to trigger flyout
-    toggleBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
-    toggleBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
-    toggleBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+    indicatorBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10, view: window }));
+    indicatorBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, clientX: 10, clientY: 10, view: window }));
+    indicatorBtn.click();
 
-    await new Promise(r => setTimeout(r, 60));
-
-    // For filterable comboboxes (e.g. School, Major), type into the input to filter options
+    // Type into input if filterable combobox (e.g. School, Major)
     if (inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
       try {
         if (document.activeElement !== inputEl) inputEl.focus();
@@ -864,24 +863,36 @@
         if (setter && setter.set) { setter.set.call(inputEl, targetVal); } else { inputEl.value = targetVal; }
         inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: String(targetVal) }));
       } catch (e) {}
-      await new Promise(r => setTimeout(r, 80));
     }
 
-    // 2. Query available options in active document & portals
-    function getAvailableOptions() {
-      const doc = inputEl.ownerDocument || document;
-      return Array.from(doc.querySelectorAll('.select__option, [role="option"], [class*="option"], [id*="-option-"]'))
+    // Wait up to 650ms for active menu to appear in DOM with polling
+    let activeMenu = null;
+    let options = [];
+    const startTime = Date.now();
+    while (Date.now() - startTime < 650) {
+      const menus = Array.from(document.querySelectorAll('.select__menu, [id*="menu-"], div[class*="menu"]'));
+      for (let i = menus.length - 1; i >= 0; i--) {
+        if (menus[i].offsetParent !== null || menus[i].getBoundingClientRect().height > 0) {
+          activeMenu = menus[i];
+          break;
+        }
+      }
+      if (!activeMenu && menus.length > 0) activeMenu = menus[menus.length - 1];
+
+      if (activeMenu) {
+        options = Array.from(activeMenu.querySelectorAll('.select__option, [role="option"], div[id*="option"]'));
+        if (options.length > 0) break;
+      }
+      await new Promise(r => setTimeout(r, 60));
+    }
+
+    // Fallback: search document for any options if menu wasn't scoped
+    if (options.length === 0) {
+      options = Array.from(document.querySelectorAll('.select__option, [role="option"], div[id*="option"]'))
         .filter(opt => {
           const rect = opt.getBoundingClientRect();
           return (rect.width > 0 && rect.height > 0) || opt.offsetParent !== null;
         });
-    }
-
-    let options = getAvailableOptions();
-    if (options.length === 0) {
-      toggleBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-      await new Promise(r => setTimeout(r, 80));
-      options = getAvailableOptions();
     }
 
     if (options.length === 0) return false;
@@ -891,33 +902,63 @@
     const syns = {
       'male': ['man', 'm'],
       'female': ['woman', 'f'],
-      'yes': ['true', '1', 'i agree', 'i confirm', 'yes, i am', 'yes, i do', 'yes, i have', 'acknowledge'],
+      'yes': ['confirmed', 'confirm', 'agree', 'i agree', 'i confirm', 'true', '1', 'yes, i am', 'yes, i do', 'yes, i have'],
       'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't"],
       'immediate': ['immediately', 'now', '0 weeks', '1 week', '2 weeks'],
       'bachelor of computer applications (bca)': ['bachelor of computer applications', 'bachelor', 'bachelors', 'undergraduate', 'bca', 'computer applications', 'b.c.a'],
       'i am not a protected veteran': ['not a protected veteran', 'not a veteran', 'i am not a veteran', 'no'],
       'no, i don\'t have a disability': ['no, i do not have a disability', "no, i don't have", 'i do not have a disability', 'no disability', 'no'],
       'asian': ['asian (not hispanic or latino)', 'asian / pacific islander', 'south asian', 'asian - non hispanic'],
+      'indian': ['asian'],
+      'india': ['asian'],
       'linkedin': ['linkedin', 'job board', 'online job board', 'social network'],
     };
 
-    // Stage A: Exact text match
-    for (const opt of options) {
-      const optText = (opt.textContent || '').trim().toLowerCase();
-      if (optText === targetValLower) { matchedOption = opt; break; }
+    // Stage A: Specialized Race Matching (Indian candidate -> strictly Asian, never American Indian!)
+    if (targetValLower === 'asian' || targetValLower === 'indian' || targetValLower === 'india' || fieldType === 'RACE_ETHNICITY') {
+      matchedOption = options.find(o => {
+        const t = (o.textContent || '').trim().toLowerCase();
+        return (t === 'asian' || t.startsWith('asian')) && !t.includes('american indian');
+      });
     }
 
-    // Stage B: Contains match
+    // Stage B: Specialized School Fallback (If Amity not in list -> "0 - Other" / "Other")
+    if (!matchedOption && (fieldType === 'SCHOOL' || targetValLower.includes('university') || targetValLower.includes('college'))) {
+      for (const opt of options) {
+        const optText = (opt.textContent || '').trim().toLowerCase();
+        if (optText.includes(targetValLower)) {
+          matchedOption = opt; break;
+        }
+      }
+      if (!matchedOption) {
+        // Fallback to "0 - Other", "Other", or "Not Listed"
+        matchedOption = options.find(o => {
+          const t = (o.textContent || '').trim().toLowerCase();
+          return t === 'other' || t.startsWith('0 - other') || t.includes('other') || t.includes('not listed') || t.includes('not applicable');
+        });
+      }
+    }
+
+    // Stage C: Exact text match
+    if (!matchedOption) {
+      for (const opt of options) {
+        const optText = (opt.textContent || '').trim().toLowerCase();
+        if (optText === targetValLower) { matchedOption = opt; break; }
+      }
+    }
+
+    // Stage D: Contains / Substring match (except avoid "american indian" when searching "asian")
     if (!matchedOption) {
       for (const opt of options) {
         const optText = (opt.textContent || '').trim().toLowerCase();
         if (optText.includes(targetValLower) || targetValLower.includes(optText)) {
+          if (targetValLower === 'asian' && optText.includes('american indian')) continue;
           matchedOption = opt; break;
         }
       }
     }
 
-    // Stage C: Synonyms
+    // Stage E: Synonyms
     if (!matchedOption) {
       const synList = syns[targetValLower] || [];
       for (const syn of synList) {
@@ -931,21 +972,22 @@
       }
     }
 
-    // Stage D: Boolean fallback for Yes/No questions
+    // Stage F: Boolean fallback for Yes/No questions (including "Confirmed" for Privacy notice)
     if (!matchedOption) {
-      if (targetValLower === 'yes') {
-        matchedOption = options.find(o => /^(yes|agree|confirm)/i.test((o.textContent || '').trim()));
+      if (targetValLower === 'yes' || targetValLower === 'confirmed') {
+        matchedOption = options.find(o => /^(yes|agree|confirm|acknowledged)/i.test((o.textContent || '').trim()));
       } else if (targetValLower === 'no') {
         matchedOption = options.find(o => /^(no|disagree|decline)/i.test((o.textContent || '').trim()));
       }
     }
 
-    // Stage E: AI tools usage heuristics
-    if (!matchedOption && targetValLower.includes('ai')) {
-      matchedOption = options.find(o => /daily|frequently|regularly|extensively|advanced/i.test((o.textContent || '').trim()));
+    // Stage G: AI Tools Usage options
+    if (!matchedOption && (targetValLower.includes('ai') || targetValLower.includes('regular') || targetValLower.includes('daily') || fieldType === 'AI_USAGE')) {
+      matchedOption = options.find(o => /regular|daily|frequently|task|deliverable/i.test((o.textContent || '').trim())) ||
+                      options.find(o => !/do not|never/i.test((o.textContent || '').trim()));
     }
 
-    // Stage F: First valid option if required
+    // Stage H: Fallback to first non-placeholder option
     if (!matchedOption && options.length > 0) {
       matchedOption = options.find(o => !/select|choose|placeholder|optional/i.test((o.textContent || '').trim())) || options[0];
     }
@@ -953,8 +995,8 @@
     if (matchedOption) {
       matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
       matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
-      matchedOption.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-      await new Promise(r => setTimeout(r, 50));
+      matchedOption.click();
+      await new Promise(r => setTimeout(r, 60));
       return true;
     }
 
@@ -994,7 +1036,11 @@
     if (el.tagName === 'INPUT' && el.type === 'checkbox') {
       const valLower = String(value).toLowerCase();
       const shouldCheck = valLower === 'yes' || valLower === 'true' || valLower === '1' || valLower === 'checked';
-      el.checked = shouldCheck;
+      if (el.checked !== shouldCheck) {
+        el.click();
+      }
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'checked');
+      if (setter && setter.set) { setter.set.call(el, shouldCheck); } else { el.checked = shouldCheck; }
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return;
@@ -1270,9 +1316,9 @@
       case 'VISA':        return profile.requiresVisa ? 'Yes' : 'No';
       case 'AGE_18':       return profile.is18OrOlder || 'Yes';
       case 'PREVIOUS_EMPLOYED': return profile.previouslyEmployed || 'No';
-      case 'PRIVACY_CONSENT': return profile.privacyConsent || 'Yes';
+      case 'PRIVACY_CONSENT': return profile.privacyConsent || 'Confirmed';
       case 'AI_CONSENT':   return profile.aiConsent || 'Yes';
-      case 'AI_USAGE':     return profile.aiUsage || 'I use generative AI and developer copilots daily to maximize development throughput and code reliability.';
+      case 'AI_USAGE':     return profile.aiUsage ? 'regularly use AI tools' : 'regularly use AI tools';
       case 'GOVT_OFFICIAL': return profile.governmentOfficial || 'No';
       case 'GOVT_RELATIVE': return profile.relativeGovernmentOfficial || 'No';
       case 'CONFLICT_INTEREST': return profile.conflictOfInterest || 'No';
@@ -1675,7 +1721,7 @@
       if (!skipped) {
         if (isReactSelect(f.element)) {
           AstrePilotHUD.highlight(f.element);
-          await fillReactSelect(f.element, val);
+          await fillReactSelect(f.element, val, f.type);
         } else if (f.element.tagName === 'SELECT' || f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
           setNativeValue(f.element, val, true);
         } else {
