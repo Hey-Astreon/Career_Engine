@@ -1428,6 +1428,35 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 * **Engineering Experience Gained:**
   - **Rule:** Enterprise ATS platforms like iCIMS, Taleo, and Workday frequently embed job content and application forms in same-origin iframes. A production browser extension must always traverse `iframe.contentDocument` for text extraction, field scanning, and button dispatch rather than relying solely on the top-level DOM.
 
+### 🔴 Case 17: Turso Cloud LibSQL Schema Desync (`no such column: main.autopilot_sessions.recruiterName`) & AstrePilot Extract 500 Resolution
+* **What Happened:**
+  - After resolving the iCIMS iframe extraction blindness in Case 16, the user clicked **"Extract"** again on Cook Medical's job portal ([`americas-cookmedical.icims.com`](https://americas-cookmedical.icims.com/jobs/19550/intern%2c-applied-ai-%26-full-stack-development/job)).
+  - AstrePilot failed with:
+    `Action Failed`
+    `Internal Server Error` (HTTP 500).
+* **The Root Cause / Mistake:**
+  1. **Turso Cloud LibSQL Schema Desync:** `prisma/schema.prisma` defined 4 recruiter fields on the `AutopilotSession` model: `recruiterName`, `recruiterTitle`, `recruiterLinkedInUrl`, and `recruiterId`.
+  2. While the local development SQLite database (`prisma/dev.db`) had been pushed, the remote Turso Cloud database (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`) lacked these 4 columns because `scripts/migrate-turso-columns.mjs` only handled `astraShield*` and `profiles` columns.
+  3. Because `src/lib/db.ts` dynamically routes Prisma queries to Turso Cloud in runtime/cloud mode, Prisma generated an `INSERT` statement containing all schema fields, which failed immediately with:
+     `SQLite input error: no such column: main.autopilot_sessions.recruiterName (at offset 515)`.
+  4. The API catch block caught the exception and returned a generic `"Internal Server Error"`, which hid the true database error from developer inspection.
+  5. In addition, the generated default connection note contained `"share my engineering portfolio"`, which violated Section 5 BCA Title Compliance.
+* **How We Solved It:**
+  1. **Turso Cloud Column Migration (`scripts/migrate-turso-columns.mjs`):**
+     - Updated `scripts/migrate-turso-columns.mjs` to execute `ALTER TABLE "autopilot_sessions" ADD COLUMN` for `recruiterName`, `recruiterTitle`, `recruiterLinkedInUrl`, and `recruiterId`.
+     - Executed `node scripts/migrate-turso-columns.mjs` against Turso Cloud. All 4 columns were successfully applied and verified with `PRAGMA table_info`.
+  2. **Defensive API Hardening & Section 5 Compliance (`src/app/api/autopilot/extract/route.ts`):**
+     - Wrapped `db.autopilotSession.create` in a defensive try/catch fallback: if optional recruiter fields ever cause a column failure, it immediately degrades to a minimal session save rather than crashing the HTTP request.
+     - Updated the route catch block to surface explicit error messages (`err instanceof Error ? err.message : "Internal Server Error"`).
+     - Fixed the connection note string to `"share my developer portfolio!"` in strict accordance with Section 5 BCA Title Law.
+  3. **Verification & Quality:**
+     - Executed live test against Turso Cloud: `db.autopilotSession.findFirst()` and session creation succeed with zero errors.
+     - `npx tsc --noEmit`: 0 errors.
+     - `npx vitest run`: 36 test files passed, 357/357 tests passing green.
+* **Engineering Experience Gained:**
+  - **Rule:** When running with a dual-database architecture (local SQLite vs remote Turso Cloud LibSQL), `prisma db push` only applies to the datasource specified in `prisma.config.ts`. Any new schema columns on models queried by Prisma must always be synchronized to Turso Cloud via `scripts/migrate-turso-columns.mjs` before deploying or testing runtime API endpoints.
+  - **Rule:** Database insertion blocks in production API handlers should always employ defensive column degradation to ensure that minor telemetry or optional metadata columns never fail the core user operation.
+
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀

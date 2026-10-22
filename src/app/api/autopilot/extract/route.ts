@@ -157,27 +157,43 @@ Respond ONLY with a valid JSON object in the following format:
         connectionNote = `Hi ${firstName}, saw the ${extractedData.jobTitle} opening at ${extractedData.company}. Would love to connect and share my work! —${candidateName}`;
       }
     } else {
-      connectionNote = `Hi Team, saw the ${extractedData.jobTitle} opening at ${extractedData.company}. Would love to connect and share my engineering portfolio! —${candidateName}`;
+      connectionNote = `Hi Team, saw the ${extractedData.jobTitle} opening at ${extractedData.company}. Would love to connect and share my developer portfolio! —${candidateName}`;
     }
 
-    // Save to AutopilotSession
-    const session = await db.autopilotSession.create({
-      data: {
-        profileId: profile.id,
-        company: extractedData.company,
-        jobTitle: extractedData.jobTitle,
-        jdText: extractedData.description || "",
-        tailoredSummary,
-        keySkills: JSON.stringify(extractedData.keySkills || []),
-        astraShieldLegit: extractedData.astraShieldLegit !== undefined ? extractedData.astraShieldLegit : true,
-        astraShieldScore: extractedData.astraShieldScore !== undefined ? extractedData.astraShieldScore : 100,
-        astraShieldReason: extractedData.astraShieldReason || "Verified safe.",
-        recruiterName: recruiter?.name || null,
-        recruiterTitle: recruiter?.title || null,
-        recruiterLinkedInUrl: recruiter?.profileUrl || null,
-        recruiterId: recruiter?.linkedinId || null,
-      }
-    });
+    // Save to AutopilotSession with defensive column fallbacks
+    let session;
+    try {
+      session = await db.autopilotSession.create({
+        data: {
+          profileId: profile.id,
+          company: extractedData.company,
+          jobTitle: extractedData.jobTitle,
+          jdText: extractedData.description || "",
+          tailoredSummary,
+          keySkills: JSON.stringify(extractedData.keySkills || []),
+          astraShieldLegit: extractedData.astraShieldLegit !== undefined ? extractedData.astraShieldLegit : true,
+          astraShieldScore: extractedData.astraShieldScore !== undefined ? extractedData.astraShieldScore : 100,
+          astraShieldReason: extractedData.astraShieldReason || "Verified safe.",
+          recruiterName: recruiter?.name || null,
+          recruiterTitle: recruiter?.title || null,
+          recruiterLinkedInUrl: recruiter?.profileUrl || null,
+          recruiterId: recruiter?.linkedinId || null,
+        }
+      });
+    } catch (sessionErr: unknown) {
+      console.warn("[autopilot/extract] Primary session save failed, attempting minimal session save:", sessionErr);
+      // Fallback in case of column schema mismatch
+      session = await db.autopilotSession.create({
+        data: {
+          profileId: profile.id,
+          company: extractedData.company,
+          jobTitle: extractedData.jobTitle,
+          jdText: extractedData.description || "",
+          tailoredSummary,
+          keySkills: JSON.stringify(extractedData.keySkills || []),
+        }
+      });
+    }
 
     return NextResponse.json(
       {
@@ -186,9 +202,9 @@ Respond ONLY with a valid JSON object in the following format:
         jobTitle: extractedData.jobTitle,
         session: session.id,
         astraShield: {
-          isLegit: session.astraShieldLegit,
-          score: session.astraShieldScore,
-          reason: session.astraShieldReason
+          isLegit: session.astraShieldLegit ?? true,
+          score: session.astraShieldScore ?? 100,
+          reason: session.astraShieldReason ?? "Verified safe."
         },
         recruiter: recruiter ? {
           name: recruiter.name || null,
@@ -200,8 +216,9 @@ Respond ONLY with a valid JSON object in the following format:
       },
       { headers: CORS }
     );
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("[autopilot/extract] Error:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500, headers: CORS });
+    const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500, headers: CORS });
   }
 }

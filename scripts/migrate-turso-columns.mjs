@@ -48,8 +48,16 @@ async function main() {
   await addColumnIfNotExists("autopilot_sessions", "astraShieldLegit", "BOOLEAN NOT NULL DEFAULT 1");
   await addColumnIfNotExists("autopilot_sessions", "astraShieldScore", "INTEGER NOT NULL DEFAULT 100");
   await addColumnIfNotExists("autopilot_sessions", "astraShieldReason", "TEXT");
+  await addColumnIfNotExists("autopilot_sessions", "recruiterName", "TEXT");
+  await addColumnIfNotExists("autopilot_sessions", "recruiterTitle", "TEXT");
+  await addColumnIfNotExists("autopilot_sessions", "recruiterLinkedInUrl", "TEXT");
+  await addColumnIfNotExists("autopilot_sessions", "recruiterId", "TEXT");
 
-  console.log("\n=== Migration Completed! Verifying Profiles Table... ===");
+  console.log("\n=== Migration Completed! Verifying AutopilotSessions Table... ===");
+  const aCols = (await tursoClient.execute('PRAGMA table_info("autopilot_sessions")')).rows;
+  console.log("Turso autopilot_sessions columns now:", aCols.map((c) => c.name));
+
+  console.log("\n=== Verifying Profiles Table... ===");
   const pCols = (await tursoClient.execute('PRAGMA table_info("profiles")')).rows;
   console.log("Turso profiles columns now:", pCols.map((c) => c.name));
 
