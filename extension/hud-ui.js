@@ -251,6 +251,9 @@ window.AstrePilotHUD = (function () {
         else if (btn.classList.contains('action-sync-harvester')) {
           if (this.options.onSyncHarvester) this.options.onSyncHarvester();
         }
+        else if (btn.classList.contains('action-confirm-submit')) {
+          if (this.options.onConfirmSubmit) this.options.onConfirmSubmit(this.meta);
+        }
       });
 
       // Escape to collapse
@@ -588,9 +591,32 @@ window.AstrePilotHUD = (function () {
       if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog') {
         html += `<div class="hud-footer">`;
         if (this.state === 'done') {
-          html += `<button class="btn-primary action-close">Done</button>`;
-          if (this.fields && this.fields.length > 0) {
-            html += `<button class="btn-secondary action-undo">Undo Autofill</button>`;
+          const isConfirmed = this.meta && this.meta.isConfirmed;
+          if (isConfirmed) {
+            html += `
+              <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
+                <div style="color: var(--ap-success, #10b981); font-weight: 700; font-size: 13px;">✓ Confirmed in AstreWork!</div>
+                <div style="color: var(--ap-ink-2, #475569); font-size: 11px; margin-top: 2px;">Tracked with timestamp in your Application Table.</div>
+              </div>
+              <button class="btn-primary action-close">Close HUD</button>
+            `;
+          } else {
+            html += `
+              <div style="background: rgba(0, 113, 227, 0.08); border: 1px solid rgba(0, 113, 227, 0.2); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px;">
+                <div style="color: var(--ap-ai, #0071e3); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                  <span>Form Filled (Draft Tracked)</span>
+                  <a href="https://astrework.app/applications" target="_blank" rel="noopener noreferrer" style="color: var(--ap-ai, #0071e3); font-size: 11px; text-decoration: none; font-weight: 600;">View Tracker ↗</a>
+                </div>
+                <div style="color: var(--ap-ink-2, #475569); font-size: 10px; margin-top: 3px;">Review form fields on this page, then click below once submitted.</div>
+              </div>
+              <button class="btn-primary action-confirm-submit" style="background: var(--ap-success, #059669); border-color: var(--ap-success, #059669); color: white; margin-bottom: 6px;">
+                🎉 Mark as Submitted
+              </button>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-secondary action-close" style="flex: 1;">Close</button>
+                <button class="btn-secondary action-undo" style="flex: 1;">Undo Fill</button>
+              </div>
+            `;
           }
         } else if (this.state === 'catalog') {
           const count = this.harvester ? (this.harvester.count || (this.harvester.jobs ? this.harvester.jobs.length : 0)) : 0;

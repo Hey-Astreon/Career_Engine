@@ -54,8 +54,8 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
     });
 
-    const formattedApps = applications.map((app) => {
-      const now = Date.now();
+    const now = Date.now();
+    const formattedApps = applications.map((app, index) => {
       const baseDate = app.appliedAt || app.createdAt;
       const diffMs = now - new Date(baseDate).getTime();
       const daysSilent = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
@@ -65,20 +65,55 @@ export async function GET(req: Request) {
         currentStatus = "QUIET";
       }
 
+      let parsedNotes: {
+        source?: string;
+        fieldsFilled?: number;
+        fieldsTotal?: number;
+        hasAiAnswers?: boolean;
+        confirmed?: boolean;
+      } = {};
+
+      if (app.notes) {
+        try {
+          if (app.notes.startsWith("{") && app.notes.endsWith("}")) {
+            parsedNotes = JSON.parse(app.notes);
+          } else if (app.notes.includes("AstrePilot")) {
+            parsedNotes.source = "ASTREPILOT";
+          }
+        } catch {
+          /* fallback */
+        }
+      }
+
       const companyName = app.opportunity?.company || app.jobPosting?.company || "Direct Portal";
       const jobTitle = app.opportunity?.title || app.jobPosting?.title || "Software Developer";
       const url = app.opportunity?.canonicalAppUrl || app.jobPosting?.url || "";
+      const source = parsedNotes.source || (app.jobPosting?.platform ? String(app.jobPosting.platform) : "DIRECT_PORTAL");
 
       return {
         id: app.id,
+        slNo: index + 1,
         company: companyName,
         title: jobTitle,
         status: currentStatus,
+        confirmed: parsedNotes.confirmed !== false,
+        source: source === "ASTREPILOT" ? "⚡ AstrePilot Autofill" : source,
+        fieldsFilled: parsedNotes.fieldsFilled ?? null,
+        fieldsTotal: parsedNotes.fieldsTotal ?? null,
+        hasAiAnswers: Boolean(parsedNotes.hasAiAnswers),
         appliedDate: new Date(baseDate).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
         }),
+        appliedDateFull: new Date(baseDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        appliedAtIso: new Date(baseDate).toISOString(),
         daysSilent,
         jobUrl: url,
         resumeVariantName: app.resumeVariantName,
@@ -224,27 +259,14 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, status } = await req.json();
+    const { id, status, confirmed } = await req.json();
 
-    if (!id || !status) {
+    if (!id) {
       return NextResponse.json(
-        { success: false, error: "Application id and status required" },
+        { success: false, error: "Application id required" },
         { status: 400 }
       );
     }
-
-    const prismaStatusMap: Record<string, ApplicationStatus> = {
-      DISCOVERED: ApplicationStatus.DISCOVERED,
-      SHORTLISTED: ApplicationStatus.SHORTLISTED,
-      APPLIED: ApplicationStatus.APPLIED,
-      SCREENING: ApplicationStatus.SCREENING,
-      TECHNICAL_ROUND: ApplicationStatus.TECHNICAL_ROUND,
-      OFFER: ApplicationStatus.OFFER,
-      REJECTED: ApplicationStatus.REJECTED,
-      QUIET: ApplicationStatus.QUIET,
-    };
-
-    const targetStatus = prismaStatusMap[status] || ApplicationStatus.APPLIED;
 
     const existing = await db.application.findUnique({
       where: { id },
@@ -258,13 +280,50 @@ export async function PATCH(req: Request) {
       );
     }
 
-    if (existing.profile.userId !== session.user.id) {
+    if (!canAccessProfile(session.user, existing.profile)) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    const updateData: Record<string, any> = {};
+
+    if (status) {
+      const prismaStatusMap: Record<string, ApplicationStatus> = {
+        DISCOVERED: ApplicationStatus.DISCOVERED,
+        SHORTLISTED: ApplicationStatus.SHORTLISTED,
+        APPLIED: ApplicationStatus.APPLIED,
+        SCREENING: ApplicationStatus.SCREENING,
+        TECHNICAL_ROUND: ApplicationStatus.TECHNICAL_ROUND,
+        OFFER: ApplicationStatus.OFFER,
+        REJECTED: ApplicationStatus.REJECTED,
+        QUIET: ApplicationStatus.QUIET,
+      };
+      updateData.status = prismaStatusMap[status] || ApplicationStatus.APPLIED;
+    }
+
+    if (confirmed !== undefined) {
+      let notesObj: Record<string, any> = {};
+      if (existing.notes) {
+        try {
+          if (existing.notes.startsWith("{")) {
+            notesObj = JSON.parse(existing.notes);
+          } else {
+            notesObj = { rawNotes: existing.notes };
+          }
+        } catch {
+          notesObj = { rawNotes: existing.notes };
+        }
+      }
+      notesObj.confirmed = Boolean(confirmed);
+      if (confirmed) {
+        notesObj.confirmedAt = new Date().toISOString();
+        updateData.appliedAt = new Date();
+      }
+      updateData.notes = JSON.stringify(notesObj);
     }
 
     const updated = await db.application.update({
       where: { id },
-      data: { status: targetStatus },
+      data: updateData,
       include: { jobPosting: true, opportunity: true },
     });
 

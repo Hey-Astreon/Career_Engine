@@ -1433,6 +1433,26 @@
       onDownloadResume: runDownloadResume,
       onSyncHarvester: runSyncHarvester,
       onRescan: rescanFields,
+      onConfirmSubmit: async (meta) => {
+        try {
+          await apFetch('/confirm', {
+            method: 'POST',
+            body: JSON.stringify({
+              fillId: meta && meta.fillId,
+              applicationId: meta && meta.applicationId,
+              siteUrl: window.location.href,
+            }),
+          });
+          if (activeHud) {
+            activeHud.setState('done', { ...meta, isConfirmed: true });
+            setTimeout(() => {
+              if (activeHud && !activeHud.isCollapsed) activeHud.collapse();
+            }, 3500);
+          }
+        } catch (e) {
+          console.error('[AstrePilot] Confirm failed', e);
+        }
+      },
       onClose: () => {
         if (detectedFields) {
           detectedFields.forEach(f => f.element.classList.remove('ap-field-active', 'ap-field-done'));
@@ -1736,9 +1756,10 @@
       await new Promise(r => setTimeout(r, 80));
     }
 
+    let logRes = null;
     try {
       const titleMatch = document.title.match(/(.+?)\s*[|\-]\s*(.+)/);
-      await apFetch('/log', {
+      const res = await apFetch('/log', {
         method: 'POST',
         body: JSON.stringify({
           siteUrl: window.location.href,
@@ -1749,12 +1770,19 @@
           hasAiAnswers: hadAI,
         })
       });
+      if (res && res.ok) {
+        logRes = await res.json();
+      }
     } catch (e) { /* silent */ }
 
     if (activeHud !== hud) return;
-    hud.setState('done');
-    // Auto-collapse to pill after 4 seconds
-    setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, 4000);
+    hud.setState('done', {
+      fillId: logRes ? (logRes.fillId || logRes.id) : null,
+      applicationId: logRes ? logRes.applicationId : null,
+      fieldsFilled: filled,
+      fieldsTotal: detectedFields.length,
+      isConfirmed: false,
+    });
   }
 
   function runUndo() {

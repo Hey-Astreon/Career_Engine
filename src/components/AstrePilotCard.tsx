@@ -316,7 +316,17 @@ export default function AstrePilotCard() {
 
       {/* ── History Panel ────────────────────────────────────────────────── */}
       {showHistory && history.length > 0 && (
-        <div className="border-t border-[var(--line)] max-h-64 overflow-y-auto">
+        <div className="border-t border-[var(--line)] max-h-72 overflow-y-auto">
+          <div className="flex items-center justify-between px-4 py-2 bg-[var(--surface-muted)]/60 border-b border-[var(--line)]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Recent AstrePilot Autofills</span>
+            <a
+              href="/applications"
+              className="text-[10px] font-bold text-[var(--blue)] hover:underline flex items-center gap-1"
+            >
+              <span>Open Detailed Table Report</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
           <table className="w-full text-[11px]">
             <thead className="sticky top-0 bg-[var(--surface-muted)] border-b border-[var(--line)]">
               <tr>

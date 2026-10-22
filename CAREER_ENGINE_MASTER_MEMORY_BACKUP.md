@@ -1799,7 +1799,62 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+
+### 🔴 Case 26: AstrePilot Remote Application Tracker, Multi-Format Export Suite (CSV, Excel XML, Semantic XML, TSV), and 2-Stage Submission State Machine
+
+* **What Happened:**
+  Founder Roushan Kumar identified a crucial architectural disconnect in the job hunting workflow:
+  1. When using the AstrePilot Chrome Extension to autofill remote opportunity forms across Greenhouse, Lever, Ashby, Workday, or direct careers pages, the autofill event was only being logged to `autopilot_fills` for settings telemetry, leaving the user's `applications` pipeline completely untouched.
+  2. Users had no centralized, high-density table report in their AstreWork account tracking every single job applied: Serial Number, Company Name, Position, Date of Apply, Form Link, Source/Platform, Status, and Field Completion count.
+  3. Users had no native way to download and export their application records into spreadsheet software (Microsoft Excel, Google Sheets) or raw data formats without data corruption, formula injection hazards, or formatting loss.
+
+* **Deep Root Cause Diagnosis:**
+  1. **Telemetry vs. Pipeline Disconnect:** `POST /api/autopilot/log` recorded completed fills to `db.autopilotFill` but did not create or link a corresponding `db.application` record. Users had to manually track jobs in the workspace.
+  2. **The "Form Filled" vs. "Form Submitted" State Dilemma:** Marking an application as officially `APPLIED` the second autofill completed risked logging phantom applications if the user cancelled, encountered a missing required file, or closed the tab. Conversely, relying on automated DOM `submit` event listeners on complex multi-page wizards ("Submit & Next" on Workday, Taleo, etc.) proved brittle and bug-prone.
+  3. **Spreadsheet Traps (Mojibake, Formula Injection, and Layout Squishing):**
+     - Opening raw UTF-8 CSVs in Microsoft Excel on Windows defaults to ANSI encoding, corrupting currency symbols (`₹`, `$`) and punctuation (`—`, `•`) into mojibake.
+     - Cell values starting with `=`, `+`, `-`, or `@` trigger Excel's Dynamic Data Exchange (DDE) formula execution or security warnings.
+     - Unformatted CSVs lack column widths and clickable hyperlinks, squishing company names and URLs.
+  4. **Kanban-Only Interface:** `/applications` was restricted to a Kanban board layout, which lacks the dense, scannable table view required for spreadsheet review and bulk tracking.
+
+* **The Concrete Surgical Fix (The 5 Engineering Pillars):**
+  1. **2-Stage State Machine with Human-in-the-Loop Confirmation:**
+     - When AstrePilot completes autofill, it logs an immediate draft to `db.application` with `status: APPLIED` and `confirmed: false` (zero data loss).
+     - AstrePilot HUD renders: `14/14 Fields Filled · Review before submitting` with a primary button: **`[ 🎉 Mark as Submitted ]`**.
+     - Clicking the button sends a confirmation to `POST /api/autopilot/confirm`, updating the application record to `confirmed: true` with an authoritative timestamp.
+     - In the AstreWork Table Report, unconfirmed fills display an amber badge: `⚡ Filled (Pending Review)` with a 1-click **`[ ✓ Confirm ]`** button.
+  2. **Brain-Primed Authoritative Metadata:**
+     - Grounded extraction in the **AstreWork Brain (`AutopilotSession`)** as single source of truth for Company Name and BCA-compliant Role Title, eliminating messy title scrapers (`"Greenhouse - Application"`).
+  3. **Canonical URL Deduplication & Re-fill Protection:**
+     - Built `normalizeApplicationUrl()` in `src/lib/exportEngine.ts` to strip tracking query parameters (`utm_*`, `gh_src`, `ref`) while preserving functional deep paths.
+     - Deduplication key checks `(profileId, canonicalUrl)` and `(profileId, company, title)`. Re-filling or re-testing updates the existing record instead of creating duplicate rows.
+  4. **4-in-1 Spreadsheet Export Suite (`src/lib/exportEngine.ts` & `src/app/api/applications/export/route.ts`):**
+     - **Universal CSV (`.csv`):** Prepended with `\uFEFF` UTF-8 BOM; includes formula injection shielding (`'` escaping) and RFC 4180 quotation wrapping.
+     - **Styled Excel Spreadsheet (`.xls` / XML Spreadsheet 2003):** Formatted with AstreWork Navy headers (`#0071E3`), bold white text, auto-fit column widths, and clickable hyperlinks.
+     - **Semantic XML (`.xml`):** Structured XML data (`<applications><application>...</application></applications>`).
+     - **1-Click Copy as TSV (Tab-Separated Values):** Copies clean TSV text to clipboard for instant `Ctrl+V` pasting into Google Sheets or Excel.
+     - Multi-tenant security strictly enforced via `canAccessProfile()` (Section 6 compliant).
+  5. **High-Density Workspace Table Report UI (`src/app/(workspace)/applications/page.tsx`):**
+     - Added View Mode Switcher: `[ ☷ Kanban Board ]` vs. `[ ▤ Detailed Table Report ]` with `localStorage` persistence.
+     - Table columns: `# (Sl No.)`, `Company Name` (with avatar initial badge), `Position`, `Date of Apply`, `Form Link`, `Engine / Source (AstrePilot field count + AI)`, `Status (Interactive dropdown)`, `Days Silent`, and `Actions (⚡ Send Nudge / Delete)`.
+     - Filter tabs: `All`, `⚡ AstrePilot Applied`, `In-Flight`, `Quiet Attention`, `Offers` + Live Search.
+     - Linked AstrePilotCard history in Settings directly to the new Detailed Table Report.
+  6. **Automated Verification:**
+     - Created `tests/application-export-engine.test.ts` (9 tests passing).
+     - Created `tests/autopilot-application-sync.test.ts` (9 tests passing).
+     - Full Vitest suite: all 41 test files and 419 unit tests passing (`npx vitest run`).
+     - TypeScript compiler check: `npx tsc --noEmit` exited clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never disconnect client-side automation actuators (AstrePilot) from the server-side pipeline. When an agent autofills an external application, it must automatically reflect in the user's core operating pipeline.
+  - **Rule:** In web automation, never confuse "form autofilled" with "form submitted". Always employ a 2-stage state machine (draft log on fill $\rightarrow$ human-in-the-loop confirmation on submit) to prevent phantom tracking without losing data.
+  - **Rule:** Every CSV exported from a production system must include a UTF-8 BOM (`\uFEFF`) and sanitize formula prefixes (`=`, `+`, `-`, `@`) with a leading apostrophe (`'`).
+  - **Rule:** For professional spreadsheet exports, provide Microsoft Excel XML Spreadsheet 2003 (`.xls` SpreadsheetML) as a zero-dependency alternative to raw CSV, giving users pre-styled headers, custom column widths, and clickable hyperlinks out of the box.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
+
 
 
 ## Codebase Cleanup & Junk Removal (Latest)
