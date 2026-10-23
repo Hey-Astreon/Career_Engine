@@ -1188,6 +1188,16 @@
         const computed = (targetDoc.defaultView || window).getComputedStyle(canonicalEl);
         if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isCB && !isFileInput && !isDropzone) return;
 
+        // Filter out site-wide career search filters & navigation inputs (e.g. iCIMS footer search)
+        if (canonicalEl.type === 'search') return;
+        if (canonicalEl.closest) {
+          const isSearchContainer = canonicalEl.closest('form[role="search"], [role="search"], .search-box, .search-form, .job-search, header, footer, .iCIMS_JobSearch, #job-search, .search-wrapper');
+          if (isSearchContainer) {
+            const isAppForm = Boolean(canonicalEl.closest('form[id*="apply"], form[class*="apply"], #icims_content_iframe, [data-automation-id*="form"], .application-form, .jobs-apply-form'));
+            if (!isAppForm) return;
+          }
+        }
+
         const type = classifyField(canonicalEl);
         if (!type) return;
 
@@ -2073,6 +2083,9 @@
 
   /* -- HUD ORCHESTRATOR (delegates to AstrePilotHUD Shadow DOM module) -- */
   async function toggleAstrePilotHUD() {
+    // Only top-level window mounts and controls the HUD UI
+    if (window !== window.top) return;
+
     // Guard: wait for hud-ui.js to initialize (loads before content.js per manifest order)
     if (typeof window.AstrePilotHUD === 'undefined') {
       await new Promise(r => setTimeout(r, 200));
@@ -2112,6 +2125,49 @@
       onDownloadResume: runDownloadResume,
       onSyncHarvester: runSyncHarvester,
       onRescan: rescanFields,
+      onSwitchContext: async (ctx) => {
+        try {
+          const profileRes = await apFetch(`/profile?slug=${encodeURIComponent(ctx)}`);
+          if (profileRes.ok) {
+            const pData = await profileRes.json();
+            if (pData.success && pData.profile) {
+              userProfile = pData.profile;
+              if (activeHud) {
+                activeHud.setIdentity({
+                  fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'Candidate',
+                  title: userProfile.title || 'Full-Stack Developer',
+                  primedCompany: activeSession ? activeSession.company : null
+                });
+                rescanFields();
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[AstrePilot] Context switch error:', e);
+        }
+      },
+      onSwitchOrigin: async (origin) => {
+        try {
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+            await chrome.storage.sync.set({ astrepilot_origin: origin });
+          }
+          const sRes = await apFetch('/session');
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            activeSession = sData.session;
+          }
+          const pRes = await apFetch('/profile');
+          if (pRes.ok) {
+            const pData = await pRes.json();
+            if (pData.success && pData.profile) {
+              userProfile = pData.profile;
+            }
+          }
+          rescanFields();
+        } catch (e) {
+          console.warn('[AstrePilot] Origin switch error:', e);
+        }
+      },
       onReapply: () => {
         if (activeHud) activeHud.duplicateAlert = null;
         runAutofill();
@@ -2280,12 +2336,25 @@
     if (!activeHud) return;
     detectedFields = fields || [];
 
+    const CORE_APPLICATION_TYPES = new Set([
+      'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'RESUME',
+      'WORK_AUTH', 'VISA', 'SCREENING', 'SCREENING_SELECT', 'WORK_DESCRIPTION',
+      'COMPANY', 'SCHOOL', 'PASSWORD', 'CONFIRM_PASSWORD', 'LOGIN_ID'
+    ]);
+    const hasCoreAppField = detectedFields.some(f => CORE_APPLICATION_TYPES.has(f.type));
+
+    // If there are no core application fields and only 1-2 generic inputs (like location/zip from search widget),
+    // this is a Job Description page, NOT an active application form.
+    if (!hasCoreAppField && detectedFields.length <= 2) {
+      detectedFields = [];
+    }
+
     if (detectedFields.length === 0) {
       const cat = catalogData || extractCatalogJobs();
       if (cat && cat.jobs.length > 0) {
         activeHud.setState('catalog');
       } else {
-        activeHud.setState('no-fields');
+        activeHud.setState('no-fields', { isJobOverview: true });
       }
       return;
     }

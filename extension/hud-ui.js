@@ -26,7 +26,10 @@ window.AstrePilotHUD = (function () {
     download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
     warn: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
     shield: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
-    key: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3L22 7l-3-3"></path></svg>`
+    key: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3L22 7l-3-3"></path></svg>`,
+    arrowLeft: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
+    external: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
+    refresh: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`
   };
 
   const TYPE_LABELS = {
@@ -102,6 +105,16 @@ window.AstrePilotHUD = (function () {
       this.duplicateAlert = null;
       this.remoteLock = null;
 
+      this.previousState = 'ready';
+      this.settings = {
+        autoPassword: true,
+        autoAdvance: false,
+        strictVerify: true,
+        autoTailor: true,
+        origin: 'https://astrework.app',
+        activeContext: 'roushan'
+      };
+
       // Restore position if possible
       try {
         const savedPos = sessionStorage.getItem('ap-hud-pos');
@@ -113,6 +126,22 @@ window.AstrePilotHUD = (function () {
       } catch (e) {
         this.position = { top: 20, right: 20 };
       }
+
+      // Load saved settings from chrome.storage.sync
+      try {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+          chrome.storage.sync.get(['ap_auto_password', 'ap_auto_advance', 'ap_strict_verify', 'ap_auto_tailor', 'astrepilot_origin', 'ap_candidate_context'], (res) => {
+            if (res) {
+              if (res.ap_auto_password !== undefined) this.settings.autoPassword = Boolean(res.ap_auto_password);
+              if (res.ap_auto_advance !== undefined) this.settings.autoAdvance = Boolean(res.ap_auto_advance);
+              if (res.ap_strict_verify !== undefined) this.settings.strictVerify = Boolean(res.ap_strict_verify);
+              if (res.ap_auto_tailor !== undefined) this.settings.autoTailor = Boolean(res.ap_auto_tailor);
+              if (res.astrepilot_origin) this.settings.origin = res.astrepilot_origin;
+              if (res.ap_candidate_context) this.settings.activeContext = res.ap_candidate_context;
+            }
+          });
+        }
+      } catch (e) {}
 
       this._buildDOM(options.css || '');
       this._attachEvents();
@@ -223,7 +252,40 @@ window.AstrePilotHUD = (function () {
         if (btn.classList.contains('action-close')) this.destroy();
         else if (btn.classList.contains('action-collapse')) this.collapse();
         else if (btn.classList.contains('action-settings')) {
-          safeSendMessage({ type: "OPEN_OPTIONS" });
+          this.toggleSettings();
+        }
+        else if (btn.classList.contains('action-settings-back') || btn.classList.contains('action-settings-done')) {
+          this.toggleSettings();
+        }
+        else if (btn.classList.contains('btn-context-switch')) {
+          const ctx = btn.getAttribute('data-context');
+          if (ctx) {
+            this.settings.activeContext = ctx;
+            try {
+              if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                chrome.storage.sync.set({ ap_candidate_context: ctx });
+              }
+            } catch (err) {}
+            if (this.options.onSwitchContext) {
+              this.options.onSwitchContext(ctx);
+            }
+            this._renderBody();
+          }
+        }
+        else if (btn.classList.contains('btn-env-switch')) {
+          const origin = btn.getAttribute('data-origin');
+          if (origin) {
+            this.settings.origin = origin;
+            try {
+              if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                chrome.storage.sync.set({ astrepilot_origin: origin });
+              }
+            } catch (err) {}
+            if (this.options.onSwitchOrigin) {
+              this.options.onSwitchOrigin(origin);
+            }
+            this._renderBody();
+          }
         }
         else if (btn.classList.contains('action-extract-jd')) {
           if (this.options.onExtractJD) this.options.onExtractJD();
@@ -278,6 +340,27 @@ window.AstrePilotHUD = (function () {
         }
         else if (btn.classList.contains('action-force-lock-takeover')) {
           if (this.options.onForceLockTakeover) this.options.onForceLockTakeover();
+        }
+      });
+
+      // Settings toggle change listener
+      this.shadow.addEventListener('change', (e) => {
+        const toggle = e.target.closest('.setting-toggle');
+        if (toggle) {
+          const key = toggle.getAttribute('data-key');
+          const val = toggle.checked;
+          if (this.settings && key) {
+            this.settings[key] = val;
+            const storageKey = 'ap_' + key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            try {
+              if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                chrome.storage.sync.set({ [storageKey]: val });
+              }
+            } catch (err) {}
+            if (this.options.onSettingChange) {
+              this.options.onSettingChange(key, val);
+            }
+          }
         }
       });
 
@@ -448,7 +531,6 @@ window.AstrePilotHUD = (function () {
           if (!badgeEl) {
             badgeEl = document.createElement('span');
             badgeEl.className = 'step-pill-badge';
-            badgeEl.style.cssText = 'font-size: 10px; font-weight: 700; color: var(--ap-ai, #0071e3); background: rgba(0, 113, 227, 0.12); padding: 2px 6px; border-radius: 9999px; margin-left: 6px; border: 1px solid rgba(0,113,227,0.2);';
             titleEl.appendChild(badgeEl);
           }
           badgeEl.textContent = `Step ${badge.stepIndex + 1}`;
@@ -469,6 +551,15 @@ window.AstrePilotHUD = (function () {
       this.container.classList.remove('mode-collapsed');
     }
 
+    toggleSettings() {
+      if (this.state === 'settings') {
+        this.setState(this.previousState || 'ready');
+      } else {
+        this.previousState = this.state;
+        this.setState('settings');
+      }
+    }
+
     destroy() {
       if (this._detachDrag) this._detachDrag();
       document.removeEventListener('keydown', this._keydownHandler);
@@ -484,6 +575,11 @@ window.AstrePilotHUD = (function () {
     }
 
     _renderBody() {
+      if (this.state === 'settings') {
+        this.body.innerHTML = this._renderSettingsView();
+        return;
+      }
+
       if (['not-connected', 'no-profile', 'extracting', 'error', 'transitioning'].includes(this.state)) {
         let msg = '', sub = '', btn = '';
         let iconHtml = ICONS.emptyGhost;
@@ -705,14 +801,16 @@ window.AstrePilotHUD = (function () {
         const isPrimed = this.profile && this.profile.primedCompany;
         const msg = isPrimed ? 'Job Intelligence Primed' : 'Job Posting Detected';
         const sub = isPrimed ? 
-          `Brain primed for ${esc(this.profile.primedCompany)}. Click below to navigate to the application form.` : 
-          'AstrePilot can read this page and prime the brain.';
+          `Brain primed for ${esc(this.profile.primedCompany)}. Click below to start your application.` : 
+          'AstrePilot has analyzed this role. Click below to begin your application.';
         html += `
-          <div class="empty-state" style="margin-top: 10px;">
-            <div class="empty-icon">${ICONS.emptyGhost}</div>
-            <div style="font-weight: 600">${msg}</div>
-            <div class="empty-text">${sub}</div>
-            <button type="button" class="btn-primary action-extract">Apply This Role →</button>
+          <div class="empty-state" style="margin-top: 10px; padding: 16px 14px; background: rgba(0, 113, 227, 0.05); border: 1px dashed rgba(0, 113, 227, 0.28); border-radius: 10px; text-align: center;">
+            <div class="empty-icon" style="color: var(--ap-ai); margin-bottom: 8px;">${ICONS.sparkle}</div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--ap-ink);">${msg}</div>
+            <div class="empty-text" style="font-size: 11.5px; color: var(--ap-ink-2); margin: 6px 0 14px 0; line-height: 1.4;">${sub}</div>
+            <button type="button" class="btn-primary action-extract" style="width: 100%; font-size: 13px; font-weight: 700; padding: 10px 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>🚀 Start Application →</span>
+            </button>
           </div>
         `;
       }
@@ -847,6 +945,160 @@ window.AstrePilotHUD = (function () {
             <div class="field-value">${val}</div>
           </div>
           <div class="field-status">${statusIcon}</div>
+        </div>
+      `;
+    }
+
+    _renderSettingsView() {
+      const settings = this.settings || {
+        autoPassword: true,
+        autoAdvance: false,
+        strictVerify: true,
+        autoTailor: true,
+        origin: 'https://astrework.app',
+        activeContext: 'roushan'
+      };
+
+      const isRoushan = !settings.activeContext || settings.activeContext === 'roushan';
+      const candidateName = this.profile ? (this.profile.fullName || (isRoushan ? 'Roushan Kumar' : 'Ayushi Raj')) : (isRoushan ? 'Roushan Kumar' : 'Ayushi Raj');
+      const candidateRole = this.profile ? (this.profile.title || 'Full-Stack Developer') : 'Full-Stack Developer';
+      const addressDisplay = 'Indrapuri, North Patel Nagar, Patna, Bihar · PIN 800024';
+
+      return `
+        <div class="hud-settings-panel">
+          <div class="settings-top-bar">
+            <button type="button" class="btn-subtle action-settings-back">
+              ${ICONS.arrowLeft} <span>Back</span>
+            </button>
+            <div class="settings-top-title"><span>⚙️</span> AstrePilot Settings</div>
+            <button type="button" class="btn-subtle action-settings-done" style="color: var(--ap-ai); font-weight: 700;">Done</button>
+          </div>
+
+          <!-- Section 1: Candidate Identity & Founder Context -->
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <span class="section-tag">Candidate Profile</span>
+              <span class="section-badge">Verified</span>
+            </div>
+            <div class="settings-profile-card">
+              <div class="settings-avatar">${isRoushan ? 'RO' : 'AY'}</div>
+              <div class="settings-profile-meta">
+                <div class="settings-profile-name">${esc(candidateName)}</div>
+                <div class="settings-profile-role">${esc(candidateRole)}</div>
+                <div class="settings-profile-geo">📍 ${esc(addressDisplay)}</div>
+              </div>
+            </div>
+            <div class="settings-context-toggle">
+              <button type="button" class="btn-context-switch ${isRoushan ? 'is-active' : ''}" data-context="roushan">
+                Roushan Kumar
+              </button>
+              <button type="button" class="btn-context-switch ${!isRoushan ? 'is-active' : ''}" data-context="ayushi">
+                Ayushi Raj
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 2: Autonomous Brain Automation -->
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <span class="section-tag">Autonomous Agent Brain</span>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">🔑 Auto-Generate ATS Passwords</div>
+                <div class="toggle-desc">Creates 16-char compliant passwords on sign-up gates & stages to Credential Vault.</div>
+              </div>
+              <label class="ap-switch">
+                <input type="checkbox" class="setting-toggle" data-key="autoPassword" ${settings.autoPassword ? 'checked' : ''}>
+                <span class="ap-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">⚡ Auto-Advance Multi-Step Forms</div>
+                <div class="toggle-desc">Automatically clicks "Continue / Next Step" after verified fields are populated.</div>
+              </div>
+              <label class="ap-switch">
+                <input type="checkbox" class="setting-toggle" data-key="autoAdvance" ${settings.autoAdvance ? 'checked' : ''}>
+                <span class="ap-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">🛡️ Proof-of-Write Strict Mode</div>
+                <div class="toggle-desc">Audits React 19 DOM read-back with 60ms delay; secondary bursts resistant fields.</div>
+              </div>
+              <label class="ap-switch">
+                <input type="checkbox" class="setting-toggle" data-key="strictVerify" ${settings.strictVerify ? 'checked' : ''}>
+                <span class="ap-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">🎯 Auto-Tailor Resume on Upload</div>
+                <div class="toggle-desc">Attaches tailored variant matched to job description when available.</div>
+              </div>
+              <label class="ap-switch">
+                <input type="checkbox" class="setting-toggle" data-key="autoTailor" ${settings.autoTailor ? 'checked' : ''}>
+                <span class="ap-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 3: AstreWork Quick Vault Links -->
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <span class="section-tag">Quick Vault Navigation</span>
+            </div>
+            <div class="settings-links-grid">
+              <a href="${esc(settings.origin)}/credentials" target="_blank" rel="noopener noreferrer" class="settings-link-card">
+                <div class="link-icon">🔐</div>
+                <div class="link-info">
+                  <div class="link-label">Credential Vault</div>
+                  <div class="link-hint">Manage saved ATS passwords ↗</div>
+                </div>
+              </a>
+              <a href="${esc(settings.origin)}/applications" target="_blank" rel="noopener noreferrer" class="settings-link-card">
+                <div class="link-icon">⚡</div>
+                <div class="link-info">
+                  <div class="link-label">Application Pipeline</div>
+                  <div class="link-hint">Track live submissions ↗</div>
+                </div>
+              </a>
+              <a href="${esc(settings.origin)}/resume-maker" target="_blank" rel="noopener noreferrer" class="settings-link-card">
+                <div class="link-icon">📄</div>
+                <div class="link-info">
+                  <div class="link-label">ATS Resume Maker</div>
+                  <div class="link-hint">A4 print sheet builder ↗</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Section 4: Target Host Environment -->
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <span class="section-tag">API Target Environment</span>
+            </div>
+            <div class="settings-env-selector">
+              <button type="button" class="btn-env-switch ${settings.origin.includes('astrework.app') ? 'is-active' : ''}" data-origin="https://astrework.app">
+                ☁️ Production (astrework.app)
+              </button>
+              <button type="button" class="btn-env-switch ${settings.origin.includes('localhost') ? 'is-active' : ''}" data-origin="http://localhost:3000">
+                💻 Localhost (:3000)
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 5: Telemetry & Shortcuts -->
+          <div class="settings-footer-info">
+            <div>Shortcut: <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></div>
+            <div>AstrePilot Cognitive Engine v1.2.0 · AstreWork</div>
+          </div>
         </div>
       `;
     }

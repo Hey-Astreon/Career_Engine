@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 53: AstrePilot Pillar E — Multi-Tab Application Synchronization & Telemetry, Cross-Tab BroadcastChannel Engine, Pre-Flight Duplicate Guards, 5-Pillar Comprehensive Audit & Hardening, and 48/48 Vitest 497-Test Green Verification)
+> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 55: AstrePilot In-HUD Settings Drawer, Header Stepper Single-Line Typography Calibration, Job Description vs Application Form Recognition Heuristics, Multi-Frame ATS Scanning, and 50/50 Vitest 503-Test Green Verification)
 
 ---
 
@@ -1110,6 +1110,24 @@ Located in `extension/`:
     - Vitest test suite: 48 test files, 497 unit tests passing green (`npx vitest run`).
     - TypeScript strict compile: 0 errors (`npx tsc --noEmit`).
     - Extension JavaScript syntax checks (`node -c`) clean with 0 errors.
+
+- [x] **Phase 54: AstrePilot Pillar F — Encrypted Credential Vault & Context-Aware Work Description Classification (Oct 23, 2026)**
+  - **1. Ground Truth Profile Anchoring (`scripts/sync-master-profiles.cjs`, `dev.db`, Turso Cloud):** Anchored Roushan Kumar's real verified address into Turso Cloud LibSQL and local `dev.db`: `streetAddress: "Indrapuri, North Patel Nagar, Patna, Bihar"`, `apartment: ""`, `zipCode: "800024"`. Updated `/api/autopilot/profile/route.ts` to export `workDescription` and `virtualExps` and fixed default zip code to `800024`.
+  - **2. Pillar F Credential Vault (`prisma/schema.prisma`, `vaultCrypto.ts`, `/api/autopilot/credentials`):** Created `SiteCredential` model with authenticated user ownership, cascade delete, and unique index `@@unique([userId, sitePattern])`. Executed db push to `dev.db` and Turso Cloud. Implemented AES-256-GCM encryption with random 96-bit IVs and high-entropy compliant password generator. Created `/api/autopilot/credentials/route.ts` supporting Bearer token and session auth.
+  - **3. Context-Aware `WORK_DESCRIPTION` Classification (`extension/content.js`):** Added `WORK_DESCRIPTION` to `FIELD_PATTERNS`. Inside employment history sections, textareas and description/responsibilities inputs are classified as `WORK_DESCRIPTION`, resolving to verified career achievements.
+  - **4. Closed-Loop Proof-of-Write Verification Engine (`extension/content.js`):** Implemented `verifyFieldWritten(field, expectedVal)` with type-aware validation across inputs, textareas, selects, comboboxes, and checkboxes with 60ms settle readback and self-healing retries with Amber ⚠ status.
+  - **5. Automated Password Generator & Auto-Vault Persist (`extension/content.js`):** Generates compliant 16-character passwords on account registration pages, stages across password and confirmation inputs, and persists securely to the user's encrypted vault upon form completion.
+  - **6. Credential Vault Workspace Manager UI (`src/app/(workspace)/credentials/page.tsx`, `Sidebar.tsx`):** Built glassmorphic Credential Vault Manager page in AstreWork with Show/Hide password toggles, 1-click clipboard copy, portal links, and search filter. Added Credential Vault link with `VAULT` badge to `Sidebar.tsx`.
+  - **7. Comprehensive Automated Verification:** Created `tests/vault-crypto.test.ts` (3 tests) and `tests/api-autopilot-credentials.test.ts` (3 tests). Full suite passed: 50 test files, 503 tests green. TypeScript strict compile clean (0 errors).
+
+- [x] **Phase 55: AstrePilot In-HUD Settings Drawer, Header Stepper Typography & Job Description Recognition Engine (Oct 23, 2026)**
+  - **1. Job Description vs Application Form Recognition Engine (`extension/content.js`):** Excluded career portal navigation and search filter inputs (`input[type="search"]`, containers with `role="search"`, `.search-box`, `.search-form`, `.job-search`, `header`, `footer`, `.iCIMS_JobSearch`, `#job-search`). Enforced applicant identity sanity check: if detected fields contain 0 core identity fields (`FIRST_NAME`, `LAST_NAME`, `FULL_NAME`, `EMAIL`, `PHONE`, `RESUME`, `WORK_AUTH`) and total count is <= 2, treats the page as a pure Job Description page (`detectedFields = []`) and sets state to `no-fields`.
+  - **2. Job Intelligence Primed Empty-State View (`extension/hud-ui.js`):** Upgraded `no-fields` view to display **Job Intelligence Primed** with a prominent **`🚀 Start Application →`** button that triggers `findAndClickApplyButton()` to navigate directly into the actual form. Added `all_frames: true` in `manifest.json` for multi-frame enterprise portals.
+  - **3. Header Stepper Single-Line Typography (`extension/hud-ui.js`, `extension/hud.shadow.css`):** Updated `.hud-title` with `white-space: nowrap !important; flex-shrink: 0; min-width: 0;`. Added dedicated `.step-pill-badge` CSS rules with `white-space: nowrap !important; display: inline-flex !important; align-items: center !important; line-height: 1 !important; flex-shrink: 0 !important; font-size: 10.5px; font-weight: 700; text-transform: uppercase;`. Updated `setStepBadge()` to delegate styling to `.step-pill-badge`, permanently eliminating the two-line wrap.
+  - **4. In-HUD Settings Drawer (`extension/hud-ui.js`, `extension/hud.shadow.css`, `extension/content.js`):** Built dedicated `_renderSettingsView()` directly inside the HUD Shadow DOM, toggled via `toggleSettings()`. Features: (1) Roushan Kumar vs Ayushi Raj context switcher with verified Patna address indicator (`Patna, Bihar · PIN 800024`), (2) live toggles for Auto-Generate ATS Passwords, Auto-Advance Multi-Step Forms, Proof-of-Write Strict Mode, and Auto-Tailor Resume on Upload (persisting directly to `chrome.storage.sync`), (3) 1-click shortcuts to Credential Vault, Application Pipeline, and ATS Resume Maker, (4) Production vs Localhost API Origin switcher, and (5) keyboard shortcut `<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd>` HUD toggle reminder.
+  - **5. VS Code TypeScript Workspace Configuration:** Created `.vscode/settings.json` configuring `"typescript.tsdk": "node_modules/typescript/lib"` and removed unused import in `src/app/api/autopilot/vault/route.ts`.
+  - **6. Repackaged Distribution:** Executed `npm run build:extension` generating updated `public/downloads/astrepilot-extension.zip` (85.0 KB).
+  - **7. Comprehensive Automated Verification:** Full Vitest suite: 50 test files passed (503/503 tests passing green). TypeScript strict compile: `npx tsc --noEmit` clean with 0 errors.
 
 ---
 
@@ -2292,6 +2310,54 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never trust a synthetic write without proof. Modern reactive frameworks (React 19, Angular, Vue) can swallow synthetic events or revert controlled state on the subsequent render tick. An intelligent agent MUST perform an asynchronous settle read-back (`verifyFieldWritten`) and transparently reflect truth to the human operator with an amber status rather than a false green checkmark.
   - **Rule:** When injecting into registration forms with `Password` and `Confirm Password`, the password generation must be staged at the session level (`window.__ap_staged_password`) so both fields receive the exact same compliant ciphertext.
   - **Rule:** Tenant isolation on enterprise ATS platforms (Workday, iCIMS, Taleo) must always use canonical hostnames (`normalizeSitePattern`), never bare root domains, to prevent credential leakage across different employer portals.
+
+### 🔴 Case 35: AstrePilot In-HUD Settings Drawer, Header Stepper Single-Line Typography Calibration, and Job Description vs Application Form Recognition Heuristics
+
+* **Date & Context:** October 23, 2026 — Upgrading AstrePilot with an embedded in-HUD Settings Drawer, calibrating single-line header typography for multi-step ATS forms, and engineering intelligent differentiation between Job Description overview pages and actual Candidate Application forms.
+
+* **The Exact Challenge & Mistake Encountered:**
+  1. **Job Description Page False-Positive Form Detection:** When candidate Roushan Kumar navigated to an enterprise ATS posting (Cotiviti on iCIMS) and clicked the `+` extract button, AstrePilot extracted the JD but immediately scanned the page and declared:
+     `Ready to fill: 2 fields (Location, ZIP Code)`.
+     These two fields were actually the career site's global footer search filters ("Search Open Positions"), not job application fields. This misled the candidate into believing they were on the application form.
+  2. **Header Stepper Typography Two-Line Wrap:** In the HUD header, the `Step 1` badge collapsed and wrapped onto two vertical lines (`Step` on line 1, `1` on line 2), disrupting visual hierarchy and crowding the action icons.
+  3. **Disruptive External Settings Navigation:** Clicking the settings gear button in the HUD opened `https://astrework.app/settings` in a new browser tab, abruptly kicking the candidate out of their application workflow instead of offering in-context control.
+  4. **VS Code TypeScript Language Server Red Highlights:** Transient squiggles in `src/app/api/autopilot/vault/route.ts` due to an unused import and unpinned VS Code TypeScript workspace SDK.
+
+* **Deep Root Cause Diagnosis:**
+  1. `scanFields()` in `extension/content.js` indiscriminately queried any `<input>` element on the page, including career portal navigation bars and search filter widgets (`header`, `footer`, `[role="search"]`, `.search-box`, `.iCIMS_JobSearch`). Furthermore, `applyDetectedFields()` lacked an applicant identity sanity check: when a page contained 0 core identity fields (`FIRST_NAME`, `LAST_NAME`, `EMAIL`, `PHONE`, `RESUME`, `WORK_AUTH`) and only generic location/zip filters, it erroneously transitioned the HUD to `ready` state.
+  2. In `extension/hud.shadow.css`, the `.step-pill-badge` lacked explicit `white-space: nowrap !important; display: inline-flex !important; line-height: 1 !important; flex-shrink: 0 !important;`, allowing flexbox parent container shrink rules to split the word and number across two lines.
+  3. The settings button executed a primitive `window.open(SETTINGS_URL)` rather than mounting an in-HUD drawer within the Shadow DOM.
+
+* **The Concrete Surgical Fix:**
+  1. **Job Description vs Application Form Recognition Engine (`extension/content.js`):**
+     - Excluded career site navigation and search filters from `scanFields()`: `input[type="search"]`, containers with `role="search"`, `.search-box`, `.search-form`, `.job-search`, `header`, `footer`, `.iCIMS_JobSearch`, `#job-search`.
+     - In `applyDetectedFields()`: Enforced core applicant field heuristic: if detected fields contain zero core identity fields (`FIRST_NAME`, `LAST_NAME`, `FULL_NAME`, `EMAIL`, `PHONE`, `RESUME`, `WORK_AUTH`, etc.) and total count is <= 2, treats the page as a pure Job Description page (`detectedFields = []`) and sets state to `no-fields`.
+     - In `hud-ui.js`, upgraded `no-fields` view to display **Job Intelligence Primed** with a prominent **`🚀 Start Application →`** button that triggers `findAndClickApplyButton()` to navigate directly into the actual form.
+     - Added `all_frames: true` in `manifest.json` for multi-frame enterprise portals.
+  2. **Header Stepper Single-Line Typography (`extension/hud-ui.js`, `extension/hud.shadow.css`):**
+     - Updated `.hud-title` with `white-space: nowrap !important; flex-shrink: 0; min-width: 0;`.
+     - Added dedicated `.step-pill-badge` CSS rules with `white-space: nowrap !important; display: inline-flex !important; align-items: center !important; line-height: 1 !important; flex-shrink: 0 !important; font-size: 10.5px; font-weight: 700; text-transform: uppercase;`.
+     - Updated `setStepBadge()` to delegate styling to `.step-pill-badge`, eliminating the two-line wrap permanently.
+  3. **In-HUD Settings Drawer (`extension/hud-ui.js`, `extension/hud.shadow.css`, `extension/content.js`):**
+     - Built dedicated `_renderSettingsView()` directly inside the HUD Shadow DOM, toggled via `toggleSettings()`.
+     - **Candidate Context Switcher:** Roushan Kumar vs Ayushi Raj 1-click toggle with verified Patna address indicator (`Patna, Bihar · PIN 800024`).
+     - **Autonomous Brain Toggles:** Live toggles for Auto-Generate ATS Passwords, Auto-Advance Multi-Step Forms, Proof-of-Write Strict Mode, and Auto-Tailor Resume on Upload (persisting directly to `chrome.storage.sync`).
+     - **Credential Vault Shortcuts:** 1-click navigation to Credential Vault (`/credentials`), Application Pipeline (`/applications`), and ATS Resume Maker (`/resume-maker`).
+     - **API Origin Switcher:** 1-click toggle between Production (`https://astrework.app`) and Local Dev (`http://localhost:3000`).
+     - **Keyboard Shortcut Reference:** `<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd>` HUD toggle reminder.
+  4. **VS Code TypeScript Workspace Configuration:**
+     - Created `.vscode/settings.json` configuring `"typescript.tsdk": "node_modules/typescript/lib"`.
+     - Removed unused import in `src/app/api/autopilot/vault/route.ts`.
+  5. **Repackaged Distribution:**
+     - Executed `npm run build:extension` generating updated `public/downloads/astrepilot-extension.zip` (85.0 KB).
+  6. **Comprehensive Automated Verification:**
+     - Full Vitest suite: **50 test files passed (503/503 tests passing green)**.
+     - Full TypeScript typecheck: `npx tsc --noEmit` exited clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never assume any page with `<input>` elements is an application form. Enterprise career portals regularly display search widgets, newsletter inputs, or location filters in headers and footers. An intelligent career agent must verify the presence of core applicant identity fields before declaring an application form ready.
+  - **Rule:** UI controls in a browser extension HUD must stay inside the HUD. Forcing the candidate into a new browser tab breaks the cognitive flow and disengages the user from the application they are actively completing.
+  - **Rule:** Stepper badges in flexbox headers must enforce `white-space: nowrap !important` and `display: inline-flex` to prevent parent compression from breaking compound phrases (e.g. `Step 1`) across lines.
 
 ---
 
