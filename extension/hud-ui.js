@@ -96,6 +96,8 @@ window.AstrePilotHUD = (function () {
       this.recruiter = null;
       this.harvester = null;
       this.stepBadge = null;
+      this.duplicateAlert = null;
+      this.remoteLock = null;
 
       // Restore position if possible
       try {
@@ -262,6 +264,18 @@ window.AstrePilotHUD = (function () {
           const fieldId = btn.getAttribute('data-field-id');
           if (this.options.onSaveToVault) this.options.onSaveToVault(fieldId, btn);
         }
+        else if (btn.classList.contains('action-dismiss-duplicate')) {
+          this.duplicateAlert = null;
+          this._renderBody();
+        }
+        else if (btn.classList.contains('action-reapply-anyway')) {
+          this.duplicateAlert = null;
+          this._renderBody();
+          if (this.options.onReapply) this.options.onReapply();
+        }
+        else if (btn.classList.contains('action-force-lock-takeover')) {
+          if (this.options.onForceLockTakeover) this.options.onForceLockTakeover();
+        }
       });
 
       // Escape to collapse
@@ -363,6 +377,21 @@ window.AstrePilotHUD = (function () {
 
     setHarvester(data) {
       this.harvester = data;
+      this._renderBody();
+    }
+
+    setDuplicateAlert(data) {
+      this.duplicateAlert = data;
+      this._renderBody();
+    }
+
+    setRemoteLock(data) {
+      this.remoteLock = data;
+      this._renderBody();
+    }
+
+    clearRemoteLock() {
+      this.remoteLock = null;
       this._renderBody();
     }
 
@@ -518,6 +547,53 @@ window.AstrePilotHUD = (function () {
               <div class="identity-name">${esc(this.profile.fullName)}</div>
               <div class="identity-role">${esc(role)}</div>
               ${primedHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      // Duplicate Application Pre-Flight Alert (Pillar E)
+      if (this.duplicateAlert) {
+        const daysAgoText = this.duplicateAlert.daysAgo === 0 ? 'Today' : `${this.duplicateAlert.daysAgo}d ago`;
+        html += `
+          <div class="duplicate-alert-card" style="margin-top: 10px; padding: 10px; background: rgba(245, 158, 11, 0.09); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #b45309; background: rgba(245,158,11,0.18); padding: 2px 6px; border-radius: 4px;">⚠️ Already Applied</span>
+                <span style="font-weight: 700; font-size: 11px; color: var(--ap-ink, #0f172a);">${daysAgoText}</span>
+              </div>
+              <a href="https://astrework.app/applications" target="_blank" rel="noopener noreferrer" style="font-size: 11px; font-weight: 600; color: var(--ap-ai, #0071e3); text-decoration: none;">View Pipeline ↗</a>
+            </div>
+            <div style="font-size: 11px; color: var(--ap-ink-2, #475569); margin-top: 4px; line-height: 1.3;">
+              Status: <b>${esc(this.duplicateAlert.status)}</b> · Submitted via ${esc(this.duplicateAlert.source || 'AstrePilot')}. Re-submitting may flag your profile as duplicate in employer ATS.
+            </div>
+            <div style="margin-top: 8px; display: flex; gap: 6px;">
+              <button type="button" class="action-dismiss-duplicate" style="flex: 1; padding: 4px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); background: transparent; color: var(--ap-ink-2, #475569); cursor: pointer;">
+                Dismiss Warning
+              </button>
+              <button type="button" class="action-reapply-anyway" style="flex: 1; padding: 4px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(245,158,11,0.4); background: rgba(245,158,11,0.15); color: #b45309; cursor: pointer;">
+                Proceed Anyway
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // Active Fill Remote Lock Alert (Pillar E)
+      if (this.remoteLock) {
+        html += `
+          <div class="remote-lock-card" style="margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #dc2626; background: rgba(239,68,68,0.12); padding: 2px 6px; border-radius: 4px;">🔒 Lock Active (Tab #${esc(this.remoteLock.tabId)})</span>
+              <span style="font-size: 10px; color: var(--ap-ink-3, #94a3b8);">Active Fill Running</span>
+            </div>
+            <div style="font-size: 11px; color: var(--ap-ink-2, #475569); margin-top: 4px; line-height: 1.3;">
+              Another browser tab is actively filling this form to prevent race conditions.
+            </div>
+            <div style="margin-top: 8px;">
+              <button type="button" class="action-force-lock-takeover" style="width: 100%; padding: 4px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.1); color: #dc2626; cursor: pointer;">
+                Force Takeover Lock in This Tab
+              </button>
             </div>
           </div>
         `;

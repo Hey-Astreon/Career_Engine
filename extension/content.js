@@ -20,6 +20,91 @@
   let activeSession = null;
   let mountPromise = null; // set while the HUD is initialising (prevents double mounts)
   let isFilling = false;  // re-entrancy guard for runAutofill
+  let fillHeartbeatTimer = null; // heartbeat timer for active fill locks
+
+  // Pillar E: Cross-Tab Broadcast Channel & Message Bus
+  let syncChannel = null;
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      syncChannel = new BroadcastChannel('astrepilot_application_sync');
+      syncChannel.onmessage = (event) => {
+        const msg = event && event.data;
+        if (!msg) return;
+        handleCrossTabSyncMessage(msg);
+      };
+    }
+  } catch (e) {
+    /* BroadcastChannel fallback */
+  }
+
+  function handleCrossTabSyncMessage(msg) {
+    if (!msg || !msg.type) return;
+    if (msg.type === 'FILL_LOCK_ACQUIRED') {
+      const payload = msg.payload || {};
+      const currentUrl = (window.location.href || '').toLowerCase();
+      const lockUrl = (payload.url || '').toLowerCase();
+      if (lockUrl && currentUrl.includes(lockUrl) && activeHud) {
+        activeHud.setRemoteLock(payload);
+      }
+    } else if (msg.type === 'FILL_LOCK_RELEASED') {
+      if (activeHud) {
+        activeHud.clearRemoteLock();
+      }
+    } else if (msg.type === 'APPLICATION_CONFIRMED') {
+      const payload = msg.payload || {};
+      const currentUrl = (window.location.href || '').toLowerCase();
+      const confirmedUrl = (payload.siteUrl || '').toLowerCase();
+      if (confirmedUrl && currentUrl.includes(confirmedUrl) && activeHud) {
+        activeHud.setState('done', { isConfirmed: true });
+      }
+    }
+  }
+
+  async function acquireFillLock(force = false) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+        type: 'ACQUIRE_FILL_LOCK',
+        url: window.location.href,
+        company: activeSession ? activeSession.company : document.title.replace(/ \|.*/, '').trim().slice(0, 80),
+        jobTitle: activeSession ? activeSession.jobTitle : '',
+        ttlMs: 45000,
+        force: force
+      }, (res) => {
+        resolve(res || { success: true });
+      });
+    });
+  }
+
+  function startFillHeartbeat() {
+    if (fillHeartbeatTimer) clearInterval(fillHeartbeatTimer);
+    fillHeartbeatTimer = setInterval(() => {
+      chrome.runtime.sendMessage({
+        type: 'HEARTBEAT_FILL_LOCK',
+        url: window.location.href,
+        ttlMs: 45000
+      });
+    }, 10000);
+  }
+
+  function releaseFillLock() {
+    if (fillHeartbeatTimer) {
+      clearInterval(fillHeartbeatTimer);
+      fillHeartbeatTimer = null;
+    }
+    chrome.runtime.sendMessage({
+      type: 'RELEASE_FILL_LOCK',
+      url: window.location.href
+    });
+    if (syncChannel) {
+      try {
+        syncChannel.postMessage({
+          type: 'FILL_LOCK_RELEASED',
+          timestamp: Date.now(),
+          payload: { url: window.location.href }
+        });
+      } catch (e) {}
+    }
+  }
 
   /* -- MESSAGE LISTENER -- */
   // All responses are synchronous, so the channel is not kept open.
@@ -42,12 +127,23 @@
       sendResponse(extractPageContent());
     } else if (request.action === 'CLICK_APPLY') {
       sendResponse({ success: findAndClickApplyButton() });
+    } else if (request.type === 'FILL_LOCK_ACQUIRED' || request.type === 'FILL_LOCK_RELEASED' || request.type === 'APPLICATION_CONFIRMED') {
+      handleCrossTabSyncMessage(request);
+      sendResponse({ status: 'handled' });
     }
     return false;
   };
   chrome.runtime.onMessage.addListener(messageListener);
   window.__ASTREPILOT_CLEANUP__ = () => {
     chrome.runtime.onMessage.removeListener(messageListener);
+    if (syncChannel) {
+      try { syncChannel.close(); } catch (e) {}
+      syncChannel = null;
+    }
+    if (fillHeartbeatTimer) {
+      clearInterval(fillHeartbeatTimer);
+      fillHeartbeatTimer = null;
+    }
     if (activeHud) { try { activeHud.destroy(); } catch (e) {} activeHud = null; }
   };
 
@@ -1139,7 +1235,7 @@
 
     // Stage 1: Exact text / value match
     for (const opt of pool) {
-      const text = (opt.textContent || opt.text || '').trim().toLowerCase();
+      const text = (opt.textContent || opt.text || '').replace(/\u00a0/g, ' ').trim().toLowerCase();
       const val = (opt.value || (opt.getAttribute && opt.getAttribute('data-value')) || '').trim().toLowerCase();
       if (text === targetLower || val === targetLower) return opt;
     }
@@ -1914,6 +2010,15 @@
       onDownloadResume: runDownloadResume,
       onSyncHarvester: runSyncHarvester,
       onRescan: rescanFields,
+      onReapply: () => {
+        if (activeHud) activeHud.duplicateAlert = null;
+        runAutofill();
+      },
+      onForceLockTakeover: async () => {
+        await acquireFillLock(true);
+        if (activeHud) activeHud.clearRemoteLock();
+        runAutofill();
+      },
       onSaveToVault: async (fieldId, btnEl) => {
         const f = detectedFields && detectedFields.find(x => x.id === fieldId);
         if (!f || !f.element) return;
@@ -1946,6 +2051,15 @@
             }
             f.source = 'vault';
             if (activeHud) activeHud.updateField(f);
+            if (syncChannel) {
+              try {
+                syncChannel.postMessage({
+                  type: 'VAULT_ENTRY_SAVED',
+                  timestamp: Date.now(),
+                  payload: { questionPattern: question }
+                });
+              } catch (e) {}
+            }
           } else {
             if (btnEl) {
               btnEl.textContent = 'Save Failed';
@@ -1974,6 +2088,20 @@
             setTimeout(() => {
               if (activeHud && !activeHud.isCollapsed) activeHud.collapse();
             }, 3500);
+          }
+          if (syncChannel) {
+            try {
+              syncChannel.postMessage({
+                type: 'APPLICATION_CONFIRMED',
+                timestamp: Date.now(),
+                payload: {
+                  fillId: meta && meta.fillId,
+                  applicationId: meta && meta.applicationId,
+                  siteUrl: window.location.href,
+                  company: (activeSession && activeSession.company) || ''
+                }
+              });
+            } catch (e) {}
           }
         } catch (e) {
           console.error('[AstrePilot] Confirm failed', e);
@@ -2009,6 +2137,26 @@
       title: userProfile.title || 'Candidate',
       primedCompany: activeSession ? activeSession.company : null
     });
+
+    // Pillar E: Duplicate Application Pre-Flight Status Check
+    try {
+      const checkRes = await apFetch('/check-status', {
+        method: 'POST',
+        body: JSON.stringify({
+          siteUrl: window.location.href,
+          company: (activeSession && activeSession.company) || document.title.replace(/ \|.*/, '').trim().slice(0, 80),
+          jobTitle: (activeSession && activeSession.jobTitle) || ''
+        })
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData && checkData.exists && checkData.application) {
+          if (activeHud) activeHud.setDuplicateAlert(checkData.application);
+        }
+      }
+    } catch (checkErr) {
+      /* silent */
+    }
 
     activeHud.setState('scanning');
 
@@ -2077,6 +2225,9 @@
     // Attach live input listeners to textareas to reflect edits in HUD
     detectedFields.forEach(f => {
       if ((f.type === 'SCREENING' || f.type === 'COVER_LETTER') && f.element) {
+        if (f.element.value && (!f.preview || f.preview === '-')) {
+          f.preview = f.element.value;
+        }
         f.element.addEventListener('input', () => {
           f.preview = f.element.value;
           if (activeHud) {
@@ -2102,11 +2253,30 @@
   async function runAutofill() {
     const hud = activeHud;
     if (!hud || isFilling || !detectedFields || !detectedFields.length) return;
+
+    // Pillar E: Concurrency Lock Check
+    const lockRes = await acquireFillLock(false);
+    if (!lockRes.success && lockRes.lock) {
+      hud.setRemoteLock(lockRes.lock);
+      return;
+    }
+
     isFilling = true;
+    startFillHeartbeat();
     try {
+      if (syncChannel) {
+        try {
+          syncChannel.postMessage({
+            type: 'FILL_LOCK_ACQUIRED',
+            timestamp: Date.now(),
+            payload: { url: window.location.href, company: activeSession ? activeSession.company : '' }
+          });
+        } catch (e) {}
+      }
       await fillAllFields(hud);
     } finally {
       isFilling = false;
+      releaseFillLock();
     }
   }
 
@@ -2410,6 +2580,21 @@
         curSession.activeFillId = logRes.fillId || logRes.id || null;
         curSession.activeApplicationId = logRes.applicationId || null;
         saveNavSession(curSession);
+        if (syncChannel) {
+          try {
+            syncChannel.postMessage({
+              type: 'APPLICATION_DRAFT_LOGGED',
+              timestamp: Date.now(),
+              payload: {
+                fillId: curSession.activeFillId,
+                applicationId: curSession.activeApplicationId,
+                siteUrl: window.location.href,
+                company: (activeSession && activeSession.company) || '',
+                jobTitle: (activeSession && activeSession.jobTitle) || ''
+              }
+            });
+          } catch (e) {}
+        }
       }
     } catch (e) { /* silent */ }
 

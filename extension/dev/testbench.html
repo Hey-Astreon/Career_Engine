@@ -370,6 +370,68 @@
         </button>
       </div>
     </div>
+
+    <!-- CARD 9: Multi-Tab Synchronization & Duplicate Guard Sandbox (Pillar E) -->
+    <div class="card" id="card-multi-tab-sync" style="grid-column: span 2; border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <h2 style="margin: 0; color: #34d399;">Card 9: Multi-Tab Synchronization &amp; Duplicate Guard Sandbox (Pillar E)</h2>
+        <span class="badge" style="background: #047857; color: white;">CONCURRENCY &amp; TELEMETRY</span>
+      </div>
+      <p style="color: #94a3b8; font-size: 13px; margin-bottom: 16px;">
+        Simulates multi-tab form filling coordination, cross-tab lock acquisition/release, duplicate application pre-flight checks, and real-time BroadcastChannel telemetry.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <!-- Lock Coordination Simulator -->
+        <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span>Cross-Tab Lock Simulation</span>
+            <span id="lock-status-badge" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #334155; color: #94a3b8; font-family: monospace;">UNLOCKED</span>
+          </div>
+          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">
+            Test how AstrePilot protects users from simultaneous autofills across multiple open tabs.
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btn-acquire-remote-lock" style="flex: 1; background: #e11d48; border: none; color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+              Simulate Lock (Tab #777)
+            </button>
+            <button type="button" id="btn-release-remote-lock" style="background: #334155; border: none; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+              Release Lock
+            </button>
+          </div>
+        </div>
+
+        <!-- Duplicate Detection Simulator -->
+        <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span>Duplicate Submission Guard</span>
+            <span id="dup-status-badge" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #334155; color: #94a3b8; font-family: monospace;">CLEAR</span>
+          </div>
+          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">
+            Simulate pre-flight check finding a previous application to this company and role.
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btn-trigger-dup-check" style="flex: 1; background: #d97706; border: none; color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+              Simulate Duplicate Job
+            </button>
+            <button type="button" id="btn-clear-dup-check" style="background: #334155; border: none; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+              Clear Guard
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live BroadcastChannel Telemetry Feed -->
+      <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px;">
+        <div style="font-size: 11px; font-weight: 700; color: #a7f3d0; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+          <span>Live BroadcastChannel Stream (astrepilot_application_sync)</span>
+          <span style="font-size: 10px; font-family: monospace; color: #6ee7b7;">LISTEN ACTIVE</span>
+        </div>
+        <div id="sync-telemetry-feed" style="font-family: monospace; font-size: 11px; color: #94a3b8; max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+          <div style="color: #64748b;">Waiting for cross-tab broadcast telemetry events...</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -521,6 +583,98 @@
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
         textarea.dispatchEvent(new Event('change', { bubbles: true }));
       }
+    });
+
+    // 9. Multi-Tab Synchronization & Duplicate Guard simulation (Pillar E)
+    const telemetryFeed = document.getElementById('sync-telemetry-feed');
+    const lockBadge = document.getElementById('lock-status-badge');
+    const dupBadge = document.getElementById('dup-status-badge');
+
+    function logTelemetry(msg, color = '#38bdf8') {
+      if (!telemetryFeed) return;
+      const row = document.createElement('div');
+      const timeStr = new Date().toLocaleTimeString();
+      row.innerHTML = `<span style="color: #64748b;">[${timeStr}]</span> <span style="color: ${color};">${msg}</span>`;
+      telemetryFeed.appendChild(row);
+      telemetryFeed.scrollTop = telemetryFeed.scrollHeight;
+    }
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      const testChannel = new BroadcastChannel('astrepilot_application_sync');
+      testChannel.onmessage = (e) => {
+        const d = e.data || {};
+        if (d.type === 'FILL_LOCK_ACQUIRED') {
+          logTelemetry(`🔒 LOCK ACQUIRED: Tab #${d.tabId || '?'} locked autofill`, '#f43f5e');
+          if (lockBadge) {
+            lockBadge.textContent = `LOCKED (TAB #${d.tabId || '?'})`;
+            lockBadge.style.background = '#e11d48';
+            lockBadge.style.color = '#fff';
+          }
+        } else if (d.type === 'FILL_LOCK_RELEASED') {
+          logTelemetry(`🔓 LOCK RELEASED: Tab #${d.tabId || '?'} released autofill lock`, '#10b981');
+          if (lockBadge) {
+            lockBadge.textContent = 'UNLOCKED';
+            lockBadge.style.background = '#334155';
+            lockBadge.style.color = '#94a3b8';
+          }
+        } else if (d.type === 'APPLICATION_DRAFT_LOGGED') {
+          logTelemetry(`📝 DRAFT LOGGED: ${d.company || 'Job'} application recorded`, '#38bdf8');
+        } else if (d.type === 'APPLICATION_CONFIRMED') {
+          logTelemetry(`🎉 CONFIRMED: ${d.company || 'Job'} submitted successfully!`, '#34d399');
+        } else if (d.type === 'VAULT_ENTRY_SAVED') {
+          logTelemetry(`💾 VAULT SAVED: [${d.category || 'QA'}] entry added to vault`, '#a855f7');
+        } else {
+          logTelemetry(`📡 SYNC: ${d.type || 'UNKNOWN_MESSAGE'}`, '#94a3b8');
+        }
+      };
+
+      document.getElementById('btn-acquire-remote-lock')?.addEventListener('click', () => {
+        testChannel.postMessage({
+          type: 'FILL_LOCK_ACQUIRED',
+          tabId: 777,
+          url: window.location.href,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + 45000
+        });
+        logTelemetry('Simulated Tab #777 acquiring autofill lock', '#f43f5e');
+        if (lockBadge) {
+          lockBadge.textContent = 'LOCKED (TAB #777)';
+          lockBadge.style.background = '#e11d48';
+          lockBadge.style.color = '#fff';
+        }
+      });
+
+      document.getElementById('btn-release-remote-lock')?.addEventListener('click', () => {
+        testChannel.postMessage({
+          type: 'FILL_LOCK_RELEASED',
+          tabId: 777,
+          timestamp: Date.now()
+        });
+        logTelemetry('Simulated Tab #777 releasing autofill lock', '#10b981');
+        if (lockBadge) {
+          lockBadge.textContent = 'UNLOCKED';
+          lockBadge.style.background = '#334155';
+          lockBadge.style.color = '#94a3b8';
+        }
+      });
+    }
+
+    document.getElementById('btn-trigger-dup-check')?.addEventListener('click', () => {
+      if (dupBadge) {
+        dupBadge.textContent = 'DUPLICATE (3d AGO)';
+        dupBadge.style.background = '#d97706';
+        dupBadge.style.color = '#fff';
+      }
+      logTelemetry('⚠️ Pre-flight guard: Acme Corp application detected 3 days ago', '#fbbf24');
+    });
+
+    document.getElementById('btn-clear-dup-check')?.addEventListener('click', () => {
+      if (dupBadge) {
+        dupBadge.textContent = 'CLEAR';
+        dupBadge.style.background = '#334155';
+        dupBadge.style.color = '#94a3b8';
+      }
+      logTelemetry('Duplicate guard status cleared', '#94a3b8');
     });
   </script>
 </body>

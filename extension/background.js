@@ -32,6 +32,34 @@ function isAtsUrl(url) {
 
 let lastApplyClickTime = 0;
 
+// Pillar E: Multi-Tab Active Fill Concurrency Lock Registry
+const activeTabLocks = new Map();
+
+function broadcastToTabs(message, excludeTabId = null) {
+  chrome.tabs.query({}, (tabs) => {
+    if (!tabs || !tabs.length) return;
+    tabs.forEach((tab) => {
+      if (tab.id && tab.id !== excludeTabId) {
+        chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+      }
+    });
+  });
+}
+
+// Sweep locks held by closed tabs (Pillar E auto-cleanup)
+chrome.tabs.onRemoved.addListener((tabId) => {
+  let releasedAny = false;
+  for (const [key, lock] of activeTabLocks.entries()) {
+    if (lock.tabId === tabId) {
+      activeTabLocks.delete(key);
+      releasedAny = true;
+    }
+  }
+  if (releasedAny) {
+    broadcastToTabs({ type: 'FILL_LOCK_RELEASED', payload: { tabId } });
+  }
+});
+
 // 1. Detect ATS on page navigation & set badge
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
@@ -166,9 +194,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         const buffer = await response.arrayBuffer();
         const bytes = new Uint8Array(buffer);
+        // V8 Chunked String Conversion (Pillar B optimization: eliminates 1.5MB heap allocation lag)
+        const CHUNK_SIZE = 0x8000; // 32KB
         let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
+        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE));
         }
         const base64 = btoa(binary);
         const disposition = response.headers.get('content-disposition') || '';
@@ -188,6 +218,66 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
     return true; // Keep message channel open for async response
+  }
+
+  // Pillar E: Multi-Tab Concurrency Lock Handlers
+  if (request.type === 'ACQUIRE_FILL_LOCK') {
+    const tabId = (sender && sender.tab) ? sender.tab.id : request.tabId;
+    const key = (request.url || '').trim().toLowerCase();
+    const now = Date.now();
+    const existing = activeTabLocks.get(key);
+
+    if (existing && now < existing.expiresAt && String(existing.tabId) !== String(tabId)) {
+      sendResponse({ success: false, lock: existing, error: 'Fill in progress in another tab' });
+      return false;
+    }
+
+    const lock = {
+      tabId: tabId,
+      url: request.url,
+      company: request.company,
+      jobTitle: request.jobTitle,
+      lockedAt: now,
+      lastHeartbeat: now,
+      expiresAt: now + (request.ttlMs || 45000)
+    };
+    activeTabLocks.set(key, lock);
+    broadcastToTabs({ type: 'FILL_LOCK_ACQUIRED', payload: lock }, tabId);
+    sendResponse({ success: true, lock });
+    return false;
+  }
+
+  if (request.type === 'HEARTBEAT_FILL_LOCK') {
+    const tabId = (sender && sender.tab) ? sender.tab.id : request.tabId;
+    const key = (request.url || '').trim().toLowerCase();
+    const existing = activeTabLocks.get(key);
+    if (existing && String(existing.tabId) === String(tabId)) {
+      existing.lastHeartbeat = Date.now();
+      existing.expiresAt = Date.now() + (request.ttlMs || 45000);
+      activeTabLocks.set(key, existing);
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false });
+    }
+    return false;
+  }
+
+  if (request.type === 'RELEASE_FILL_LOCK') {
+    const tabId = (sender && sender.tab) ? sender.tab.id : request.tabId;
+    const key = (request.url || '').trim().toLowerCase();
+    const existing = activeTabLocks.get(key);
+    if (existing && String(existing.tabId) === String(tabId)) {
+      activeTabLocks.delete(key);
+      broadcastToTabs({ type: 'FILL_LOCK_RELEASED', payload: { tabId, url: request.url } });
+    }
+    sendResponse({ success: true });
+    return false;
+  }
+
+  if (request.type === 'BROADCAST_CROSS_TAB') {
+    broadcastToTabs(request.message, (sender && sender.tab) ? sender.tab.id : null);
+    sendResponse({ success: true });
+    return false;
   }
 
   if (request.type === 'PROXY_FETCH') {

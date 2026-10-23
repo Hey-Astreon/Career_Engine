@@ -84,6 +84,13 @@ export default function ApplicationsPage() {
   const [isGeneratingFollowup, setIsGeneratingFollowup] = useState(false);
   const [copiedFollowup, setCopiedFollowup] = useState(false);
 
+  // Multi-Tab Real-Time Sync & Telemetry State (Pillar E)
+  const [lastSyncEvent, setLastSyncEvent] = useState<{
+    type: string;
+    company: string;
+    timestamp: number;
+  } | null>(null);
+
   // Load view mode preference from localStorage
   useEffect(() => {
     try {
@@ -141,6 +148,44 @@ export default function ApplicationsPage() {
       isMounted = false;
     };
   }, [activeProfileSlug]);
+
+  // Real-time Cross-Tab Application Synchronization (Pillar E)
+  useEffect(() => {
+    if (typeof window === "undefined" || !("BroadcastChannel" in window)) return;
+
+    let clearTimer: ReturnType<typeof setTimeout> | null = null;
+    const channel = new BroadcastChannel("astrepilot_application_sync");
+
+    channel.onmessage = (event) => {
+      const data = event.data;
+      if (!data || !data.type) return;
+
+      if (
+        data.type === "APPLICATION_DRAFT_LOGGED" ||
+        data.type === "APPLICATION_CONFIRMED" ||
+        data.type === "VAULT_ENTRY_SAVED"
+      ) {
+        // Optimistically refresh applications pipeline from server
+        fetchApplications();
+
+        setLastSyncEvent({
+          type: data.type,
+          company: data.company || "Remote Job",
+          timestamp: Date.now(),
+        });
+
+        if (clearTimer) clearTimeout(clearTimer);
+        clearTimer = setTimeout(() => {
+          setLastSyncEvent(null);
+        }, 6000);
+      }
+    };
+
+    return () => {
+      if (clearTimer) clearTimeout(clearTimer);
+      channel.close();
+    };
+  }, [fetchApplications]);
 
   const updateStatus = async (appId: string, newStatus: string) => {
     try {
@@ -342,6 +387,30 @@ export default function ApplicationsPage() {
             <span className="ce-chip ce-chip-blue !min-h-5 !px-2 !text-[8px]">
               LIVE TRACKER
             </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              title="Cross-tab BroadcastChannel active for real-time telemetry"
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span>MULTI-TAB SYNC</span>
+            </span>
+            {lastSyncEvent && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-medium bg-[var(--blue-soft)] text-[var(--blue)] border border-[var(--blue-line)] animate-in fade-in slide-in-from-top-1 duration-200">
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>
+                  Synced: {lastSyncEvent.company} (
+                  {lastSyncEvent.type === "APPLICATION_CONFIRMED"
+                    ? "Confirmed"
+                    : lastSyncEvent.type === "VAULT_ENTRY_SAVED"
+                    ? "Vault Updated"
+                    : "Draft"}
+                  )
+                </span>
+              </span>
+            )}
           </div>
           <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--muted)]">
             Structured tracking report of every remote opportunity form applied via AstrePilot or tracked manually. Real-time telemetry, stage progression, and export suite.
