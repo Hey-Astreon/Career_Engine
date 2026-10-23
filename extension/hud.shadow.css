@@ -106,7 +106,7 @@ svg {
 
 /* --- HUD Expanded Card --- */
 .hud-card {
-  width: 340px;
+  width: 364px;
   background: var(--ap-bg);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
@@ -128,10 +128,11 @@ svg {
 
 /* Header */
 .hud-header {
-  padding: 16px 20px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   border-bottom: 1px solid var(--ap-line);
   background: rgba(255, 255, 255, 0.3); /* Softer than solid for better glass effect */
   cursor: grab;
@@ -195,7 +196,7 @@ svg {
 .hud-actions {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -203,20 +204,31 @@ svg {
   background: transparent;
   border: none;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--ap-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--ap-ink-2);
   transition: all 0.2s var(--ap-ease);
+  flex-shrink: 0;
+}
+
+.icon-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .icon-btn:hover {
   color: var(--ap-ink);
   background: var(--ap-surface-hover);
   transform: scale(1.05);
+}
+
+.icon-btn.action-close:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .icon-btn:active {
