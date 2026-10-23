@@ -172,6 +172,7 @@
 
   /* -- MULTI-STEP STATE MACHINE & NAVIGATIONAL MEMORY (PILLAR C) -- */
   const STEP_CATEGORY_LABELS = {
+    GATEKEEPER: 'Login / Gateway',
     CONTACT_INFO: 'Contact Information',
     EXPERIENCE: 'Work Experience',
     EDUCATION: 'Education & Academics',
@@ -181,7 +182,7 @@
     GENERIC_STEP: 'Application Step'
   };
 
-  const NEXT_STEP_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|continue\s*to\s*next\s*step|step\s*\d+\s*->)$/i;
+  const NEXT_STEP_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|continue\s*to\s*next\s*step|step\s*\d+\s*->|log\s*in|login|sign\s*in|signin|get\s*started|start\s*application|enter)$/i;
   const SUBMIT_APPLICATION_REGEX = /^(submit|submit\s*application|complete\s*application|apply|apply\s*now|send\s*application|finish\s*and\s*submit)$/i;
 
   let navSession = null;
@@ -215,6 +216,25 @@
     } catch (e) {}
   }
 
+  function isGatekeeperStep(fields = detectedFields, url = window.location.href) {
+    if (!fields || !fields.length) return false;
+    const cleanUrl = url.toLowerCase();
+    const isAuthUrl = cleanUrl.includes('/login') || cleanUrl.includes('/signin') || cleanUrl.includes('/sign-in') || cleanUrl.includes('/auth') || cleanUrl.includes('from=login') || cleanUrl.includes('login_or_register') || cleanUrl.includes('login.jsp');
+    
+    const AUTH_TYPES = new Set(['EMAIL', 'LOGIN_ID', 'PASSWORD', 'CONFIRM_PASSWORD']);
+    const nonAuthFields = fields.filter(f => !AUTH_TYPES.has(f.type));
+    
+    // If only 1 or 2 fields and all are auth types
+    if (nonAuthFields.length === 0 && fields.length <= 2) {
+      return true;
+    }
+    // Or on an auth URL with at most 1 other field (e.g. remember me / terms checkbox)
+    if (isAuthUrl && nonAuthFields.length <= 1) {
+      return true;
+    }
+    return false;
+  }
+
   function createDefaultNavSession(siteUrl, company, jobTitle) {
     return {
       sessionId: 'nav_' + Math.random().toString(36).slice(2, 9),
@@ -236,6 +256,9 @@
 
   function classifyCurrentStep(url = '', stepIndicatorsText = '', fieldTypes = []) {
     const combined = `${url} ${stepIndicatorsText}`.toLowerCase();
+    if (combined.includes('login') || combined.includes('signin') || combined.includes('sign-in') || isGatekeeperStep(detectedFields, url)) {
+      return { category: 'GATEKEEPER', label: STEP_CATEGORY_LABELS.GATEKEEPER };
+    }
     if (combined.includes('review') || combined.includes('confirm') || combined.includes('summary') || combined.includes('final')) {
       return { category: 'REVIEW_SUBMIT', label: STEP_CATEGORY_LABELS.REVIEW_SUBMIT };
     }
@@ -276,8 +299,10 @@
     const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
     const ariaLabel = (btn.getAttribute ? btn.getAttribute('aria-label') : '') || '';
     const automationId = (btn.getAttribute ? btn.getAttribute('data-automation-id') : '') || '';
-    if (SUBMIT_APPLICATION_REGEX.test(txt)) return false;
+    const isGate = isGatekeeperStep(detectedFields, window.location.href);
+    if (!isGate && SUBMIT_APPLICATION_REGEX.test(txt)) return false;
     if (NEXT_STEP_REGEX.test(txt)) return true;
+    if (isGate && /^(submit|log\s*in|login|sign\s*in|signin|enter|continue|next)$/i.test(txt)) return true;
     if (automationId.toLowerCase().includes('next') || automationId.toLowerCase().includes('continue')) return true;
     if (ariaLabel && NEXT_STEP_REGEX.test(ariaLabel)) return true;
     return false;
@@ -290,8 +315,11 @@
       'button[data-automation-id="bottom-navigation-next-button"]',
       'input[type="submit"][value*="Next" i]',
       'input[type="button"][value*="Next" i]',
-      'button:not([disabled])',
+      'input[type="submit"][value*="Log In" i]',
+      'input[type="submit"][value*="Login" i]',
+      'input[type="submit"][value*="Sign In" i]',
       'input[type="submit"]:not([disabled])',
+      'button:not([disabled])',
       'a[role="button"]:not([disabled])'
     ].join(', ');
     const elements = targetDoc.querySelectorAll(selectors);
@@ -300,6 +328,19 @@
         return elements[i];
       }
     }
+    // Also traverse same-origin iframes
+    try {
+      const iframes = targetDoc.querySelectorAll('iframe');
+      for (let f = 0; f < iframes.length; f++) {
+        try {
+          const idoc = iframes[f].contentDocument || (iframes[f].contentWindow && iframes[f].contentWindow.document);
+          if (idoc) {
+            const btn = findNextStepButton(idoc);
+            if (btn) return btn;
+          }
+        } catch (err) {}
+      }
+    } catch (e) {}
     return null;
   }
 
@@ -378,7 +419,22 @@
       }
     }
   };
+  function attachFrameClickListeners() {
+    try {
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(frame => {
+        try {
+          const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+          if (doc && !doc.__ap_click_bound) {
+            doc.addEventListener('click', clickNavListener, true);
+            doc.__ap_click_bound = true;
+          }
+        } catch (e) {}
+      });
+    } catch (e) {}
+  }
   document.addEventListener('click', clickNavListener, true);
+  setInterval(attachFrameClickListeners, 2000);
 
   const oldCleanup = window.__ASTREPILOT_CLEANUP__;
   window.__ASTREPILOT_CLEANUP__ = () => {
@@ -2168,9 +2224,26 @@
           console.warn('[AstrePilot] Origin switch error:', e);
         }
       },
+      onLoginAdvance: () => {
+        const loginBtn = findNextStepButton(document) || document.querySelector('input[type="submit"], button[type="submit"], button');
+        if (activeHud) {
+          activeHud.setState('transitioning', { step: 'Signing in & loading application form...' });
+          if (loginBtn) {
+            try {
+              loginBtn.focus();
+              loginBtn.click();
+            } catch (e) {
+              try { loginBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (err) {}
+            }
+          }
+          watchForStepTransition(() => {
+            rescanFields();
+          });
+        }
+      },
       onReapply: () => {
         if (activeHud) activeHud.duplicateAlert = null;
-        runAutofill();
+        rescanFields();
       },
       onForceLockTakeover: async () => {
         await acquireFillLock(true);
@@ -2817,6 +2890,34 @@
       }
     }
 
+    // Gatekeeper / Authentication Step Isolation:
+    // If only email, login, or password fields exist, this is an authentication gateway, not a completed application.
+    const isGate = isGatekeeperStep(detectedFields, window.location.href);
+    if (isGate) {
+      console.log('[AstrePilot] Gatekeeper/Login step filled. Withholding application logging and "done" state.');
+      
+      const loginBtn = findNextStepButton(document) || document.querySelector('input[type="submit"], button[type="submit"], button');
+      const btnText = loginBtn ? (loginBtn.innerText || loginBtn.value || 'Log In').trim() : 'Log In';
+
+      if (hud.settings && hud.settings.autoAdvance && loginBtn) {
+        hud.setState('transitioning', { step: 'Logging in & loading application form...' });
+        try {
+          loginBtn.focus();
+          loginBtn.click();
+        } catch (e) {
+          try { loginBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (err) {}
+        }
+        watchForStepTransition(() => {
+          rescanFields();
+        });
+      } else {
+        hud.setState('gatekeeper-ready', {
+          buttonText: btnText
+        });
+      }
+      return;
+    }
+
     let logRes = null;
     let curSession = getNavSession() || createDefaultNavSession(window.location.href, (activeSession && activeSession.company) || '', (activeSession && activeSession.jobTitle) || '');
     
@@ -2934,6 +3035,98 @@
       activeHud.expand();
     }
   }
+
+  /* -- CONTINUOUS SPA NAVIGATION & DYNAMIC DOM TRANSITION WATCHER -- */
+  let lastTrackedUrl = window.location.href;
+  let domCheckTimer = null;
+
+  function initSpaNavigationWatcher() {
+    // 1. Monkey-patch pushState & replaceState to detect SPA client-side navigations
+    if (!history.__ap_patched) {
+      const origPush = history.pushState;
+      history.pushState = function() {
+        const res = origPush.apply(this, arguments);
+        handleNavigationChange('pushState');
+        return res;
+      };
+      const origReplace = history.replaceState;
+      history.replaceState = function() {
+        const res = origReplace.apply(this, arguments);
+        handleNavigationChange('replaceState');
+        return res;
+      };
+      history.__ap_patched = true;
+    }
+
+    window.addEventListener('popstate', () => handleNavigationChange('popstate'));
+    window.addEventListener('hashchange', () => handleNavigationChange('hashchange'));
+
+    // 2. Heartbeat URL check for query/path/hash changes
+    setInterval(() => {
+      if (window.location.href !== lastTrackedUrl) {
+        handleNavigationChange('url_poll');
+      }
+    }, 600);
+
+    // 3. Continuous MutationObserver to detect dynamic form mounting (e.g. login -> candidate profile)
+    const observer = new MutationObserver(() => {
+      if (isFilling) return;
+      if (domCheckTimer) clearTimeout(domCheckTimer);
+      domCheckTimer = setTimeout(() => {
+        checkIfNewFormMounted();
+      }, 500);
+    });
+
+    try {
+      observer.observe(document.body || document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+    } catch (e) {}
+  }
+
+  function handleNavigationChange(source) {
+    if (window.location.href === lastTrackedUrl && source === 'url_poll') return;
+    console.log(`[AstrePilot] SPA navigation detected (${source}): ${lastTrackedUrl} -> ${window.location.href}`);
+    lastTrackedUrl = window.location.href;
+
+    if (!activeHud || isFilling) return;
+
+    if (activeHud.duplicateAlert) {
+      activeHud.duplicateAlert = null;
+    }
+
+    setTimeout(() => {
+      rescanFields();
+    }, 400);
+  }
+
+  function checkIfNewFormMounted() {
+    if (!activeHud || isFilling) return;
+    
+    // Only auto-wake if currently in done, gatekeeper-ready, step-complete, transitioning, or no-fields
+    const wakeableStates = ['done', 'gatekeeper-ready', 'step-complete', 'transitioning', 'no-fields'];
+    if (!wakeableStates.includes(activeHud.state)) return;
+
+    const currentFields = scanFields();
+    if (!currentFields || currentFields.length === 0) return;
+
+    // Check if new core application fields are now present
+    const prevFieldIds = new Set((detectedFields || []).map(f => f.id));
+    const newFields = currentFields.filter(f => !prevFieldIds.has(f.id));
+
+    // If we were on gatekeeper (1-2 fields) and now 3+ fields exist, or if at least 2 brand new fields appeared
+    if ((detectedFields.length <= 2 && currentFields.length >= 3) || newFields.length >= 2) {
+      console.log(`[AstrePilot] Real form detected with ${currentFields.length} fields! Transitioning from ${activeHud.state} to ready.`);
+      if (activeHud.duplicateAlert) {
+        activeHud.duplicateAlert = null;
+      }
+      applyDetectedFields(currentFields);
+    }
+  }
+
+  // Initialize continuous SPA navigation and dynamic DOM observer
+  initSpaNavigationWatcher();
 
   // Auto-launch if we just clicked an apply button or next/continue step and navigated
   if (sessionStorage.getItem('ap_auto_open') === 'true') {

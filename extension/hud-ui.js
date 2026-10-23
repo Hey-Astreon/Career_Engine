@@ -187,6 +187,7 @@ window.AstrePilotHUD = (function () {
           AstrePilot
         </div>
         <div class="hud-actions">
+          <button type="button" class="icon-btn action-rescan" title="Re-scan Form Fields" aria-label="Re-scan Form Fields">${ICONS.refresh}</button>
           <button type="button" class="icon-btn action-extract-jd" title="Extract JD to AstreWork" aria-label="Extract JD">${ICONS.scan}</button>
           <button type="button" class="icon-btn action-download-resume" title="Download Resume" aria-label="Download Resume">${ICONS.download}</button>
           <button type="button" class="icon-btn action-settings" title="Settings" aria-label="Settings">${ICONS.settings}</button>
@@ -286,6 +287,12 @@ window.AstrePilotHUD = (function () {
             }
             this._renderBody();
           }
+        }
+        else if (btn.classList.contains('action-rescan')) {
+          if (this.options.onRescan) this.options.onRescan();
+        }
+        else if (btn.classList.contains('action-login-advance')) {
+          if (this.options.onLoginAdvance) this.options.onLoginAdvance();
         }
         else if (btn.classList.contains('action-extract-jd')) {
           if (this.options.onExtractJD) this.options.onExtractJD();
@@ -870,8 +877,30 @@ window.AstrePilotHUD = (function () {
                 <button class="btn-secondary action-close" style="flex: 1;">Close</button>
                 <button class="btn-secondary action-undo" style="flex: 1;">Undo Fill</button>
               </div>
+              <button type="button" class="btn-secondary action-rescan" style="width: 100%; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 11px; padding: 6px 10px;">
+                ${ICONS.refresh} More Fields Appeared? Re-Scan Form
+              </button>
             `;
           }
+        } else if (this.state === 'gatekeeper-ready') {
+          const btnTxt = (this.meta && this.meta.buttonText) || 'Log In';
+          html += `
+            <div style="background: rgba(0, 113, 227, 0.08); border: 1px solid rgba(0, 113, 227, 0.2); border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
+              <div style="color: var(--ap-ai, #0071e3); font-weight: 700; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span>Credentials Populated</span>
+                <span style="color: var(--ap-success, #10b981);">✓</span>
+              </div>
+              <div style="color: var(--ap-ink-2, #475569); font-size: 11px; margin-top: 3px;">
+                Sign in to advance to the candidate profile and full application form.
+              </div>
+            </div>
+            <button type="button" class="btn-primary action-login-advance" style="background: var(--ap-ai, #0071e3); border-color: var(--ap-ai, #0071e3); color: white; margin-bottom: 6px; font-weight: 600;">
+              ${esc(btnTxt)} & Continue to Form →
+            </button>
+            <button type="button" class="btn-secondary action-rescan" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 11px;">
+              ${ICONS.refresh} Re-Scan Form Fields
+            </button>
+          `;
         } else if (this.state === 'catalog') {
           const count = this.harvester ? (this.harvester.count || (this.harvester.jobs ? this.harvester.jobs.length : 0)) : 0;
           if (this.harvester && this.harvester.synced) {

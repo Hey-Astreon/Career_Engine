@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 55: AstrePilot In-HUD Settings Drawer, Header Stepper Single-Line Typography Calibration, Job Description vs Application Form Recognition Heuristics, Multi-Frame ATS Scanning, and 50/50 Vitest 503-Test Green Verification)
+> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 56: AstrePilot Gatekeeper Step Segregation, Continuous SPA/DOM Transition Watcher, Header Re-scan Controls & False Duplicate Prevention, and 50/50 Vitest 503-Test Green Verification)
 
 ---
 
@@ -1128,6 +1128,16 @@ Located in `extension/`:
   - **5. VS Code TypeScript Workspace Configuration:** Created `.vscode/settings.json` configuring `"typescript.tsdk": "node_modules/typescript/lib"` and removed unused import in `src/app/api/autopilot/vault/route.ts`.
   - **6. Repackaged Distribution:** Executed `npm run build:extension` generating updated `public/downloads/astrepilot-extension.zip` (85.0 KB).
   - **7. Comprehensive Automated Verification:** Full Vitest suite: 50 test files passed (503/503 tests passing green). TypeScript strict compile: `npx tsc --noEmit` clean with 0 errors.
+
+- [x] **Phase 56: AstrePilot Gatekeeper Step Segregation, Continuous SPA/DOM Transition Watcher, Header Re-scan Controls & False Duplicate Prevention (Oct 23, 2026)**
+  - **1. Gatekeeper / Login Step Recognition & Segregation (`extension/content.js`):** Built `isGatekeeperStep()` identifying authentication screens containing only email/login/password inputs or auth URLs. Strictly prevents gatekeeper steps from invoking `apFetch('/log')` or setting `state: 'done'`.
+  - **2. Dedicated `gatekeeper-ready` HUD State (`extension/hud-ui.js`):** Transitions filled login screens into a clear "Credentials Populated ✓" state with `[Log In & Continue to Form →]` and `[↻ Re-Scan Form Fields]`. If auto-advance is enabled, automatically clicks the login button and arms the transition watcher.
+  - **3. Expanded Step Button Heuristics (`NEXT_STEP_REGEX` & `isNextStepButton`):** Added `log in`, `login`, `sign in`, `signin`, `get started`, `start application`, `enter` to advance button recognizers, and traversed same-origin iframes in `findNextStepButton()`.
+  - **4. Continuous SPA Navigation & Dynamic DOM Transition Watcher (`extension/content.js`):** Engineered `initSpaNavigationWatcher()` combining: (1) `history.pushState` and `history.replaceState` monkey-patching, (2) `popstate` and `hashchange` listeners, (3) 600ms URL polling heartbeat, and (4) continuous MutationObserver watching for dynamic form mounting. Automatically wakes up from `done`/`gatekeeper-ready`/`transitioning` when 3+ new application fields appear, clears stale duplicate alerts, and transitions the HUD into `ready` state.
+  - **5. Header Re-Scan Action Button & 'Done' State Escape Hatch (`extension/hud-ui.js`):** Added a dedicated `action-rescan` (`↻` refresh icon) in `.hud-actions` in the header, allowing 1-click re-scanning at any second. Added `More Fields Appeared? Re-Scan Form` secondary action inside the `done` state card.
+  - **6. Backend Telemetry Guard (`src/app/api/autopilot/log/route.ts`):** Added gatekeeper guard: if `isGatekeeper === true` or (`fieldsFilled <= 1 && fieldsTotal <= 2 && !hasAiAnswers`), records raw telemetry in `autopilotFill` but strictly blocks upserting to `db.application` with status `APPLIED`. Eliminates premature application draft creation and prevents false `ALREADY APPLIED Today` duplicate alerts.
+  - **7. Repackaged Distribution:** Built updated `public/downloads/astrepilot-extension.zip` (87.2 KB).
+  - **8. Comprehensive Automated Verification:** Full Vitest suite: 50 test files passed (503/503 tests passing green). TypeScript strict compile: `npx tsc --noEmit` clean with 0 errors.
 
 ---
 
@@ -2358,6 +2368,53 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never assume any page with `<input>` elements is an application form. Enterprise career portals regularly display search widgets, newsletter inputs, or location filters in headers and footers. An intelligent career agent must verify the presence of core applicant identity fields before declaring an application form ready.
   - **Rule:** UI controls in a browser extension HUD must stay inside the HUD. Forcing the candidate into a new browser tab breaks the cognitive flow and disengages the user from the application they are actively completing.
   - **Rule:** Stepper badges in flexbox headers must enforce `white-space: nowrap !important` and `display: inline-flex` to prevent parent compression from breaking compound phrases (e.g. `Step 1`) across lines.
+
+### 🔴 Case 36: Resolving Gatekeeper Login False Form Completion, Premature Application Drafting, SPA Dynamic Form Blindness, and In-HUD Re-scan Ergonomics
+
+* **Date & Context:** October 23, 2026 — Eliminating the critical usability bug where filling an email on an initial ATS login screen (e.g. Cotiviti on iCIMS) caused AstrePilot to declare the application finished (`Form Filled (Draft Tracked) · Mark as Submitted`), record a premature application draft in the database, trigger a false `ALREADY APPLIED Today` warning, and remain frozen in `done` state when the actual multi-field candidate profile form loaded.
+
+* **The Exact Challenge & Mistake Encountered:**
+  - Candidate Roushan Kumar navigated to an enterprise ATS portal (Cotiviti iCIMS) where applicants first encounter a gateway login screen asking for Email.
+  - AstrePilot detected 1 field: `Email`.
+  - Roushan autofilled the email.
+  - AstrePilot immediately declared `Form Filled (Draft Tracked)` and `[🎉 Mark as Submitted]`, logged the application to `/api/autopilot/log`, and set `state = 'done'`.
+  - When Roushan clicked "Log In" on Cotiviti, iCIMS dynamically rendered the real application form (Resume upload, Login creation, Name, Phone, Address, etc.) via SPA/AJAX.
+  - AstrePilot remained completely frozen in `state = 'done'`, showing `1 fields (Email) ✓`, with NO autofill button, NO header refresh/rescan button, and a glaring amber alert: `ALREADY APPLIED Today (Submitted via ASTREPILOT)`. Roushan was completely trapped with zero options to autofill the real form.
+
+* **Deep Root Cause Diagnosis:**
+  1. **Gatekeeper False Completion:** An authentication or login screen is an identity gatekeeper, not a job application. The autofill engine did not isolate gatekeeper steps: filling a single email input was treated identically to submitting a full job application.
+  2. **Advance Button Recognition Gap:** In `content.js`, `NEXT_STEP_REGEX` did not recognize `Log In`, `Login`, `Sign In`, or `Submit` on login forms as step transition buttons. Thus, `findNextStepButton()` returned `null`, falsely convincing AstrePilot that this was the final step of the entire application.
+  3. **Premature Application Draft Logging:** In `fillAllFields()`, `apFetch('/log')` was unconditionally invoked after filling, upserting an `APPLIED` record in `db.application` with today's date. When the subsequent form loaded, `/check-status` queried the database, found the record created seconds earlier, and slapped the `ALREADY APPLIED Today` duplicate warning on the user.
+  4. **SPA / Dynamic DOM Blindness:** Modern enterprise ATS portals (iCIMS, Workday, Lever) swap forms via client-side SPA routing (`history.pushState`) or dynamic DOM replacement without full window reloads. AstrePilot had zero SPA history hooks and no persistent MutationObserver watching for newly mounted forms.
+  5. **HUD Action Ergonomics Void:** In `hud-ui.js`, the header lacked an `action-rescan` (refresh) button, and the `done` state card provided zero escape hatch to re-scan when more fields appeared.
+
+* **The Concrete Surgical Fix:**
+  1. **Gatekeeper Step Recognition & Segregation (`extension/content.js`):**
+     - Implemented `isGatekeeperStep()` detecting screens with <= 2 inputs consisting solely of auth types (`EMAIL`, `LOGIN_ID`, `PASSWORD`) or auth URLs (`/login`, `/signin`, `from=login`).
+     - In `fillAllFields()`: If `isGatekeeperStep` is true, strictly bypasses `apFetch('/log')` and `state = 'done'`.
+     - Transitions to dedicated `state: 'gatekeeper-ready'`: displays `Credentials Populated ✓`, with a prominent **`[Log In & Continue to Form →]`** action and `[↻ Re-Scan Form Fields]`. If auto-advance is enabled, automatically triggers the login button and arms the transition watcher.
+  2. **Expanded Step Button Recognition (`extension/content.js`):**
+     - Added `log in`, `login`, `sign in`, `signin`, `get started`, `start application`, `enter` to `NEXT_STEP_REGEX`.
+     - In `isNextStepButton()`: Allowed submit and login buttons to qualify as advance buttons when on gatekeeper steps.
+     - In `findNextStepButton()`: Traversed same-origin iframes (e.g. `#icims_content_iframe`) to locate nested buttons.
+  3. **Backend Telemetry Guard (`src/app/api/autopilot/log/route.ts`):**
+     - Added gatekeeper guard: if `isGatekeeper === true` or (`fieldsFilled <= 1 && fieldsTotal <= 2 && !hasAiAnswers`), records raw telemetry in `autopilotFill` but strictly blocks upserting to `db.application` with status `APPLIED`. Eliminates premature application draft creation and prevents false duplicate alerts.
+  4. **Continuous SPA Navigation & Dynamic DOM Transition Watcher (`extension/content.js`):**
+     - Built `initSpaNavigationWatcher()` combining: (1) `history.pushState` and `history.replaceState` monkey-patching, (2) `popstate` and `hashchange` listeners, (3) 600ms URL polling heartbeat, and (4) continuous MutationObserver.
+     - When an SPA transition occurs or when 3+ new application fields appear while in `done`/`gatekeeper-ready`/`transitioning`, automatically wakes up, clears any duplicate alerts, scans the new fields, and transitions the HUD into **`state: 'ready'`** with the primary **`[⚡ Autofill X fields]`** button!
+     - Added `attachFrameClickListeners()` binding navigation listeners to same-origin iframes.
+  5. **Header Re-Scan Action Button & 'Done' State Escape Hatch (`extension/hud-ui.js`):**
+     - Added a dedicated `action-rescan` (`↻` refresh icon) in `.hud-actions` in the header for 1-click re-scanning at any second.
+     - Added `More Fields Appeared? Re-Scan Form` secondary action inside the `done` state card.
+  6. **Repackaged Distribution & Verification:**
+     - Executed `npm run build:extension` generating updated `public/downloads/astrepilot-extension.zip` (87.2 KB).
+     - Full Vitest suite: 50 test files passed (503/503 tests passing green).
+     - Full TypeScript typecheck: `npx tsc --noEmit` exited clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never treat a login or authentication gateway step as an application form. Authentication is a prerequisite, not a submission. Gatekeeper steps must NEVER create database application records or declare `state = 'done'`.
+  - **Rule:** Single Page Applications (SPAs) and dynamic ATS portals replace DOM trees without window reloads. An in-browser career agent must continuously observe SPA router transitions (`pushState`, `replaceState`, `popstate`) and dynamic DOM mutations to automatically transition from completed gatekeeper states into active application forms.
+  - **Rule:** Never lock the user into a terminal state without a re-scan escape hatch. Always provide a persistent re-scan icon in the HUD header and a "More fields appeared? Re-Scan" button in completed state cards.
 
 ---
 

@@ -28,13 +28,14 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { siteUrl, company, jobTitle, fieldsTotal, fieldsFilled, hasAiAnswers } = body as {
+    const { siteUrl, company, jobTitle, fieldsTotal, fieldsFilled, hasAiAnswers, isGatekeeper } = body as {
       siteUrl: string;
       company?: string;
       jobTitle?: string;
       fieldsTotal: number;
       fieldsFilled: number;
       hasAiAnswers?: boolean;
+      isGatekeeper?: boolean;
     };
 
     if (!siteUrl || fieldsTotal == null || fieldsFilled == null) {
@@ -104,6 +105,23 @@ export async function POST(req: Request) {
         hasAiAnswers: hasAiAnswers ?? false,
       },
     });
+
+    // Gatekeeper & Single-Field Authentication Guard:
+    // If this fill was on a gatekeeper/login step or only filled 1-2 scalar auth fields without AI/resume,
+    // do NOT upsert to db.application as APPLIED. This prevents false duplicate alerts and phantom drafts.
+    const isGatekeeperStep = Boolean(isGatekeeper) || (fieldsFilled <= 1 && fieldsTotal <= 2 && !hasAiAnswers);
+    if (isGatekeeperStep) {
+      return NextResponse.json(
+        {
+          success: true,
+          id: fill.id,
+          fillId: fill.id,
+          applicationId: null,
+          isGatekeeper: true,
+        },
+        { headers: CORS }
+      );
+    }
 
     // 2. Canonical Deduplication & Auto-Upsert in Application Pipeline
     // Look for existing application by URL or (company + title) for this profile
