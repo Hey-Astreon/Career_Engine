@@ -1160,8 +1160,16 @@
         return 'REASON_FOR_LEAVING';
       }
 
-      // Disambiguate Date inputs (Month, Day, Year) in employment history
-      const isEnd = labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to');
+      if (input.type === 'checkbox' && (labelSignal.includes('current') || attrSignal.includes('current'))) return 'CURRENT_ROLE';
+      if (input.tagName === 'TEXTAREA' || labelSignal.includes('description') || labelSignal.includes('responsibilities') || labelSignal.includes('duties') || attrSignal.includes('description') || attrSignal.includes('responsibilities')) {
+        return 'WORK_DESCRIPTION';
+      }
+    }
+
+    // 4. GLOBAL DATE DISAMBIGUATION (Month, Day, Year) in Employment or Education
+    const isStart = labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from');
+    const isEnd = labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to') || labelSignal.includes('graduat');
+    if (isStart || isEnd) {
       if (attrSignal.includes('year') || (labelSignal.includes('year') && !labelSignal.includes('month'))) {
         return isEnd ? 'END_YEAR' : 'START_YEAR';
       }
@@ -1171,26 +1179,18 @@
       if (attrSignal.includes('month') || (labelSignal.includes('month') && !labelSignal.includes('year'))) {
         return isEnd ? 'END_MONTH' : 'START_MONTH';
       }
-      if (labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from')) {
-        return (labelSignal.includes('month') || isSelect) ? 'START_MONTH' : 'START_YEAR';
-      }
-      if (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to')) {
-        return (labelSignal.includes('month') || isSelect) ? 'END_MONTH' : 'END_YEAR';
-      }
-
-      if (input.type === 'checkbox' && (labelSignal.includes('current') || attrSignal.includes('current'))) return 'CURRENT_ROLE';
-      if (input.tagName === 'TEXTAREA' || labelSignal.includes('description') || labelSignal.includes('responsibilities') || labelSignal.includes('duties') || attrSignal.includes('description') || attrSignal.includes('responsibilities')) {
-        return 'WORK_DESCRIPTION';
-      }
+      if (isStart) return (labelSignal.includes('month') || isSelect) ? 'START_MONTH' : 'START_YEAR';
+      if (isEnd) return (labelSignal.includes('month') || isSelect) ? 'END_MONTH' : 'END_YEAR';
     }
 
-    // 4. SECTION-AWARE FAST HEURISTICS: Education
-    const isEducationSection = contextSignal.includes('education') || contextSignal.includes('school') || attrSignal.includes('education') || attrSignal.includes('school');
-    if (isEducationSection) {
-      if (labelSignal.includes('school') || labelSignal.includes('university') || labelSignal.includes('college') || labelSignal.includes('institution') || attrSignal.includes('school')) return 'SCHOOL';
-      if (labelSignal.includes('degree') || attrSignal.includes('degree')) return 'DEGREE';
-      if (labelSignal.includes('discipline') || labelSignal.includes('major') || labelSignal.includes('field of study') || attrSignal.includes('discipline') || attrSignal.includes('major')) return 'DISCIPLINE';
+    if (labelSignal.includes('anticipate graduating') || labelSignal.includes('graduation year') || labelSignal.includes('graduating year')) {
+      return 'END_YEAR';
     }
+
+    // 5. GLOBAL EDUCATION HEURISTICS (School, Degree, Discipline)
+    if (labelSignal.includes('school') || labelSignal.includes('university') || labelSignal.includes('college') || labelSignal.includes('institution') || attrSignal.includes('school')) return 'SCHOOL';
+    if (labelSignal.includes('degree') || attrSignal.includes('degree')) return 'DEGREE';
+    if (labelSignal.includes('discipline') || labelSignal.includes('major') || labelSignal.includes('field of study') || attrSignal.includes('discipline') || attrSignal.includes('major')) return 'DISCIPLINE';
 
     // 5. SPECIFIC QUESTIONS & COMPLIANCE HEURISTICS
     if (labelSignal.includes('text consent') || labelSignal.includes('text message') || labelSignal.includes('sms') || attrSignal.includes('text_consent') || attrSignal.includes('sms')) return 'TEXT_CONSENT';
@@ -2006,15 +2006,30 @@
 
     let options = [];
     const startTime = Date.now();
-    while (Date.now() - startTime < 600) {
+    while (Date.now() - startTime < 700) {
+      // Check for search input in popover or container
+      const searchInput = document.querySelector('.select2-input, [role="listbox"] input, [data-radix-popper-content-wrapper] input, input[type="search"], input[aria-autocomplete="list"]') ||
+                          (triggerEl.parentElement && triggerEl.parentElement.querySelector('input:not([type="hidden"])'));
+      if (searchInput && searchInput !== triggerEl && !searchInput.disabled) {
+        try {
+          searchInput.focus();
+          const proto = window.HTMLInputElement.prototype;
+          const setter = Object.getOwnPropertyDescriptor(proto, 'value');
+          if (setter && setter.set) { setter.set.call(searchInput, targetVal); } else { searchInput.value = targetVal; }
+          searchInput.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: String(targetVal) }));
+          searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+          await new Promise(r => setTimeout(r, 120));
+        } catch (e) {}
+      }
+
       const popovers = Array.from(document.querySelectorAll(
-        '[data-radix-popper-content-wrapper], [data-radix-select-viewport], [role="listbox"], [data-headlessui-state="open"]'
+        '[data-radix-popper-content-wrapper], [data-radix-select-viewport], [role="listbox"], [data-headlessui-state="open"], .select__menu, .select2-drop, .select2-results, [class*="menu"], [class*="dropdown-menu"], [class*="popover"], div[id*="listbox"], ul[id*="listbox"]'
       ));
       for (const p of popovers) {
-        const opts = Array.from(p.querySelectorAll('[role="option"], [data-radix-collection-item], [data-headlessui-state], div[id*="option"]'));
+        const opts = Array.from(p.querySelectorAll('[role="option"], [data-radix-collection-item], [data-headlessui-state], li, div[id*="option"], div[class*="option"], .select2-results li'));
         if (opts.length > 0) {
-          options = opts;
-          break;
+          options = opts.filter(o => o.offsetHeight > 0 || o.getBoundingClientRect().height > 0 || o.offsetParent !== null);
+          if (options.length > 0) break;
         }
       }
       if (options.length > 0) break;
@@ -2035,6 +2050,17 @@
       await new Promise(r => setTimeout(r, 80));
       cleanupLingeringPopovers();
       return true;
+    }
+
+    // Fallback: If School/Degree/Discipline doesn't match exact target, pick 'Other' / 'Not Listed'
+    if (fieldType === 'SCHOOL' || fieldType === 'DEGREE' || fieldType === 'DISCIPLINE') {
+      const otherOpt = options.find(o => OTHER_FALLBACK_REGEX.test((o.textContent || o.text || '').trim()));
+      if (otherOpt) {
+        otherOpt.click();
+        await new Promise(r => setTimeout(r, 80));
+        cleanupLingeringPopovers();
+        return true;
+      }
     }
 
     return await fillWaiAriaKeyboard(triggerEl, targetVal, fieldType);
@@ -2115,13 +2141,14 @@
         return await fillNativeSelect(triggerEl, targetVal, fieldType);
       case 'RADIX':
       case 'HEADLESS_UI':
+      case 'WAI_ARIA':
         return await fillRadixOrHeadless(triggerEl, targetVal, fieldType);
       case 'WORKDAY':
         return await fillWorkdaySelect(triggerEl, targetVal, fieldType);
       case 'REACT_SELECT':
         return await fillReactSelectV2(triggerEl, targetVal, fieldType);
       default:
-        return await fillWaiAriaKeyboard(triggerEl, targetVal, fieldType);
+        return await fillRadixOrHeadless(triggerEl, targetVal, fieldType);
     }
   }
 
@@ -2350,6 +2377,85 @@
     PREFERRED_NAME: 'Preferred Name'
   };
 
+  /* -- RESOLVE SCREENING SELECT (DETERMINISTIC ASYMMETRIC SAFETY FIREWALL) -- */
+  function resolveScreeningSelect(element) {
+    const q = getLabelText(element).toLowerCase();
+
+    // 1. KNOCKOUT & DISQUALIFY QUESTIONS -> ABSOLUTELY "NO"
+    if (
+      q.includes('previously worked') ||
+      q.includes('worked for') ||
+      q.includes('worked at') ||
+      q.includes('prior employee') ||
+      q.includes('former employee') ||
+      q.includes('previously been employed') ||
+      q.includes('previously employed') ||
+      q.includes('contractor or full-time') ||
+      q.includes('contractor') ||
+      q.includes('rioter') ||
+      q.includes('tencent') ||
+      q.includes('affiliate') ||
+      q.includes('subsidiary') ||
+      q.includes('previously applied') ||
+      q.includes('applied to') ||
+      q.includes('applied before') ||
+      q.includes('sponsor') ||
+      q.includes('sponsorship') ||
+      q.includes('require visa') ||
+      q.includes('felony') ||
+      q.includes('criminal') ||
+      q.includes('misdemeanor') ||
+      q.includes('convicted') ||
+      q.includes('disciplinary') ||
+      q.includes('discharged') ||
+      q.includes('terminated for cause') ||
+      q.includes('fired') ||
+      q.includes('relative') ||
+      q.includes('family member') ||
+      q.includes('conflict of interest') ||
+      q.includes('conflict') ||
+      q.includes('non-compete') ||
+      q.includes('restrictive covenant') ||
+      q.includes('government official') ||
+      q.includes('public office') ||
+      q.includes('civil service') ||
+      q.includes('suspended') ||
+      q.includes('debarred')
+    ) {
+      return 'No';
+    }
+
+    // 2. COMPLIANCE, CONSENT, POLICIES & WORK AUTH -> ABSOLUTELY "YES"
+    if (
+      q.includes('authorized to work') ||
+      q.includes('legally authorized') ||
+      q.includes('18 years') ||
+      q.includes('at least 18') ||
+      q.includes('consent') ||
+      q.includes('acknowledge') ||
+      q.includes('agree') ||
+      q.includes('privacy notice') ||
+      q.includes('privacy policy') ||
+      q.includes('candidate privacy') ||
+      q.includes('e-verify') ||
+      q.includes('truthful') ||
+      q.includes('certify') ||
+      q.includes('terms and conditions') ||
+      q.includes('terms') ||
+      q.includes('background check') ||
+      q.includes('drug screen') ||
+      q.includes('reference check') ||
+      q.includes('reliable internet') ||
+      q.includes('comfortable with remote') ||
+      q.includes('relocate')
+    ) {
+      return 'Yes';
+    }
+
+    // Safety-first default against risk knockout: return 'No'
+    return 'No';
+  }
+
   /* -- RESOLVE PREVIEW -- */
   function resolvePreview(field, profile, session) {
     const loc = parseLocation(profile.location);
@@ -2438,11 +2544,7 @@
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
       case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
-      case 'SCREENING_SELECT': {
-        const labelText = getLabelText(field.element).toLowerCase();
-        if (labelText.includes('sponsor') || labelText.includes('felony') || labelText.includes('criminal') || labelText.includes('relative') || labelText.includes('conflict')) return 'No';
-        return 'Yes';
-      }
+      case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
       case 'COVER_LETTER': return null;
       case 'SCREENING': {
         const labelText = getLabelText(field.element).toLowerCase();
@@ -2622,11 +2724,7 @@
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
       case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
-      case 'SCREENING_SELECT': {
-        const labelText = getLabelText(field.element).toLowerCase();
-        if (labelText.includes('sponsor') || labelText.includes('felony') || labelText.includes('criminal') || labelText.includes('relative') || labelText.includes('conflict')) return 'No';
-        return 'Yes';
-      }
+      case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
       case 'COVER_LETTER':
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
@@ -3307,8 +3405,8 @@
       const text = (el.innerText || el.textContent || '').trim().toLowerCase();
       const ariaVal = (el.getAttribute('aria-valuenow') || el.getAttribute('aria-label') || '').toLowerCase();
       if (text && !PLACEHOLDER_REGEX.test(text) && text.length > 0) return true;
-      if (ariaVal && ariaVal.length > 0) return true;
-      return true;
+      if (ariaVal && ariaVal.length > 0 && !PLACEHOLDER_REGEX.test(ariaVal)) return true;
+      return false;
     }
 
     // 3. Radio / Checkbox
