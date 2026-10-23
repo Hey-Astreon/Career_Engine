@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import type { ScreeningQuestionVault } from "@prisma/client";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { extractKeywords, inferQuestionCategory } from "@/lib/autopilot/qaVaultEngine";
 import {
