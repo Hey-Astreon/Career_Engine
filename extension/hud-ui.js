@@ -95,6 +95,7 @@ window.AstrePilotHUD = (function () {
       this.astraShield = null;
       this.recruiter = null;
       this.harvester = null;
+      this.stepBadge = null;
 
       // Restore position if possible
       try {
@@ -227,6 +228,9 @@ window.AstrePilotHUD = (function () {
         }
         else if (btn.classList.contains('action-fill')) {
           if (this.options.onAutofill) this.options.onAutofill();
+        }
+        else if (btn.classList.contains('action-next-step')) {
+          if (this.options.onNextStep) this.options.onNextStep();
         }
         else if (btn.classList.contains('action-undo')) {
           if (this.options.onUndo) this.options.onUndo();
@@ -390,6 +394,26 @@ window.AstrePilotHUD = (function () {
       }
     }
 
+    setStepBadge(badge) {
+      this.stepBadge = badge;
+      const titleEl = this.shadow.querySelector('.hud-title');
+      if (titleEl) {
+        let badgeEl = titleEl.querySelector('.step-pill-badge');
+        if (badge && badge.stepIndex != null) {
+          if (!badgeEl) {
+            badgeEl = document.createElement('span');
+            badgeEl.className = 'step-pill-badge';
+            badgeEl.style.cssText = 'font-size: 10px; font-weight: 700; color: var(--ap-ai, #0071e3); background: rgba(0, 113, 227, 0.12); padding: 2px 6px; border-radius: 9999px; margin-left: 6px; border: 1px solid rgba(0,113,227,0.2);';
+            titleEl.appendChild(badgeEl);
+          }
+          badgeEl.textContent = `Step ${badge.stepIndex + 1}`;
+          badgeEl.title = badge.stepName || '';
+        } else if (badgeEl) {
+          badgeEl.remove();
+        }
+      }
+    }
+
     collapse() {
       this.isCollapsed = true;
       this.container.classList.add('mode-collapsed');
@@ -415,7 +439,7 @@ window.AstrePilotHUD = (function () {
     }
 
     _renderBody() {
-      if (['not-connected', 'no-profile', 'no-fields', 'extracting', 'error'].includes(this.state)) {
+      if (['not-connected', 'no-profile', 'no-fields', 'extracting', 'error', 'transitioning'].includes(this.state)) {
         let msg = '', sub = '', btn = '';
         let iconHtml = ICONS.emptyGhost;
         let isError = false;
@@ -437,6 +461,11 @@ window.AstrePilotHUD = (function () {
            sub = (this.meta && this.meta.step) ? this.meta.step : 'Scanning the document using AI...';
            btn = 'Extracting...';
            iconHtml = '<div class="pulse"></div>';
+        } else if (this.state === 'transitioning') {
+           msg = 'Loading Next Step...';
+           sub = (this.meta && this.meta.step) ? this.meta.step : 'Watching for the next ATS form stage...';
+           btn = 'Dismiss';
+           iconHtml = '<div class="pulse"></div>';
         } else if (this.state === 'error') {
            msg = 'Action Failed';
            sub = (this.meta && this.meta.msg) ? this.meta.msg : 'Something went wrong.';
@@ -447,7 +476,7 @@ window.AstrePilotHUD = (function () {
 
         const btnClass = this.state === 'no-fields' ? 'btn-primary action-extract' :
                          (this.state === 'error' ? 'btn-secondary action-close' :
-                         (this.state === 'extracting' ? 'btn-secondary action-close' : 'btn-primary action-settings'));
+                         (this.state === 'extracting' || this.state === 'transitioning' ? 'btn-secondary action-close' : 'btn-primary action-settings'));
 
         this.body.innerHTML = `
           <div class="empty-state">
@@ -588,9 +617,35 @@ window.AstrePilotHUD = (function () {
       }
 
       // Footer
-      if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog') {
+      if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete') {
         html += `<div class="hud-footer">`;
-        if (this.state === 'done') {
+        if (this.state === 'step-complete') {
+          const meta = this.meta || {};
+          const stepName = meta.stepName || 'Step';
+          const stepNum = meta.stepIndex != null ? meta.stepIndex + 1 : 1;
+          const filled = meta.stepFieldsFilled || 0;
+          const cumFilled = meta.cumulativeFilled || filled;
+          const cumTotal = meta.cumulativeTotal || filled;
+
+          html += `
+            <div style="background: rgba(0, 113, 227, 0.08); border: 1px solid rgba(0, 113, 227, 0.25); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+              <div style="color: var(--ap-ai, #0071e3); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <span>✓ Step ${stepNum} Complete</span>
+                <span style="font-size: 10px; background: rgba(0,113,227,0.15); padding: 2px 6px; border-radius: 4px;">${esc(stepName)}</span>
+              </div>
+              <div style="color: var(--ap-ink-2, #475569); font-size: 11px; margin-top: 4px;">
+                ${filled} fields populated on this step · ${cumFilled} of ${cumTotal} cumulative.
+              </div>
+            </div>
+            <button type="button" class="btn-primary action-next-step" style="background: var(--ap-ai, #0071e3); border-color: var(--ap-ai, #0071e3); color: white; margin-bottom: 6px; font-weight: 600;">
+              Continue to Next Step →
+            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-secondary action-close" style="flex: 1;">Close</button>
+              <button type="button" class="btn-secondary action-undo" style="flex: 1;">Undo Step</button>
+            </div>
+          `;
+        } else if (this.state === 'done') {
           const isConfirmed = this.meta && this.meta.isConfirmed;
           if (isConfirmed) {
             html += `

@@ -171,3 +171,30 @@ Bypasses the traditional drag-and-drop file friction by programmatically streami
 4. **Hidden Input Visibility Immunity:** Calibrates scanner geometry so `opacity: 0` or 0-dimension file inputs are not discarded during scanning.
 5. **Graceful Disk Fallback:** If synthetic injection fails or is blocked by extreme sandbox restrictions, automatically falls back to background disk download (`DOWNLOAD_RESUME`).
 
+---
+
+## 🪜 9. Pillar C: ATS Multi-Step Form State Machine & Navigational Memory
+
+Handles multi-page / multi-section job applications (Workday, Ashby, SmartRecruiters, Greenhouse multi-part) across dynamic SPA step re-renders and full page reloads:
+1. **Multi-Step Form Classifier (`classifyCurrentStep()`):** Scans DOM steppers (`[role="progressbar"]`, `.stepper`, `[class*="wizard"]`, `ol > li`), step indicators (`"Step 2 of 4"`), and contextual action buttons to determine:
+   - `isMultiStep`: Whether this application is split across multiple steps.
+   - `stepIndex`: Current 1-based step number.
+   - `totalSteps`: Total steps identified (or null if indefinite).
+   - `stepName`: Semantic step title (e.g., "Contact Information", "Experience", "Review & Submit").
+   - `isFinalStep`: Whether the current step is the final review/submit screen.
+2. **Button Disambiguation (`isNextStepButton()` vs `isSubmitApplicationButton()`):** Disambiguates forward navigation buttons ("Next", "Save & Continue", "Proceed") from irreversible submission triggers ("Submit Application", "Confirm & Apply", "Send Application"). Ensures the HUD never prompts "Mark as Submitted" while intermediate steps remain.
+3. **Persistent Navigational Memory (`ap_nav_session` in `sessionStorage`):** Stores application progression state across SPA container swaps and hard reloads:
+   - Tracks `activeFillId`, `applicationId`, `currentStepIndex`, `totalSteps`, and `stepHistory`.
+   - Accumulates `cumulativeFieldsFilled` and `cumulativeFieldsTotal` across all visited steps.
+   - Enforces the backend accounting invariant (`fieldsFilled <= fieldsTotal`) so the final `/api/autopilot/log` telemetry call never triggers HTTP 400.
+4. **Reactive SPA `MutationObserver` Transition Watcher (`watchForStepTransition()`):** Replaces brittle fixed `setTimeout` sleeps with dynamic DOM mutation tracking:
+   - Monitors container mutations after clicking "Next Step".
+   - Uses a 300ms quiet debounce once new interactive form inputs (`input`, `select`, `textarea`, comboboxes) mount into the DOM.
+   - Features a 4000ms safety timeout fallback.
+5. **Dynamic HUD Step Progression UI:**
+   - Visual step pill badge (`setStepBadge("Step 2/4: Experience")`).
+   - `step-complete` state showing step statistics and transforming the primary action button to `"Continue to Next Step →"`.
+   - `transitioning` state featuring an animated pulse spinner while the next step mounts.
+   - Automatically auto-scans and re-primes autofill for the subsequent step once settled.
+
+

@@ -74,22 +74,211 @@
   };
   window.addEventListener('keydown', keydownListener);
 
-  /* -- MULTI-STEP NAVIGATION TRACKER -- */
-  const STEP_BUTTON_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|submit\s*and\s*continue)$/i;
+  /* -- MULTI-STEP STATE MACHINE & NAVIGATIONAL MEMORY (PILLAR C) -- */
+  const STEP_CATEGORY_LABELS = {
+    CONTACT_INFO: 'Contact Information',
+    EXPERIENCE: 'Work Experience',
+    EDUCATION: 'Education & Academics',
+    EEO_COMPLIANCE: 'Voluntary Self-ID / EEO',
+    SCREENING: 'Screening & Questions',
+    REVIEW_SUBMIT: 'Review & Submit',
+    GENERIC_STEP: 'Application Step'
+  };
+
+  const NEXT_STEP_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|continue\s*to\s*next\s*step|step\s*\d+\s*->)$/i;
+  const SUBMIT_APPLICATION_REGEX = /^(submit|submit\s*application|complete\s*application|apply|apply\s*now|send\s*application|finish\s*and\s*submit)$/i;
+
+  let navSession = null;
+  function getNavSession() {
+    if (navSession) return navSession;
+    try {
+      const raw = sessionStorage.getItem('ap_nav_session');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.currentStepIndex === 'number') {
+          navSession = parsed;
+        }
+      }
+    } catch (e) {}
+    return navSession;
+  }
+
+  function saveNavSession(session) {
+    navSession = session;
+    try {
+      sessionStorage.setItem('ap_nav_session', JSON.stringify(session));
+      sessionStorage.setItem('ap_auto_open', 'true');
+    } catch (e) {}
+  }
+
+  function clearNavSession() {
+    navSession = null;
+    try {
+      sessionStorage.removeItem('ap_nav_session');
+      sessionStorage.removeItem('ap_auto_open');
+    } catch (e) {}
+  }
+
+  function createDefaultNavSession(siteUrl, company, jobTitle) {
+    return {
+      sessionId: 'nav_' + Math.random().toString(36).slice(2, 9),
+      siteUrl: siteUrl || window.location.href,
+      company: company || '',
+      jobTitle: jobTitle || '',
+      currentStepIndex: 0,
+      stepName: STEP_CATEGORY_LABELS.CONTACT_INFO,
+      stepCategory: 'CONTACT_INFO',
+      stepHistory: [],
+      cumulativeFieldsTotal: 0,
+      cumulativeFieldsFilled: 0,
+      activeFillId: null,
+      activeApplicationId: null,
+      isFinalStep: false,
+      lastUpdated: Date.now()
+    };
+  }
+
+  function classifyCurrentStep(url = '', stepIndicatorsText = '', fieldTypes = []) {
+    const combined = `${url} ${stepIndicatorsText}`.toLowerCase();
+    if (combined.includes('review') || combined.includes('confirm') || combined.includes('summary') || combined.includes('final')) {
+      return { category: 'REVIEW_SUBMIT', label: STEP_CATEGORY_LABELS.REVIEW_SUBMIT };
+    }
+    if (combined.includes('eeo') || combined.includes('diversity') || combined.includes('self-id') || combined.includes('voluntary')) {
+      return { category: 'EEO_COMPLIANCE', label: STEP_CATEGORY_LABELS.EEO_COMPLIANCE };
+    }
+    if (combined.includes('experience') || combined.includes('employment') || combined.includes('work_history')) {
+      return { category: 'EXPERIENCE', label: STEP_CATEGORY_LABELS.EXPERIENCE };
+    }
+    if (combined.includes('education') || combined.includes('academic') || combined.includes('school')) {
+      return { category: 'EDUCATION', label: STEP_CATEGORY_LABELS.EDUCATION };
+    }
+    if (combined.includes('contact') || combined.includes('personal') || combined.includes('candidate_info')) {
+      return { category: 'CONTACT_INFO', label: STEP_CATEGORY_LABELS.CONTACT_INFO };
+    }
+    if (fieldTypes && fieldTypes.length > 0) {
+      const counts = {};
+      fieldTypes.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+      const scoreContact = ['FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'ADDRESS', 'CITY', 'STATE', 'ZIP', 'RESUME'].reduce((acc, k) => acc + (counts[k] || 0), 0);
+      const scoreExp = ['COMPANY', 'EMPLOYMENT_TITLE', 'START_MONTH', 'START_YEAR', 'END_MONTH', 'END_YEAR', 'CURRENT_ROLE'].reduce((acc, k) => acc + (counts[k] || 0), 0);
+      const scoreEdu = ['SCHOOL', 'DEGREE', 'DISCIPLINE'].reduce((acc, k) => acc + (counts[k] || 0), 0);
+      const scoreEeo = ['GENDER', 'PRONOUNS', 'VETERAN', 'DISABILITY', 'RACE_ETHNICITY', 'HISPANIC_LATINO'].reduce((acc, k) => acc + (counts[k] || 0), 0);
+      const scoreScreen = ['SCREENING', 'SCREENING_SELECT', 'COVER_LETTER', 'WORK_AUTH', 'VISA', 'SALARY', 'NOTICE_PERIOD'].reduce((acc, k) => acc + (counts[k] || 0), 0);
+      const max = Math.max(scoreContact, scoreExp, scoreEdu, scoreEeo, scoreScreen);
+      if (max > 0) {
+        if (max === scoreContact) return { category: 'CONTACT_INFO', label: STEP_CATEGORY_LABELS.CONTACT_INFO };
+        if (max === scoreExp) return { category: 'EXPERIENCE', label: STEP_CATEGORY_LABELS.EXPERIENCE };
+        if (max === scoreEdu) return { category: 'EDUCATION', label: STEP_CATEGORY_LABELS.EDUCATION };
+        if (max === scoreEeo) return { category: 'EEO_COMPLIANCE', label: STEP_CATEGORY_LABELS.EEO_COMPLIANCE };
+        if (max === scoreScreen) return { category: 'SCREENING', label: STEP_CATEGORY_LABELS.SCREENING };
+      }
+    }
+    return { category: 'GENERIC_STEP', label: STEP_CATEGORY_LABELS.GENERIC_STEP };
+  }
+
+  function isNextStepButton(btn) {
+    if (!btn) return false;
+    const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
+    const ariaLabel = (btn.getAttribute ? btn.getAttribute('aria-label') : '') || '';
+    const automationId = (btn.getAttribute ? btn.getAttribute('data-automation-id') : '') || '';
+    if (SUBMIT_APPLICATION_REGEX.test(txt)) return false;
+    if (NEXT_STEP_REGEX.test(txt)) return true;
+    if (automationId.toLowerCase().includes('next') || automationId.toLowerCase().includes('continue')) return true;
+    if (ariaLabel && NEXT_STEP_REGEX.test(ariaLabel)) return true;
+    return false;
+  }
+
+  function findNextStepButton(targetDoc = document) {
+    const selectors = [
+      'button[data-automation-id*="next"]',
+      'button[data-automation-id*="continue"]',
+      'button[data-automation-id="bottom-navigation-next-button"]',
+      'input[type="submit"][value*="Next" i]',
+      'input[type="button"][value*="Next" i]',
+      'button:not([disabled])',
+      'input[type="submit"]:not([disabled])',
+      'a[role="button"]:not([disabled])'
+    ].join(', ');
+    const elements = targetDoc.querySelectorAll(selectors);
+    for (let i = 0; i < elements.length; i++) {
+      if (isNextStepButton(elements[i])) {
+        return elements[i];
+      }
+    }
+    return null;
+  }
+
+  let activeStepObserver = null;
+  function watchForStepTransition(onReady) {
+    if (activeStepObserver) {
+      activeStepObserver.disconnect();
+      activeStepObserver = null;
+    }
+    let debounceTimer = null;
+    const startTime = Date.now();
+    const safetyTimeout = setTimeout(() => {
+      if (activeStepObserver) {
+        activeStepObserver.disconnect();
+        activeStepObserver = null;
+      }
+      if (onReady) onReady();
+    }, 4000);
+
+    activeStepObserver = new MutationObserver(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const inputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea, button[role="combobox"]');
+        if (inputs.length > 0 || Date.now() - startTime > 1500) {
+          clearTimeout(safetyTimeout);
+          if (activeStepObserver) {
+            activeStepObserver.disconnect();
+            activeStepObserver = null;
+          }
+          if (onReady) onReady();
+        }
+      }, 300);
+    });
+
+    activeStepObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  async function runContinueNextStep() {
+    const hud = activeHud;
+    if (!hud) return;
+
+    const nextBtn = findNextStepButton(document);
+    if (!nextBtn) {
+      hud.setState('done', { isConfirmed: false });
+      return;
+    }
+
+    hud.setState('transitioning', { step: 'Advancing to next ATS stage...' });
+
+    // Click next button
+    try {
+      nextBtn.focus();
+      nextBtn.click();
+    } catch (e) {
+      try { nextBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (err) {}
+    }
+
+    watchForStepTransition(async () => {
+      if (!activeHud) return;
+      rescanFields();
+    });
+  }
 
   const clickNavListener = (e) => {
     const target = e.target && e.target.closest ? e.target.closest('button, a, input[type="submit"], input[type="button"]') : null;
     if (!target) return;
-    const txt = (target.innerText || target.textContent || target.value || '').trim();
-    if (STEP_BUTTON_REGEX.test(txt) || (activeHud && (target.type === 'submit' || target.getAttribute('role') === 'button'))) {
+    if (isNextStepButton(target)) {
       try { sessionStorage.setItem('ap_auto_open', 'true'); } catch (err) {}
-      // If HUD is currently mounted and active, check for in-page SPA transition after a short delay
       if (activeHud) {
-        setTimeout(() => {
+        activeHud.setState('transitioning', { step: 'Advancing to next step...' });
+        watchForStepTransition(() => {
           if (activeHud && !isFilling) {
             rescanFields();
           }
-        }, 1200);
+        });
       }
     }
   };
@@ -100,6 +289,10 @@
     if (oldCleanup) try { oldCleanup(); } catch(e) {}
     window.removeEventListener('keydown', keydownListener);
     document.removeEventListener('click', clickNavListener, true);
+    if (activeStepObserver) {
+      try { activeStepObserver.disconnect(); } catch (e) {}
+      activeStepObserver = null;
+    }
   };
 
   /* -- HELPERS -- */
@@ -1694,6 +1887,7 @@
     // Mount HUD immediately in connecting state so user gets visual feedback
     activeHud = AstrePilotHUD.mount({
       onAutofill: runAutofill,
+      onNextStep: runContinueNextStep,
       onUndo: runUndo,
       onExtract: runExtract,
       onExtractJD: runExtractJD,
@@ -1798,6 +1992,22 @@
     activeHud.setFields(hudFields);
     activeHud.setProgress(0, detectedFields.length);
     activeHud.setState('ready');
+
+    // Classify step and display step badge
+    const curSession = getNavSession() || createDefaultNavSession(window.location.href, activeSession ? activeSession.company : '', activeSession ? activeSession.jobTitle : '');
+    const stepIndicators = Array.from(document.querySelectorAll('[data-automation-id*="step"], ol.steps, ul.progress, [aria-current="step"], .progress-bar, h1, h2, legend'))
+      .map(e => e.innerText || e.textContent || '').join(' ');
+    const stepInfo = classifyCurrentStep(window.location.href, stepIndicators, detectedFields.map(f => f.type));
+    curSession.stepCategory = stepInfo.category;
+    curSession.stepName = stepInfo.label;
+    saveNavSession(curSession);
+
+    if (activeHud.setStepBadge) {
+      activeHud.setStepBadge({
+        stepIndex: curSession.currentStepIndex,
+        stepName: curSession.stepName
+      });
+    }
   }
 
   function rescanFields() {
@@ -2068,6 +2278,37 @@
     }
 
     let logRes = null;
+    let curSession = getNavSession() || createDefaultNavSession(window.location.href, (activeSession && activeSession.company) || '', (activeSession && activeSession.jobTitle) || '');
+    
+    // Check if there is an intermediate next step button
+    const nextBtn = findNextStepButton(document);
+    const hasNext = Boolean(nextBtn);
+
+    // Record step completion in navigational memory
+    const historyRecord = {
+      stepIndex: curSession.currentStepIndex,
+      stepCategory: curSession.stepCategory,
+      stepName: curSession.stepName,
+      fieldsTotal: detectedFields.length,
+      fieldsFilled: filled,
+      completedAt: Date.now()
+    };
+
+    const existingIdx = curSession.stepHistory.findIndex(s => s.stepIndex === curSession.currentStepIndex);
+    if (existingIdx >= 0) {
+      curSession.stepHistory[existingIdx] = historyRecord;
+    } else {
+      curSession.stepHistory.push(historyRecord);
+    }
+
+    curSession.cumulativeFieldsTotal = curSession.stepHistory.reduce((sum, h) => sum + h.fieldsTotal, 0);
+    curSession.cumulativeFieldsFilled = curSession.stepHistory.reduce((sum, h) => sum + h.fieldsFilled, 0);
+    curSession.isFinalStep = !hasNext;
+    if (hasNext) {
+      curSession.currentStepIndex += 1;
+    }
+    saveNavSession(curSession);
+
     try {
       const titleMatch = document.title.match(/(.+?)\s*[|\-]\s*(.+)/);
       const res = await apFetch('/log', {
@@ -2076,24 +2317,39 @@
           siteUrl: window.location.href,
           company: (activeSession && activeSession.company) || (titleMatch ? titleMatch[2].trim() : ''),
           jobTitle: (activeSession && activeSession.jobTitle) || (titleMatch ? titleMatch[1].trim() : ''),
-          fieldsTotal: detectedFields.length,
-          fieldsFilled: filled,
+          fieldsTotal: curSession.cumulativeFieldsTotal || detectedFields.length,
+          fieldsFilled: curSession.cumulativeFieldsFilled || filled,
           hasAiAnswers: hadAI,
         })
       });
       if (res && res.ok) {
         logRes = await res.json();
+        curSession.activeFillId = logRes.fillId || logRes.id || null;
+        curSession.activeApplicationId = logRes.applicationId || null;
+        saveNavSession(curSession);
       }
     } catch (e) { /* silent */ }
 
     if (activeHud !== hud) return;
-    hud.setState('done', {
-      fillId: logRes ? (logRes.fillId || logRes.id) : null,
-      applicationId: logRes ? logRes.applicationId : null,
-      fieldsFilled: filled,
-      fieldsTotal: detectedFields.length,
-      isConfirmed: false,
-    });
+
+    if (hasNext) {
+      hud.setState('step-complete', {
+        stepIndex: curSession.currentStepIndex - 1,
+        stepName: historyRecord.stepName,
+        stepFieldsFilled: filled,
+        cumulativeFilled: curSession.cumulativeFieldsFilled,
+        cumulativeTotal: curSession.cumulativeFieldsTotal,
+        hasNext: true
+      });
+    } else {
+      hud.setState('done', {
+        fillId: logRes ? (logRes.fillId || logRes.id) : curSession.activeFillId,
+        applicationId: logRes ? logRes.applicationId : curSession.activeApplicationId,
+        fieldsFilled: curSession.cumulativeFieldsFilled || filled,
+        fieldsTotal: curSession.cumulativeFieldsTotal || detectedFields.length,
+        isConfirmed: false,
+      });
+    }
   }
 
   function runUndo() {

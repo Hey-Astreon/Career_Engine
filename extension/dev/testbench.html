@@ -224,6 +224,98 @@
         <div id="dropzone-status" style="margin-top: 12px; font-size: 13px; color: #10b981; font-weight: 500;">Waiting for synthetic drop...</div>
       </div>
     </div>
+
+    <!-- 7. ATS Multi-Step Form Simulation Wizard (Pillar C) -->
+    <div class="card" id="multi-step-wizard-card">
+      <h2>7. ATS Multi-Step Application Wizard <span class="badge">Pillar C State Machine</span></h2>
+      <div style="display: flex; gap: 8px; margin-bottom: 16px; font-size: 12px; font-weight: 600;">
+        <div id="step-pill-1" style="padding: 4px 10px; border-radius: 9999px; background: #0284c7; color: white;">1. Contact</div>
+        <div id="step-pill-2" style="padding: 4px 10px; border-radius: 9999px; background: #334155; color: #94a3b8;">2. Experience</div>
+        <div id="step-pill-3" style="padding: 4px 10px; border-radius: 9999px; background: #334155; color: #94a3b8;">3. Compliance</div>
+        <div id="step-pill-4" style="padding: 4px 10px; border-radius: 9999px; background: #334155; color: #94a3b8;">4. Review</div>
+      </div>
+
+      <!-- Step 1 Container -->
+      <div id="wizard-stage-1" class="wizard-stage" data-automation-id="step-contact">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #38bdf8;">Stage 1: Contact Information</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div>
+            <label for="w-first-name">First Name</label>
+            <input type="text" id="w-first-name" name="first_name" placeholder="Roushan">
+          </div>
+          <div>
+            <label for="w-last-name">Last Name</label>
+            <input type="text" id="w-last-name" name="last_name" placeholder="Kumar">
+          </div>
+          <div>
+            <label for="w-email">Email Address</label>
+            <input type="email" id="w-email" name="email" placeholder="roushan@example.com">
+          </div>
+          <div>
+            <label for="w-phone">Phone Number</label>
+            <input type="tel" id="w-phone" name="phone" placeholder="+91 9876543210">
+          </div>
+        </div>
+        <button type="button" id="wizard-next-1" data-automation-id="bottom-navigation-next-button" style="background: #0284c7; border: none; color: white; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+          Save & Continue
+        </button>
+      </div>
+
+      <!-- Step 2 Container -->
+      <div id="wizard-stage-2" class="wizard-stage" data-automation-id="step-experience" style="display: none;">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #38bdf8;">Stage 2: Work Experience</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div>
+            <label for="w-company">Company Name</label>
+            <input type="text" id="w-company" name="company" placeholder="AstreWork">
+          </div>
+          <div>
+            <label for="w-title">Job Title</label>
+            <input type="text" id="w-title" name="job_title" placeholder="Full-Stack Developer">
+          </div>
+          <div>
+            <label for="w-start-year">Start Year</label>
+            <input type="text" id="w-start-year" name="start_year" placeholder="2024">
+          </div>
+          <div>
+            <label for="w-end-year">End Year</label>
+            <input type="text" id="w-end-year" name="end_year" placeholder="2026">
+          </div>
+        </div>
+        <button type="button" id="wizard-next-2" style="background: #0284c7; border: none; color: white; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+          Next Step
+        </button>
+      </div>
+
+      <!-- Step 3 Container -->
+      <div id="wizard-stage-3" class="wizard-stage" data-automation-id="step-compliance" style="display: none;">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #38bdf8;">Stage 3: Voluntary Self-Identification</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div>
+            <label for="w-gender">Gender</label>
+            <input type="text" id="w-gender" name="gender" placeholder="Male">
+          </div>
+          <div>
+            <label for="w-veteran">Veteran Status</label>
+            <input type="text" id="w-veteran" name="veteran" placeholder="I am not a protected veteran">
+          </div>
+        </div>
+        <button type="button" id="wizard-next-3" style="background: #0284c7; border: none; color: white; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+          Proceed to Review
+        </button>
+      </div>
+
+      <!-- Step 4 Container -->
+      <div id="wizard-stage-4" class="wizard-stage" data-automation-id="step-review" style="display: none;">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #10b981;">Stage 4: Review & Final Confirmation</div>
+        <div style="background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 16px; font-size: 13px; color: #94a3b8;">
+          All previous steps completed. Click below to submit your application.
+        </div>
+        <button type="button" id="wizard-submit-btn" style="background: #10b981; border: none; color: white; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer;">
+          Submit Application
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -339,6 +431,32 @@
         dropStatus.textContent = `Drop event fired without files payload`;
         dropStatus.style.color = '#f59e0b';
       }
+    });
+
+    // 7. Multi-Step Wizard SPA Simulation Controller (Pillar C)
+    function activateWizardStep(stepNum) {
+      for (let s = 1; s <= 4; s++) {
+        const stage = document.getElementById(`wizard-stage-${s}`);
+        const pill = document.getElementById(`step-pill-${s}`);
+        if (stage) stage.style.display = s === stepNum ? 'block' : 'none';
+        if (pill) {
+          pill.style.background = s === stepNum ? '#0284c7' : (s < stepNum ? '#10b981' : '#334155');
+          pill.style.color = s <= stepNum ? 'white' : '#94a3b8';
+        }
+      }
+    }
+
+    document.getElementById('wizard-next-1')?.addEventListener('click', () => {
+      setTimeout(() => activateWizardStep(2), 350);
+    });
+    document.getElementById('wizard-next-2')?.addEventListener('click', () => {
+      setTimeout(() => activateWizardStep(3), 350);
+    });
+    document.getElementById('wizard-next-3')?.addEventListener('click', () => {
+      setTimeout(() => activateWizardStep(4), 350);
+    });
+    document.getElementById('wizard-submit-btn')?.addEventListener('click', () => {
+      alert('Application submitted successfully in testbench!');
     });
   </script>
 </body>

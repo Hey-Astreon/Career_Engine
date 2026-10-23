@@ -5,9 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **WORKSPACE ROOT:** `X:\Career_Engine`  
-> **GIT REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
-> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 51: Commercial ATS Optimizer Autopsy, Jobright.ai vs AstreWork Deep Benchmarking, Title Compliance Governance, HPPD Cover Letter Architecture)
+> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 51: AstrePilot Pillar C — ATS Multi-Step Form State Machine, Navigational Memory, Reactive SPA MutationObserver, and Extension Repackaging)
 
 ---
 
@@ -1080,6 +1078,13 @@ Located in `extension/`:
   - **4. Content Script Ingestion (`extension/content.js`):** Added `RESUME` classification heuristics for `input[type="file"]` and dropzones, exempted file inputs from 0-dimension culling, implemented `injectResumeFile(targetEl)`, wired `RESUME` handling in `fillAllFields` with automatic disk fallback, and upgraded HUD `runDownloadResume()` to attempt zero-click injection first.
   - **5. Automated Testing & Verification:** Authored `tests/resume-synthetic-upload.test.ts` (12/12 passing). Total test suite: 43 test files, 444 tests passing green (444/444). `npx tsc --noEmit` and JavaScript syntax checks (`node -c`) clean with 0 errors.
 
+- [x] **Phase 51: AstrePilot Pillar C — ATS Multi-Step Form State Machine & Navigational Memory (Oct 23, 2026)**
+  - **1. Multi-Step Form Engine (`src/lib/autopilot/multiStepEngine.ts`):** Architected `classifyCurrentStep()` scanning progressbars, wizard steppers, step indicator text, and forward/submit buttons. Built `isNextStepButton()` and `isSubmitApplicationButton()` for rigorous button disambiguation, and session memory utilities (`createDefaultNavSession()`, `recordStepCompletion()`, `serializeNavSession()`, `deserializeNavSession()`).
+  - **2. Content Script & SPA MutationObserver (`extension/content.js`):** Replaced arbitrary timer sleeps with `watchForStepTransition()` utilizing a reactive `MutationObserver` with 300ms quiet debounce and 4000ms safety timeout. Implemented `runContinueNextStep()` for 1-click step progression, multi-step session persistence (`ap_nav_session`), and cumulative field counting to satisfy the backend accounting invariant (`fieldsFilled <= fieldsTotal`).
+  - **3. HUD Presentation Enhancements (`extension/hud-ui.js`):** Added `setStepBadge()` step pill badge, `step-complete` state with cumulative statistics and `"Continue to Next Step →"` primary action, and `transitioning` state with pulse indicator.
+  - **4. Testbench & Unit Tests:** Built Card 7 (4-step interactive ATS simulation with 350ms SPA delay) in `extension/dev/testbench.html`, authored `tests/multi-step-form-engine.test.ts` (11/11 passing).
+  - **5. Verification & Packaging:** All 44 test files and 455 unit tests passing green (`npx vitest run`), TypeScript compile clean with 0 errors (`npx tsc --noEmit`), and extension repackaged to `public/downloads/astrepilot-extension.zip`.
+
 ---
 
 ## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
@@ -2000,6 +2005,52 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** For custom dropzone containers (Ashby, Workday), always dispatch synthetic `DragEvent('drop', { dataTransfer: dt })` in addition to populating the underlying `<input type="file">`.
   - **Rule:** Never reject an `<input type="file">` because its bounding rect has zero width or height. Production ATS platforms almost universally hide file inputs (`opacity: 0` or `display: none`) and display custom styled buttons in their place.
   - **Rule:** Always provide a graceful fallback to local disk download (`DOWNLOAD_RESUME`) if synthetic injection is blocked by restrictive sandboxes.
+
+---
+
+### 🔴 Case 30: Pillar C — ATS Multi-Step Form State Machine & Navigational Memory (AstrePilot Persistent Multi-Page Progression)
+* **Date & Context:** October 23, 2026 — Architecting and deploying Pillar C (ATS Multi-Step Form State Machine & Navigational Memory) to eliminate application drop-off on multi-part ATS workflows (Workday, Ashby, SmartRecruiters, Greenhouse multi-part).
+
+* **The Exact Challenge & Mistake Encountered:**
+  1. Real-world candidate testing revealed that enterprise ATS systems partition job applications into 3-6 sequential steps (Contact $\rightarrow$ Experience $\rightarrow$ Screening Questions $\rightarrow$ Compliance & Diversity $\rightarrow$ Review & Submit).
+  2. AstrePilot previously treated all job applications as single-screen forms. After filling Step 1, the HUD immediately prompted "Review & Submit" or "Mark as Submitted", confusing candidates and leaving subsequent steps unassisted.
+  3. Clicking forward navigation ("Next Step") previously relied on a naive boolean `ap_auto_open = true` in `sessionStorage` and an arbitrary 1200ms `setTimeout`. On reactive SPA portals (Workday/Ashby), client-side DOM re-rendering took variable times (100ms to 2500ms), causing race conditions where the extension scanned before new inputs mounted or hung indefinitely.
+  4. Telemetry logging to `/api/autopilot/log` enforces the schema invariant `fieldsFilled <= fieldsTotal`. Treating each step in isolation caused telemetry fragmentation and risk of 400 rejection when steps dynamically changed field totals.
+
+* **Deep Root Cause Diagnosis:**
+  1. Lack of a formal multi-step classifier and semantic state machine. The extension could not distinguish intermediate step progression ("Next", "Continue") from final submission ("Submit Application", "Confirm & Apply").
+  2. Absence of a persistent session memory schema (`ap_nav_session`) storing `activeFillId`, `applicationId`, `currentStepIndex`, `totalSteps`, and cumulative counts across SPA container swaps and hard reloads.
+  3. Fragility of fixed timer sleeps (`setTimeout(..., 1200)`) against client-side asynchronous DOM mount latencies.
+
+* **The Concrete Surgical Fix:**
+  1. **Multi-Step Form Classifier & Utilities (`src/lib/autopilot/multiStepEngine.ts`):**
+     - Architected `classifyCurrentStep()` scanning progressbars, wizard steppers, step indicator text, and forward/submit buttons.
+     - Implemented `isNextStepButton()` and `isSubmitApplicationButton()` with strict button text disambiguation.
+     - Built `createDefaultNavSession()`, `recordStepCompletion()`, `serializeNavSession()`, and `deserializeNavSession()` for robust `sessionStorage` persistence.
+  2. **Automated Unit Test Suite (`tests/multi-step-form-engine.test.ts`):**
+     - 11 comprehensive Vitest tests verifying step extraction, button disambiguation, and cumulative state serialization. 11/11 passing green.
+  3. **HUD State Machine & UI Enhancements (`extension/hud-ui.js`):**
+     - Added `setStepBadge()` step pill badge.
+     - Implemented `step-complete` state with cumulative step stats and primary action `"Continue to Next Step →"`.
+     - Implemented `transitioning` state with pulse spinner while subsequent steps mount.
+  4. **Content Script Lifecycle & SPA Mutation Observer (`extension/content.js`):**
+     - Replaced brittle timer with `watchForStepTransition()` utilizing a reactive `MutationObserver` with 300ms quiet debounce and 4000ms safety timeout.
+     - Added `runContinueNextStep()` to click the next button and transition state cleanly.
+     - Integrated multi-step telemetry accounting into `fillAllFields()`, updating `ap_nav_session` and ensuring backend accounting compliance.
+  5. **Interactive Multi-Step Testbench (`extension/dev/testbench.html`):**
+     - Added Card 7: 4-Step Interactive ATS Wizard simulation with realistic 350ms SPA transition delay.
+  6. **Repackaged Distribution:**
+     - Rebuilt `public/downloads/astrepilot-extension.zip`.
+  7. **Full Verification:**
+     - 44 test files, 455/455 tests passing green (`npx vitest run`).
+     - TypeScript compile: 0 errors (`npx tsc --noEmit`).
+     - Syntax checks (`node -c extension/content.js`, `node -c extension/hud-ui.js`) 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never treat enterprise ATS forms as single-page targets. Always classify page structure using progress indicators, step counters, and forward navigation buttons.
+  - **Rule:** Forward navigation buttons ("Next", "Continue") must strictly be separated from irreversible submission buttons ("Submit Application"). The HUD must never show "Mark as Submitted" on intermediate steps.
+  - **Rule:** Never use fixed `setTimeout` sleeps to await SPA page transitions. Always use a `MutationObserver` with quiet debounce that triggers only when new interactive inputs (`input`, `select`, `combobox`) actually mount into the DOM.
+  - **Rule:** State across multi-step wizard applications must be persisted in structured session storage (`ap_nav_session`) tracking step history and cumulative field tallies, so neither SPA container swaps nor hard reloads break the fill sequence or corrupt backend telemetry.
 
 ---
 
