@@ -2194,6 +2194,50 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 
 ---
 
+### 🔴 Case 33: Premature Submission State Machine Trigger & Premature "Mark as Submitted" Bug
+* **Date & Context:** October 23, 2026 — Fixing critical bug where clicking the `[+]` extract button in AstrePilot HUD prematurely rendered "Form Filled (Draft Tracked)" and "🎉 Mark as Submitted" before any form fields were filled.
+
+* **The Exact Challenge & Mistake Encountered:**
+  - When candidate Roushan Kumar navigated to an enterprise ATS portal (e.g. Cotiviti on iCIMS) and clicked the `[+]` extract button in the HUD header (`action-extract-jd`), the HUD scanned the page and immediately rendered:
+    `Form Filled (Draft Tracked)   View Tracker ↗`
+    `Review form fields on this page, then click below once submitted.`
+    `[🎉 Mark as Submitted]`
+    `[Undo Fill]`
+  - Roushan had not filled any form fields using AstrePilot, yet the HUD displayed post-autofill confirmation actions and hid the actual autofill trigger.
+
+* **Deep Root Cause Diagnosis:**
+  - Forensic code analysis revealed an obsolete remnant from early extension versions (Oct 9, commit `2626fcf237`). In `extension/content.js`:
+    1. `runExtractJD()` concluded with a hardcoded `hud.setState('done');` and `setTimeout(() => hud.collapse(), collapseDelay)`.
+    2. `runExtract()` (clicking "Apply This Role") similarly concluded with `hud.setState('done');`.
+    3. `syncCatalogJobs()` similarly concluded with `hud.setState('done');`.
+  - In `extension/hud-ui.js`, `state === 'done'` was architected exclusively for post-autofill state, rendering the draft confirmation card, the primary `[🎉 Mark as Submitted]` action, and `[Undo Fill]`.
+  - Furthermore, `runExtractJD()` did not re-scan the DOM for newly mounted form fields on the active page, leaving `detectedFields` stale.
+  - In `hud-ui.js`, `this.state === 'no-fields'` had an early return that hid the candidate identity, AstraShield trust badge, and recruiter radar when viewing pure job description pages.
+
+* **The Concrete Surgical Fix:**
+  1. **Purged False `'done'` Transitions (`extension/content.js`):**
+     - Completely removed `hud.setState('done')` from `runExtractJD()`, `runExtract()`, and `syncCatalogJobs()`.
+     - In `runExtractJD()`: After parsing the JD and priming candidate session identity, actively executes `const fields = scanFields(); applyDetectedFields(fields); activeHud.expand();`.
+     - In `runExtract()`: If `findAndClickApplyButton()` succeeds, sets `ap_auto_open = 'true'` in `sessionStorage` and transitions to `state: 'transitioning'` (`Navigating to application form...`). If already on form, runs `applyDetectedFields(scanFields())`.
+     - In `syncCatalogJobs()`: Transitions cleanly to `state: 'catalog'` with `synced: true`.
+  2. **Elevated Empty-State Presentation (`extension/hud-ui.js`):**
+     - Removed `'no-fields'` from early returns in `_renderBody()`.
+     - When `this.state === 'no-fields'`, renders Candidate Identity, AstraShield trust badge, Recruiter Radar, and an elevated "Job Intelligence Primed" card with 1-click `[Apply This Role →]`.
+     - When form fields are detected (`this.state === 'ready'`), renders the full field list with preview badges and the authoritative **`[⚡ Autofill X fields]`** primary button.
+  3. **Repackaged Distribution:**
+     - Executed `npm run build:extension` generating updated `public/downloads/astrepilot-extension.zip` (78.5 KB).
+  4. **Verification:**
+     - Tested syntax with `node -c extension/content.js; node -c extension/hud-ui.js` (0 errors).
+     - Executed TypeScript check `npx tsc --noEmit` (0 errors).
+     - Executed unit test suite `npx vitest run` (All passing).
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** The `'done'` state in the autofill state machine represents an irreversible post-condition: *the form inputs have been physically populated in the DOM*. Never invoke `setState('done')` from data extraction, catalog sync, or page navigation routines.
+  - **Rule:** Data extraction (`runExtractJD`) and form scanning are complementary phases: extraction primes the session and candidate intelligence, while scanning classifies DOM inputs against that primed session. Always run `applyDetectedFields(scanFields())` immediately after extraction completes.
+  - **Rule:** When navigating between a job posting and its application form, use `ap_auto_open = 'true'` in `sessionStorage` with a `transitioning` HUD state so the user experiences continuous, seamless guidance.
+
+---
+
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀
 
 

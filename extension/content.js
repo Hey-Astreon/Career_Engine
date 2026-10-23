@@ -2312,36 +2312,22 @@
                  if (sessionRes.ok) {
                    const sData = await sessionRes.json();
                    activeSession = sData.session;
-                   activeHud.setIdentity({
-                     fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
-                     title: userProfile.title || 'Candidate',
-                     primedCompany: activeSession ? activeSession.company : null
-                   });
-                   const hudFields = detectedFields.map(f => {
-                     const isAI = f.type === 'COVER_LETTER' || f.type === 'SCREENING';
-                     const isSession = (f.type === 'TITLE' || f.type === 'SUMMARY' || f.type === 'SALARY') && !!activeSession;
-                     const preview = resolvePreview(f, userProfile, activeSession);
-                     return {
-                       id: f.id,
-                       type: f.type.toLowerCase().replace(/_/g, ''),
-                       label: TYPE_LABELS[f.type] || f.type,
-                       preview: preview || (isAI ? 'AI-generated on fill' : '-'),
-                       source: isAI ? 'ai' : (isSession ? 'session' : 'profile'),
-                       status: ''
-                     };
-                   });
-                   activeHud.setFields(hudFields);
+                   if (userProfile) {
+                     activeHud.setIdentity({
+                       fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
+                       title: userProfile.title || 'Candidate',
+                       primedCompany: activeSession ? activeSession.company : null
+                     });
+                   }
                  }
                } catch (e) {}
 
-               hud.setState('done');
-               let collapseDelay = 2500;
-               if (extracted.astraShield) {
-                 collapseDelay = extracted.astraShield.score < 80 ? 12000 : 5000;
-               }
-               setTimeout(() => { if (activeHud === hud && !hud.isCollapsed) hud.collapse(); }, collapseDelay);
+               // Re-scan fields dynamically on the page with newly primed session
+               const fields = scanFields();
+               applyDetectedFields(fields);
+               activeHud.expand();
              }
-           }, 1000);
+           }, 800);
            return;
         } else {
            hud.setState('error', { msg: extracted.error || 'Failed to extract data.' });
@@ -2411,7 +2397,7 @@
             updated: result.updated || 0,
           });
         }
-        hud.setState('done');
+        hud.setState('catalog');
       } else {
         hud.setState('error', { msg: (result && result.error) || 'Failed to sync roles.' });
       }
@@ -2444,14 +2430,37 @@
            if (extracted.recruiter && hud.setRecruiter) {
              hud.setRecruiter(extracted.recruiter);
            }
+
+           try {
+             const sessionRes = await apFetch('/session');
+             if (sessionRes.ok) {
+               const sData = await sessionRes.json();
+               activeSession = sData.session;
+               if (userProfile && activeHud) {
+                 activeHud.setIdentity({
+                   fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
+                   title: userProfile.title || 'Candidate',
+                   primedCompany: activeSession ? activeSession.company : null
+                 });
+               }
+             }
+           } catch (e) {}
+
            hud.setState('extracting', { step: 'Locating Apply button...' });
            setTimeout(() => {
              const success = findAndClickApplyButton();
              if (activeHud === hud) {
-               hud.setState('done');
-               if (!success && !hud.isCollapsed) hud.collapse();
+               if (success) {
+                 try { sessionStorage.setItem('ap_auto_open', 'true'); } catch (e) {}
+                 hud.setState('transitioning', { step: 'Navigating to application form...' });
+               } else {
+                 // Already on application form or no apply button found; scan fields
+                 const fields = scanFields();
+                 applyDetectedFields(fields);
+                 activeHud.expand();
+               }
              }
-           }, 1500);
+           }, 1000);
            return;
         } else {
            hud.setState('error', { msg: extracted.error || 'Failed to extract data.' });

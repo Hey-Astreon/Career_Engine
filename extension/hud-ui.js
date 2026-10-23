@@ -481,7 +481,7 @@ window.AstrePilotHUD = (function () {
     }
 
     _renderBody() {
-      if (['not-connected', 'no-profile', 'no-fields', 'extracting', 'error', 'transitioning'].includes(this.state)) {
+      if (['not-connected', 'no-profile', 'extracting', 'error', 'transitioning'].includes(this.state)) {
         let msg = '', sub = '', btn = '';
         let iconHtml = ICONS.emptyGhost;
         let isError = false;
@@ -494,10 +494,6 @@ window.AstrePilotHUD = (function () {
            msg = 'Profile not found';
            sub = 'Set up your AstreWork profile first.';
            btn = 'Open AstreWork';
-        } else if (this.state === 'no-fields') {
-           msg = 'Job Posting Detected';
-           sub = 'AstrePilot can read this page and prime the brain.';
-           btn = 'Apply This Role';
         } else if (this.state === 'extracting') {
            msg = 'Extracting Details...';
            sub = (this.meta && this.meta.step) ? this.meta.step : 'Scanning the document using AI...';
@@ -516,8 +512,7 @@ window.AstrePilotHUD = (function () {
            iconHtml = ICONS.close;
         }
 
-        const btnClass = this.state === 'no-fields' ? 'btn-primary action-extract' :
-                         (this.state === 'error' ? 'btn-secondary action-close' :
+        const btnClass = (this.state === 'error' ? 'btn-secondary action-close' :
                          (this.state === 'extracting' || this.state === 'transitioning' ? 'btn-secondary action-close' : 'btn-primary action-settings'));
 
         this.body.innerHTML = `
@@ -703,6 +698,20 @@ window.AstrePilotHUD = (function () {
         html += `<div class="field-list">`;
         html += this.fields.map(f => this._generateFieldRowHTML(f)).join('');
         html += `</div>`;
+      } else if (this.state === 'no-fields') {
+        const isPrimed = this.profile && this.profile.primedCompany;
+        const msg = isPrimed ? 'Job Intelligence Primed' : 'Job Posting Detected';
+        const sub = isPrimed ? 
+          `Brain primed for ${esc(this.profile.primedCompany)}. Click below to navigate to the application form.` : 
+          'AstrePilot can read this page and prime the brain.';
+        html += `
+          <div class="empty-state" style="margin-top: 10px;">
+            <div class="empty-icon">${ICONS.emptyGhost}</div>
+            <div style="font-weight: 600">${msg}</div>
+            <div class="empty-text">${sub}</div>
+            <button type="button" class="btn-primary action-extract">Apply This Role →</button>
+          </div>
+        `;
       }
 
       // Footer
