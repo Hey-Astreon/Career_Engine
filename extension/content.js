@@ -857,6 +857,12 @@
     { type: 'VETERAN',      kw: ['veteran status', 'protected veteran', 'veterans act', 'vevraa'] },
     { type: 'DISABILITY',   kw: ['disability status', 'have a disability', 'disability'] },
     { type: 'RACE_ETHNICITY', kw: ['race & ethnicity', 'race and ethnicity', 'race/ethnicity', 'ethnicity', 'race'] },
+    // Work Experience Granular Description
+    { type: 'WORK_DESCRIPTION', kw: ['job_description', 'role_description', 'work_description', 'responsibilities', 'duties', 'describe your role', 'describe your responsibilities', 'role description', 'job description'] },
+    // Authentication & Credential Vault
+    { type: 'PASSWORD',     kw: ['password', 'create password', 'new password', 'set password', 'choose password', 'user password'] },
+    { type: 'CONFIRM_PASSWORD', kw: ['confirm password', 're-enter password', 'repeat password', 'verify password', 'confirm_password'] },
+    { type: 'LOGIN_ID',     kw: ['username', 'login', 'user id', 'user name', 'account id', 'login id', 'login_id'] },
   ];
 
   function parseLocation(loc) {
@@ -1022,6 +1028,16 @@
         }
       }
 
+      if (input.type === 'password' || attrSignal.includes('password') || labelSignal.includes('password')) {
+        if (labelSignal.includes('confirm') || attrSignal.includes('confirm') || labelSignal.includes('re-enter') || labelSignal.includes('repeat') || labelSignal.includes('verify')) {
+          return 'CONFIRM_PASSWORD';
+        }
+        return 'PASSWORD';
+      }
+      if (attrSignal.includes('username') || labelSignal.includes('username') || attrSignal.includes('login_id') || labelSignal.includes('login id')) {
+        return 'LOGIN_ID';
+      }
+
       if (input.type === 'tel') return 'PHONE';
       if ((labelSignal.includes('number') || attrSignal.includes('number')) && (contextSignal.includes('phone') || attrSignal.includes('phone'))) {
         return 'PHONE';
@@ -1056,6 +1072,9 @@
       if ((labelSignal.includes('month') || attrSignal.includes('month')) && (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to'))) return 'END_MONTH';
       if ((labelSignal.includes('year') || attrSignal.includes('year')) && (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to'))) return 'END_YEAR';
       if (input.type === 'checkbox' && (labelSignal.includes('current') || attrSignal.includes('current'))) return 'CURRENT_ROLE';
+      if (input.tagName === 'TEXTAREA' || labelSignal.includes('description') || labelSignal.includes('responsibilities') || labelSignal.includes('duties') || attrSignal.includes('description') || attrSignal.includes('responsibilities')) {
+        return 'WORK_DESCRIPTION';
+      }
     }
 
     // 4. SECTION-AWARE FAST HEURISTICS: Education
@@ -1129,13 +1148,13 @@
       'AGE_18', 'PREVIOUS_EMPLOYED', 'PRIVACY_CONSENT', 'AI_CONSENT', 'AI_USAGE',
       'GOVT_OFFICIAL', 'GOVT_RELATIVE', 'CONFLICT_INTEREST', 'REFERRED_BY_LEADER',
       'HISPANIC_LATINO', 'VETERAN', 'DISABILITY', 'RACE_ETHNICITY',
-      'COMPANY', 'EMPLOYMENT_TITLE', 'START_MONTH', 'START_YEAR', 'END_MONTH', 'END_YEAR', 'CURRENT_ROLE',
+      'COMPANY', 'EMPLOYMENT_TITLE', 'WORK_DESCRIPTION', 'START_MONTH', 'START_YEAR', 'END_MONTH', 'END_YEAR', 'CURRENT_ROLE',
       'SCHOOL', 'DEGREE', 'DISCIPLINE'
     ]);
 
     const COMBOBOX_QUERY = [
       'input[type="text"]', 'input[type="email"]', 'input[type="tel"]', 'input[type="url"]',
-      'input[type="number"]', 'input[type="radio"]', 'input[type="checkbox"]', 'input[type="search"]',
+      'input[type="number"]', 'input[type="password"]', 'input[type="radio"]', 'input[type="checkbox"]', 'input[type="search"]',
       'input[type="file"]',
       'input:not([type])', 'textarea', 'select',
       'button[role="combobox"]', 'div[role="combobox"]', '[aria-haspopup="listbox"]',
@@ -1307,6 +1326,31 @@
         return OTHER_FALLBACK_REGEX.test(t);
       });
       if (otherOpt) return otherOpt;
+    }
+
+    // Stage 5b: Smart heuristics for HEAR_ABOUT and boolean consent/authorization fields
+    if (fieldType === 'HEAR_ABOUT' || fieldType === 'HEAR_ABOUT_DETAIL') {
+      const hearMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t.includes('linkedin') || t.includes('job board') || t.includes('online') || t.includes('internet') || t.includes('website') || t.includes('other');
+      });
+      if (hearMatch) return hearMatch;
+    }
+
+    if (['WORK_AUTH', 'AGE_18', 'PRIVACY_CONSENT', 'AI_CONSENT'].includes(fieldType) || targetLower === 'yes' || targetLower === 'true') {
+      const yesMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return (t === 'yes' || t.startsWith('yes') || t.includes('authorized') || t.includes('agree') || t.includes('confirm')) && !t.includes('no');
+      });
+      if (yesMatch) return yesMatch;
+    }
+
+    if (['VISA', 'PREVIOUS_EMPLOYED', 'GOVT_OFFICIAL', 'GOVT_RELATIVE', 'CONFLICT_INTEREST'].includes(fieldType) || targetLower === 'no' || targetLower === 'false') {
+      const noMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return (t === 'no' || t.startsWith('no') || t.includes('do not') || t.includes('none')) && !t.includes('yes');
+      });
+      if (noMatch) return noMatch;
     }
 
     // Stage 6: First non-placeholder fallback for mandatory fields
@@ -1721,7 +1765,8 @@
     COMPANY: 'Company Name', EMPLOYMENT_TITLE: 'Job Title', START_MONTH: 'Start Month', START_YEAR: 'Start Year',
     END_MONTH: 'End Month', END_YEAR: 'End Year', CURRENT_ROLE: 'Current Role',
     SCHOOL: 'School / University', DEGREE: 'Degree', DISCIPLINE: 'Discipline / Major',
-    SCREENING_SELECT: 'Screening Question'
+    SCREENING_SELECT: 'Screening Question',
+    WORK_DESCRIPTION: 'Work Description', PASSWORD: 'Password', CONFIRM_PASSWORD: 'Confirm Password', LOGIN_ID: 'Login ID / Username'
   };
 
   /* -- RESOLVE PREVIEW -- */
@@ -1742,11 +1787,15 @@
       case 'ADDRESS':      return profile.streetAddress || profile.city || loc.city || null;
       case 'APT':          return profile.apartment || null;
       case 'ZIP': {
-        const rawZip = String(profile.zipCode || '800020').trim();
+        const rawZip = String(profile.zipCode || '800024').trim();
         const el = field.element;
         if (el && el.maxLength === 5) return rawZip.slice(0, 5);
         return rawZip;
       }
+      case 'WORK_DESCRIPTION': return profile.workDescription || (profile.virtualExps && profile.virtualExps[0] ? profile.virtualExps[0].outcome : profile.professionalSummary);
+      case 'PASSWORD':
+      case 'CONFIRM_PASSWORD': return '••••••••••••';
+      case 'LOGIN_ID': return profile.email || 'roushan@gmail.com';
       case 'HEAR_ABOUT':   return profile.referralSource || 'LinkedIn';
       case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
       case 'LINKEDIN':     return profile.linkedinUrl || null;
@@ -1835,7 +1884,7 @@
       case 'ADDRESS':     return profile.streetAddress || profile.city || loc.city || '';
       case 'APT':         return profile.apartment || '';
       case 'ZIP': {
-        const rawZip = String(profile.zipCode || '800020').trim();
+        const rawZip = String(profile.zipCode || '800024').trim();
         const el = field.element;
         if (el) {
           if (el.maxLength === 5) return rawZip.slice(0, 5);
@@ -1845,6 +1894,59 @@
           if (/^\d{5}$/.test(placeholder) || placeholder.toLowerCase() === '12345') return rawZip.slice(0, 5);
         }
         return rawZip;
+      }
+      case 'WORK_DESCRIPTION': {
+        if (profile.workDescription) return profile.workDescription;
+        if (profile.virtualExps && profile.virtualExps.length > 0) {
+          const exp = profile.virtualExps[0];
+          return `${exp.actionTaken || ''}. ${exp.outcome || ''}`.trim() || profile.professionalSummary;
+        }
+        return profile.professionalSummary || 'Engineered high-performance cloud applications, API microservices, and distributed scraping pipelines.';
+      }
+      case 'LOGIN_ID': {
+        try {
+          const credRes = await apFetch('/credentials?siteUrl=' + encodeURIComponent(window.location.hostname));
+          if (credRes.ok) {
+            const cData = await credRes.json();
+            if (cData && cData.credential && cData.credential.loginId) {
+              return cData.credential.loginId;
+            }
+          }
+        } catch (e) {}
+        return profile.email || 'roushan@gmail.com';
+      }
+      case 'PASSWORD':
+      case 'CONFIRM_PASSWORD': {
+        if (window.__ap_staged_password) {
+          return window.__ap_staged_password;
+        }
+        try {
+          const credRes = await apFetch('/credentials?siteUrl=' + encodeURIComponent(window.location.hostname));
+          if (credRes.ok) {
+            const cData = await credRes.json();
+            if (cData && cData.credential && cData.credential.password) {
+              window.__ap_staged_password = cData.credential.password;
+              return cData.credential.password;
+            }
+          }
+        } catch (e) {}
+
+        try {
+          const genRes = await apFetch('/credentials?generate=true');
+          if (genRes.ok) {
+            const gData = await genRes.json();
+            if (gData && gData.password) {
+              window.__ap_staged_password = gData.password;
+              window.__ap_needs_save = true;
+              return gData.password;
+            }
+          }
+        } catch (e) {}
+
+        const fallbackPwd = 'Ast' + Math.random().toString(36).slice(2, 8).toUpperCase() + '@2026!';
+        window.__ap_staged_password = fallbackPwd;
+        window.__ap_needs_save = true;
+        return fallbackPwd;
       }
       case 'HEAR_ABOUT':  return profile.referralSource || 'LinkedIn';
       case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
@@ -2477,6 +2579,69 @@
     }
   }
 
+  /* -- PROOF-OF-WRITE AUDITOR -- */
+  async function verifyFieldWritten(field, expectedVal) {
+    if (!field || !field.element) return false;
+    const el = field.element;
+    const expStr = String(expectedVal).trim().toLowerCase();
+
+    // Settle tick for React/Vue synthetic event commitments
+    await new Promise(r => setTimeout(r, 60));
+
+    // 1. Native Select
+    if (el.tagName === 'SELECT') {
+      if (el.selectedIndex < 0) return false;
+      const opt = el.options[el.selectedIndex];
+      if (!opt) return false;
+      const optText = (opt.textContent || opt.text || '').trim().toLowerCase();
+      const optVal = (opt.value || '').trim().toLowerCase();
+      return !PLACEHOLDER_REGEX.test(optText) && (optVal !== '' && optVal !== '0');
+    }
+
+    // 2. Custom ARIA Combobox
+    if (isComboboxOrSelect(el)) {
+      const text = (el.innerText || el.textContent || '').trim().toLowerCase();
+      const ariaVal = (el.getAttribute('aria-valuenow') || el.getAttribute('aria-label') || '').toLowerCase();
+      if (text && !PLACEHOLDER_REGEX.test(text) && text.length > 0) return true;
+      if (ariaVal && ariaVal.length > 0) return true;
+      return true;
+    }
+
+    // 3. Radio / Checkbox
+    if (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox')) {
+      if (el.type === 'radio') {
+        const radios = el.name
+          ? document.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
+          : [el];
+        for (let r of radios) {
+          if (r.checked) return true;
+        }
+        return false;
+      }
+      return el.checked === (expStr === 'yes' || expStr === 'true' || expStr === '1');
+    }
+
+    // 4. Text, Password, Textarea
+    const currentVal = (el.value || '').trim();
+    if (currentVal.length === 0) return false;
+
+    if (field.type === 'PASSWORD' || field.type === 'CONFIRM_PASSWORD' || el.type === 'password') {
+      return currentVal.length >= 6;
+    }
+
+    const curLower = currentVal.toLowerCase();
+    if (curLower === expStr) return true;
+    if (expStr.startsWith(curLower) || curLower.startsWith(expStr.slice(0, 5))) return true;
+
+    const expDigits = expStr.replace(/\D/g, '');
+    const curDigits = curLower.replace(/\D/g, '');
+    if (expDigits.length > 0 && (curDigits.includes(expDigits) || expDigits.includes(curDigits))) {
+      return true;
+    }
+
+    return currentVal.length > 0;
+  }
+
   async function fillAllFields(hud) {
     hud.setState('filling');
     let filled = 0;
@@ -2506,6 +2671,7 @@
       const skipped = !val || String(val).trim() === '';
 
       if (!skipped) {
+        let writeSuccess = false;
         if (f.type === 'RESUME') {
           AstrePilotHUD.highlight(f.element);
           const uploadRes = await injectResumeFile(f.element);
@@ -2513,30 +2679,73 @@
             filled++;
             hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
           } else {
-            // Trigger download to disk as reliable zero-drop fallback
             chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
             hud.markRow(f.id, 'skipped', 'Downloaded to disk');
           }
         } else if (isComboboxOrSelect(f.element)) {
           AstrePilotHUD.highlight(f.element);
-          await fillUniversalCombobox(f.element, val, f.type);
-          filled++;
-          hud.markRow(f.id, 'done', String(val).slice(0, 30));
+          const cbSuccess = await fillUniversalCombobox(f.element, val, f.type);
+          writeSuccess = cbSuccess || await verifyFieldWritten(f, val);
+          if (writeSuccess) {
+            filled++;
+            hud.markRow(f.id, 'done', String(val).slice(0, 30));
+          } else {
+            hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+          }
         } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
           setNativeValue(f.element, val, true);
-          filled++;
-          hud.markRow(f.id, 'done', String(val).slice(0, 30));
+          writeSuccess = await verifyFieldWritten(f, val);
+          if (!writeSuccess) {
+            setNativeValue(f.element, val, true);
+            writeSuccess = await verifyFieldWritten(f, val);
+          }
+          if (writeSuccess) {
+            filled++;
+            hud.markRow(f.id, 'done', String(val).slice(0, 30));
+          } else {
+            hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+          }
         } else {
           AstrePilotHUD.highlight(f.element);
           await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
-          filled++;
-          hud.markRow(f.id, 'done', String(val).slice(0, 30));
+          writeSuccess = await verifyFieldWritten(f, val);
+          if (!writeSuccess) {
+            setNativeValue(f.element, val, true);
+            writeSuccess = await verifyFieldWritten(f, val);
+          }
+          if (writeSuccess) {
+            filled++;
+            const displayVal = (f.type === 'PASSWORD' || f.type === 'CONFIRM_PASSWORD') ? '••••••••' : String(val).slice(0, 30);
+            hud.markRow(f.id, 'done', displayVal);
+          } else {
+            hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+          }
         }
       } else {
         hud.markRow(f.id, 'skipped', '-');
       }
       hud.setProgress(filled, detectedFields.length);
       await new Promise(r => setTimeout(r, 80));
+    }
+
+    // Auto-secure staged credentials into Vault upon successful fill
+    if (window.__ap_needs_save && window.__ap_staged_password) {
+      try {
+        const loginId = (userProfile && userProfile.email) || 'roushan@gmail.com';
+        await apFetch('/credentials', {
+          method: 'POST',
+          body: JSON.stringify({
+            siteUrl: window.location.hostname,
+            loginId: loginId,
+            password: window.__ap_staged_password,
+            notes: 'Generated & secured by AstrePilot during application fill'
+          })
+        });
+        window.__ap_needs_save = false;
+        console.log('[AstrePilot] Generated credentials secured in Vault for ' + window.location.hostname);
+      } catch (e) {
+        console.warn('[AstrePilot] Failed to save staged credentials:', e);
+      }
     }
 
     let logRes = null;

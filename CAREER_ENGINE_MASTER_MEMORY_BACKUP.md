@@ -2236,6 +2236,63 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Data extraction (`runExtractJD`) and form scanning are complementary phases: extraction primes the session and candidate intelligence, while scanning classifies DOM inputs against that primed session. Always run `applyDetectedFields(scanFields())` immediately after extraction completes.
   - **Rule:** When navigating between a job posting and its application form, use `ap_auto_open = 'true'` in `sessionStorage` with a `transitioning` HUD state so the user experiences continuous, seamless guidance.
 
+### 🔴 Case 34: AstrePilot Smarter Cognitive Agent Brain V2 — Proof-of-Write Verification Loop, Context-Aware Work Description Classification, and Pillar F Encrypted Credential Vault
+
+* **The Exact Challenge & Mistake Encountered:**
+  - Complex ATS candidate registration & employment pages (specifically iCIMS/Cotiviti and Workday portals) presented four major failure modes:
+    1. **The "Lying Checkmark" Defect (Zero Proof-of-Write):** Synthetic input events dispatched to React/Vue controlled form inputs frequently failed to bind to the underlying state fiber on the first attempt, leaving inputs empty while the HUD falsely marked the field `✓ Done`.
+    2. **Work Experience Description Slop:** `<textarea>` fields in employment history blocks were classified under the catch-all `SCREENING` heuristic, causing the AI Oracle to draft generic cultural screening essays into the job description textarea.
+    3. **100% Password Blindspot:** `input[type="password"]` was omitted from `COMBOBOX_QUERY` and classification patterns. Applicant account registration forms were invisible to AstrePilot, forcing the user to invent, type, and remember passwords manually.
+    4. **Street Address Fallback Lie:** When candidate street address was null, `src/app/api/autopilot/profile/route.ts` returned `"Noida, Uttar Pradesh"` instead of Roushan's real verified Patna address (`Indrapuri, North Patel Nagar, Patna, Bihar`), failing form validation.
+
+* **Deep Root Cause Diagnosis:**
+  - The legacy autofill architecture was built as a linear, fire-and-forget script rather than a closed-loop Cognitive Agent Brain ($\text{Sense} \rightarrow \text{Reason} \rightarrow \text{Act} \rightarrow \text{Verify} \rightarrow \text{Recover}$).
+  - Event dispatch did not yield to the framework reconcile loop before reporting success.
+  - Multi-tenant enterprise ATS architectures (where thousands of employers share subdomains like `*.icims.com` and `*.myworkdayjobs.com`) were vulnerable to credential bleed if domain isolation was not strictly enforced at the hostname level.
+  - Client-side `content.js` expected `_context.virtualExps`, but the backend profile API payload omitted work experience outcomes and bullets.
+
+* **The Concrete Surgical Fix:**
+  1. **Ground Truth Profile Anchoring (`scripts/sync-master-profiles.cjs`, `dev.db`, Turso Cloud):**
+     - Anchored Roushan Kumar's real verified address into Turso Cloud LibSQL and local `dev.db`:
+       - `streetAddress`: `"Indrapuri, North Patel Nagar, Patna, Bihar"`
+       - `apartment`: `""`
+       - `zipCode`: `"800024"`
+     - In `src/app/api/autopilot/profile/route.ts`: Removed fake `"Noida, Uttar Pradesh"` fallback, changed zip code default from `800020` to `800024`, and exported `workDescription` and `virtualExps`.
+  2. **Pillar F: AstrePilot Credential Vault (`prisma/schema.prisma`, `vaultCrypto.ts`, `/api/autopilot/credentials`):**
+     - Created `SiteCredential` Prisma model with authenticated user ownership, cascade delete, and unique index `@@unique([userId, sitePattern])`.
+     - Executed database push to `prisma/dev.db` and migrated `site_credentials` table & indexes on Turso Cloud LibSQL.
+     - Implemented `src/lib/autopilot/vaultCrypto.ts` providing AES-256-GCM authenticated encryption/decryption with random 96-bit IVs and high-entropy compliant password generation (upper, lower, digits, symbols).
+     - Created `/api/autopilot/credentials/route.ts` supporting dual-mode authentication (extension Bearer tokens and NextAuth workspace sessions), strict hostname normalization (`normalizeSitePattern`), and dynamic password generation (`?generate=true`).
+  3. **Context-Aware `WORK_DESCRIPTION` Classification (`extension/content.js`):**
+     - Added `WORK_DESCRIPTION` to `FIELD_PATTERNS` and `SINGLETON_TYPES`.
+     - In `classifyField`: Inside `isEmploymentSection`, textareas and description/responsibilities inputs are classified as `WORK_DESCRIPTION`, resolving to verified career achievements.
+  4. **Closed-Loop Proof-of-Write Verification Engine (`extension/content.js`):**
+     - Implemented `verifyFieldWritten(field, expectedVal)` with type-aware validation:
+       - Text/textarea/password: 60ms settle tick $\rightarrow$ confirms DOM `el.value` is non-empty and matches sanitized target.
+       - Native `<select>`: confirms `selectedIndex >= 0` and non-placeholder selection.
+       - Custom ARIA Combobox: confirms non-placeholder innerText or `fillUniversalCombobox` confirmation.
+       - Radio/Checkbox: confirms `el.checked === true`.
+     - In `fillAllFields`: Wrapped every fill path in verification. If write verification fails, triggers self-healing retry with direct native setter + event burst. If still unverified, flags row with **Amber ⚠ Retry** instead of a false green checkmark.
+  5. **Automated Password Generator & Auto-Vault Persist (`extension/content.js`):**
+     - Senses `input[type="password"]` on registration pages.
+     - If no stored credential exists for the host, queries `/credentials?generate=true` for a 16-character compliant password, stages it across both `PASSWORD` and `CONFIRM_PASSWORD` fields, and auto-saves the new credentials to the user's encrypted Vault upon form completion.
+  6. **HUD Badges & Shadow DOM Calibration (`extension/hud-ui.js`, `hud.shadow.css`):**
+     - Added SVG icons and styling for `is-retry` (Amber `⚠ Retry`), `is-manual` (Amber `🔑 Manual`), and `is-skipped`.
+     - Repackaged extension to `public/downloads/astrepilot-extension.zip` (80.8 KB).
+  7. **Credential Vault Manager Workspace UI (`src/app/(workspace)/credentials/page.tsx`, `Sidebar.tsx`):**
+     - Built high-density, glassmorphic Credential Vault Manager page in AstreWork with Show/Hide password toggles, 1-click clipboard copy, portal links, and search filter.
+     - Added Credential Vault link with `VAULT` badge to `Sidebar.tsx`.
+  8. **Comprehensive Automated Verification:**
+     - Created `tests/vault-crypto.test.ts` (3 unit tests passing).
+     - Created `tests/api-autopilot-credentials.test.ts` (3 integration tests passing against live Turso Cloud LibSQL).
+     - Executed full test suite: **50 test files passed (503/503 tests passing green)**.
+     - Executed typecheck: `npx tsc --noEmit` clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never trust a synthetic write without proof. Modern reactive frameworks (React 19, Angular, Vue) can swallow synthetic events or revert controlled state on the subsequent render tick. An intelligent agent MUST perform an asynchronous settle read-back (`verifyFieldWritten`) and transparently reflect truth to the human operator with an amber status rather than a false green checkmark.
+  - **Rule:** When injecting into registration forms with `Password` and `Confirm Password`, the password generation must be staged at the session level (`window.__ap_staged_password`) so both fields receive the exact same compliant ciphertext.
+  - **Rule:** Tenant isolation on enterprise ATS platforms (Workday, iCIMS, Taleo) must always use canonical hostnames (`normalizeSitePattern`), never bare root domains, to prevent credential leakage across different employer portals.
+
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀

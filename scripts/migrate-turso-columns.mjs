@@ -81,6 +81,30 @@ async function main() {
   `);
   console.log("✓ screening_question_vault table & indexes ready on Turso Cloud!");
 
+  // Site credentials table (Pillar F)
+  console.log("\nMigrating site_credentials table...");
+  await tursoClient.execute(`
+    CREATE TABLE IF NOT EXISTS "site_credentials" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "userId" TEXT NOT NULL,
+      "sitePattern" TEXT NOT NULL,
+      "loginId" TEXT NOT NULL,
+      "password" TEXT NOT NULL,
+      "notes" TEXT,
+      "lastUsedAt" DATETIME,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "site_credentials_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `);
+  await tursoClient.execute(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "site_credentials_userId_sitePattern_key" ON "site_credentials"("userId", "sitePattern")
+  `);
+  await tursoClient.execute(`
+    CREATE INDEX IF NOT EXISTS "site_credentials_userId_sitePattern_idx" ON "site_credentials"("userId", "sitePattern")
+  `);
+  console.log("✓ site_credentials table & indexes ready on Turso Cloud!");
+
   console.log("\n=== Migration Completed! Verifying AutopilotSessions Table... ===");
   const aCols = (await tursoClient.execute('PRAGMA table_info("autopilot_sessions")')).rows;
   console.log("Turso autopilot_sessions columns now:", aCols.map((c) => c.name));

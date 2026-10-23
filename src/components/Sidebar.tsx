@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Globe2, Target, FileCheck, Sparkles, ChevronRight, Briefcase, Clock, Send } from "lucide-react";
+import { Globe2, Target, FileCheck, Sparkles, ChevronRight, Briefcase, Clock, Send, KeyRound } from "lucide-react";
 
 const navItems = [
   { name: "Discovery", href: "/dashboard", icon: Globe2, badge: "LIVE" },
@@ -13,6 +13,7 @@ const navItems = [
   { name: "Recruiter Radar", href: "/outreach", icon: Send, badge: "NEW" },
   { name: "Complete Application Kit", href: "/resume-builder", icon: FileCheck },
   { name: "ATS Resume Maker", href: "/resume-maker", icon: Sparkles, badge: "TIER-1" },
+  { name: "Credential Vault", href: "/credentials", icon: KeyRound, badge: "VAULT" },
   { name: "Alert Settings", href: "/settings", icon: Clock },
 ];
 

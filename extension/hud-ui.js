@@ -25,7 +25,8 @@ window.AstrePilotHUD = (function () {
     scan: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><path d="M20 7V4h-3"></path><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
     download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
     warn: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
-    shield: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`
+    shield: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+    key: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3L22 7l-3-3"></path></svg>`
   };
 
   const TYPE_LABELS = {
@@ -47,7 +48,8 @@ window.AstrePilotHUD = (function () {
     'raceethnicity': 'Race / Ethnicity', 'company': 'Company Name', 'employmenttitle': 'Job Title',
     'startmonth': 'Start Month', 'startyear': 'Start Year', 'endmonth': 'End Month',
     'endyear': 'End Year', 'currentrole': 'Current Role', 'school': 'School / University',
-    'degree': 'Degree', 'discipline': 'Discipline / Major', 'screeningselect': 'Screening Question'
+    'degree': 'Degree', 'discipline': 'Discipline / Major', 'screeningselect': 'Screening Question',
+    'workdescription': 'Work Description', 'password': 'Password', 'confirmpassword': 'Confirm Password', 'loginid': 'Login ID / Username'
   };
   // Everything interpolated into innerHTML that originates outside this file
   // (profile, session, AI answers, page labels) MUST pass through this.
@@ -79,7 +81,8 @@ window.AstrePilotHUD = (function () {
     if (['phone', 'phonetype'].includes(type)) return ICONS.phone;
     if (['location', 'city', 'state', 'country', 'address', 'apt', 'zip', 'company', 'employmenttitle', 'school', 'degree', 'discipline'].includes(type)) return ICONS.briefcase;
     if (['linkedin', 'github', 'portfolio'].includes(type)) return ICONS.link;
-    if (['resume', 'coverletter', 'summary', 'screening', 'screeningselect', 'aiusage'].includes(type)) return ICONS.text;
+    if (['password', 'confirmpassword', 'loginid'].includes(type)) return ICONS.key;
+    if (['resume', 'coverletter', 'summary', 'screening', 'screeningselect', 'aiusage', 'workdescription'].includes(type)) return ICONS.text;
     if (['visa', 'salary', 'noticeperiod', 'relocate', 'education', 'hearabout', 'hearaboutdetail', 'age18', 'previousemployed', 'privacyconsent', 'aiconsent', 'govtofficial', 'govtrelative', 'conflictinterest', 'referredbyleader', 'hispaniclatino', 'startmonth', 'startyear', 'endmonth', 'endyear', 'currentrole'].includes(type)) return ICONS.briefcase;
     return ICONS.text;
   }
@@ -810,9 +813,15 @@ window.AstrePilotHUD = (function () {
       if (isVault) classList.push('is-vault');
       if (f.status === 'active') classList.push('active');
       if (f.status === 'done') classList.push('done');
+      if (f.status === 'retry') classList.push('is-retry');
+      if (f.status === 'manual') classList.push('is-manual');
+      if (f.status === 'skipped') classList.push('is-skipped');
 
       let statusIcon = ICONS.circle;
       if (f.status === 'done') statusIcon = ICONS.check;
+      else if (f.status === 'retry') statusIcon = '<span style="color:#d97706;font-size:12px;font-weight:700" title="Proof-of-Write verification failed — check field">⚠</span>';
+      else if (f.status === 'manual') statusIcon = '<span style="color:#d97706;font-size:12px;font-weight:700" title="Manual Entry or Saved in Vault">🔑</span>';
+      else if (f.status === 'skipped') statusIcon = '<span style="color:#94a3b8;font-size:12px;font-weight:700">-</span>';
       else if (isVault) statusIcon = '🛡️';
       else if (isAI) statusIcon = ICONS.sparkle;
 

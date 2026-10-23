@@ -93,9 +93,9 @@ export async function GET(req: Request) {
         city,
         state,
         country,
-        streetAddress: profile.streetAddress ?? (city ? `${city}, ${state}` : ""),
+        streetAddress: profile.streetAddress ?? "",
         apartment: profile.apartment ?? "",
-        zipCode: profile.zipCode ?? "800020",
+        zipCode: profile.zipCode ?? "800024",
         noticePeriod: profile.noticePeriod ?? "Immediate",
         willingnessToRelocate: profile.willingnessToRelocate ?? true,
         highestEducation: profile.highestEducation ?? "Bachelor of Computer Applications (BCA)",
@@ -111,8 +111,11 @@ export async function GET(req: Request) {
         degree: profile.highestEducation ?? "Bachelor of Computer Applications (BCA)",
         discipline: "Computer Science / Applications",
         // Employment fields
-        company: profile.projects[0]?.title ?? "AstreWork",
-        employmentTitle: profile.title ?? "Full-Stack Developer",
+        company: profile.virtualExps[0]?.company ?? "AstreWork",
+        employmentTitle: profile.virtualExps[0]?.roleTitle ?? profile.title ?? "Full-Stack Developer",
+        workDescription: profile.virtualExps[0]
+          ? `${profile.virtualExps[0].actionTaken}. ${profile.virtualExps[0].outcome}`
+          : (profile.projects[0]?.architecture ?? professionalSummary),
         startMonth: "January",
         startYear: "2024",
         endMonth: "Present",
