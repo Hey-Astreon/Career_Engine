@@ -258,6 +258,10 @@ window.AstrePilotHUD = (function () {
         else if (btn.classList.contains('action-confirm-submit')) {
           if (this.options.onConfirmSubmit) this.options.onConfirmSubmit(this.meta);
         }
+        else if (btn.classList.contains('action-save-vault')) {
+          const fieldId = btn.getAttribute('data-field-id');
+          if (this.options.onSaveToVault) this.options.onSaveToVault(fieldId, btn);
+        }
       });
 
       // Escape to collapse
@@ -378,6 +382,15 @@ window.AstrePilotHUD = (function () {
         field.status = status; // 'active', 'done', 'skipped'
         if (displayValue !== undefined) field.preview = displayValue;
         this._renderFieldRow(field);
+        this._updateSummary();
+      }
+    }
+
+    updateField(field) {
+      const existing = this.fields.find(f => f.id === field.id);
+      if (existing) {
+        Object.assign(existing, field);
+        this._renderFieldRow(existing);
         this._updateSummary();
       }
     }
@@ -704,23 +717,38 @@ window.AstrePilotHUD = (function () {
     _generateFieldRowHTML(f) {
       const icon = getIconForType(f.type);
       const isAI = f.source === 'ai';
+      const isVault = f.source === 'vault';
       const label = esc(TYPE_LABELS[f.type] || f.label || 'Field');
       const val = esc(f.preview || '...');
       const classList = ['field-row'];
       if (isAI) classList.push('is-ai');
+      if (isVault) classList.push('is-vault');
       if (f.status === 'active') classList.push('active');
       if (f.status === 'done') classList.push('done');
 
       let statusIcon = ICONS.circle;
       if (f.status === 'done') statusIcon = ICONS.check;
+      else if (isVault) statusIcon = '🛡️';
       else if (isAI) statusIcon = ICONS.sparkle;
+
+      const sourceBadge = isVault
+        ? `<span class="vault-chip" style="display:inline-flex;margin:0 0 0 6px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700">Vault ${f.confidence ? f.confidence + '%' : ''}</span>`
+        : isAI
+        ? `<span class="primed-chip" style="display:inline-flex;margin:0 0 0 6px">AI</span>`
+        : '';
+
+      const canSaveVault = (f.type === 'screening' || f.type === 'coverletter') && val && val !== '...';
+      const saveVaultBtn = canSaveVault
+        ? `<button type="button" class="action-save-vault" data-field-id="${f.id}" title="Save answer to your permanent Vault" style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.2);cursor:pointer;font-size:10px;font-weight:600;color:var(--ap-ai, #0071e3);padding:2px 6px;border-radius:4px;margin-left:auto;display:inline-flex;align-items:center;gap:3px">💾 Save to Vault</button>`
+        : '';
 
       return `
         <div class="${classList.join(' ')}" id="ap-row-${f.id}">
           <div class="field-icon">${icon}</div>
           <div class="field-content">
-            <div class="field-header">
-              <div class="field-label">${label} ${isAI ? '<span class="primed-chip" style="display:inline-flex;margin:0 0 0 6px">AI</span>' : ''}</div>
+            <div class="field-header" style="display:flex;align-items:center;width:100%">
+              <div class="field-label">${label} ${sourceBadge}</div>
+              ${saveVaultBtn}
             </div>
             <div class="field-value">${val}</div>
           </div>

@@ -181,6 +181,7 @@ model Profile {
   resumeVariants ResumeVariant[]
   autopilotFills AutopilotFill[]
   autopilotSessions AutopilotSession[]
+  screeningVault ScreeningQuestionVault[]
 
   userId         String? @unique
   user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -515,4 +516,26 @@ model AutopilotSession {
   @@index([profileId])
   @@index([createdAt])
   @@map("autopilot_sessions")
+}
+
+model ScreeningQuestionVault {
+  id              String    @id @default(uuid())
+  profileId       String
+  category        String    @default("GENERAL") // "MOTIVATION" | "TECHNICAL" | "BEHAVIORAL" | "LOGISTICS" | "COMPENSATION" | "GENERAL"
+  questionPattern String
+  keywords        String    @default("[]") // JSON string array of token stems
+  answerText      String
+  isFavorite      Boolean   @default(false)
+  timesUsed       Int       @default(0)
+  lastUsedAt      DateTime?
+  companyContext  String?
+  roleContext     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([category])
+  @@map("screening_question_vault")
 }

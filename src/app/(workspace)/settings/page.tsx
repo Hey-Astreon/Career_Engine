@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronUp,
 } from "lucide-react";
 import AstrePilotCard from "@/components/AstrePilotCard";
+import ScreeningVaultCard from "@/components/ScreeningVaultCard";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -606,6 +607,14 @@ export default function SettingsPage() {
           <h2 className="text-[18px] font-bold tracking-tight text-[var(--ink)] mb-1">AstrePilot</h2>
           <p className="text-[12px] text-[var(--muted)] mb-4">Intelligent autofill for job application forms — powered by your AstreWork profile.</p>
           <AstrePilotCard />
+        </div>
+
+        {/* ── Smart Screening Q&A Vault Section ───────────────────────────── */}
+        <div className="mt-10">
+          <p className="ce-page-eyebrow mb-1">Ammunition & Intelligence</p>
+          <h2 className="text-[18px] font-bold tracking-tight text-[var(--ink)] mb-1">Smart Screening Q&A Vault</h2>
+          <p className="text-[12px] text-[var(--muted)] mb-4">Curated, battle-tested screening answers automatically deployed across ATS application forms.</p>
+          <ScreeningVaultCard />
         </div>
 
       </main>

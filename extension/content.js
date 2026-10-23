@@ -1823,8 +1823,28 @@
 
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
         const jobTitle = session && session.jobTitle ? session.jobTitle : '';
+
+        // 1. Check Candidate Screening Q&A Vault first (sub-5ms, zero LLM latency)
         try {
-          // Attempt high-reasoning Antigravity AI Oracle first
+          const vaultRes = await apFetch('/vault/match', {
+            method: 'POST',
+            body: JSON.stringify({ question, company, jobTitle }),
+          });
+          if (vaultRes.ok) {
+            const vaultData = await vaultRes.json();
+            if (vaultData && vaultData.matched && vaultData.answer) {
+              field.source = 'vault';
+              field.confidence = vaultData.confidence;
+              field.vaultId = vaultData.vaultId;
+              return vaultData.answer;
+            }
+          }
+        } catch (e) {
+          /* proceed to oracle/answer */
+        }
+
+        try {
+          // Attempt high-reasoning Antigravity AI Oracle next
           let res = await apFetch('/oracle', {
             method: 'POST',
             body: JSON.stringify({
@@ -1894,6 +1914,51 @@
       onDownloadResume: runDownloadResume,
       onSyncHarvester: runSyncHarvester,
       onRescan: rescanFields,
+      onSaveToVault: async (fieldId, btnEl) => {
+        const f = detectedFields && detectedFields.find(x => x.id === fieldId);
+        if (!f || !f.element) return;
+        const question = (getLabelText(f.element) || '').slice(0, 300) || 'Custom Screening Question';
+        const answerText = f.element.value || f.preview || '';
+        if (!answerText.trim() || answerText.length < 5) return;
+
+        if (btnEl) {
+          btnEl.textContent = 'Saving…';
+          btnEl.disabled = true;
+        }
+
+        try {
+          const res = await apFetch('/vault', {
+            method: 'POST',
+            body: JSON.stringify({
+              questionPattern: question,
+              answerText: answerText,
+              companyContext: activeSession && activeSession.company ? activeSession.company : document.title.replace(/ \|.*/, '').trim(),
+              roleContext: activeSession && activeSession.jobTitle ? activeSession.jobTitle : '',
+              isFavorite: true,
+            }),
+          });
+          if (res.ok) {
+            if (btnEl) {
+              btnEl.textContent = '✓ Saved!';
+              btnEl.style.color = '#059669';
+              btnEl.style.borderColor = 'rgba(5, 150, 105, 0.3)';
+              btnEl.style.background = 'rgba(5, 150, 105, 0.1)';
+            }
+            f.source = 'vault';
+            if (activeHud) activeHud.updateField(f);
+          } else {
+            if (btnEl) {
+              btnEl.textContent = 'Save Failed';
+              btnEl.disabled = false;
+            }
+          }
+        } catch (err) {
+          if (btnEl) {
+            btnEl.textContent = 'Save Failed';
+            btnEl.disabled = false;
+          }
+        }
+      },
       onConfirmSubmit: async (meta) => {
         try {
           await apFetch('/confirm', {
@@ -2008,6 +2073,24 @@
         stepName: curSession.stepName
       });
     }
+
+    // Attach live input listeners to textareas to reflect edits in HUD
+    detectedFields.forEach(f => {
+      if ((f.type === 'SCREENING' || f.type === 'COVER_LETTER') && f.element) {
+        f.element.addEventListener('input', () => {
+          f.preview = f.element.value;
+          if (activeHud) {
+            activeHud.updateField({
+              id: f.id,
+              type: f.type.toLowerCase().replace(/_/g, ''),
+              label: TYPE_LABELS[f.type] || f.type,
+              preview: f.element.value,
+              source: f.source || 'profile',
+            });
+          }
+        });
+      }
+    });
   }
 
   function rescanFields() {

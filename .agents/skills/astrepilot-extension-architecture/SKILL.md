@@ -197,4 +197,22 @@ Handles multi-page / multi-section job applications (Workday, Ashby, SmartRecrui
    - `transitioning` state featuring an animated pulse spinner while the next step mounts.
    - Automatically auto-scans and re-primes autofill for the subsequent step once settled.
 
+---
+
+## 🧠 10. Pillar D: Smart Screening Q&A Memory Bank & Semantic Vault
+
+Transforms AstrePilot from an ephemeral single-shot LLM generator into a learning, adaptive career copilot with candidate-scoped persistent memory:
+1. **Persistent Vault Schema (`ScreeningQuestionVault`):** First-class Prisma model in `prisma/schema.prisma` connected to LibSQL distributed SQLite and Turso Cloud, storing `questionPattern`, `keywords` (token stems), `answerText`, `category` (`MOTIVATION`, `TECHNICAL`, `BEHAVIORAL`, `LOGISTICS`, `COMPENSATION`, `GENERAL`), `isFavorite`, and `timesUsed`.
+2. **Fast Semantic Matching Engine (`src/lib/autopilot/qaVaultEngine.ts`):** Sub-5ms deterministic + fuzzy matching:
+   - Strips grammatical noise and normalizes technical abbreviations (`react.js` $\rightarrow$ `react`, `ts` $\rightarrow$ `typescript`, `compensation` $\rightarrow$ `salary`).
+   - Evaluates token coverage, Jaccard similarity, N-gram phrase containment, and category affinity.
+   - Interpolates dynamic template slots (`{{COMPANY}}`, `{{ROLE}}`) to customize answers to the active employer and position on the fly.
+3. **Pre-Seeded Ammunition (`src/lib/autopilot/qaVaultSeed.ts`):** Auto-seeds verified, Section 5 Title-Compliant answers for Roushan Kumar & Ayushi Raj (Distributed Harvesters, High-Concurrency LibSQL WAL, Caddy HTTP/3 Architecture, ATS Typography, Notice Period, Market Compensation).
+4. **HUD Integration & 1-Click Save (`extension/hud-ui.js` & `extension/content.js`):**
+   - Shows blue `Vault 94%` badge on matched screening questions instead of generic `AI` badge.
+   - Real-time textarea input listeners update HUD preview as the user types.
+   - `[💾 Save to Vault]` action button allows candidates to save custom or edited answers directly to their cloud database with 1 click.
+5. **Workspace Management UI (`ScreeningVaultCard.tsx`):** High-density workspace dashboard in `/settings` for searching, filtering by category, toggling favorite priorities, reading expanded responses, and adding new Q&A ammunition.
+
+
 

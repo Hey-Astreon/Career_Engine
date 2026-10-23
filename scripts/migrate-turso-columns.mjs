@@ -53,6 +53,34 @@ async function main() {
   await addColumnIfNotExists("autopilot_sessions", "recruiterLinkedInUrl", "TEXT");
   await addColumnIfNotExists("autopilot_sessions", "recruiterId", "TEXT");
 
+  // Screening question vault table (Pillar D)
+  console.log("\nMigrating screening_question_vault table...");
+  await tursoClient.execute(`
+    CREATE TABLE IF NOT EXISTS "screening_question_vault" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "profileId" TEXT NOT NULL,
+      "category" TEXT NOT NULL DEFAULT 'GENERAL',
+      "questionPattern" TEXT NOT NULL,
+      "keywords" TEXT NOT NULL DEFAULT '[]',
+      "answerText" TEXT NOT NULL,
+      "isFavorite" BOOLEAN NOT NULL DEFAULT 0,
+      "timesUsed" INTEGER NOT NULL DEFAULT 0,
+      "lastUsedAt" DATETIME,
+      "companyContext" TEXT,
+      "roleContext" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "screening_question_vault_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "profiles" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `);
+  await tursoClient.execute(`
+    CREATE INDEX IF NOT EXISTS "screening_question_vault_profileId_idx" ON "screening_question_vault"("profileId")
+  `);
+  await tursoClient.execute(`
+    CREATE INDEX IF NOT EXISTS "screening_question_vault_category_idx" ON "screening_question_vault"("category")
+  `);
+  console.log("✓ screening_question_vault table & indexes ready on Turso Cloud!");
+
   console.log("\n=== Migration Completed! Verifying AutopilotSessions Table... ===");
   const aCols = (await tursoClient.execute('PRAGMA table_info("autopilot_sessions")')).rows;
   console.log("Turso autopilot_sessions columns now:", aCols.map((c) => c.name));

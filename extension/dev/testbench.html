@@ -316,6 +316,60 @@
         </button>
       </div>
     </div>
+
+    <!-- CARD 8: Smart Screening Q&A Vault Sandbox (Pillar D) -->
+    <div class="card" id="card-screening-vault" style="grid-column: span 2; border-color: rgba(14, 165, 233, 0.4); background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <h2 style="margin: 0; color: #38bdf8;">Card 8: Smart Screening Q&A Vault Sandbox (Pillar D)</h2>
+        <span class="badge" style="background: #0369a1; color: white;">Semantic Q&A Vault</span>
+      </div>
+      <p style="color: #94a3b8; font-size: 13px; margin-bottom: 16px;">
+        Simulates custom ATS screening questions with instant sub-5ms semantic vault matching, company/role slot interpolation ({{COMPANY}}), and 1-click &quot;Save to Vault&quot; actions.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label for="tb-q-motivation" style="font-weight: 600; color: #f1f5f9; display: flex; justify-content: space-between;">
+            <span>Why are you interested in joining our company?*</span>
+            <span style="font-size: 10px; color: #38bdf8;">MOTIVATION</span>
+          </label>
+          <textarea id="tb-q-motivation" name="why_us" rows="4" placeholder="AstrePilot will match this from your Motivation vault entry and interpolate the company name..." style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; padding: 10px; font-size: 13px; font-family: inherit; resize: vertical;"></textarea>
+        </div>
+
+        <div>
+          <label for="tb-q-tech" style="font-weight: 600; color: #f1f5f9; display: flex; justify-content: space-between;">
+            <span>Describe a challenging technical problem you solved.*</span>
+            <span style="font-size: 10px; color: #38bdf8;">TECHNICAL</span>
+          </label>
+          <textarea id="tb-q-tech" name="tech_challenge" rows="4" placeholder="AstrePilot will match this from your Technical Challenge vault entry..." style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; padding: 10px; font-size: 13px; font-family: inherit; resize: vertical;"></textarea>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label for="tb-q-notice" style="font-weight: 600; color: #f1f5f9; display: flex; justify-content: space-between;">
+            <span>What is your notice period / earliest possible start date?*</span>
+            <span style="font-size: 10px; color: #38bdf8;">LOGISTICS</span>
+          </label>
+          <input type="text" id="tb-q-notice" name="notice_period" placeholder="e.g. Immediate (0 to 14 days)">
+        </div>
+
+        <div>
+          <label for="tb-q-salary" style="font-weight: 600; color: #f1f5f9; display: flex; justify-content: space-between;">
+            <span>What are your salary or compensation expectations?*</span>
+            <span style="font-size: 10px; color: #38bdf8;">COMPENSATION</span>
+          </label>
+          <input type="text" id="tb-q-salary" name="salary_expectation" placeholder="e.g. Competitive market rate">
+        </div>
+      </div>
+
+      <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #7dd3fc; display: flex; align-items: center; justify-content: space-between;">
+        <span>💡 <b>Pro-Tip:</b> Type your own custom answer above to see the <code>💾 Save to Vault</code> action activate in the AstrePilot HUD in real-time.</span>
+        <button type="button" id="btn-simulate-edit" style="background: rgba(14, 165, 233, 0.2); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+          Simulate Typing
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -457,6 +511,16 @@
     });
     document.getElementById('wizard-submit-btn')?.addEventListener('click', () => {
       alert('Application submitted successfully in testbench!');
+    });
+
+    // 8. Screening Q&A Vault simulation
+    document.getElementById('btn-simulate-edit')?.addEventListener('click', () => {
+      const textarea = document.getElementById('tb-q-motivation');
+      if (textarea) {
+        textarea.value = "I have followed AstreWork's architecture closely and admire how the distributed scraping pipelines achieve 99.9% uptime with zero socket leaks. I want to build resilient distributed tools with your team.";
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     });
   </script>
 </body>
