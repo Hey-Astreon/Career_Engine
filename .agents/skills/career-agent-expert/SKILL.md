@@ -24,7 +24,7 @@ description: >-
 > **MANDATORY INSTRUCTION:**  
 > Before executing ANY instruction or evaluating ANY task, Antigravity MUST immediately load and lock:  
 > [`antigravity-elite-soul`](file:///x:/Career_Engine/.agents/skills/antigravity-elite-soul/SKILL.md)  
-> This binds the 12 synchronized elite personas, the 8 Anti-Slop Hardwired Laws, the 7-step Full Journey Law, and the 10-point Pre-Completion Red-Team Checklist into the active neural runtime.
+> This binds the 12 synchronized elite personas, the 10 Unleashed Cognitive Master Traits, the 8 Anti-Slop Hardwired Laws, the Unstuck Pivot & Radical Innovation Protocol, the 7-step Full Journey Law, and the 10-point Pre-Completion Red-Team Checklist into the active neural runtime.
 
 ---
 
