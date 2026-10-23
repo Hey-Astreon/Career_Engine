@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 56: AstrePilot Gatekeeper Step Segregation, Continuous SPA/DOM Transition Watcher, Header Re-scan Controls & False Duplicate Prevention, and 50/50 Vitest 503-Test Green Verification)
+> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 57: Eradication of Cross-Realm Prototype Crash, Iframe Priority Inversion, Singleton Type Hijacking, and MutationObserver Reset Loop in Live Field Autofill; 50/50 Vitest 503-Test Green Verification)
 
 ---
 
@@ -2415,6 +2415,75 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never treat a login or authentication gateway step as an application form. Authentication is a prerequisite, not a submission. Gatekeeper steps must NEVER create database application records or declare `state = 'done'`.
   - **Rule:** Single Page Applications (SPAs) and dynamic ATS portals replace DOM trees without window reloads. An in-browser career agent must continuously observe SPA router transitions (`pushState`, `replaceState`, `popstate`) and dynamic DOM mutations to automatically transition from completed gatekeeper states into active application forms.
   - **Rule:** Never lock the user into a terminal state without a re-scan escape hatch. Always provide a persistent re-scan icon in the HUD header and a "More fields appeared? Re-Scan" button in completed state cards.
+
+### 🔴 Case 37: Eliminating Cross-Realm Prototype Crash, Iframe Priority Inversion, Singleton Hijacking, and MutationObserver Reset Loop in Live Field Autofill
+
+* **Date & Context:** October 23, 2026 — Comprehensive deep-scan and eradication of 4 compounding bugs causing AstrePilot to fail to fill candidate profile fields (Address, Zip, Employer, Dates, Text Consent) on enterprise iframe-embedded ATS portals (Cotiviti iCIMS) and leaving HUD in an un-submitted, reset state.
+
+* **The Exact Challenge & Mistake Encountered:**
+  - On the Cotiviti candidate profile screen (`careers-cotiviti.icims.com`), AstrePilot detected 18 fields.
+  - Upon clicking `Autofill 18 fields`:
+    1. Address (`streetAddress`), `Address 2` (`apartment`), `Zip/Postal Code` (`zipCode`), and `Text Consent` remained completely empty on the live page.
+    2. Experience section (`Employer*`, `State*`, `Title*`, `Start Date`, `End Date`, `Description*`, `Reason for Leaving`) remained completely empty on the live page.
+    3. The AstrePilot HUD displayed all fields with empty status circles (`○`), and the primary action button remained stuck in `state = 'ready'` displaying `⚡ Autofill 18 fields`, giving the impression that autofill did not run or immediately failed.
+
+* **Deep Root Cause Diagnosis:**
+  1. **Cross-Realm Prototype Crash (`Illegal invocation`):**
+     - In embedded ATS portals like iCIMS, candidate inputs reside inside `#icims_content_iframe`. The element's global realm is `el.ownerDocument.defaultView` (the iframe window), NOT the top-level `window`.
+     - `setNativeValue` invoked `Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(el, value)`.
+     - In Chrome V8, invoking the top-level prototype setter on a cross-realm iframe element throws an uncaught `TypeError: Illegal invocation`!
+     - In `hud-ui.js`, `fillAnimated` wrapped `setNativeValue` in a `setTimeout` without `try/catch`. The uncaught exception caused `resolve()` to never be called, permanently freezing the fill promise chain!
+  2. **Iframe Priority Inversion & Singleton Type Hijacking:**
+     - `scanFields()` populated `targetDocs = [document, ...iframes]`.
+     - The outer host document (Cotiviti's branded wrapper) was scanned *before* `#icims_content_iframe`.
+     - The outer document contains global career search widgets (e.g. `<input name="location">`, `<input name="zip">`).
+     - `seenTypes['ZIP'] = true` was consumed by the outer search widget. When the scanner subsequently entered the iframe, the candidate form's actual `Zip/Postal Code*` input was discarded as a duplicate!
+  3. **Classification Order & Singleton Collisions:**
+     - `ADDRESS_TYPE`: In `Addresses (1)*`, the dropdown `Type*` (`Home`/`Work`) was matched by keyword `address` in `contextSignal`, falsely claiming `seenTypes['ADDRESS'] = true`. The real street address `<input>` immediately following it was discarded as a duplicate `ADDRESS`!
+     - `ZIP` vs `ADDRESS`: In iCIMS, the postal code input is named `iCIMS_Candidate_Address_PostalCode`. The classifier checked `attrSignal.includes('address')` *before* checking `zip` or `postal`, misclassifying the postal code as `ADDRESS` and discarding it!
+     - `EMPLOYER`: In `Experience`, the company field is labeled `Employer*`. `classifyField` only checked `labelSignal.includes('company')`, missing `Employer*`.
+     - `EXP_STATE`: `State*` in `Experience` was classified as `STATE` and discarded as a duplicate of the address `STATE`.
+     - Grouped Date Inputs: The container label `Start Date (best estimate) (Month / Day / Year)` contained `month`, `day`, and `year`. Since `getLabelText` fell back to the container, all 3 inputs were classified as `START_MONTH`, dropping Day and Year as duplicates.
+     - `TEXT_CONSENT`: Cotiviti's `Text Consent: Do you consent to receive text messages from our company?` was completely unclassified.
+  4. **Randomized IDs & MutationObserver Infinite Reset Loop:**
+     - `scanFields()` assigned randomized field IDs (`'f' + Math.random().toString(36)`).
+     - Every 500ms, `checkIfNewFormMounted()` filtered `newFields = currentFields.filter(f => !prevFieldIds.has(f.id))`.
+     - Because IDs were randomized on every scan, `newFields.length >= 2` was always true!
+     - 500ms after autofill completed, `checkIfNewFormMounted()` mistook existing inputs for "brand new forms" and invoked `applyDetectedFields(currentFields)`, wiping out the completed state and resetting the HUD back to `state = 'ready'` (`⚡ Autofill 18 fields`) with empty status circles!
+
+* **The Concrete Surgical Fix:**
+  1. **Cross-Realm Prototype Safety (`extension/content.js`):**
+     - Resolved `win = (el.ownerDocument && el.ownerDocument.defaultView) || window` and `doc = el.ownerDocument || document`.
+     - Retrieved prototype dynamically via `(win.HTMLInputElement && win.HTMLInputElement.prototype) || Object.getPrototypeOf(el)`.
+     - Wrapped `setter.set.call(el, value)` in `try/catch` with guaranteed fallback `el.value = value`.
+     - Used `doc.querySelectorAll` for radio inputs and dispatched native jQuery `change` triggers if `win.$` exists.
+  2. **Defensive Promise Completion (`extension/hud-ui.js`):**
+     - Wrapped the typing loop in `fillAnimated` in a comprehensive `try/catch` block with direct write fallback and guaranteed `resolve()`, making autofill promise hangs mathematically impossible.
+  3. **Iframe Exclusivity & Prioritization (`extension/content.js`):**
+     - In `scanFields()`, inspected iframes for candidate form inputs (`input:not([type="hidden"]), select, textarea`).
+     - When an embedded ATS portal is detected inside an iframe (>= 2 fields), prioritized `frameDocs` exclusively (`targetDocs = frameDocs`), completely isolating the outer host wrapper and eliminating singleton hijacking.
+     - Hardened site-wide search input filtering against outer header/footer elements.
+  4. **Granular Classification & Field Heuristics (`extension/content.js`):**
+     - Added `ADDRESS_TYPE` classifier and resolved to `'Home'`.
+     - Evaluated `ZIP` and `APT` strictly before generic `ADDRESS`, and guarded `ADDRESS` to exclude `zip`, `postal`, `city`, `state`, `country`.
+     - In `isEmploymentSection`: Added `employer` and `organization` to `COMPANY`; added `REASON_FOR_LEAVING` resolving to `'Seeking career growth and developer opportunities'`; added `EXP_STATE`, `EXP_CITY`, `EXP_COUNTRY`.
+     - Disambiguated date inputs using `attrSignal` precedence (`year` $\rightarrow$ `START_YEAR`/`END_YEAR`, `day` $\rightarrow$ `START_DAY`/`END_DAY`, `month` $\rightarrow$ `START_MONTH`/`END_MONTH`).
+     - Added `TEXT_CONSENT` for SMS/text messaging consent, resolving to `'Yes'`.
+     - Expanded `SYNONYM_DICTIONARY` with `'home'` and `'consent'`/`'opt in'`.
+  5. **Deterministic IDs & Done State Guard (`extension/content.js`):**
+     - Generated deterministic IDs: `type.toLowerCase() + '_' + (canonicalEl.id || canonicalEl.name || index)`.
+     - In `checkIfNewFormMounted()`: Added a guard preventing auto-waking from `done` when previous elements are still attached to the DOM and URL has not changed.
+     - Compared field identity using DOM element object references (`prevElements.has(f.element)`).
+  6. **Repackaged Distribution & Automated Verification:**
+     - Executed `node scripts/package-extension.js` generating updated `public/downloads/astrepilot-extension.zip` (88.8 KB).
+     - Full Vitest suite: **50 test files passed (503/503 tests passing green)**.
+     - Full TypeScript typecheck: `npx tsc --noEmit` exited clean with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Elements residing in iframes belong to a separate JavaScript execution realm (`el.ownerDocument.defaultView`). Never access `window.HTMLInputElement.prototype` directly on an element without resolving its owner window, and always wrap prototype property descriptor setters in defensive try/catches.
+  - **Rule:** Embedded ATS portals (iCIMS, Taleo, Jobvite) place candidate forms inside iframes while the outer parent page contains global navigation, search filters, and newsletter inputs. When an application iframe is present, never allow outer document inputs to be scanned first or consume singleton identity types.
+  - **Rule:** Dynamic DOM change detectors (MutationObservers) must never rely on randomized string IDs to detect new inputs. Comparing element instances via DOM reference (`prevElements.has(element)`) and guarding against re-scanning existing attached elements prevents infinite state reset loops.
+  - **Rule:** In grouped composite inputs (like Month / Day / Year date fields under a shared container label), never classify by parent container text alone. The individual control's local attributes (`id`, `name`, `aria-label`) must take precedence over ancestor container labels.
 
 ---
 

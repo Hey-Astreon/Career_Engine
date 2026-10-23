@@ -1156,14 +1156,24 @@ window.AstrePilotHUD = (function () {
         const delay = value.length > 50 ? 5 : 15;
         
         const type = () => {
-          if (i < value.length) {
-            const nextChunk = value.substring(0, i + chunkSize);
-            setNativeValue(inputEl, nextChunk, false);
-            if (onTick) onTick();
-            i += chunkSize;
-            setTimeout(type, delay);
-          } else {
-            setNativeValue(inputEl, value, true);
+          try {
+            if (i < value.length) {
+              const nextChunk = value.substring(0, i + chunkSize);
+              setNativeValue(inputEl, nextChunk, false);
+              if (onTick) onTick();
+              i += chunkSize;
+              setTimeout(type, delay);
+            } else {
+              setNativeValue(inputEl, value, true);
+              resolve();
+            }
+          } catch (err) {
+            console.warn('[AstrePilot HUD] fillAnimated error fallback:', err);
+            try {
+              setNativeValue(inputEl, value, true);
+            } catch (e) {
+              try { inputEl.value = value; } catch (e2) {}
+            }
             resolve();
           }
         };

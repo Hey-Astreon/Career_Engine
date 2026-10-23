@@ -863,12 +863,13 @@
     { type: 'EMAIL',        kw: ['email', 'e-mail', 'email_address', 'emailaddress'] },
     { type: 'PHONE_TYPE',   kw: ['phone_type', 'phone type', 'phonetype', 'number_type', 'number type', 'telephone_type', 'telephonetype'] },
     { type: 'PHONE',        kw: ['phone', 'telephone', 'mobile', 'cell', 'contact_number', 'phone_number', 'phonenumber', 'phone number', 'contact number', 'mobile number'] },
+    { type: 'ADDRESS_TYPE', kw: ['address_type', 'address type', 'addresstype', 'location_type', 'location type'] },
     { type: 'APT',          kw: ['apartment', 'suite', 'apt', 'address line 2', 'address_line_2', 'address2', 'address 2', 'line 2', 'line2', 'address_2'] },
+    { type: 'ZIP',          kw: ['zip', 'zip_code', 'zip code', 'postal code', 'postal_code', 'postal', 'postcode', 'pin code', 'pincode'] },
     { type: 'ADDRESS',      kw: ['street_address', 'street address', 'address line 1', 'address_line_1', 'address 1', 'address_1', 'address1', 'street', 'address'] },
     { type: 'CITY',         kw: ['city', 'town', 'municipality'] },
     { type: 'STATE',        kw: ['state', 'province', 'state_province', 'state/province', 'region', 'state or province'] },
     { type: 'COUNTRY',      kw: ['country', 'nation', 'country_region', 'country/region'] },
-    { type: 'ZIP',          kw: ['zip', 'zip_code', 'zip code', 'postal code', 'postal_code', 'postal', 'postcode', 'pin code', 'pincode'] },
     { type: 'LOCATION',     kw: ['current_location', 'city_state', 'city_country', 'current location', 'location'] },
     { type: 'HEAR_ABOUT_DETAIL', kw: ['specify further', 'please specify', 'source detail', 'referral detail', 'specify'] },
     { type: 'HEAR_ABOUT',   kw: ['how did you hear', 'hear about us', 'source', 'referral_source', 'how_did_you_hear', 'hear_about', 'hear about', 'referral'] },
@@ -890,16 +891,23 @@
     // Employment granular patterns
     { type: 'COMPANY',      kw: ['company_name', 'company name', 'employer', 'organization', 'company'] },
     { type: 'EMPLOYMENT_TITLE', kw: ['employment_title', 'role_title', 'position title'] },
+    { type: 'EXP_STATE',    kw: ['company_state', 'work_state', 'employer_state'] },
+    { type: 'EXP_CITY',     kw: ['company_city', 'work_city', 'employer_city'] },
+    { type: 'EXP_COUNTRY',  kw: ['company_country', 'work_country', 'employer_country'] },
     { type: 'START_MONTH',  kw: ['start_date_month', 'start date month', 'start month', 'start_month'] },
+    { type: 'START_DAY',    kw: ['start_date_day', 'start date day', 'start day', 'start_day'] },
     { type: 'START_YEAR',   kw: ['start_date_year', 'start date year', 'start year', 'start_year'] },
     { type: 'END_MONTH',    kw: ['end_date_month', 'end date month', 'end month', 'end_month'] },
+    { type: 'END_DAY',      kw: ['end_date_day', 'end date day', 'end day', 'end_day'] },
     { type: 'END_YEAR',     kw: ['end_date_year', 'end date year', 'end year', 'end_year'] },
     { type: 'CURRENT_ROLE', kw: ['current_role', 'current role', 'currently work here', 'i currently work here'] },
+    { type: 'REASON_FOR_LEAVING', kw: ['reason for leaving', 'reason_for_leaving', 'leaving reason', 'reason_leaving', 'reason'] },
     // Education granular patterns
     { type: 'SCHOOL',       kw: ['school_name', 'school name', 'university', 'college', 'institution', 'school'] },
     { type: 'DEGREE',       kw: ['degree_type', 'degree level', 'degree'] },
     { type: 'DISCIPLINE',   kw: ['discipline', 'major', 'field of study', 'specialization', 'branch'] },
     // Compliance & Voluntary self-identification
+    { type: 'TEXT_CONSENT', kw: ['text consent', 'text messages', 'receive text messages', 'sms consent', 'text_consent', 'sms'] },
     { type: 'AGE_18',       kw: ['18 years', '18 years of age', 'at least 18', 'age 18', 'legal age', '18 or older'] },
     { type: 'PREVIOUS_EMPLOYED', kw: ['previously been employed', 'previously employed', 'prior employment', 'former employee', 'worked here before', 'worked for coinbase'] },
     { type: 'PRIVACY_CONSENT', kw: ['privacy notice', 'privacy policy', 'arbitration agreement', 'global data privacy', 'receipt of the above linked'] },
@@ -1046,12 +1054,24 @@
     const isCB = isComboboxOrSelect(input);
     const isSelect = input.tagName === 'SELECT' || isCB;
 
+    // 0. SECTION-AWARE FAST HEURISTICS: Employment pre-detection
+    const isEmploymentSection = contextSignal.includes('employment') || contextSignal.includes('experience') || attrSignal.includes('employment') || attrSignal.includes('job_history') || labelSignal.includes('experience') || attrSignal.includes('experience');
+
     // 1. SELECT-SPECIFIC FAST HEURISTICS
     if (isSelect) {
-      if (labelSignal.includes('type') && (contextSignal.includes('phone') || attrSignal.includes('phone'))) return 'PHONE_TYPE';
+      if ((labelSignal.includes('type') || attrSignal.includes('type')) && (contextSignal.includes('phone') || attrSignal.includes('phone'))) return 'PHONE_TYPE';
       if (attrSignal.includes('phone_type') || attrSignal.includes('phonetype')) return 'PHONE_TYPE';
-      if (labelSignal.includes('country') || attrSignal.includes('country')) return 'COUNTRY';
-      if (labelSignal.includes('state') || labelSignal.includes('province') || attrSignal.includes('state') || attrSignal.includes('province')) return 'STATE';
+      if ((labelSignal.includes('type') || attrSignal.includes('type')) && (contextSignal.includes('address') || attrSignal.includes('address'))) return 'ADDRESS_TYPE';
+      if (labelSignal.includes('text consent') || labelSignal.includes('text message') || labelSignal.includes('sms') || attrSignal.includes('text_consent') || attrSignal.includes('sms')) {
+        return 'TEXT_CONSENT';
+      }
+      if (labelSignal.includes('country') || attrSignal.includes('country')) return isEmploymentSection ? 'EXP_COUNTRY' : 'COUNTRY';
+      if (labelSignal.includes('state') || labelSignal.includes('province') || attrSignal.includes('state') || attrSignal.includes('province')) {
+        return isEmploymentSection ? 'EXP_STATE' : 'STATE';
+      }
+      if (labelSignal.includes('city') || attrSignal.includes('city') || labelSignal.includes('town')) {
+        return isEmploymentSection ? 'EXP_CITY' : 'CITY';
+      }
       if (labelSignal.includes('hear about') || labelSignal.includes('how did you hear') || labelSignal.includes('source') || attrSignal.includes('source') || attrSignal.includes('referral')) {
         if (labelSignal.includes('further') || labelSignal.includes('specify') || attrSignal.includes('specify') || attrSignal.includes('detail')) {
           return 'HEAR_ABOUT_DETAIL';
@@ -1098,35 +1118,62 @@
       if ((labelSignal.includes('number') || attrSignal.includes('number')) && (contextSignal.includes('phone') || attrSignal.includes('phone'))) {
         return 'PHONE';
       }
-      if (labelSignal.includes('address 2') || labelSignal.includes('address line 2') || attrSignal.includes('address2') || attrSignal.includes('address_2') || attrSignal.includes('line2') || attrSignal.includes('line_2') || labelSignal.includes('apartment') || labelSignal.includes('suite') || labelSignal.includes('apt')) {
-        return 'APT';
-      }
-      if ((labelSignal.includes('address') || attrSignal.includes('address') || labelSignal.includes('street') || attrSignal.includes('street')) && !labelSignal.includes('email') && !attrSignal.includes('email') && !labelSignal.includes('web') && !attrSignal.includes('url')) {
-        return 'ADDRESS';
-      }
+
+      // Check ZIP and APT before generic ADDRESS so that compound IDs (e.g. iCIMS Address_PostalCode) don't hijack singleton ADDRESS
       if (labelSignal.includes('zip') || labelSignal.includes('postal') || attrSignal.includes('zip') || attrSignal.includes('postal') || labelSignal.includes('pin code') || labelSignal.includes('pincode') || attrSignal.includes('postalcode') || attrSignal.includes('postal_code') || attrSignal.includes('postal-code')) {
         return 'ZIP';
       }
+      if (labelSignal.includes('address 2') || labelSignal.includes('address line 2') || attrSignal.includes('address2') || attrSignal.includes('address_2') || attrSignal.includes('line2') || attrSignal.includes('line_2') || labelSignal.includes('apartment') || labelSignal.includes('suite') || labelSignal.includes('apt')) {
+        return 'APT';
+      }
+      if ((labelSignal.includes('address') || attrSignal.includes('address') || labelSignal.includes('street') || attrSignal.includes('street')) &&
+          !labelSignal.includes('email') && !attrSignal.includes('email') &&
+          !labelSignal.includes('web') && !attrSignal.includes('url') &&
+          !labelSignal.includes('zip') && !attrSignal.includes('zip') &&
+          !labelSignal.includes('postal') && !attrSignal.includes('postal') &&
+          !labelSignal.includes('city') && !attrSignal.includes('city') &&
+          !labelSignal.includes('state') && !attrSignal.includes('state') &&
+          !labelSignal.includes('country') && !attrSignal.includes('country')) {
+        return 'ADDRESS';
+      }
       if (labelSignal.includes('city') || attrSignal.includes('city') || labelSignal.includes('town')) {
-        return 'CITY';
+        return isEmploymentSection ? 'EXP_CITY' : 'CITY';
       }
       if (labelSignal.includes('state') || labelSignal.includes('province') || attrSignal.includes('state') || attrSignal.includes('province')) {
-        return 'STATE';
+        return isEmploymentSection ? 'EXP_STATE' : 'STATE';
       }
       if (labelSignal.includes('country') || attrSignal.includes('country')) {
-        return 'COUNTRY';
+        return isEmploymentSection ? 'EXP_COUNTRY' : 'COUNTRY';
       }
     }
 
     // 3. SECTION-AWARE FAST HEURISTICS: Employment
-    const isEmploymentSection = contextSignal.includes('employment') || contextSignal.includes('experience') || attrSignal.includes('employment') || attrSignal.includes('job_history');
     if (isEmploymentSection) {
-      if (labelSignal.includes('company') || attrSignal.includes('company')) return 'COMPANY';
+      if (labelSignal.includes('company') || attrSignal.includes('company') || labelSignal.includes('employer') || attrSignal.includes('employer') || labelSignal.includes('organization')) return 'COMPANY';
       if ((labelSignal.includes('title') || attrSignal.includes('title')) && !labelSignal.includes('degree')) return 'EMPLOYMENT_TITLE';
-      if ((labelSignal.includes('month') || attrSignal.includes('month')) && (labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from'))) return 'START_MONTH';
-      if ((labelSignal.includes('year') || attrSignal.includes('year')) && (labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from'))) return 'START_YEAR';
-      if ((labelSignal.includes('month') || attrSignal.includes('month')) && (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to'))) return 'END_MONTH';
-      if ((labelSignal.includes('year') || attrSignal.includes('year')) && (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to'))) return 'END_YEAR';
+      
+      if (labelSignal.includes('reason for leaving') || labelSignal.includes('reason') || attrSignal.includes('reason_for_leaving') || attrSignal.includes('leaving_reason')) {
+        return 'REASON_FOR_LEAVING';
+      }
+
+      // Disambiguate Date inputs (Month, Day, Year) in employment history
+      const isEnd = labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to');
+      if (attrSignal.includes('year') || (labelSignal.includes('year') && !labelSignal.includes('month'))) {
+        return isEnd ? 'END_YEAR' : 'START_YEAR';
+      }
+      if (attrSignal.includes('day') || (labelSignal.includes('day') && !labelSignal.includes('month') && !labelSignal.includes('year'))) {
+        return isEnd ? 'END_DAY' : 'START_DAY';
+      }
+      if (attrSignal.includes('month') || (labelSignal.includes('month') && !labelSignal.includes('year'))) {
+        return isEnd ? 'END_MONTH' : 'START_MONTH';
+      }
+      if (labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from')) {
+        return (labelSignal.includes('month') || isSelect) ? 'START_MONTH' : 'START_YEAR';
+      }
+      if (labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to')) {
+        return (labelSignal.includes('month') || isSelect) ? 'END_MONTH' : 'END_YEAR';
+      }
+
       if (input.type === 'checkbox' && (labelSignal.includes('current') || attrSignal.includes('current'))) return 'CURRENT_ROLE';
       if (input.tagName === 'TEXTAREA' || labelSignal.includes('description') || labelSignal.includes('responsibilities') || labelSignal.includes('duties') || attrSignal.includes('description') || attrSignal.includes('responsibilities')) {
         return 'WORK_DESCRIPTION';
@@ -1142,6 +1189,7 @@
     }
 
     // 5. SPECIFIC QUESTIONS & COMPLIANCE HEURISTICS
+    if (labelSignal.includes('text consent') || labelSignal.includes('text message') || labelSignal.includes('sms') || attrSignal.includes('text_consent') || attrSignal.includes('sms')) return 'TEXT_CONSENT';
     if (labelSignal.includes('18 years') || labelSignal.includes('at least 18') || attrSignal.includes('18_years') || attrSignal.includes('age_18')) return 'AGE_18';
     if (labelSignal.includes('previously been employed') || labelSignal.includes('previously employed') || labelSignal.includes('employed by coinbase') || labelSignal.includes('prior employment')) return 'PREVIOUS_EMPLOYED';
     if (labelSignal.includes('privacy notice') || labelSignal.includes('arbitration agreement') || labelSignal.includes('global data privacy') || labelSignal.includes('receipt of the above linked')) return 'PRIVACY_CONSENT';
@@ -1182,29 +1230,41 @@
   }
 
   function scanFields() {
-    const targetDocs = [document];
+    let frameDocs = [];
     try {
       const iframes = document.querySelectorAll('iframe');
       for (let i = 0; i < iframes.length; i++) {
         try {
           const doc = iframes[i].contentDocument || (iframes[i].contentWindow && iframes[i].contentWindow.document);
-          if (doc && doc.body) targetDocs.push(doc);
+          if (doc && doc.body) {
+            const count = doc.querySelectorAll('input:not([type="hidden"]), select, textarea').length;
+            if (count >= 2) {
+              frameDocs.push(doc);
+            }
+          }
         } catch (e) {}
       }
     } catch (e) {}
+
+    // When an embedded ATS portal is detected inside an iframe (like iCIMS #icims_content_iframe),
+    // prioritize frameDocs exclusively so that the host company's outer header/footer search inputs never hijack singleton fields.
+    const targetDocs = frameDocs.length > 0 ? frameDocs : [document];
 
     const results = [];
     const seenTypes = {};
     const SINGLETON_TYPES = new Set([
       'RESUME',
       'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'PHONE_TYPE',
-      'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
+      'ADDRESS_TYPE', 'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
+      'EXP_STATE', 'EXP_CITY', 'EXP_COUNTRY',
       'LINKEDIN', 'GITHUB', 'PORTFOLIO', 'SUMMARY', 'NOTICE_PERIOD',
       'GENDER', 'PRONOUNS', 'RELOCATE', 'WORK_AUTH', 'VISA',
       'AGE_18', 'PREVIOUS_EMPLOYED', 'PRIVACY_CONSENT', 'AI_CONSENT', 'AI_USAGE',
       'GOVT_OFFICIAL', 'GOVT_RELATIVE', 'CONFLICT_INTEREST', 'REFERRED_BY_LEADER',
       'HISPANIC_LATINO', 'VETERAN', 'DISABILITY', 'RACE_ETHNICITY',
-      'COMPANY', 'EMPLOYMENT_TITLE', 'WORK_DESCRIPTION', 'START_MONTH', 'START_YEAR', 'END_MONTH', 'END_YEAR', 'CURRENT_ROLE',
+      'COMPANY', 'EMPLOYMENT_TITLE', 'WORK_DESCRIPTION',
+      'START_MONTH', 'START_DAY', 'START_YEAR', 'END_MONTH', 'END_DAY', 'END_YEAR', 'CURRENT_ROLE',
+      'REASON_FOR_LEAVING', 'TEXT_CONSENT',
       'SCHOOL', 'DEGREE', 'DISCIPLINE'
     ]);
 
@@ -1246,11 +1306,18 @@
 
         // Filter out site-wide career search filters & navigation inputs (e.g. iCIMS footer search)
         if (canonicalEl.type === 'search') return;
+        const nameAttr = (canonicalEl.getAttribute('name') || '').toLowerCase();
+        const idAttr = (canonicalEl.id || '').toLowerCase();
         if (canonicalEl.closest) {
           const isSearchContainer = canonicalEl.closest('form[role="search"], [role="search"], .search-box, .search-form, .job-search, header, footer, .iCIMS_JobSearch, #job-search, .search-wrapper');
           if (isSearchContainer) {
             const isAppForm = Boolean(canonicalEl.closest('form[id*="apply"], form[class*="apply"], #icims_content_iframe, [data-automation-id*="form"], .application-form, .jobs-apply-form'));
             if (!isAppForm) return;
+          }
+        }
+        if ((nameAttr.includes('search') || idAttr.includes('search')) && !nameAttr.includes('research') && !idAttr.includes('research')) {
+          if (!canonicalEl.closest('form[id*="apply"], form[class*="apply"], #icims_content_iframe, [data-automation-id*="form"], .application-form')) {
+            return;
           }
         }
 
@@ -1266,10 +1333,14 @@
           ? canonicalEl.checked
           : (canonicalEl.value !== undefined ? canonicalEl.value : (canonicalEl.innerText || canonicalEl.textContent || ''));
 
+        const elId = canonicalEl.id || canonicalEl.name || (canonicalEl.getAttribute && canonicalEl.getAttribute('data-automation-id')) || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('idx_' + results.length);
+        const fieldId = type.toLowerCase() + '_' + safeId;
+
         results.push({
           element: canonicalEl,
           type,
-          id: 'f' + Math.random().toString(36).slice(2, 7),
+          id: fieldId,
           originalValue: origVal
         });
       });
@@ -1293,10 +1364,11 @@
     'he/him': ['he / him', 'he/him/his', 'male', 'man'],
     'she/her': ['she / her', 'she/her/hers', 'female', 'woman'],
     'mobile': ['cell', 'cellular', 'personal', 'primary', 'mobile phone', 'direct'],
+    'home': ['home', 'personal', 'primary', 'residence', 'main'],
     'india': ['in', 'ind', 'republic of india'],
     'united states': ['usa', 'us', 'u.s.', 'united states of america'],
     'linkedin': ['job board', 'online job board', 'social network', 'social media', 'internet', 'company website', 'other'],
-    'yes': ['confirmed', 'confirm', 'agree', 'i agree', 'i confirm', 'true', '1', 'yes, i am', 'yes, i do', 'yes, i have', 'authorized', 'authorized to work', 'legally authorized', 'us citizen or permanent resident', 'authorized without restriction'],
+    'yes': ['confirmed', 'confirm', 'agree', 'i agree', 'i confirm', 'true', '1', 'yes, i am', 'yes, i do', 'yes, i have', 'authorized', 'authorized to work', 'legally authorized', 'us citizen or permanent resident', 'authorized without restriction', 'consent', 'opt in', 'opt-in', 'i consent'],
     'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't", 'not required', 'no sponsorship required', 'will not require', 'decline'],
     'immediate': ['immediately', 'now', '0 weeks', '1 week', '2 weeks', 'available immediately', 'immediate', '< 2 weeks', 'less than 2 weeks'],
     'bachelor of computer applications (bca)': ['bachelor of computer applications', 'bachelor', 'bachelors', "bachelor's", "bachelor's degree", 'undergraduate', 'bca', 'computer applications', 'b.c.a', 'b.c.a.'],
@@ -1403,10 +1475,10 @@
       if (hearMatch) return hearMatch;
     }
 
-    if (['WORK_AUTH', 'AGE_18', 'PRIVACY_CONSENT', 'AI_CONSENT'].includes(fieldType) || targetLower === 'yes' || targetLower === 'true') {
+    if (['WORK_AUTH', 'AGE_18', 'PRIVACY_CONSENT', 'AI_CONSENT', 'TEXT_CONSENT'].includes(fieldType) || targetLower === 'yes' || targetLower === 'true') {
       const yesMatch = pool.find(o => {
         const t = (o.textContent || o.text || '').trim().toLowerCase();
-        return (t === 'yes' || t.startsWith('yes') || t.includes('authorized') || t.includes('agree') || t.includes('confirm')) && !t.includes('no');
+        return (t === 'yes' || t.startsWith('yes') || t.includes('authorized') || t.includes('agree') || t.includes('confirm') || t.includes('consent') || t.includes('opt in') || t.includes('opt-in')) && !t.includes('no');
       });
       if (yesMatch) return yesMatch;
     }
@@ -1745,14 +1817,18 @@
 
   /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
   function setNativeValue(el, value, isFinal = true) {
+    if (!el) return;
     if (isComboboxOrSelect(el)) {
       fillUniversalCombobox(el, value).catch(() => {});
       return;
     }
 
+    const doc = el.ownerDocument || document;
+    const win = (el.ownerDocument && el.ownerDocument.defaultView) ? el.ownerDocument.defaultView : window;
+
     if (el.tagName === 'INPUT' && el.type === 'radio') {
       const radios = el.name
-        ? document.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
+        ? doc.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
         : [el];
       let target = null;
       const valLower = String(value).toLowerCase();
@@ -1777,26 +1853,55 @@
       const valLower = String(value).toLowerCase();
       const shouldCheck = valLower === 'yes' || valLower === 'true' || valLower === '1' || valLower === 'checked';
       if (el.checked !== shouldCheck) {
-        el.click();
+        try { el.click(); } catch(e) {}
       }
-      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'checked');
-      if (setter && setter.set) { setter.set.call(el, shouldCheck); } else { el.checked = shouldCheck; }
+      let setter = null;
+      try {
+        const proto = (win.HTMLInputElement && win.HTMLInputElement.prototype) || Object.getPrototypeOf(el);
+        setter = Object.getOwnPropertyDescriptor(proto, 'checked');
+      } catch (e) {}
+      if (setter && setter.set) {
+        try { setter.set.call(el, shouldCheck); } catch (e) { el.checked = shouldCheck; }
+      } else {
+        el.checked = shouldCheck;
+      }
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return;
     }
 
     try {
-      if (document.activeElement !== el) {
+      if (doc.activeElement !== el) {
         el.focus();
       }
     } catch (e) {}
 
-    const proto = el.tagName === 'TEXTAREA'
-      ? window.HTMLTextAreaElement.prototype
-      : window.HTMLInputElement.prototype;
-    const setter = Object.getOwnPropertyDescriptor(proto, 'value');
-    if (setter && setter.set) { setter.set.call(el, value); } else { el.value = value; }
+    let proto = null;
+    try {
+      if (el.tagName === 'TEXTAREA') {
+        proto = (win.HTMLTextAreaElement && win.HTMLTextAreaElement.prototype) || Object.getPrototypeOf(el);
+      } else {
+        proto = (win.HTMLInputElement && win.HTMLInputElement.prototype) || Object.getPrototypeOf(el);
+      }
+    } catch (e) {
+      proto = Object.getPrototypeOf(el);
+    }
+
+    let setter = null;
+    try {
+      setter = Object.getOwnPropertyDescriptor(proto, 'value');
+    } catch (e) {}
+
+    if (setter && setter.set) {
+      try {
+        setter.set.call(el, value);
+      } catch (e) {
+        el.value = value;
+      }
+    } else {
+      el.value = value;
+    }
+
     if (el._valueTracker) {
       try { el._valueTracker.setValue(''); } catch(e) {}
     }
@@ -1808,6 +1913,11 @@
     if (isFinal) {
       el.dispatchEvent(new Event('change', { bubbles: true }));
       el.dispatchEvent(new Event('blur', { bubbles: true }));
+      try {
+        if (win.$ && win.$(el).trigger) {
+          win.$(el).trigger('change');
+        }
+      } catch (e) {}
     }
   }
 
@@ -1821,7 +1931,11 @@
     TITLE: 'Job Title', COVER_LETTER: 'Cover Letter', SUMMARY: 'Summary',
     WORK_AUTH: 'Work Authorization', VISA: 'Visa Sponsorship', SALARY: 'Salary', SCREENING: 'Screening Q',
     NOTICE_PERIOD: 'Notice Period', RELOCATE: 'Relocate', EDUCATION: 'Highest Education',
-    GENDER: 'Gender', PRONOUNS: 'Pronouns', ADDRESS: 'Street Address', APT: 'Apartment/Suite', ZIP: 'ZIP Code',
+    GENDER: 'Gender', PRONOUNS: 'Pronouns',
+    ADDRESS_TYPE: 'Address Type', ADDRESS: 'Street Address', APT: 'Apartment/Suite', ZIP: 'ZIP Code',
+    EXP_STATE: 'Work State', EXP_CITY: 'Work City', EXP_COUNTRY: 'Work Country',
+    START_DAY: 'Start Day', END_DAY: 'End Day', REASON_FOR_LEAVING: 'Reason for Leaving',
+    TEXT_CONSENT: 'Text / SMS Consent',
     HEAR_ABOUT: 'Referral Source', HEAR_ABOUT_DETAIL: 'Source Detail',
     AGE_18: 'Legal Age (18+)', PREVIOUS_EMPLOYED: 'Prior Employment', PRIVACY_CONSENT: 'Privacy Agreement',
     AI_CONSENT: 'AI Processing Consent', AI_USAGE: 'AI Tools Usage', GOVT_OFFICIAL: 'Government Official',
@@ -1850,6 +1964,7 @@
       case 'CITY':         return profile.city || loc.city || null;
       case 'STATE':        return profile.state || loc.state || null;
       case 'COUNTRY':      return profile.country || loc.country || null;
+      case 'ADDRESS_TYPE': return profile.addressType || 'Home';
       case 'ADDRESS':      return profile.streetAddress || profile.city || loc.city || null;
       case 'APT':          return profile.apartment || null;
       case 'ZIP': {
@@ -1858,6 +1973,13 @@
         if (el && el.maxLength === 5) return rawZip.slice(0, 5);
         return rawZip;
       }
+      case 'EXP_STATE':    return profile.state || loc.state || 'Bihar';
+      case 'EXP_CITY':     return profile.city || loc.city || 'Patna';
+      case 'EXP_COUNTRY':  return profile.country || loc.country || 'India';
+      case 'START_DAY':    return '1';
+      case 'END_DAY':      return '1';
+      case 'REASON_FOR_LEAVING': return 'Seeking career growth and developer opportunities';
+      case 'TEXT_CONSENT': return 'Yes';
       case 'WORK_DESCRIPTION': return profile.workDescription || (profile.virtualExps && profile.virtualExps[0] ? profile.virtualExps[0].outcome : profile.professionalSummary);
       case 'PASSWORD':
       case 'CONFIRM_PASSWORD': return '••••••••••••';
@@ -1947,6 +2069,7 @@
       case 'CITY':        return profile.city || loc.city || '';
       case 'STATE':       return profile.state || loc.state || '';
       case 'COUNTRY':     return profile.country || loc.country || '';
+      case 'ADDRESS_TYPE': return profile.addressType || 'Home';
       case 'ADDRESS':     return profile.streetAddress || profile.city || loc.city || '';
       case 'APT':         return profile.apartment || '';
       case 'ZIP': {
@@ -1961,6 +2084,13 @@
         }
         return rawZip;
       }
+      case 'EXP_STATE':    return profile.state || loc.state || 'Bihar';
+      case 'EXP_CITY':     return profile.city || loc.city || 'Patna';
+      case 'EXP_COUNTRY':  return profile.country || loc.country || 'India';
+      case 'START_DAY':    return '1';
+      case 'END_DAY':      return '1';
+      case 'REASON_FOR_LEAVING': return 'Seeking career growth and developer opportunities';
+      case 'TEXT_CONSENT': return 'Yes';
       case 'WORK_DESCRIPTION': {
         if (profile.workDescription) return profile.workDescription;
         if (profile.virtualExps && profile.virtualExps.length > 0) {
@@ -3108,12 +3238,23 @@
     const wakeableStates = ['done', 'gatekeeper-ready', 'step-complete', 'transitioning', 'no-fields'];
     if (!wakeableStates.includes(activeHud.state)) return;
 
+    // Guard: If currently in 'done', do NOT auto-reset to 'ready' if all previous fields are still attached in DOM and URL hasn't changed!
+    if (activeHud.state === 'done') {
+      if (window.location.href === lastTrackedUrl && detectedFields && detectedFields.length > 0) {
+        const stillAttached = detectedFields.every(f => {
+          const doc = (f.element && f.element.ownerDocument) || document;
+          return doc.contains(f.element);
+        });
+        if (stillAttached) return;
+      }
+    }
+
     const currentFields = scanFields();
     if (!currentFields || currentFields.length === 0) return;
 
-    // Check if new core application fields are now present
-    const prevFieldIds = new Set((detectedFields || []).map(f => f.id));
-    const newFields = currentFields.filter(f => !prevFieldIds.has(f.id));
+    // Check if new core application fields are now present using DOM element reference comparison
+    const prevElements = new Set((detectedFields || []).map(f => f.element));
+    const newFields = currentFields.filter(f => !prevElements.has(f.element));
 
     // If we were on gatekeeper (1-2 fields) and now 3+ fields exist, or if at least 2 brand new fields appeared
     if ((detectedFields.length <= 2 && currentFields.length >= 3) || newFields.length >= 2) {
