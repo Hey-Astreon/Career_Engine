@@ -530,6 +530,7 @@
     { type: 'LINKEDIN',     kw: ['linkedin', 'linkedin_url', 'linkedin_profile'] },
     { type: 'GITHUB',       kw: ['github', 'github_url', 'github_profile'] },
     { type: 'PORTFOLIO',    kw: ['portfolio', 'portfolio_url', 'personal_website', 'personal_site', 'website'] },
+    { type: 'RESUME',       kw: ['resume', 'cv', 'curriculum', 'curriculum vitae', 'curriculum_vitae', 'resume/cv', 'resume_file', 'cv_file', 'attach_resume', 'upload_resume', 'attach resume', 'upload resume', 'resume document'] },
     { type: 'TITLE',        kw: ['headline', 'current_title', 'job_title', 'current_role', 'current_position'] },
     { type: 'COVER_LETTER', kw: ['cover_letter', 'coverletter', 'cover letter', 'motivation_letter', 'brief summary', 'cover note'] },
     { type: 'SUMMARY',      kw: ['summary', 'about_yourself', 'professional_summary', 'about you'] },
@@ -717,6 +718,21 @@
 
     // 2. INPUT-SPECIFIC FAST HEURISTICS
     if (!isSelect) {
+      if (input.type === 'file' || (input.tagName === 'INPUT' && input.type === 'file')) {
+        if (labelSignal.includes('cover') || attrSignal.includes('cover') || labelSignal.includes('letter')) return 'COVER_LETTER';
+        if (labelSignal.includes('transcript') || attrSignal.includes('transcript')) return null;
+        if (labelSignal.includes('portfolio') || attrSignal.includes('portfolio')) return 'PORTFOLIO';
+        return 'RESUME';
+      }
+
+      if (attrSignal.includes('dropzone') || attrSignal.includes('upload') || attrSignal.includes('resume-upload')) {
+        if (labelSignal.includes('cover') || attrSignal.includes('cover')) return 'COVER_LETTER';
+        if (labelSignal.includes('transcript') || attrSignal.includes('transcript')) return null;
+        if (labelSignal.includes('resume') || labelSignal.includes('cv') || attrSignal.includes('resume') || attrSignal.includes('cv') || Boolean(input.querySelector && input.querySelector('input[type="file"]'))) {
+          return 'RESUME';
+        }
+      }
+
       if (input.type === 'tel') return 'PHONE';
       if ((labelSignal.includes('number') || attrSignal.includes('number')) && (contextSignal.includes('phone') || attrSignal.includes('phone'))) {
         return 'PHONE';
@@ -816,6 +832,7 @@
     const results = [];
     const seenTypes = {};
     const SINGLETON_TYPES = new Set([
+      'RESUME',
       'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'PHONE_TYPE',
       'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
       'LINKEDIN', 'GITHUB', 'PORTFOLIO', 'SUMMARY', 'NOTICE_PERIOD',
@@ -830,9 +847,11 @@
     const COMBOBOX_QUERY = [
       'input[type="text"]', 'input[type="email"]', 'input[type="tel"]', 'input[type="url"]',
       'input[type="number"]', 'input[type="radio"]', 'input[type="checkbox"]', 'input[type="search"]',
+      'input[type="file"]',
       'input:not([type])', 'textarea', 'select',
       'button[role="combobox"]', 'div[role="combobox"]', '[aria-haspopup="listbox"]',
-      '[data-automation-id="select-box"]', '.select-shell', '[class*="select__control"]'
+      '[data-automation-id="select-box"]', '.select-shell', '[class*="select__control"]',
+      '[data-automation-id*="upload"]', '[class*="dropzone"]', '[class*="resume-upload"]'
     ].join(', ');
 
     targetDocs.forEach(targetDoc => {
@@ -852,9 +871,14 @@
         const rect = canonicalEl.getBoundingClientRect();
         const isCheckOrRadio = canonicalEl.tagName === 'INPUT' && (canonicalEl.type === 'radio' || canonicalEl.type === 'checkbox');
         const isCB = isComboboxOrSelect(canonicalEl);
-        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio && !isCB) return;
+        const isFileInput = canonicalEl.tagName === 'INPUT' && canonicalEl.type === 'file';
+        const isDropzone = (canonicalEl.getAttribute && (canonicalEl.getAttribute('data-automation-id') || '').includes('upload')) ||
+          (canonicalEl.className && String(canonicalEl.className).includes('dropzone'));
+
+        // Standard visibility check - file inputs & dropzones often use opacity: 0 / 0-height styling
+        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio && !isCB && !isFileInput && !isDropzone) return;
         const computed = (targetDoc.defaultView || window).getComputedStyle(canonicalEl);
-        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isCB) return;
+        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isCB && !isFileInput && !isDropzone) return;
 
         const type = classifyField(canonicalEl);
         if (!type) return;
@@ -1230,6 +1254,96 @@
     }
   }
 
+  /* -- SYNTHETIC RESUME BINARY INJECTION (PILLAR B) -- */
+  function getResumeBinaryFromBackground() {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'GET_RESUME_BINARY' }, (res) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+            return;
+          }
+          resolve(res || { success: false, error: 'Empty response from background streamer' });
+        });
+      } catch (e) {
+        resolve({ success: false, error: e.message });
+      }
+    });
+  }
+
+  function base64ToBlob(base64, mimeType = 'application/pdf') {
+    const cleanBase64 = base64.replace(/^data:[^;]+;base64,/, '').trim();
+    const binary = atob(cleanBase64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mimeType });
+  }
+
+  async function injectResumeFile(targetEl) {
+    if (!targetEl) return { success: false, error: 'No target element provided' };
+
+    const data = await getResumeBinaryFromBackground();
+    if (!data || !data.success || !data.base64) {
+      return { success: false, error: (data && data.error) || 'Failed to stream resume binary from background' };
+    }
+
+    try {
+      const filename = data.filename || 'Candidate_Resume.pdf';
+      const mimeType = data.mimeType || 'application/pdf';
+      const blob = base64ToBlob(data.base64, mimeType);
+      const file = new File([blob], filename, {
+        type: mimeType,
+        lastModified: Date.now()
+      });
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+
+      // Locate actual input[type="file"]
+      let fileInput = null;
+      if (targetEl.tagName === 'INPUT' && targetEl.type === 'file') {
+        fileInput = targetEl;
+      } else {
+        fileInput = targetEl.querySelector('input[type="file"]') ||
+          (targetEl.closest('form, [class*="application"], body') && targetEl.closest('form, [class*="application"], body').querySelector('input[type="file"]'));
+      }
+
+      if (fileInput) {
+        try {
+          fileInput.files = dt.files;
+        } catch (filesErr) {}
+        fileInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        fileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+      }
+
+      // Dispatch Drag & Drop events on dropzone wrapper if present
+      const dropzone = targetEl.tagName === 'INPUT'
+        ? (targetEl.closest('[class*="dropzone"], [data-automation-id*="upload"], [class*="resume-upload"], .file-upload, [id*="dropzone"]') || targetEl.parentElement)
+        : targetEl;
+
+      if (dropzone && dropzone !== fileInput) {
+        try {
+          dropzone.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: dt }));
+          dropzone.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+          dropzone.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+        } catch (dragErr) {
+          try {
+            const dropEvt = new CustomEvent('drop', { bubbles: true, cancelable: true });
+            dropEvt.dataTransfer = dt;
+            dropzone.dispatchEvent(dropEvt);
+          } catch (e) {}
+        }
+      }
+
+      return { success: true, filename: filename, size: data.size };
+    } catch (err) {
+      return { success: false, error: err.message || 'Synthetic injection failed' };
+    }
+  }
+
   /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
   function setNativeValue(el, value, isFinal = true) {
     if (isComboboxOrSelect(el)) {
@@ -1300,6 +1414,7 @@
 
   /* -- TYPE LABELS -- */
   const TYPE_LABELS = {
+    RESUME: 'Resume / CV',
     FIRST_NAME: 'First Name', LAST_NAME: 'Last Name', FULL_NAME: 'Full Name',
     EMAIL: 'Email Address', PHONE_TYPE: 'Phone Type', PHONE: 'Phone Number',
     LOCATION: 'Location', CITY: 'City', STATE: 'State / Province', COUNTRY: 'Country',
@@ -1324,6 +1439,7 @@
   function resolvePreview(field, profile, session) {
     const loc = parseLocation(profile.location);
     switch (field.type) {
+      case 'RESUME':       return session ? (session.jobTitle ? 'Tailored PDF (' + session.jobTitle + ')' : 'Master Resume.pdf') : 'Master Resume.pdf';
       case 'FIRST_NAME':   return profile.firstName || null;
       case 'LAST_NAME':    return profile.lastName || null;
       case 'FULL_NAME':    return profile.fullName || null;
@@ -1409,6 +1525,7 @@
   async function resolveValue(field, profile, session) {
     const loc = parseLocation(profile.location);
     switch (field.type) {
+      case 'RESUME':      return 'SYNTHETIC_RESUME_BINARY';
       case 'FIRST_NAME':  return profile.firstName;
       case 'LAST_NAME':   return profile.lastName;
       case 'FULL_NAME':   return profile.fullName;
@@ -1778,7 +1895,27 @@
     }
   }
 
-  function runDownloadResume() {
+  async function runDownloadResume() {
+    const hud = activeHud;
+    const resumeFields = (detectedFields || []).filter(f => f.type === 'RESUME');
+    let targetEl = resumeFields.length > 0 ? resumeFields[0].element : null;
+    if (!targetEl) {
+      targetEl = document.querySelector('input[type="file"], [class*="dropzone"], [data-automation-id*="upload"]');
+    }
+
+    if (targetEl) {
+      if (hud) hud.setState('filling');
+      const res = await injectResumeFile(targetEl);
+      if (res && res.success) {
+        if (hud) {
+          hud.markRow(resumeFields[0] ? resumeFields[0].id : 'manual_resume', 'done', res.filename || 'Uploaded');
+          hud.setState('ready');
+        }
+        return;
+      }
+    }
+
+    // Fallback: download PDF directly to candidate's local Downloads folder
     chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
   }
 
@@ -1897,19 +2034,35 @@
       const skipped = !val || String(val).trim() === '';
 
       if (!skipped) {
-        if (isComboboxOrSelect(f.element)) {
+        if (f.type === 'RESUME') {
+          AstrePilotHUD.highlight(f.element);
+          const uploadRes = await injectResumeFile(f.element);
+          if (uploadRes && uploadRes.success) {
+            filled++;
+            hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
+          } else {
+            // Trigger download to disk as reliable zero-drop fallback
+            chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
+            hud.markRow(f.id, 'skipped', 'Downloaded to disk');
+          }
+        } else if (isComboboxOrSelect(f.element)) {
           AstrePilotHUD.highlight(f.element);
           await fillUniversalCombobox(f.element, val, f.type);
+          filled++;
+          hud.markRow(f.id, 'done', String(val).slice(0, 30));
         } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
           setNativeValue(f.element, val, true);
+          filled++;
+          hud.markRow(f.id, 'done', String(val).slice(0, 30));
         } else {
           AstrePilotHUD.highlight(f.element);
           await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
+          filled++;
+          hud.markRow(f.id, 'done', String(val).slice(0, 30));
         }
-        filled++;
+      } else {
+        hud.markRow(f.id, 'skipped', '-');
       }
-
-      hud.markRow(f.id, skipped ? 'skipped' : 'done', skipped ? '-' : String(val).slice(0, 30));
       hud.setProgress(filled, detectedFields.length);
       await new Promise(r => setTimeout(r, 80));
     }

@@ -203,6 +203,27 @@
         </div>
       </div>
     </div>
+
+    <!-- 5. Greenhouse Style Native File Input (Pillar B) -->
+    <div class="card">
+      <h2>5. Greenhouse Resume File Input <span class="badge">input[type="file"]</span></h2>
+      <label for="resume">Attach Resume / CV</label>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" style="display: block; color: #94a3b8;">
+        <div id="greenhouse-status" style="font-size: 13px; color: #38bdf8; font-family: monospace;">No file attached</div>
+      </div>
+    </div>
+
+    <!-- 6. Ashby / Workday Drag & Drop Dropzone (Pillar B) -->
+    <div class="card">
+      <h2>6. Ashby / Workday Dropzone <span class="badge">DragEvent('drop')</span></h2>
+      <label>Upload Resume / CV File</label>
+      <div id="ashby-dropzone" class="ashby-dropzone" data-automation-id="file-upload-dropzone" style="border: 2px dashed #475569; border-radius: 8px; padding: 24px; text-align: center; background: #0f172a; cursor: pointer; transition: all 0.2s ease;">
+        <div style="color: #38bdf8; font-weight: 600; margin-bottom: 4px;">Drop your resume here, or browse</div>
+        <div style="font-size: 12px; color: #64748b;">Supports PDF up to 10MB</div>
+        <div id="dropzone-status" style="margin-top: 12px; font-size: 13px; color: #10b981; font-weight: 500;">Waiting for synthetic drop...</div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -276,6 +297,47 @@
         });
       } else {
         sSelect.disabled = true;
+      }
+    });
+
+    // 5. Greenhouse file input listener
+    const ghInput = document.getElementById('resume');
+    const ghStatus = document.getElementById('greenhouse-status');
+    ghInput.addEventListener('change', () => {
+      if (ghInput.files && ghInput.files.length > 0) {
+        const file = ghInput.files[0];
+        ghStatus.textContent = `Attached: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+        ghStatus.style.color = '#10b981';
+      }
+    });
+
+    // 6. Ashby dropzone listener
+    const dropzone = document.getElementById('ashby-dropzone');
+    const dropStatus = document.getElementById('dropzone-status');
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#38bdf8';
+        dropzone.style.background = '#1e293b';
+      });
+    });
+    ['dragleave'].forEach(evt => {
+      dropzone.addEventListener(evt, () => {
+        dropzone.style.borderColor = '#475569';
+        dropzone.style.background = '#0f172a';
+      });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '#10b981';
+      dropzone.style.background = '#0f172a';
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        dropStatus.textContent = `Dropped: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+        dropStatus.style.color = '#10b981';
+      } else {
+        dropStatus.textContent = `Drop event fired without files payload`;
+        dropStatus.style.color = '#f59e0b';
       }
     });
   </script>

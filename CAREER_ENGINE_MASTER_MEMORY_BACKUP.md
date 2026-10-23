@@ -1067,6 +1067,19 @@ Located in `extension/`:
     - Vitest: All 39 test files and 401 tests passed green (`npx vitest run`).
     - Typecheck: `npx tsc --noEmit` clean with 0 errors.
 
+- [x] **Phase 49: AstrePilot Pillar A — Universal Combobox & Dropdown Engine (UCDE) (Oct 22-23, 2026)**
+  - **1. Framework & Widget Detection (`src/lib/autopilot/comboboxEngine.ts`):** Architected `detectComboboxTypeFromAttributes()` detecting `NATIVE`, `REACT_SELECT`, `RADIX`, `HEADLESS_UI`, `WORKDAY`, and `WAI_ARIA`.
+  - **2. 6-Stage Semantic Option Matcher (`resolveSemanticOptionMatch`):** Implemented exact, invariant-guarded, synonym-expanded, fuzzy token, smart fallback, and first non-placeholder option matching. Strictly enforces Indian candidate -> "Asian" and BCA candidate -> "Bachelor of Computer Applications" / "Bachelor's Degree".
+  - **3. Content Script Integration (`extension/content.js`):** Broadened `scanFields()` to capture `[role="combobox"]`, `[aria-haspopup="listbox"]`, and custom select shells. Implemented `fillUniversalCombobox()` with portal polling in `document.body` and WAI-ARIA keyboard fallback.
+  - **4. Unit Tests & Testbench:** Created `tests/universal-combobox-engine.test.ts` (13/13 passing) and interactive `extension/dev/testbench.html`.
+
+- [x] **Phase 50: AstrePilot Pillar B — Zero-Click Synthetic Resume File Upload Engine (Oct 23, 2026)**
+  - **1. Elevated Host Binary Streamer Bridge (`extension/background.js`):** Added `GET_RESUME_BINARY` message listener using service worker permissions to stream candidate PDF binary buffers from `/api/resume/download/latest?token=...`, encoding to base64 and returning filename and size, bypassing third-party ATS domain CORS and CSP.
+  - **2. Bearer Auth & Header Exposure (`src/app/api/resume/download/latest/route.ts`):** Added `extractBearerToken()` support and exposed `X-Resume-Filename`, `X-Resume-Variant`, and `Access-Control-Expose-Headers`.
+  - **3. Synthetic Upload Engine (`src/lib/autopilot/syntheticUploadEngine.ts`):** Architected typed cross-runtime utilities for base64 conversion, ATS keyword detection, target classification, and W3C `DataTransfer` file injection with DragEvent dispatching.
+  - **4. Content Script Ingestion (`extension/content.js`):** Added `RESUME` classification heuristics for `input[type="file"]` and dropzones, exempted file inputs from 0-dimension culling, implemented `injectResumeFile(targetEl)`, wired `RESUME` handling in `fillAllFields` with automatic disk fallback, and upgraded HUD `runDownloadResume()` to attempt zero-click injection first.
+  - **5. Automated Testing & Verification:** Authored `tests/resume-synthetic-upload.test.ts` (12/12 passing). Total test suite: 43 test files, 444 tests passing green (444/444). `npx tsc --noEmit` and JavaScript syntax checks (`node -c`) clean with 0 errors.
+
 ---
 
 ## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
@@ -1940,6 +1953,53 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Dropdown options rendered via React portals (Radix UI, Floating UI, Popper) live directly in `document.body`, not in the parent form. Scanners must search the document root for active listboxes when a combobox is activated.
   - **Rule:** Always implement dual-mode automation for comboboxes: attempt synthetic pointer events first, but always provide an automated WAI-ARIA keyboard fallback (`Focus` $\rightarrow$ `ArrowDown` $\rightarrow$ Type Query $\rightarrow$ `Enter`). Standard keyboard events succeed where custom pointer listeners fail.
   - **Rule:** When selecting a parent field in a cascade (Country), never immediately attempt to read the child field (State). Always poll for child options or observe DOM mutations for up to 1200ms to allow AJAX option population.
+
+---
+
+### Case 29: Pillar B — Zero-Click Synthetic Resume File Upload Engine (AstrePilot Autonomous File Injection)
+* **Date & Context:** October 2026 — Upgrading AstrePilot autonomous application automation to conquer ATS file upload dropzones without candidate manual intervention.
+
+* **The Exact Challenge & Mistake Encountered:**
+  - On almost every ATS portal (Greenhouse, Lever, Ashby, Workday), candidates had to manually download their tailored PDF resume to disk and then manually drag-and-drop or browse files into the resume upload zone. This broke the 1-click autonomous application flow and was the single largest bottleneck preventing seamless submission.
+  - Traditional script-based file setting (`input.value = "..."`) is blocked by browser security sandbox (`InvalidStateError`).
+  - Content scripts running on third-party domains (`boards.greenhouse.io`, `jobs.lever.co`) could not directly fetch binary PDFs from `astrework.app` due to browser CORS and Strict Content Security Policies (CSP).
+  - ATS `<input type="file">` elements are frequently hidden (`display: none;` or `opacity: 0; width: 0; height: 0;`), causing naive visibility checks to reject them as unfillable fields.
+
+* **Deep Root Cause Diagnosis:**
+  - In Chromium extensions, only background service workers with host permissions (`*://*/*`) have the authority to bypass third-party domain CORS/CSP and fetch binary buffers from the home app origin.
+  - Standard DOM manipulation allows programmatic file assignment only through the W3C `DataTransfer` API (`input.files = dataTransfer.files`), followed by standard `input` and `change` events.
+  - Modern React/Ashby/Workday file dropzones do not listen to `<input type="file">` directly; they listen to synthetic drag-and-drop events (`dragenter`, `dragover`, `drop`) on their surrounding container `<div>`.
+
+* **The Concrete Surgical Fix:**
+  1. **Background Binary Streamer Bridge (`extension/background.js`):**
+     - Implemented `GET_RESUME_BINARY` listener that uses the background service worker's elevated host permissions to stream candidate PDF binary buffers from `/api/resume/download/latest?token=...`, encodes the array buffer into base64, and returns `{ success: true, base64, filename, mimeType, size }`.
+  2. **Bearer Auth & Header Exposure (`src/app/api/resume/download/latest/route.ts`):**
+     - Added support for `Authorization: Bearer <token>` via `extractBearerToken()` and exposed headers `X-Resume-Filename`, `X-Resume-Variant`, and `Access-Control-Expose-Headers`.
+  3. **Synthetic Upload Engine (`src/lib/autopilot/syntheticUploadEngine.ts`):**
+     - Architected typed, cross-environment utilities for `base64ToUint8Array`, `base64ToBlob`, `createSyntheticResumeFile`, `isResumeSignal`, `isResumeUploadTarget`, and `injectSyntheticFile`.
+  4. **Content Script Integration (`extension/content.js`):**
+     - Added `RESUME` to `FIELD_PATTERNS`, `SINGLETON_TYPES`, and `TYPE_LABELS`.
+     - In `classifyField()`, added fast heuristics for `input[type="file"]` and resume dropzone containers.
+     - Broadened `COMBOBOX_QUERY` to include `input[type="file"]`, `[data-automation-id*="upload"]`, `[class*="dropzone"]`, and `[class*="resume-upload"]`.
+     - Calibrated scanner visibility logic to exempt file inputs and dropzones from zero-dimension/opacity-0 culling.
+     - Implemented `injectResumeFile(targetEl)` that fetches base64 from background, constructs W3C `Blob`, `File`, and `DataTransfer`, assigns `fileInput.files = dt.files`, dispatches `input` and `change`, and emits `DragEvent('drop', { dataTransfer: dt })` on enclosing dropzones.
+     - Updated `fillAllFields(hud)` to call `injectResumeFile(f.element)` for `RESUME` fields, with automatic fallback to background disk download.
+     - Upgraded `runDownloadResume()` in HUD to attempt zero-click injection first if a file input or dropzone exists on the page.
+  5. **Testbench Verification (`extension/dev/testbench.html`):**
+     - Added Card 5 (Greenhouse native file input) and Card 6 (Ashby drag & drop dropzone with synthetic drop feedback).
+  6. **Automated Vitest Test Suite (`tests/resume-synthetic-upload.test.ts`):**
+     - 12 comprehensive unit tests covering binary conversion, ATS signal classification, synthetic file injection, and Bearer token security.
+  7. **Full Verification:**
+     - Vitest suite: 43 test files, 444 unit tests passing green (`npx vitest run`).
+     - TypeScript strict compile: 0 errors (`npx tsc --noEmit`).
+     - JavaScript syntax check: `node -c extension/content.js` and `node -c extension/background.js` passed with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never fetch binary application assets directly from content scripts on third-party ATS domains. Always route binary asset fetching through the background service worker bridge to bypass host CORS and CSP restrictions.
+  - **Rule:** Programmatic file inputs must never attempt to set `input.value`. Always synthesize a W3C `DataTransfer` object (`const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;`) and dispatch both `input` and `change` events.
+  - **Rule:** For custom dropzone containers (Ashby, Workday), always dispatch synthetic `DragEvent('drop', { dataTransfer: dt })` in addition to populating the underlying `<input type="file">`.
+  - **Rule:** Never reject an `<input type="file">` because its bounding rect has zero width or height. Production ATS platforms almost universally hide file inputs (`opacity: 0` or `display: none`) and display custom styled buttons in their place.
+  - **Rule:** Always provide a graceful fallback to local disk download (`DOWNLOAD_RESUME`) if synthetic injection is blocked by restrictive sandboxes.
 
 ---
 

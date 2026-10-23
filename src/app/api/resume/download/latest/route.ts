@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { verifyAutopilotToken } from "@/lib/autopilot/tokenUtils";
+import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const token = url.searchParams.get("token");
+    const token =
+      url.searchParams.get("token") ||
+      extractBearerToken(req.headers.get("authorization"));
 
     if (!token) {
       return new NextResponse("Unauthorized: Token missing", { status: 401 });
@@ -92,6 +94,9 @@ export async function GET(req: Request) {
         "Content-Disposition": `attachment; filename="${downloadFileName}"`,
         "Content-Length": fileBuffer.length.toString(),
         "Cache-Control": "private, max-age=3600",
+        "Access-Control-Expose-Headers": "Content-Disposition, X-Resume-Filename, X-Resume-Variant",
+        "X-Resume-Filename": downloadFileName,
+        "X-Resume-Variant": targetFileName,
       },
     });
   } catch (error) {

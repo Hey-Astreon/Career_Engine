@@ -147,3 +147,27 @@ AstrePilot pairs with the main AstreWork workspace via a zero-password token han
 - **Handshake Flow:** On visiting `https://astrework.app/dashboard`, the content script reads an ephemeral pairing nonce.
 - **Background Storage:** Nonce is exchanged for a 90-day HMAC-SHA256 session token stored in `chrome.storage.local`.
 - **Encrypted Profile Sync:** Candidate resume data, preferences, and custom answers sync securely in the background without exposing plain-text credentials in logs.
+
+---
+
+## 🧩 7. Pillar A: Universal Combobox & Dropdown Engine (UCDE)
+
+Handles complex, non-native custom dropdown widgets across 5 distinct UI design frameworks:
+1. **NATIVE (`<select>`):** Direct option selection with full `change` and `input` events.
+2. **REACT_SELECT:** Target `.select__control`, `.select__input`, and `.select__option`.
+3. **RADIX / SHADCN:** Button with `role="combobox"`, `aria-haspopup="listbox"`, and portal popup querying.
+4. **HEADLESS_UI:** Target `[id*="headlessui-combobox-input"]`.
+5. **WORKDAY (`[data-automation-id="promptOption"]`):** Targets nested popover menus and prompt search inputs.
+6. **WAI-ARIA KEYBOARD FALLBACK:** Key sequences (`ArrowDown`, character typing, `Enter`) to trigger reactive select handlers without hardcoded click coordinates.
+
+---
+
+## 📄 8. Pillar B: Zero-Click Synthetic Resume File Upload Engine
+
+Bypasses the traditional drag-and-drop file friction by programmatically streaming and injecting candidate resumes directly into ATS file inputs:
+1. **CORS/CSP Defense Streaming Bridge (`background.js`):** The service worker uses its elevated host permissions to stream candidate PDF binaries from `/api/resume/download/latest?token=...`, encodes the buffer into base64, and returns `{ success: true, base64, filename, mimeType, size }`.
+2. **W3C DataTransfer Synthesis (`content.js`):** Converts base64 to typed `Uint8Array`, creates a W3C `Blob` & `File`, populates a standard `DataTransfer` object (`dt.items.add(file)`), and assigns `input.files = dt.files`.
+3. **Dual Event Dispatching:** Dispatches `input` and `change` on the `<input type="file">`, and dispatches synthetic `DragEvent('drop', { dataTransfer: dt })` on enclosing dropzone wrappers (Ashby, Workday, Greenhouse).
+4. **Hidden Input Visibility Immunity:** Calibrates scanner geometry so `opacity: 0` or 0-dimension file inputs are not discarded during scanning.
+5. **Graceful Disk Fallback:** If synthetic injection fails or is blocked by extreme sandbox restrictions, automatically falls back to background disk download (`DOWNLOAD_RESUME`).
+

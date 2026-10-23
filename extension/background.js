@@ -145,6 +145,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
 
+  if (request.type === 'GET_RESUME_BINARY') {
+    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token'], async (res) => {
+      try {
+        const safeRes = res || {};
+        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+        if (origin.includes('vercel.app')) {
+          origin = 'https://astrework.app';
+          chrome.storage.sync.set({ astrepilot_origin: origin });
+        }
+        const token = safeRes.astrepilot_token || '';
+        const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token);
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (!response.ok) {
+          return sendResponse({ success: false, error: 'Resume download failed with status ' + response.status });
+        }
+        const buffer = await response.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        const disposition = response.headers.get('content-disposition') || '';
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        const filename = match ? match[1] : (response.headers.get('x-resume-filename') || 'Candidate_Resume.pdf');
+        const variant = response.headers.get('x-resume-variant') || '';
+        sendResponse({
+          success: true,
+          base64: base64,
+          filename: filename,
+          variant: variant,
+          mimeType: 'application/pdf',
+          size: buffer.byteLength
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message || 'Failed to stream resume' });
+      }
+    });
+    return true; // Keep message channel open for async response
+  }
+
   if (request.type === 'PROXY_FETCH') {
     fetch(request.url, request.options || {})
       .then(async res => {
