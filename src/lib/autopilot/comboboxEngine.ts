@@ -193,6 +193,26 @@ export const SYNONYM_DICTIONARY: Record<string, string[]> = {
     "software engineering",
     "computing",
   ],
+  home: ["personal", "primary", "residence", "main", "permanent"],
+  january: ["jan", "01", "1"],
+  february: ["feb", "02", "2"],
+  march: ["mar", "03", "3"],
+  april: ["apr", "04", "4"],
+  may: ["05", "5"],
+  june: ["jun", "06", "6"],
+  july: ["jul", "07", "7"],
+  august: ["aug", "08", "8"],
+  september: ["sep", "sept", "09", "9"],
+  october: ["oct", "10"],
+  november: ["nov", "11"],
+  december: ["dec", "12"],
+  present: ["current", "currently", "present", "now", "till date", "till now"],
+  "1": ["01", "1st", "day 1", "1"],
+  bihar: ["br", "bihar, india"],
+  "uttar pradesh": ["up", "u.p."],
+  delhi: ["nct of delhi", "new delhi", "dl"],
+  maharashtra: ["mh"],
+  karnataka: ["ka", "bangalore", "bengaluru"],
 };
 
 const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;
@@ -287,6 +307,43 @@ export function resolveSemanticOptionMatch<T extends SemanticOption>(
       );
     });
     if (disMatch) return disMatch;
+  }
+
+  // Invariant E: Date Months & Days
+  if (
+    (fieldType === "END_MONTH" || fieldType === "START_MONTH") &&
+    (targetLower === "present" || targetLower === "current" || targetLower === "now")
+  ) {
+    const monthNames = [
+      "january", "february", "march", "april", "may", "june",
+      "july", "august", "september", "october", "november", "december"
+    ];
+    const currentMonthName = monthNames[new Date().getMonth()];
+    const presentOpt = pool.find((o) => {
+      const t = (o.text || "").trim().toLowerCase();
+      return t.includes("present") || t.includes("current");
+    });
+    if (presentOpt) return presentOpt;
+
+    const curMonthOpt = pool.find((o) => {
+      const t = (o.text || "").trim().toLowerCase();
+      const v = (o.value || "").trim().toLowerCase();
+      return (
+        t.includes(currentMonthName) ||
+        v === String(new Date().getMonth() + 1) ||
+        v === String(new Date().getMonth() + 1).padStart(2, "0")
+      );
+    });
+    if (curMonthOpt) return curMonthOpt;
+  }
+
+  if (fieldType === "START_DAY" || fieldType === "END_DAY" || targetLower === "1") {
+    const dayOpt = pool.find((o) => {
+      const t = (o.text || "").trim().toLowerCase();
+      const v = (o.value || "").trim().toLowerCase();
+      return t === "1" || t === "01" || v === "1" || v === "01" || t.includes("1st") || t === "day 1";
+    });
+    if (dayOpt) return dayOpt;
   }
 
   // -------------------------------------------------------------

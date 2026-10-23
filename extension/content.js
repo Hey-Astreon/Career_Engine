@@ -182,7 +182,7 @@
     GENERIC_STEP: 'Application Step'
   };
 
-  const NEXT_STEP_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|continue\s*to\s*next\s*step|step\s*\d+\s*->|log\s*in|login|sign\s*in|signin|get\s*started|start\s*application|enter)$/i;
+  const NEXT_STEP_REGEX = /^(next|continue|save\s*&\s*continue|save\s*and\s*continue|next\s*step|proceed|review(?:\s*application)?|go\s*to\s*next\s*step|continue\s*to\s*next\s*step|step\s*\d+\s*->|log\s*in|login|sign\s*in|signin|get\s*started|start\s*application|enter|submit\s*profile|update\s*profile)$/i;
   const SUBMIT_APPLICATION_REGEX = /^(submit|submit\s*application|complete\s*application|apply|apply\s*now|send\s*application|finish\s*and\s*submit)$/i;
 
   let navSession = null;
@@ -318,6 +318,10 @@
       'input[type="submit"][value*="Log In" i]',
       'input[type="submit"][value*="Login" i]',
       'input[type="submit"][value*="Sign In" i]',
+      'input[name="profileButton"]',
+      'input#cp_form_submit_1',
+      'input[value*="Submit Profile" i]',
+      'input[value*="Update Profile" i]',
       'input[type="submit"]:not([disabled])',
       'button:not([disabled])',
       'a[role="button"]:not([disabled])'
@@ -1229,6 +1233,332 @@
     return best.type;
   }
 
+  /* =========================================================================
+     ATS SPECIALIZED DRIVER ENGINE (MODULAR ARCHITECTURE)
+     ========================================================================= */
+
+  function isIcimsEnvironment(targetDocs = [document]) {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (host.includes('icims.com') || href.includes('icims.com') || href.includes('icims_content_iframe')) return true;
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        if (doc.querySelector('#icims_content_iframe, [id*="PersonProfileFields"], [id*="PortalProfileFields"], [name*="PersonProfileFields"], [name*="PortalProfileFields"], table.iCIMS_Table, .iCIMS_MainWrapper, .iCIMS_JobHeader')) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function scanIcimsFields(targetDoc) {
+    if (!targetDoc) return { fields: [], seenElements: new Set() };
+    const fields = [];
+    const seenElements = new Set();
+
+    // Deterministic Selector Mapping Table for iCIMS / Cotiviti Enterprise Portals
+    const ICIMS_EXACT_MAP = [
+      // 1. Resume File Upload
+      {
+        type: 'RESUME',
+        selectors: [
+          'input#PortalProfileFields\\.Resume_File',
+          'input[name="PortalProfileFields.Resume_File"]',
+          'input[id*="Resume_File"]',
+          'input[type="file"][name*="Resume"]',
+          'input[type="file"]'
+        ]
+      },
+      // 2. Login Credentials
+      {
+        type: 'LOGIN_ID',
+        selectors: [
+          'input#PersonProfileFields\\.Login',
+          'input[name="PersonProfileFields.Login"]',
+          'input[id$="Login"]'
+        ]
+      },
+      {
+        type: 'PASSWORD',
+        selectors: [
+          'input#PersonProfileFields\\.Password',
+          'input[name="PersonProfileFields.Password"]',
+          'input[type="password"]:not([id*="Confirm"]):not([name*="Confirm"]):not([id*="_Confirm"])'
+        ]
+      },
+      {
+        type: 'CONFIRM_PASSWORD',
+        selectors: [
+          'input#PersonProfileFields\\.Password_Confirm',
+          'input[name="PersonProfileFields.Password_Confirm"]',
+          'input[type="password"][id*="Confirm"]',
+          'input[type="password"][name*="Confirm"]'
+        ]
+      },
+      // 3. Candidate Identity
+      {
+        type: 'FIRST_NAME',
+        selectors: [
+          'input#PersonProfileFields\\.FirstName',
+          'input[name="PersonProfileFields.FirstName"]',
+          'input[id$="FirstName"]'
+        ]
+      },
+      {
+        type: 'LAST_NAME',
+        selectors: [
+          'input#PersonProfileFields\\.LastName',
+          'input[name="PersonProfileFields.LastName"]',
+          'input[id$="LastName"]'
+        ]
+      },
+      {
+        type: 'EMAIL',
+        selectors: [
+          'input#PersonProfileFields\\.Email',
+          'input[name="PersonProfileFields.Email"]',
+          'input[id$="Email"]'
+        ]
+      },
+      {
+        type: 'PREFERRED_NAME',
+        selectors: [
+          'input#rcf2039',
+          'input[name="rcf2039"]',
+          'input[id$="rcf2039"]'
+        ]
+      },
+      // 4. Phone
+      {
+        type: 'PHONE_TYPE',
+        selectors: [
+          'select#-1_PersonProfileFields\\.PhoneType',
+          'select[name$="PhoneType"]',
+          'select[id$="PhoneType"]'
+        ]
+      },
+      {
+        type: 'PHONE',
+        selectors: [
+          'input#-1_PersonProfileFields\\.PhoneNumber',
+          'input[name$="PhoneNumber"]',
+          'input[id$="PhoneNumber"]'
+        ]
+      },
+      // 5. SMS / Text Consent
+      {
+        type: 'TEXT_CONSENT',
+        selectors: [
+          'select#rcf3553',
+          'select[name="rcf3553"]',
+          'select[id$="rcf3553"]',
+          'select[name*="rcf3553"]'
+        ]
+      },
+      // 6. Address Block
+      {
+        type: 'ADDRESS_TYPE',
+        selectors: [
+          'select#-1_PersonProfileFields\\.AddressType',
+          'select[name$="AddressType"]',
+          'select[id$="AddressType"]'
+        ]
+      },
+      {
+        type: 'ADDRESS',
+        selectors: [
+          'input#-1_PersonProfileFields\\.AddressStreet1',
+          'input[name$="AddressStreet1"]',
+          'input[id$="AddressStreet1"]'
+        ]
+      },
+      {
+        type: 'APT',
+        selectors: [
+          'input#-1_PersonProfileFields\\.AddressStreet2',
+          'input[name$="AddressStreet2"]',
+          'input[id$="AddressStreet2"]'
+        ]
+      },
+      {
+        type: 'CITY',
+        selectors: [
+          'input#-1_PersonProfileFields\\.AddressCity',
+          'input[name$="AddressCity"]',
+          'input[id$="AddressCity"]'
+        ]
+      },
+      {
+        type: 'ZIP',
+        selectors: [
+          'input#-1_PersonProfileFields\\.AddressZip',
+          'input[name$="AddressZip"]',
+          'input[id$="AddressZip"]'
+        ]
+      },
+      {
+        type: 'COUNTRY',
+        selectors: [
+          'select#-1_PersonProfileFields\\.AddressCountry',
+          'select[name$="AddressCountry"]',
+          'select[id$="AddressCountry"]'
+        ]
+      },
+      {
+        type: 'STATE',
+        selectors: [
+          'select#-1_PersonProfileFields\\.AddressState',
+          'select[name$="AddressState"]',
+          'select[id$="AddressState"]'
+        ]
+      },
+      // 7. Referral Sources
+      {
+        type: 'HEAR_ABOUT',
+        selectors: [
+          'select#rcf3048',
+          'select[name="rcf3048"]',
+          'select[id$="rcf3048"]',
+          'select[name*="rcf3048"]'
+        ]
+      },
+      {
+        type: 'HEAR_ABOUT_DETAIL',
+        selectors: [
+          'select#rcf3049',
+          'select[name="rcf3049"]',
+          'select[id$="rcf3049"]',
+          'input#rcf3049_Text',
+          'input[name="rcf3049_Text"]',
+          'input[id$="rcf3049_Text"]'
+        ]
+      },
+      // 8. Work Experience / Employment Block (All custom Cotiviti/iCIMS IDs)
+      {
+        type: 'COMPANY',
+        selectors: [
+          'input#-1_PersonProfileFields\\.rcf3212',
+          'input[name$="rcf3212"]',
+          'input[id$="rcf3212"]',
+          'input[name*="rcf3212"]'
+        ]
+      },
+      {
+        type: 'EXP_STATE',
+        selectors: [
+          'select#-1_PersonProfileFields\\.rcf3217',
+          'select[name$="rcf3217"]',
+          'select[id$="rcf3217"]',
+          'select[name*="rcf3217"]'
+        ]
+      },
+      {
+        type: 'EMPLOYMENT_TITLE',
+        selectors: [
+          'input#-1_PersonProfileFields\\.rcf3213',
+          'input[name$="rcf3213"]',
+          'input[id$="rcf3213"]',
+          'input[name*="rcf3213"]'
+        ]
+      },
+      {
+        type: 'START_MONTH',
+        selectors: [
+          'select#-1_PersonProfileFields\\.rcf3214_Month',
+          'select[name$="rcf3214_Month"]',
+          'select[id$="rcf3214_Month"]'
+        ]
+      },
+      {
+        type: 'START_DAY',
+        selectors: [
+          'select#-1_PersonProfileFields\\.rcf3214_Date',
+          'select[name$="rcf3214_Date"]',
+          'select[id$="rcf3214_Date"]'
+        ]
+      },
+      {
+        type: 'START_YEAR',
+        selectors: [
+          'input#-1_PersonProfileFields\\.rcf3214_Year',
+          'input[name$="rcf3214_Year"]',
+          'input[id$="rcf3214_Year"]'
+        ]
+      },
+      {
+        type: 'END_MONTH',
+        selectors: [
+          'select#-1_PersonProfileFields\\.rcf3215_Month',
+          'select[name$="rcf3215_Month"]',
+          'select[id$="rcf3215_Month"]'
+        ]
+      },
+      {
+        type: 'END_DAY',
+        selectors: [
+          'select#-1_PersonProfileFields\\.rcf3215_Date',
+          'select[name$="rcf3215_Date"]',
+          'select[id$="rcf3215_Date"]'
+        ]
+      },
+      {
+        type: 'END_YEAR',
+        selectors: [
+          'input#-1_PersonProfileFields\\.rcf3215_Year',
+          'input[name$="rcf3215_Year"]',
+          'input[id$="rcf3215_Year"]'
+        ]
+      },
+      {
+        type: 'WORK_DESCRIPTION',
+        selectors: [
+          'textarea#-1_PersonProfileFields\\.rcf3219',
+          'textarea[name$="rcf3219"]',
+          'textarea[id$="rcf3219"]'
+        ]
+      },
+      {
+        type: 'REASON_FOR_LEAVING',
+        selectors: [
+          'textarea#-1_PersonProfileFields\\.rcf3268',
+          'textarea[name$="rcf3268"]',
+          'textarea[id$="rcf3268"]'
+        ]
+      }
+    ];
+
+    ICIMS_EXACT_MAP.forEach(item => {
+      let el = null;
+      for (const sel of item.selectors) {
+        try {
+          const match = targetDoc.querySelector(sel);
+          if (match && !seenElements.has(match)) {
+            el = match;
+            break;
+          }
+        } catch (e) {}
+      }
+      if (el) {
+        seenElements.add(el);
+        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
+          ? el.checked
+          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
+        const elId = el.id || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('icims_' + fields.length);
+        fields.push({
+          element: el,
+          type: item.type,
+          id: item.type.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'iCIMS'
+        });
+      }
+    });
+
+    return { fields, seenElements };
+  }
+
   function scanFields() {
     let frameDocs = [];
     try {
@@ -1265,7 +1595,8 @@
       'COMPANY', 'EMPLOYMENT_TITLE', 'WORK_DESCRIPTION',
       'START_MONTH', 'START_DAY', 'START_YEAR', 'END_MONTH', 'END_DAY', 'END_YEAR', 'CURRENT_ROLE',
       'REASON_FOR_LEAVING', 'TEXT_CONSENT',
-      'SCHOOL', 'DEGREE', 'DISCIPLINE'
+      'SCHOOL', 'DEGREE', 'DISCIPLINE',
+      'PREFERRED_NAME', 'HEAR_ABOUT', 'HEAR_ABOUT_DETAIL'
     ]);
 
     const COMBOBOX_QUERY = [
@@ -1278,9 +1609,23 @@
       '[data-automation-id*="upload"]', '[class*="dropzone"]', '[class*="resume-upload"]'
     ].join(', ');
 
+    const isIcims = isIcimsEnvironment(targetDocs);
+
     targetDocs.forEach(targetDoc => {
-      const inputs = targetDoc.querySelectorAll(COMBOBOX_QUERY);
       const seenElements = new Set();
+
+      // If on an iCIMS portal, execute the deterministic iCIMS driver first
+      if (isIcims) {
+        const { fields: icimsFields, seenElements: icimsSeen } = scanIcimsFields(targetDoc);
+        icimsFields.forEach(f => {
+          results.push(f);
+          seenTypes[f.type] = true;
+          seenElements.add(f.element);
+        });
+        icimsSeen.forEach(el => seenElements.add(el));
+      }
+
+      const inputs = targetDoc.querySelectorAll(COMBOBOX_QUERY);
 
       inputs.forEach(inp => {
         // Canonicalize container vs inner interactive element to prevent duplicate registrations
@@ -1346,10 +1691,13 @@
       });
     });
 
-    // Ensure COUNTRY is processed before STATE so dependent options load
+    // Ensure COUNTRY is processed before STATE so dependent options load,
+    // and HEAR_ABOUT is processed before HEAR_ABOUT_DETAIL
     results.sort((a, b) => {
       if (a.type === 'COUNTRY' && b.type === 'STATE') return -1;
       if (a.type === 'STATE' && b.type === 'COUNTRY') return 1;
+      if (a.type === 'HEAR_ABOUT' && b.type === 'HEAR_ABOUT_DETAIL') return -1;
+      if (a.type === 'HEAR_ABOUT_DETAIL' && b.type === 'HEAR_ABOUT') return 1;
       return 0;
     });
 
@@ -1364,7 +1712,7 @@
     'he/him': ['he / him', 'he/him/his', 'male', 'man'],
     'she/her': ['she / her', 'she/her/hers', 'female', 'woman'],
     'mobile': ['cell', 'cellular', 'personal', 'primary', 'mobile phone', 'direct'],
-    'home': ['home', 'personal', 'primary', 'residence', 'main'],
+    'home': ['home', 'personal', 'primary', 'residence', 'main', 'permanent'],
     'india': ['in', 'ind', 'republic of india'],
     'united states': ['usa', 'us', 'u.s.', 'united states of america'],
     'linkedin': ['job board', 'online job board', 'social network', 'social media', 'internet', 'company website', 'other'],
@@ -1376,7 +1724,26 @@
     'no, i don\'t have a disability': ['no, i do not have a disability', "no, i don't have", 'i do not have a disability', 'no disability', 'no', 'i do not have a physical or mental impairment'],
     'asian': ['asian (not hispanic or latino)', 'asian / pacific islander', 'south asian', 'asian - non hispanic', 'asian (all)'],
     'amity university': ['amity university noida', 'amity university, noida', 'amity university uttar pradesh', 'amity'],
-    'computer science / applications': ['computer science', 'computer applications', 'information technology', 'software engineering', 'computing']
+    'computer science / applications': ['computer science', 'computer applications', 'information technology', 'software engineering', 'computing'],
+    'january': ['jan', '01', '1'],
+    'february': ['feb', '02', '2'],
+    'march': ['mar', '03', '3'],
+    'april': ['apr', '04', '4'],
+    'may': ['05', '5'],
+    'june': ['jun', '06', '6'],
+    'july': ['jul', '07', '7'],
+    'august': ['aug', '08', '8'],
+    'september': ['sep', 'sept', '09', '9'],
+    'october': ['oct', '10'],
+    'november': ['nov', '11'],
+    'december': ['dec', '12'],
+    'present': ['current', 'currently', 'present', 'now', 'till date', 'till now'],
+    '1': ['01', '1st', 'day 1', '1'],
+    'bihar': ['br', 'bihar, india'],
+    'uttar pradesh': ['up', 'u.p.'],
+    'delhi': ['nct of delhi', 'new delhi', 'dl'],
+    'maharashtra': ['mh'],
+    'karnataka': ['ka', 'bangalore', 'bengaluru']
   };
 
   const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;
@@ -1431,6 +1798,33 @@
         return t.includes("no, i don't have") || t.includes('no, i do not have') || t.includes('no disability') || (t === 'no' && !t.includes('yes'));
       });
       if (disMatch) return disMatch;
+    }
+
+    // Invariant: Date Months & Days
+    if ((fieldType === 'END_MONTH' || fieldType === 'START_MONTH') && (targetLower === 'present' || targetLower === 'current' || targetLower === 'now')) {
+      const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      const currentMonthName = monthNames[new Date().getMonth()];
+      const presentOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t.includes('present') || t.includes('current');
+      });
+      if (presentOpt) return presentOpt;
+
+      const curMonthOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        const v = (o.value || '').trim().toLowerCase();
+        return t.includes(currentMonthName) || v === String(new Date().getMonth() + 1) || v === String(new Date().getMonth() + 1).padStart(2, '0');
+      });
+      if (curMonthOpt) return curMonthOpt;
+    }
+
+    if (fieldType === 'START_DAY' || fieldType === 'END_DAY' || targetLower === '1') {
+      const dayOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        const v = (o.value || '').trim().toLowerCase();
+        return t === '1' || t === '01' || v === '1' || v === '01' || t.includes('1st') || t === 'day 1';
+      });
+      if (dayOpt) return dayOpt;
     }
 
     // Stage 3: Rich semantic synonyms dictionary
@@ -1525,6 +1919,12 @@
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
       el.dispatchEvent(new Event('blur', { bubbles: true }));
+      try {
+        const win = (el.ownerDocument && el.ownerDocument.defaultView) ? el.ownerDocument.defaultView : window;
+        if (win.$ && win.$(el).trigger) {
+          win.$(el).trigger('change');
+        }
+      } catch (e) {}
       return true;
     }
     return false;
@@ -1946,7 +2346,8 @@
     END_MONTH: 'End Month', END_YEAR: 'End Year', CURRENT_ROLE: 'Current Role',
     SCHOOL: 'School / University', DEGREE: 'Degree', DISCIPLINE: 'Discipline / Major',
     SCREENING_SELECT: 'Screening Question',
-    WORK_DESCRIPTION: 'Work Description', PASSWORD: 'Password', CONFIRM_PASSWORD: 'Confirm Password', LOGIN_ID: 'Login ID / Username'
+    WORK_DESCRIPTION: 'Work Description', PASSWORD: 'Password', CONFIRM_PASSWORD: 'Confirm Password', LOGIN_ID: 'Login ID / Username',
+    PREFERRED_NAME: 'Preferred Name'
   };
 
   /* -- RESOLVE PREVIEW -- */
@@ -1957,6 +2358,7 @@
       case 'FIRST_NAME':   return profile.firstName || null;
       case 'LAST_NAME':    return profile.lastName || null;
       case 'FULL_NAME':    return profile.fullName || null;
+      case 'PREFERRED_NAME': return profile.firstName || null;
       case 'EMAIL':        return profile.email || null;
       case 'PHONE_TYPE':   return profile.phoneType || 'Mobile';
       case 'PHONE':        return profile.phone || null;
@@ -1989,7 +2391,11 @@
       case 'LINKEDIN':     return profile.linkedinUrl || null;
       case 'GITHUB':       return profile.githubUrl || null;
       case 'PORTFOLIO':    return profile.portfolioUrl || null;
-      case 'TITLE':        return session ? session.jobTitle : (profile.title || null);
+      case 'TITLE': {
+        let t = session ? session.jobTitle : (profile.title || null);
+        if (t) t = t.replace(/\bEngineer\b/gi, 'Developer');
+        return t;
+      }
       case 'SUMMARY':      return session ? (session.tailoredSummary || null) : (profile.professionalSummary || null);
       case 'SALARY':       return session ? (session.salaryRange || null) : (profile.salaryRange || null);
       case 'NOTICE_PERIOD':return profile.noticePeriod || 'Immediate';
@@ -2013,11 +2419,21 @@
       case 'DISABILITY':   return profile.disabilityStatus || "No, I don't have a disability";
       case 'RACE_ETHNICITY': return profile.race || 'Asian';
       case 'COMPANY':      return profile.company || 'AstreWork';
-      case 'EMPLOYMENT_TITLE': return profile.employmentTitle || profile.title || 'Full-Stack Developer';
+      case 'EMPLOYMENT_TITLE': {
+        let t = profile.employmentTitle || profile.title || 'Full-Stack Developer';
+        t = t.replace(/\bEngineer\b/gi, 'Developer');
+        return t;
+      }
       case 'START_MONTH':  return profile.startMonth || 'January';
       case 'START_YEAR':   return profile.startYear || '2024';
       case 'END_MONTH':    return profile.endMonth || 'Present';
-      case 'END_YEAR':     return profile.endYear || '2026';
+      case 'END_YEAR': {
+        const y = profile.endYear;
+        if (!y || y.toLowerCase() === 'present' || y.toLowerCase() === 'current') {
+          return String(new Date().getFullYear());
+        }
+        return y;
+      }
       case 'CURRENT_ROLE': return profile.currentRole !== false ? 'Yes' : 'No';
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
@@ -2055,6 +2471,7 @@
       case 'FIRST_NAME':  return profile.firstName;
       case 'LAST_NAME':   return profile.lastName;
       case 'FULL_NAME':   return profile.fullName;
+      case 'PREFERRED_NAME': return profile.firstName || 'Candidate';
       case 'EMAIL':       return profile.email;
       case 'PHONE_TYPE':  return profile.phoneType || 'Mobile';
       case 'PHONE': {
@@ -2149,7 +2566,11 @@
       case 'LINKEDIN':    return profile.linkedinUrl;
       case 'GITHUB':      return profile.githubUrl;
       case 'PORTFOLIO':   return profile.portfolioUrl;
-      case 'TITLE':       return session ? session.jobTitle : profile.title;
+      case 'TITLE': {
+        let t = session ? session.jobTitle : profile.title;
+        if (t) t = t.replace(/\bEngineer\b/gi, 'Developer');
+        return t;
+      }
       case 'SUMMARY':     return session ? session.tailoredSummary : profile.professionalSummary;
       case 'WORK_AUTH':   return profile.workAuthorized ? 'Yes' : 'No';
       case 'SALARY': {
@@ -2182,11 +2603,21 @@
       case 'DISABILITY':   return profile.disabilityStatus || "No, I don't have a disability";
       case 'RACE_ETHNICITY': return profile.race || 'Asian';
       case 'COMPANY':      return profile.company || 'AstreWork';
-      case 'EMPLOYMENT_TITLE': return profile.employmentTitle || profile.title || 'Full-Stack Developer';
+      case 'EMPLOYMENT_TITLE': {
+        let t = profile.employmentTitle || profile.title || 'Full-Stack Developer';
+        t = t.replace(/\bEngineer\b/gi, 'Developer');
+        return t;
+      }
       case 'START_MONTH':  return profile.startMonth || 'January';
       case 'START_YEAR':   return profile.startYear || '2024';
       case 'END_MONTH':    return profile.endMonth || 'Present';
-      case 'END_YEAR':     return profile.endYear || '2026';
+      case 'END_YEAR': {
+        const y = profile.endYear;
+        if (!y || y.toLowerCase() === 'present' || y.toLowerCase() === 'current') {
+          return String(new Date().getFullYear());
+        }
+        return y;
+      }
       case 'CURRENT_ROLE': return profile.currentRole !== false ? 'Yes' : 'No';
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
@@ -2542,7 +2973,8 @@
     const CORE_APPLICATION_TYPES = new Set([
       'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'RESUME',
       'WORK_AUTH', 'VISA', 'SCREENING', 'SCREENING_SELECT', 'WORK_DESCRIPTION',
-      'COMPANY', 'SCHOOL', 'PASSWORD', 'CONFIRM_PASSWORD', 'LOGIN_ID'
+      'COMPANY', 'SCHOOL', 'PASSWORD', 'CONFIRM_PASSWORD', 'LOGIN_ID',
+      'PREFERRED_NAME', 'EMPLOYMENT_TITLE', 'EXP_STATE'
     ]);
     const hasCoreAppField = detectedFields.some(f => CORE_APPLICATION_TYPES.has(f.type));
 

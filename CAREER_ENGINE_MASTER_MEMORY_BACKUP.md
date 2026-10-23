@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 23, 2026 (Phase 59: Antigravity Unleashed — 10 Cognitive Master Traits, Silicon Valley Rivalry Standard & Unstuck Pivot Protocol; 50/50 Vitest 503-Test Green Verification)
+> **LAST COGNITIVE SYNC:** October 24, 2026 (Phase 60: Modular ATS Driver Engine & Deterministic iCIMS/Cotiviti Precision Mapper; 51/51 Vitest 509-Test Green Verification, 0 TypeScript Errors)
 
 ---
 
@@ -1159,6 +1159,17 @@ Located in `extension/`:
   - **2. The Unstuck Pivot & Radical Innovation Protocol (`.agents/skills/antigravity-elite-soul/SKILL.md` Part G):** Structured 4-stage deadlock breaking engine (Halt $\rightarrow$ Tri-Path Alternative Synthesis [Alpha: Simplification, Beta: Loophole, Gamma: Redesign] $\rightarrow$ Trade-Off Matrix $\rightarrow$ Decisive Execution).
   - **3. Silicon Valley Tech Dominance Benchmark:** Formally pitted AstreWork against SimplifyJobs, Teal, JobRight, Huntr, and Workday with the explicit mandate to outperform billion-dollar competitors in speed, intelligence, and UX.
   - **4. System-Wide Synchronization:** Aligned `AGENTS.md` (Sections 1 & 2), `career-agent-expert/SKILL.md` (Section 0), and master memory Section 19.
+
+- [x] **Phase 60: Modular ATS Driver Engine & Deterministic iCIMS/Cotiviti Precision Mapper (Oct 24, 2026)**
+  - **1. Modular ATS Driver Architecture (`src/lib/autopilot/atsDrivers.ts`):** Established the specialized `AtsDriver` interface (Greenhouse, Lever, Ashby, Workday, Taleo, iCIMS, SmartRecruiters) separating portal-specific DOM logic from generic heuristic fallback loops.
+  - **2. Live Ground-Truth DOM Telemetry Extraction:** Probed live Cotiviti tab (`careers-cotiviti.icims.com`) inside `#icims_content_iframe` with 38-element ground truth DOM dump, discovering that iCIMS uses obfuscated `rcfXXXX` custom field IDs for Experience and Referral inputs without semantic keywords.
+  - **3. Deterministic iCIMS Field Precision Engine (`extension/content.js`):** Engineered `scanIcimsFields(targetDoc)` that deterministically maps exact iCIMS IDs:
+    - Experience Block: Employer (`rcf3212`), Role Title (`rcf3213`), Work State (`rcf3217`), Description (`rcf3219`), Reason for Leaving (`rcf3268`), Start Date Month/Day/Year (`rcf3214_Month/Date/Year`), End Date Month/Day/Year (`rcf3215_Month/Date/Year` with text input year mapping).
+    - Identity & Login: Resume (`PortalProfileFields.Resume_File`), Credentials (`PersonProfileFields.Login/Password/Password_Confirm`), First/Last/Preferred Name (`rcf2039`), Email, Phone Type & Number (`PersonProfileFields.PhoneType/PhoneNumber`), SMS Consent (`rcf3553` $\rightarrow$ 'Yes').
+    - Address Block: Address Type (`Home`), Street 1 & 2, City, State, Zip, Country.
+    - Referral: `rcf3048` (How did you hear about us? $\rightarrow$ 'LinkedIn') and `rcf3049` (Specify further $\rightarrow$ 'Job Posting').
+  - **4. Candidate Title Compliance Enforcement (BCA Developer Law):** Enforced regex replacement `replace(/\bEngineer\b/gi, 'Developer')` in all title previews and value resolutions.
+  - **5. Automated Testing & Verification:** Created `tests/ats-icims-driver.test.ts` (6 tests green). Verified all 51 test suites passed (509/509 green), `npx tsc --noEmit` exited clean with 0 errors, and repackaged `public/downloads/astrepilot-extension.zip` (91.4 KB).
 
 ---
 
@@ -2505,6 +2516,27 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Embedded ATS portals (iCIMS, Taleo, Jobvite) place candidate forms inside iframes while the outer parent page contains global navigation, search filters, and newsletter inputs. When an application iframe is present, never allow outer document inputs to be scanned first or consume singleton identity types.
   - **Rule:** Dynamic DOM change detectors (MutationObservers) must never rely on randomized string IDs to detect new inputs. Comparing element instances via DOM reference (`prevElements.has(element)`) and guarding against re-scanning existing attached elements prevents infinite state reset loops.
   - **Rule:** In grouped composite inputs (like Month / Day / Year date fields under a shared container label), never classify by parent container text alone. The individual control's local attributes (`id`, `name`, `aria-label`) must take precedence over ancestor container labels.
+
+### 🔴 Case 38: The Enterprise ATS Obfuscated Selector Trap (Generic Fuzzy Scanning vs. Deterministic ATS Drivers)
+* **What Happened:** During live browser testing on Cotiviti (`careers-cotiviti.icims.com`), the generic regex-based scanner identified only 18 out of ~25 candidate fields. The entire Experience block (Employer, Job Title, Work State, Start/End Dates, Description, Reason for Leaving) and Referral source were completely missed, leaving the candidate profile half-empty.
+* **The Root Cause / Mistake:**
+  - Enterprise applicant tracking systems like iCIMS do not label custom profile fields with semantic names or IDs like `experience_employer` or `job_title`. Instead, they assign internal system keys such as `INPUT#-1_PersonProfileFields.rcf3212` for Employer, `INPUT#rcf3213` for Title, `SELECT#rcf3217` for State, `SELECT#rcf3048` for Referral, and `SELECT#rcf3553` for SMS Consent.
+  - Furthermore, iCIMS separates date inputs into split controls where the Month and Date are native `<select>` dropdowns (`rcf3214_Month`, `rcf3214_Date`), but the Year is a standard `<input type="text">` (`rcf3214_Year`), breaking generic assumptions that date fields share the same HTML tag.
+  - Relying on generic ancestor label scraping failed because the DOM hierarchy separated the labels from inputs via complex table/grid wrappers with nested font and span elements.
+* **The Concrete Surgical Fix:**
+  - **1. Live Ground-Truth In-Page Diagnostic:** Prompted the developer to execute an in-console diagnostic script inside `#icims_content_iframe` to retrieve the exact 38-element inventory of live tags, IDs, types, names, and labels.
+  - **2. Modular ATS Driver Engine (`src/lib/autopilot/atsDrivers.ts`):** Architected the `AtsDriver` interface enabling deterministic, portal-specific scanners (iCIMS, Workday, Taleo, Greenhouse, Lever, Ashby) to execute before falling back to generic heuristic matching.
+  - **3. Deterministic iCIMS Precision Scanner (`extension/content.js`):** Built `scanIcimsFields(targetDoc)` that queries the exact Cotiviti/iCIMS IDs directly:
+    - Employer $\rightarrow$ `rcf3212`, Title $\rightarrow$ `rcf3213` (enforcing BCA title law), Work State $\rightarrow$ `rcf3217`, Work Description $\rightarrow$ `rcf3219`, Reason for Leaving $\rightarrow$ `rcf3268`.
+    - Start Date: `rcf3214_Month` (select), `rcf3214_Date` (select), `rcf3214_Year` (text input).
+    - End Date: `rcf3215_Month` (select), `rcf3215_Date` (select), `rcf3215_Year` (text input, dynamically defaulting to current year if ongoing).
+    - Identity & Consent: Preferred Name $\rightarrow$ `rcf2039`, SMS Consent $\rightarrow$ `rcf3553` ('Yes'), Referral $\rightarrow$ `rcf3048` ('LinkedIn') & `rcf3049` ('Job Posting').
+  - **4. Strict Candidate Title Law (`extension/content.js`):** Enforced BCA compliance in `resolvePreview` and `resolveValue` via `t.replace(/\bEngineer\b/gi, 'Developer')`.
+  - **5. Automated Testing & Verification:** Created `tests/ats-icims-driver.test.ts` (6 tests). Verified all 51 test suites passed (509/509 green) and `npx tsc --noEmit` exited clean.
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The ATS Driver Law):** Enterprise ATS portals (iCIMS, Workday, SuccessFactors) use obfuscated custom field IDs (`rcfXXXX`) that defeat generic regex heuristics. Never rely on generic label traversal alone when automating enterprise ATS platforms; always implement specialized, deterministic ATS drivers that check portal signatures (`window.location.hostname` or iframe IDs) and target exact field topologies first.
+  - **Rule:** Date components in enterprise forms are frequently heterogeneous (e.g. Month and Date as `<select>`, Year as `<input type="text">`). Never assume a composite field's child inputs share the same HTML tag or event handling semantics.
+  - **Rule:** Never attempt to guess an enterprise ATS schema blindly. Extract ground-truth DOM inventories directly from the target portal to discover the exact IDs before writing scanner rules.
 
 ---
 
