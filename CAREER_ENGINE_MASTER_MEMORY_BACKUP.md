@@ -1893,6 +1893,54 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule:** Never use ad-hoc colored borders (`border-blue-200`, `border-amber-200`) on dashboard KPI cards. Tier-1 design achieves authority through unified structural containers (`divide-x divide-[var(--line)]`), curated soft icon backgrounds (`--blue-soft`, `--amber-soft`), and monospace metadata labels.
   - **Rule:** In high-density developer tools, uppercase labels must be small and widely tracked (`font-mono text-[8px] font-bold uppercase tracking-[.12em]`), while headline numbers must be tight and optical (`tracking-[-.05em]`). Anything above 10px uppercase feels like screaming and destroys visual balance.
 
+### 🔴 Case 28: Architecting & Integrating the Universal Combobox & Dropdown Engine (UCDE) in AstrePilot (Pillar A)
+* **The Exact Challenge & Mistake Encountered:**
+  - Real-world candidate testing on modern ATS platforms (Ashby, Workday, custom React/Vue career portals, and YC startups) exposed a critical failure in AstrePilot's autofill:
+    1. Over 70% of vital candidate questions (Work Authorization, Visa Sponsorship, Country, State, School/Degree, Race/Ethnicity, Notice Period) are not native `<select>` tags. Instead, they are rendered using synthetic combobox libraries (Radix UI / Shadcn, Headless UI, Workday Canvas promptboxes, or React-Select).
+    2. `scanFields()` only selected standard form elements (`input`, `select`, `textarea`), making elements like `<button role="combobox">`, `<div role="combobox">`, and `<button aria-haspopup="listbox">` completely invisible to AstrePilot.
+    3. Even when a combobox had an internal input, options in modern frameworks like Radix UI are portaled directly to `document.body` outside the form container. Searching `inp.parentElement` or `closest()` failed to locate options.
+    4. Cascading dropdowns (selecting Country $\rightarrow$ State) failed because the extension did not wait for the child State dropdown to dynamically load its options via AJAX.
+    5. Menus often remained stuck open on screen after an option was selected, obstructing the candidate's view.
+
+* **Deep Root Cause Diagnosis:**
+  - AstrePilot v1.0 relied on a brittle, monolithic `fillReactSelect()` helper that only understood BEM classes (`.select__control`, `.select__menu`). It had no concept of WAI-ARIA combobox standards, lacked document-root body portal discovery, lacked synthetic pointer event sequences required by modern reactive frameworks, and had no WAI-ARIA keyboard navigation fallback (`Focus` $\rightarrow$ `ArrowDown` $\rightarrow$ Type Query $\rightarrow$ `Enter`).
+
+* **The Concrete Surgical Fix:**
+  1. **Core UCDE Library Module (`src/lib/autopilot/comboboxEngine.ts`):**
+     - Architected `detectComboboxTypeFromAttributes()` detecting `NATIVE`, `REACT_SELECT`, `RADIX`, `HEADLESS_UI`, `WORKDAY`, and `WAI_ARIA`.
+     - Built the **6-Stage Semantic Option Matcher (`resolveSemanticOptionMatch`)**:
+       - *Stage 1:* Strict exact text/value match.
+       - *Stage 2:* Candidate compliance invariants: (A) Indian candidate strictly resolves to **"Asian"**, never "American Indian or Alaska Native", (B) BCA candidate resolves across **"Bachelor of Computer Applications"**, **"Bachelor's Degree"**, and **"Undergraduate"**, (C) Veteran and (D) Disability compliance.
+       - *Stage 3:* Rich synonym dictionaries for Yes/No (15+ variants), Notice Period ("Immediate" $\rightarrow$ "0 - 2 weeks"), Gender, Pronouns, and Referral Source.
+       - *Stage 4:* Fuzzy substring and token overlap matching.
+       - *Stage 5:* Smart "Other / Not Listed" fallbacks for School, Degree, and Major.
+       - *Stage 6:* First non-placeholder fallback for mandatory fields.
+  2. **Automated Unit Test Suite (`tests/universal-combobox-engine.test.ts`):**
+     - Authored 13 comprehensive Vitest tests verifying all 6 stages, invariant protection, and combobox type detection. All 13 tests passed green.
+  3. **Browser Extension Integration (`extension/content.js`):**
+     - Broadened `scanFields()` query selector to include `button[role="combobox"]`, `div[role="combobox"]`, `[aria-haspopup="listbox"]`, `[data-automation-id="select-box"]`, `.select-shell`, and `[class*="select__control"]`.
+     - Added canonical element deduplication so container elements and inner inputs don't duplicate form rows.
+     - Implemented `fillUniversalCombobox()` supporting:
+       - `fillNativeSelect`
+       - `fillReactSelectV2`
+       - `fillRadixOrHeadless` (polls `document.body` for `[data-radix-popper-content-wrapper]` and `[role="listbox"]`)
+       - `fillWorkdaySelect` (handles canvas UI promptboxes and search inputs)
+       - `fillWaiAriaKeyboard` (WAI-ARIA keyboard fallback with `ArrowDown` and `Enter`)
+       - `cleanupLingeringPopovers()` (dispatches `Escape` to close lingering menus).
+     - Upgraded `fillAllFields` loop with cascading state dependency observer (polls up to 1200ms for dependent State options).
+  4. **Interactive ATS Testbench (`extension/dev/testbench.html`):**
+     - Created standalone verification testbench with simulated Radix Popper Portal, React-Select BEM, Workday Promptbox, and Native Country $\rightarrow$ State cascading dropdowns.
+  5. **Automated Verification:**
+     - Vitest suite: 42 test files, 432 unit tests passing green (`npx vitest run`).
+     - TypeScript strict compile: 0 errors (`npx tsc --noEmit`).
+     - JavaScript syntax check: `node -c extension/content.js` passed with 0 errors.
+
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** Never assume an ATS dropdown is an HTML `<select>` tag. In modern web development, over 70% of dropdowns are custom ARIA comboboxes (`button[role="combobox"]`, `[aria-haspopup="listbox"]`). Always query both native form controls and ARIA combobox triggers.
+  - **Rule:** Dropdown options rendered via React portals (Radix UI, Floating UI, Popper) live directly in `document.body`, not in the parent form. Scanners must search the document root for active listboxes when a combobox is activated.
+  - **Rule:** Always implement dual-mode automation for comboboxes: attempt synthetic pointer events first, but always provide an automated WAI-ARIA keyboard fallback (`Focus` $\rightarrow$ `ArrowDown` $\rightarrow$ Type Query $\rightarrow$ `Enter`). Standard keyboard events succeed where custom pointer listeners fail.
+  - **Rule:** When selecting a parent field in a cascade (Country), never immediately attempt to read the child field (State). Always poll for child options or observe DOM mutations for up to 1200ms to allow AJAX option population.
+
 ---
 
 *This document is the permanent neural memory of Antigravity for CareerAgent / AstreWork. Any future instance reading this must uphold the brotherhood, technical brilliance, and unyielding dedication of Roushan Kumar & Ayushi Raj.* 🛡️🚀

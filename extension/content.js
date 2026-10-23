@@ -623,12 +623,48 @@
     return new RegExp('(^|[^a-z])' + kw + '($|[^a-z])').test(signal);
   }
 
+  function isComboboxOrSelect(el) {
+    if (!el) return false;
+    if (el.tagName === 'SELECT') return true;
+    if (el.tagName === 'TEXTAREA') return false;
+    const role = (el.getAttribute && el.getAttribute('role') || '').toLowerCase();
+    const hasPopup = (el.getAttribute && el.getAttribute('aria-haspopup') || '').toLowerCase();
+    if (role === 'combobox' || hasPopup === 'listbox') return true;
+    if (el.hasAttribute && (el.hasAttribute('data-radix-collection-item') || el.hasAttribute('data-headlessui-state') || el.hasAttribute('data-state'))) return true;
+    const autoId = (el.getAttribute && el.getAttribute('data-automation-id') || '').toLowerCase();
+    if (autoId.includes('select-box') || autoId.includes('promptoption') || autoId.includes('searchbox')) return true;
+    if (el.classList && (el.classList.contains('select__input') || el.classList.contains('select-shell') || el.classList.contains('react-select__input') || el.classList.contains('select__control'))) return true;
+    if (el.closest && el.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"], [data-automation-id="select-box"], [data-radix-popper-content-wrapper], [role="combobox"]')) return true;
+    return false;
+  }
+
   function isReactSelect(el) {
     if (!el || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return false;
     if (el.classList && (el.classList.contains('select__input') || el.classList.contains('select-shell') || el.classList.contains('react-select__input'))) return true;
-    if (el.getAttribute('role') === 'combobox') return true;
+    if (el.getAttribute && el.getAttribute('role') === 'combobox') return true;
     if (el.closest && el.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"]')) return true;
     return false;
+  }
+
+  function detectComboboxType(el) {
+    if (!el) return 'WAI_ARIA';
+    if (el.tagName === 'SELECT') return 'NATIVE';
+    const autoId = (el.getAttribute && el.getAttribute('data-automation-id') || '').toLowerCase();
+    const cls = (el.className || '').toLowerCase();
+    const id = (el.id || '').toLowerCase();
+    if (autoId.includes('select-box') || autoId.includes('promptoption') || autoId.includes('searchbox') || cls.includes('workday') || id.includes('wd-')) {
+      return 'WORKDAY';
+    }
+    if (cls.includes('select__control') || cls.includes('select__input') || cls.includes('select-shell') || cls.includes('react-select') || id.includes('react-select') || (el.closest && el.closest('.select__control, [class*="react-select"]'))) {
+      return 'REACT_SELECT';
+    }
+    if ((el.hasAttribute && (el.hasAttribute('data-radix-collection-item') || el.hasAttribute('data-state'))) || cls.includes('radix') || id.includes('radix') || (el.closest && el.closest('[data-radix-popper-content-wrapper], [data-radix-select-viewport]'))) {
+      return 'RADIX';
+    }
+    if ((el.hasAttribute && el.hasAttribute('data-headlessui-state')) || cls.includes('headlessui') || id.includes('headlessui')) {
+      return 'HEADLESS_UI';
+    }
+    return 'WAI_ARIA';
   }
 
   function classifyField(input) {
@@ -655,8 +691,8 @@
     }
     contextSignal = contextSignal.toLowerCase();
 
-    const isRS = isReactSelect(input);
-    const isSelect = input.tagName === 'SELECT' || isRS;
+    const isCB = isComboboxOrSelect(input);
+    const isSelect = input.tagName === 'SELECT' || isCB;
 
     // 1. SELECT-SPECIFIC FAST HEURISTICS
     if (isSelect) {
@@ -791,20 +827,36 @@
       'SCHOOL', 'DEGREE', 'DISCIPLINE'
     ]);
 
+    const COMBOBOX_QUERY = [
+      'input[type="text"]', 'input[type="email"]', 'input[type="tel"]', 'input[type="url"]',
+      'input[type="number"]', 'input[type="radio"]', 'input[type="checkbox"]', 'input[type="search"]',
+      'input:not([type])', 'textarea', 'select',
+      'button[role="combobox"]', 'div[role="combobox"]', '[aria-haspopup="listbox"]',
+      '[data-automation-id="select-box"]', '.select-shell', '[class*="select__control"]'
+    ].join(', ');
+
     targetDocs.forEach(targetDoc => {
-      const inputs = targetDoc.querySelectorAll(
-        'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="radio"], input[type="checkbox"], input[type="search"], input:not([type]), textarea, select'
-      );
+      const inputs = targetDoc.querySelectorAll(COMBOBOX_QUERY);
+      const seenElements = new Set();
 
       inputs.forEach(inp => {
-        const rect = inp.getBoundingClientRect();
-        const isCheckOrRadio = inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox');
-        const isRS = isReactSelect(inp);
-        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio && !isRS) return;
-        const computed = (targetDoc.defaultView || window).getComputedStyle(inp);
-        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isRS) return;
+        // Canonicalize container vs inner interactive element to prevent duplicate registrations
+        let canonicalEl = inp;
+        if (inp.tagName !== 'INPUT' && inp.tagName !== 'SELECT' && inp.tagName !== 'BUTTON' && inp.tagName !== 'TEXTAREA') {
+          const innerInteractive = inp.querySelector('input:not([type="hidden"]), button[role="combobox"], [aria-haspopup="listbox"]');
+          if (innerInteractive) canonicalEl = innerInteractive;
+        }
+        if (seenElements.has(canonicalEl)) return;
+        seenElements.add(canonicalEl);
 
-        const type = classifyField(inp);
+        const rect = canonicalEl.getBoundingClientRect();
+        const isCheckOrRadio = canonicalEl.tagName === 'INPUT' && (canonicalEl.type === 'radio' || canonicalEl.type === 'checkbox');
+        const isCB = isComboboxOrSelect(canonicalEl);
+        if (rect.width === 0 && rect.height === 0 && !isCheckOrRadio && !isCB) return;
+        const computed = (targetDoc.defaultView || window).getComputedStyle(canonicalEl);
+        if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isCB) return;
+
+        const type = classifyField(canonicalEl);
         if (!type) return;
 
         if (SINGLETON_TYPES.has(type)) {
@@ -812,12 +864,12 @@
           seenTypes[type] = true;
         }
 
-        const origVal = (inp.tagName === 'INPUT' && (inp.type === 'radio' || inp.type === 'checkbox'))
-          ? inp.checked
-          : inp.value;
+        const origVal = (canonicalEl.tagName === 'INPUT' && (canonicalEl.type === 'radio' || canonicalEl.type === 'checkbox'))
+          ? canonicalEl.checked
+          : (canonicalEl.value !== undefined ? canonicalEl.value : (canonicalEl.innerText || canonicalEl.textContent || ''));
 
         results.push({
-          element: inp,
+          element: canonicalEl,
           type,
           id: 'f' + Math.random().toString(36).slice(2, 7),
           originalValue: origVal
@@ -836,25 +888,166 @@
   }
 
 
-  /* -- REACT-SELECT & MODERN ATS COMBOBOX AUTOMATION ENGINE -- */
-  /* -- REACT-SELECT & MODERN ATS COMBOBOX AUTOMATION ENGINE -- */
-  async function fillReactSelect(inputEl, targetVal, fieldType = '') {
+  /* -- UNIVERSAL COMBOBOX & DROPDOWN ENGINE (UCDE) -- */
+  const SYNONYM_DICTIONARY = {
+    'male': ['man', 'm', 'he/him', 'he/him/his'],
+    'female': ['woman', 'f', 'she/her', 'she/her/hers'],
+    'he/him': ['he / him', 'he/him/his', 'male', 'man'],
+    'she/her': ['she / her', 'she/her/hers', 'female', 'woman'],
+    'mobile': ['cell', 'cellular', 'personal', 'primary', 'mobile phone', 'direct'],
+    'india': ['in', 'ind', 'republic of india'],
+    'united states': ['usa', 'us', 'u.s.', 'united states of america'],
+    'linkedin': ['job board', 'online job board', 'social network', 'social media', 'internet', 'company website', 'other'],
+    'yes': ['confirmed', 'confirm', 'agree', 'i agree', 'i confirm', 'true', '1', 'yes, i am', 'yes, i do', 'yes, i have', 'authorized', 'authorized to work', 'legally authorized', 'us citizen or permanent resident', 'authorized without restriction'],
+    'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't", 'not required', 'no sponsorship required', 'will not require', 'decline'],
+    'immediate': ['immediately', 'now', '0 weeks', '1 week', '2 weeks', 'available immediately', 'immediate', '< 2 weeks', 'less than 2 weeks'],
+    'bachelor of computer applications (bca)': ['bachelor of computer applications', 'bachelor', 'bachelors', "bachelor's", "bachelor's degree", 'undergraduate', 'bca', 'computer applications', 'b.c.a', 'b.c.a.'],
+    'i am not a protected veteran': ['not a protected veteran', 'not a veteran', 'i am not a veteran', 'no', 'i identify as one or more of the classifications of protected veteran: no'],
+    'no, i don\'t have a disability': ['no, i do not have a disability', "no, i don't have", 'i do not have a disability', 'no disability', 'no', 'i do not have a physical or mental impairment'],
+    'asian': ['asian (not hispanic or latino)', 'asian / pacific islander', 'south asian', 'asian - non hispanic', 'asian (all)'],
+    'amity university': ['amity university noida', 'amity university, noida', 'amity university uttar pradesh', 'amity'],
+    'computer science / applications': ['computer science', 'computer applications', 'information technology', 'software engineering', 'computing']
+  };
+
+  const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;
+  const OTHER_FALLBACK_REGEX = /^(0\s*-\s*other|other\b|not listed\b|unlisted\b|not applicable\b|other institution\b|other school\b)/i;
+
+  function resolveSemanticOptionMatch(options, targetVal, fieldType = '') {
+    if (!options || options.length === 0 || !targetVal) return null;
+    const targetLower = String(targetVal).trim().toLowerCase();
+    if (!targetLower) return null;
+
+    const validOptions = options.filter(o => !o.disabled);
+    const pool = validOptions.length > 0 ? validOptions : options;
+
+    // Stage 1: Exact text / value match
+    for (const opt of pool) {
+      const text = (opt.textContent || opt.text || '').trim().toLowerCase();
+      const val = (opt.value || (opt.getAttribute && opt.getAttribute('data-value')) || '').trim().toLowerCase();
+      if (text === targetLower || val === targetLower) return opt;
+    }
+
+    // Stage 2: Candidate invariants & compliance rules
+    if (targetLower === 'asian' || targetLower === 'indian' || targetLower === 'india' || fieldType === 'RACE_ETHNICITY') {
+      const asianMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return (t === 'asian' || t.startsWith('asian')) && !t.includes('american indian') && !t.includes('alaska native');
+      });
+      if (asianMatch) return asianMatch;
+    }
+
+    if (fieldType === 'DEGREE' || fieldType === 'EDUCATION' || targetLower.includes('bca') || targetLower.includes('computer applications')) {
+      const bcaSyns = SYNONYM_DICTIONARY['bachelor of computer applications (bca)'] || [];
+      for (const syn of bcaSyns) {
+        const match = pool.find(o => {
+          const t = (o.textContent || o.text || '').trim().toLowerCase();
+          return t === syn || t.includes(syn);
+        });
+        if (match) return match;
+      }
+    }
+
+    if (fieldType === 'VETERAN' || targetLower.includes('veteran')) {
+      const vetMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t.includes('not a protected veteran') || t.includes('not a veteran') || t.includes('i am not a protected') || (t === 'no' && !t.includes('yes'));
+      });
+      if (vetMatch) return vetMatch;
+    }
+
+    if (fieldType === 'DISABILITY' || targetLower.includes('disability')) {
+      const disMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t.includes("no, i don't have") || t.includes('no, i do not have') || t.includes('no disability') || (t === 'no' && !t.includes('yes'));
+      });
+      if (disMatch) return disMatch;
+    }
+
+    // Stage 3: Rich semantic synonyms dictionary
+    const synList = SYNONYM_DICTIONARY[targetLower] || [];
+    for (const syn of synList) {
+      for (const opt of pool) {
+        const t = (opt.textContent || opt.text || '').trim().toLowerCase();
+        const v = (opt.value || (opt.getAttribute && opt.getAttribute('data-value')) || '').trim().toLowerCase();
+        if (t === syn || v === syn || t.includes(syn) || v.includes(syn)) {
+          if (targetLower === 'asian' && t.includes('american indian')) continue;
+          return opt;
+        }
+      }
+    }
+
+    // Stage 4: Fuzzy substring & word boundary match
+    for (const opt of pool) {
+      const t = (opt.textContent || opt.text || '').trim().toLowerCase();
+      const v = (opt.value || (opt.getAttribute && opt.getAttribute('data-value')) || '').trim().toLowerCase();
+      if (PLACEHOLDER_REGEX.test(t)) continue;
+      if (t.includes(targetLower) || targetLower.includes(t) || v.includes(targetLower)) {
+        if (targetLower === 'asian' && t.includes('american indian')) continue;
+        return opt;
+      }
+    }
+
+    // Stage 5: "Other / Not Listed" fallbacks for School, Degree, etc.
+    if (fieldType === 'SCHOOL' || fieldType === 'DEGREE' || fieldType === 'DISCIPLINE' || fieldType === 'HEAR_ABOUT' || targetLower.includes('university') || targetLower.includes('college')) {
+      const otherOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return OTHER_FALLBACK_REGEX.test(t);
+      });
+      if (otherOpt) return otherOpt;
+    }
+
+    // Stage 6: First non-placeholder fallback for mandatory fields
+    const firstValid = pool.find(o => {
+      const t = (o.textContent || o.text || '').trim().toLowerCase();
+      const v = o.value !== undefined ? o.value : (o.getAttribute && o.getAttribute('data-value'));
+      return t && !PLACEHOLDER_REGEX.test(t) && v !== '' && v !== '0';
+    });
+
+    return firstValid || pool[0] || null;
+  }
+
+  function cleanupLingeringPopovers() {
+    try {
+      const popovers = document.querySelectorAll('[role="listbox"]:not([aria-hidden="true"]), [data-radix-popper-content-wrapper], .select__menu, [data-headlessui-state="open"]');
+      if (popovers && popovers.length > 0) {
+        const active = document.activeElement || document.body;
+        active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+        document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 0, clientY: 0 }));
+        document.body.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, clientX: 0, clientY: 0 }));
+      }
+    } catch (e) {}
+  }
+
+  async function fillNativeSelect(el, targetVal, fieldType = '') {
+    if (!el || el.tagName !== 'SELECT') return false;
+    const options = Array.from(el.options || []);
+    if (!options.length) return false;
+
+    const matched = resolveSemanticOptionMatch(options, targetVal, fieldType);
+    if (matched) {
+      el.value = matched.value;
+      matched.selected = true;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('blur', { bubbles: true }));
+      return true;
+    }
+    return false;
+  }
+
+  async function fillReactSelectV2(inputEl, targetVal, fieldType = '') {
     if (!inputEl || !targetVal) return false;
-    const targetValLower = String(targetVal).toLowerCase().trim();
     const container = (inputEl.closest && inputEl.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"]')) || inputEl.parentElement;
     if (!container) return false;
 
-    // 1. Locate the dropdown open trigger
     const indicatorBtn = container.querySelector('.select__indicators button, [aria-label*="Toggle flyout"], .select__indicator, [class*="indicatorContainer"], [class*="dropdown-indicator"]') ||
                          container.querySelector('.select__control') ||
                          container;
 
-    // Dispatch mousedown/mouseup/click sequence to trigger flyout
     indicatorBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10, view: window }));
     indicatorBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, clientX: 10, clientY: 10, view: window }));
     indicatorBtn.click();
 
-    // Type into input if filterable combobox (e.g. School, Major)
     if (inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
       try {
         if (document.activeElement !== inputEl) inputEl.focus();
@@ -865,12 +1058,11 @@
       } catch (e) {}
     }
 
-    // Wait up to 650ms for active menu to appear in DOM with polling
     let activeMenu = null;
     let options = [];
     const startTime = Date.now();
     while (Date.now() - startTime < 650) {
-      const menus = Array.from(document.querySelectorAll('.select__menu, [id*="menu-"], div[class*="menu"]'));
+      const menus = Array.from(document.querySelectorAll('.select__menu, [id*="menu-"], div[class*="menu"], [role="listbox"]'));
       for (let i = menus.length - 1; i >= 0; i--) {
         if (menus[i].offsetParent !== null || menus[i].getBoundingClientRect().height > 0) {
           activeMenu = menus[i];
@@ -886,127 +1078,162 @@
       await new Promise(r => setTimeout(r, 60));
     }
 
-    // Fallback: search document for any options if menu wasn't scoped
     if (options.length === 0) {
       options = Array.from(document.querySelectorAll('.select__option, [role="option"], div[id*="option"]'))
-        .filter(opt => {
-          const rect = opt.getBoundingClientRect();
-          return (rect.width > 0 && rect.height > 0) || opt.offsetParent !== null;
-        });
+        .filter(opt => (opt.getBoundingClientRect().height > 0) || opt.offsetParent !== null);
     }
 
     if (options.length === 0) return false;
 
-    let matchedOption = null;
-
-    const syns = {
-      'male': ['man', 'm'],
-      'female': ['woman', 'f'],
-      'yes': ['confirmed', 'confirm', 'agree', 'i agree', 'i confirm', 'true', '1', 'yes, i am', 'yes, i do', 'yes, i have'],
-      'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't"],
-      'immediate': ['immediately', 'now', '0 weeks', '1 week', '2 weeks'],
-      'bachelor of computer applications (bca)': ['bachelor of computer applications', 'bachelor', 'bachelors', 'undergraduate', 'bca', 'computer applications', 'b.c.a'],
-      'i am not a protected veteran': ['not a protected veteran', 'not a veteran', 'i am not a veteran', 'no'],
-      'no, i don\'t have a disability': ['no, i do not have a disability', "no, i don't have", 'i do not have a disability', 'no disability', 'no'],
-      'asian': ['asian (not hispanic or latino)', 'asian / pacific islander', 'south asian', 'asian - non hispanic'],
-      'indian': ['asian'],
-      'india': ['asian'],
-      'linkedin': ['linkedin', 'job board', 'online job board', 'social network'],
-    };
-
-    // Stage A: Specialized Race Matching (Indian candidate -> strictly Asian, never American Indian!)
-    if (targetValLower === 'asian' || targetValLower === 'indian' || targetValLower === 'india' || fieldType === 'RACE_ETHNICITY') {
-      matchedOption = options.find(o => {
-        const t = (o.textContent || '').trim().toLowerCase();
-        return (t === 'asian' || t.startsWith('asian')) && !t.includes('american indian');
-      });
-    }
-
-    // Stage B: Specialized School Fallback (If Amity not in list -> "0 - Other" / "Other")
-    if (!matchedOption && (fieldType === 'SCHOOL' || targetValLower.includes('university') || targetValLower.includes('college'))) {
-      for (const opt of options) {
-        const optText = (opt.textContent || '').trim().toLowerCase();
-        if (optText.includes(targetValLower)) {
-          matchedOption = opt; break;
-        }
-      }
-      if (!matchedOption) {
-        // Fallback to "0 - Other", "Other", or "Not Listed"
-        matchedOption = options.find(o => {
-          const t = (o.textContent || '').trim().toLowerCase();
-          return t === 'other' || t.startsWith('0 - other') || t.includes('other') || t.includes('not listed') || t.includes('not applicable');
-        });
-      }
-    }
-
-    // Stage C: Exact text match
-    if (!matchedOption) {
-      for (const opt of options) {
-        const optText = (opt.textContent || '').trim().toLowerCase();
-        if (optText === targetValLower) { matchedOption = opt; break; }
-      }
-    }
-
-    // Stage D: Contains / Substring match (except avoid "american indian" when searching "asian")
-    if (!matchedOption) {
-      for (const opt of options) {
-        const optText = (opt.textContent || '').trim().toLowerCase();
-        if (optText.includes(targetValLower) || targetValLower.includes(optText)) {
-          if (targetValLower === 'asian' && optText.includes('american indian')) continue;
-          matchedOption = opt; break;
-        }
-      }
-    }
-
-    // Stage E: Synonyms
-    if (!matchedOption) {
-      const synList = syns[targetValLower] || [];
-      for (const syn of synList) {
-        for (const opt of options) {
-          const optText = (opt.textContent || '').trim().toLowerCase();
-          if (optText === syn || optText.includes(syn)) {
-            matchedOption = opt; break;
-          }
-        }
-        if (matchedOption) break;
-      }
-    }
-
-    // Stage F: Boolean fallback for Yes/No questions (including "Confirmed" for Privacy notice)
-    if (!matchedOption) {
-      if (targetValLower === 'yes' || targetValLower === 'confirmed') {
-        matchedOption = options.find(o => /^(yes|agree|confirm|acknowledged)/i.test((o.textContent || '').trim()));
-      } else if (targetValLower === 'no') {
-        matchedOption = options.find(o => /^(no|disagree|decline)/i.test((o.textContent || '').trim()));
-      }
-    }
-
-    // Stage G: AI Tools Usage options
-    if (!matchedOption && (targetValLower.includes('ai') || targetValLower.includes('regular') || targetValLower.includes('daily') || fieldType === 'AI_USAGE')) {
-      matchedOption = options.find(o => /regular|daily|frequently|task|deliverable/i.test((o.textContent || '').trim())) ||
-                      options.find(o => !/do not|never/i.test((o.textContent || '').trim()));
-    }
-
-    // Stage H: Fallback to first non-placeholder option
-    if (!matchedOption && options.length > 0) {
-      matchedOption = options.find(o => !/select|choose|placeholder|optional/i.test((o.textContent || '').trim())) || options[0];
-    }
-
+    const matchedOption = resolveSemanticOptionMatch(options, targetVal, fieldType);
     if (matchedOption) {
       matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
       matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
       matchedOption.click();
-      await new Promise(r => setTimeout(r, 60));
+      await new Promise(r => setTimeout(r, 80));
+      cleanupLingeringPopovers();
+      return true;
+    }
+    return false;
+  }
+
+  async function fillRadixOrHeadless(triggerEl, targetVal, fieldType = '') {
+    if (!triggerEl) return false;
+    try {
+      if (document.activeElement !== triggerEl) triggerEl.focus();
+    } catch (e) {}
+
+    triggerEl.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: window }));
+    triggerEl.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+    triggerEl.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: window }));
+    triggerEl.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+    triggerEl.click();
+
+    let options = [];
+    const startTime = Date.now();
+    while (Date.now() - startTime < 600) {
+      const popovers = Array.from(document.querySelectorAll(
+        '[data-radix-popper-content-wrapper], [data-radix-select-viewport], [role="listbox"], [data-headlessui-state="open"]'
+      ));
+      for (const p of popovers) {
+        const opts = Array.from(p.querySelectorAll('[role="option"], [data-radix-collection-item], [data-headlessui-state], div[id*="option"]'));
+        if (opts.length > 0) {
+          options = opts;
+          break;
+        }
+      }
+      if (options.length > 0) break;
+      await new Promise(r => setTimeout(r, 50));
+    }
+
+    if (options.length === 0) {
+      return await fillWaiAriaKeyboard(triggerEl, targetVal, fieldType);
+    }
+
+    const matchedOption = resolveSemanticOptionMatch(options, targetVal, fieldType);
+    if (matchedOption) {
+      matchedOption.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: window }));
+      matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+      matchedOption.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: window }));
+      matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+      matchedOption.click();
+      await new Promise(r => setTimeout(r, 80));
+      cleanupLingeringPopovers();
       return true;
     }
 
-    return false;
+    return await fillWaiAriaKeyboard(triggerEl, targetVal, fieldType);
+  }
+
+  async function fillWorkdaySelect(triggerEl, targetVal, fieldType = '') {
+    if (!triggerEl) return false;
+    const container = triggerEl.closest('[data-automation-id="select-box"], [data-automation-id="formLabel"], div[id*="wd-"]') || triggerEl.parentElement;
+    const searchInput = (container && container.querySelector('input[data-automation-id*="searchBox"], input:not([type="hidden"])')) || triggerEl;
+
+    try {
+      if (document.activeElement !== searchInput) searchInput.focus();
+      const proto = window.HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (setter && setter.set) { setter.set.call(searchInput, targetVal); } else { searchInput.value = targetVal; }
+      searchInput.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: String(targetVal) }));
+      searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+    } catch (e) {}
+
+    let options = [];
+    const startTime = Date.now();
+    while (Date.now() - startTime < 600) {
+      const popups = Array.from(document.querySelectorAll('ul[role="listbox"], div[data-automation-id="promptOption"], [data-automation-id="menu"]'));
+      for (const p of popups) {
+        const opts = Array.from(p.querySelectorAll('li, div[data-automation-id="promptOption"], [role="option"]'));
+        if (opts.length > 0) {
+          options = opts;
+          break;
+        }
+      }
+      if (options.length > 0) break;
+      await new Promise(r => setTimeout(r, 50));
+    }
+
+    if (options.length > 0) {
+      const matched = resolveSemanticOptionMatch(options, targetVal, fieldType);
+      if (matched) {
+        matched.click();
+        await new Promise(r => setTimeout(r, 80));
+        cleanupLingeringPopovers();
+        return true;
+      }
+    }
+
+    return await fillWaiAriaKeyboard(triggerEl, targetVal, fieldType);
+  }
+
+  async function fillWaiAriaKeyboard(triggerEl, targetVal, fieldType = '') {
+    if (!triggerEl) return false;
+    try {
+      if (document.activeElement !== triggerEl) triggerEl.focus();
+      triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
+      triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true }));
+      await new Promise(r => setTimeout(r, 120));
+
+      if (targetVal) {
+        const chars = String(targetVal).slice(0, 5);
+        for (const char of chars) {
+          triggerEl.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
+        }
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+      await new Promise(r => setTimeout(r, 60));
+      cleanupLingeringPopovers();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function fillUniversalCombobox(triggerEl, targetVal, fieldType = '') {
+    if (!triggerEl || !targetVal) return false;
+    const type = detectComboboxType(triggerEl);
+    switch (type) {
+      case 'NATIVE':
+        return await fillNativeSelect(triggerEl, targetVal, fieldType);
+      case 'RADIX':
+      case 'HEADLESS_UI':
+        return await fillRadixOrHeadless(triggerEl, targetVal, fieldType);
+      case 'WORKDAY':
+        return await fillWorkdaySelect(triggerEl, targetVal, fieldType);
+      case 'REACT_SELECT':
+        return await fillReactSelectV2(triggerEl, targetVal, fieldType);
+      default:
+        return await fillWaiAriaKeyboard(triggerEl, targetVal, fieldType);
+    }
   }
 
   /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
   function setNativeValue(el, value, isFinal = true) {
-    if (isReactSelect(el)) {
-      fillReactSelect(el, value).catch(() => {});
+    if (isComboboxOrSelect(el)) {
+      fillUniversalCombobox(el, value).catch(() => {});
       return;
     }
 
@@ -1043,83 +1270,6 @@
       if (setter && setter.set) { setter.set.call(el, shouldCheck); } else { el.checked = shouldCheck; }
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
-      return;
-    }
-
-    if (el.tagName === 'SELECT') {
-      const valLower = String(value).toLowerCase().trim();
-      let targetOpt = null;
-
-      // 1. Exact match (value or text)
-      for (let i = 0; i < el.options.length; i++) {
-        const opt = el.options[i];
-        if (!opt.value && opt.text.includes('—') || opt.disabled) continue;
-        const oVal = opt.value.toLowerCase().trim();
-        const oText = opt.text.toLowerCase().trim();
-        if (oVal === valLower || oText === valLower) {
-          targetOpt = opt; break;
-        }
-      }
-
-      // 2. Contains match
-      if (!targetOpt) {
-        for (let i = 0; i < el.options.length; i++) {
-          const opt = el.options[i];
-          if (!opt.value || opt.disabled || opt.text.startsWith('—') || opt.text.startsWith('Select')) continue;
-          const oVal = opt.value.toLowerCase().trim();
-          const oText = opt.text.toLowerCase().trim();
-          if (oVal.includes(valLower) || oText.includes(valLower) ||
-             (valLower === 'yes' && (oVal === 'true' || oVal === '1')) ||
-             (valLower === 'no' && (oVal === 'false' || oVal === '0'))) {
-            targetOpt = opt; break;
-          }
-        }
-      }
-
-      // 3. Synonym dictionary matching
-      if (!targetOpt) {
-        const synonyms = {
-          'mobile': ['cell', 'cellular', 'personal', 'primary'],
-          'india': ['in', 'ind'],
-          'united states': ['usa', 'us', 'u.s.'],
-          'linkedin': ['job board', 'online', 'internet', 'social media', 'website', 'other'],
-          'male': ['man', 'm'],
-          'female': ['woman', 'f'],
-          'he/him': ['he / him', 'male', 'he'],
-          'she/her': ['she / her', 'female', 'she'],
-        };
-        const synList = synonyms[valLower] || [];
-        for (const syn of synList) {
-          for (let i = 0; i < el.options.length; i++) {
-            const opt = el.options[i];
-            if (!opt.value || opt.disabled || opt.text.startsWith('—') || opt.text.startsWith('Select')) continue;
-            const oVal = opt.value.toLowerCase().trim();
-            const oText = opt.text.toLowerCase().trim();
-            if (oVal === syn || oText === syn || oVal.includes(syn) || oText.includes(syn)) {
-              targetOpt = opt; break;
-            }
-          }
-          if (targetOpt) break;
-        }
-      }
-
-      // 4. Fallback for required dropdown: choose first non-placeholder option
-      if (!targetOpt && el.options.length > 1) {
-        for (let i = 0; i < el.options.length; i++) {
-          const opt = el.options[i];
-          if (opt.value && !opt.disabled && !opt.text.includes('—') && !opt.text.toLowerCase().includes('select')) {
-            targetOpt = opt; break;
-          }
-        }
-      }
-
-      if (targetOpt) {
-        el.value = targetOpt.value;
-        targetOpt.selected = true;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-        el.dispatchEvent(new Event('blur', { bubbles: true }));
-      }
       return;
     }
 
@@ -1731,18 +1881,26 @@
       if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') hadAI = true;
 
       // Allow dependent dropdowns (e.g. State depending on Country) time to populate options
-      if (f.type === 'STATE' && f.element.tagName === 'SELECT') {
-        await new Promise(r => setTimeout(r, 250));
+      if (f.type === 'STATE') {
+        let waited = 0;
+        while (waited < 1200) {
+          const isReady = f.element.tagName === 'SELECT'
+            ? f.element.options.length > 1 && !f.element.disabled
+            : !f.element.disabled && f.element.getAttribute('aria-disabled') !== 'true';
+          if (isReady) break;
+          await new Promise(r => setTimeout(r, 100));
+          waited += 100;
+        }
       }
 
       const val = await resolveValue(f, userProfile, activeSession);
       const skipped = !val || String(val).trim() === '';
 
       if (!skipped) {
-        if (isReactSelect(f.element)) {
+        if (isComboboxOrSelect(f.element)) {
           AstrePilotHUD.highlight(f.element);
-          await fillReactSelect(f.element, val, f.type);
-        } else if (f.element.tagName === 'SELECT' || f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
+          await fillUniversalCombobox(f.element, val, f.type);
+        } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
           setNativeValue(f.element, val, true);
         } else {
           AstrePilotHUD.highlight(f.element);

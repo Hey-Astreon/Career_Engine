@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstrePilot UCDE Testbench — Universal Combobox Verification</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 32px;
+      margin: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #38bdf8;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 15px;
+      margin-top: 0;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: #0369a1;
+      color: #e0f2fe;
+      font-family: monospace;
+      text-transform: uppercase;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    /* Native select styling */
+    select, input[type="text"] {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    /* Radix / Headless style trigger */
+    .radix-trigger {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    /* Portal container simulating body popovers */
+    .mock-portal {
+      position: absolute;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      display: none;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .mock-option {
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .mock-option:hover {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛸 AstrePilot Universal Combobox Engine (UCDE) Testbench</h1>
+    <p>Test suite representing the 5 primary ATS dropdown architectures encountered on modern career pages.</p>
+
+    <!-- 1. Radix UI / Shadcn Combobox -->
+    <div class="card">
+      <h2>1. Radix UI / Shadcn Select <span class="badge">Radix Popper Portal</span></h2>
+      <label id="lbl-work-auth">Are you legally authorized to work in the country of this role?</label>
+      <button
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-labelledby="lbl-work-auth"
+        class="radix-trigger"
+        id="radix-work-auth-btn"
+        data-state="closed"
+      >
+        <span id="radix-work-auth-val">Select an answer...</span>
+        <span>▼</span>
+      </button>
+      <div id="radix-portal-work-auth" class="mock-portal" data-radix-popper-content-wrapper role="listbox">
+        <div class="mock-option" role="option" data-value="AUTH_YES">I am authorized to work without restriction</div>
+        <div class="mock-option" role="option" data-value="AUTH_NO">I am not authorized to work</div>
+      </div>
+    </div>
+
+    <!-- 2. React-Select Container -->
+    <div class="card">
+      <h2>2. React-Select <span class="badge">BEM select__control</span></h2>
+      <label id="lbl-rs-race">Race / Ethnicity (Voluntary)</label>
+      <div class="select-shell select__container">
+        <div class="select__control" id="rs-race-control">
+          <input
+            type="text"
+            class="select__input"
+            role="combobox"
+            aria-labelledby="lbl-rs-race"
+            placeholder="Choose race/ethnicity..."
+            id="rs-race-input"
+          />
+          <div class="select__indicators">
+            <button type="button" aria-label="Toggle flyout" class="select__indicator">▼</button>
+          </div>
+        </div>
+        <div class="select__menu" id="rs-race-menu" style="display: none;">
+          <div class="select__option" data-value="AI_AN">American Indian or Alaska Native</div>
+          <div class="select__option" data-value="ASIAN">Asian (not Hispanic or Latino)</div>
+          <div class="select__option" data-value="BLACK">Black or African American</div>
+          <div class="select__option" data-value="WHITE">White</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Workday Promptbox -->
+    <div class="card">
+      <h2>3. Workday Canvas UI Promptbox <span class="badge">data-automation-id</span></h2>
+      <label id="lbl-wd-degree">Degree / Education</label>
+      <div data-automation-id="select-box" id="wd-degree-box">
+        <input
+          type="text"
+          data-automation-id="searchBox"
+          aria-labelledby="lbl-wd-degree"
+          placeholder="Search degrees..."
+          id="wd-degree-input"
+        />
+        <ul role="listbox" id="wd-degree-popup" style="display: none; list-style: none; padding: 4px; margin: 4px 0; background: #0f172a; border: 1px solid #475569; border-radius: 6px;">
+          <li role="option" data-automation-id="promptOption" class="mock-option">High School Diploma</li>
+          <li role="option" data-automation-id="promptOption" class="mock-option">Associate of Science</li>
+          <li role="option" data-automation-id="promptOption" class="mock-option">Bachelor of Computer Applications</li>
+          <li role="option" data-automation-id="promptOption" class="mock-option">Master of Science</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 4. Native Cascading Selects -->
+    <div class="card">
+      <h2>4. Native Cascading Selects <span class="badge">Country &rarr; State Cascade</span></h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <label for="native-country">Country</label>
+          <select id="native-country" name="country">
+            <option value="">-- Select Country --</option>
+            <option value="US">United States</option>
+            <option value="IN">India</option>
+            <option value="GB">United Kingdom</option>
+          </select>
+        </div>
+        <div>
+          <label for="native-state">State / Province</label>
+          <select id="native-state" name="state" disabled>
+            <option value="">-- Select State --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1. Radix simulation script
+    const rxBtn = document.getElementById('radix-work-auth-btn');
+    const rxPortal = document.getElementById('radix-portal-work-auth');
+    const rxVal = document.getElementById('radix-work-auth-val');
+    rxBtn.addEventListener('click', () => {
+      const open = rxPortal.style.display === 'block';
+      rxPortal.style.display = open ? 'none' : 'block';
+      rxBtn.setAttribute('data-state', open ? 'closed' : 'open');
+      const rect = rxBtn.getBoundingClientRect();
+      rxPortal.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      rxPortal.style.left = (rect.left + window.scrollX) + 'px';
+      rxPortal.style.width = rect.width + 'px';
+    });
+    rxPortal.querySelectorAll('.mock-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        rxVal.textContent = opt.textContent;
+        rxPortal.style.display = 'none';
+        rxBtn.setAttribute('data-state', 'closed');
+      });
+    });
+
+    // 2. React-Select simulation
+    const rsCtrl = document.getElementById('rs-race-control');
+    const rsMenu = document.getElementById('rs-race-menu');
+    const rsInp = document.getElementById('rs-race-input');
+    rsCtrl.addEventListener('click', () => {
+      rsMenu.style.display = rsMenu.style.display === 'block' ? 'none' : 'block';
+    });
+    rsMenu.querySelectorAll('.select__option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        rsInp.value = opt.textContent;
+        rsMenu.style.display = 'none';
+      });
+    });
+
+    // 3. Workday simulation
+    const wdInp = document.getElementById('wd-degree-input');
+    const wdPopup = document.getElementById('wd-degree-popup');
+    wdInp.addEventListener('focus', () => { wdPopup.style.display = 'block'; });
+    wdInp.addEventListener('input', () => { wdPopup.style.display = 'block'; });
+    wdPopup.querySelectorAll('li').forEach(li => {
+      li.addEventListener('click', () => {
+        wdInp.value = li.textContent;
+        wdPopup.style.display = 'none';
+      });
+    });
+
+    // 4. Native Country -> State Cascade simulation
+    const cSelect = document.getElementById('native-country');
+    const sSelect = document.getElementById('native-state');
+    cSelect.addEventListener('change', () => {
+      sSelect.innerHTML = '<option value="">-- Select State --</option>';
+      if (cSelect.value === 'IN') {
+        sSelect.disabled = false;
+        ['Bihar', 'Delhi', 'Maharashtra', 'Karnataka', 'Uttar Pradesh'].forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st;
+          opt.textContent = st;
+          sSelect.appendChild(opt);
+        });
+      } else if (cSelect.value === 'US') {
+        sSelect.disabled = false;
+        ['California', 'New York', 'Texas', 'Washington'].forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st;
+          opt.textContent = st;
+          sSelect.appendChild(opt);
+        });
+      } else {
+        sSelect.disabled = true;
+      }
+    });
+  </script>
+</body>
+</html>
