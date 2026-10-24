@@ -33,26 +33,71 @@ window.AstrePilotHUD = (function () {
   };
 
   const TYPE_LABELS = {
-    'firstname': 'First Name', 'lastname': 'Last Name', 'fullname': 'Full Name',
-    'email': 'Email', 'phonetype': 'Phone Type', 'phone': 'Phone',
-    'linkedin': 'LinkedIn', 'github': 'GitHub', 'portfolio': 'Portfolio',
-    'resume': 'Resume/CV', 'coverletter': 'Cover Letter', 'summary': 'Summary',
-    'location': 'Location', 'city': 'City', 'state': 'State / Province', 'country': 'Country',
-    'address': 'Street Address', 'apt': 'Apartment/Suite', 'zip': 'ZIP Code',
-    'hearabout': 'Referral Source', 'hearaboutdetail': 'Source Detail',
-    'visa': 'Visa/Sponsorship', 'salary': 'Expected Salary', 'noticeperiod': 'Notice Period',
-    'relocate': 'Relocate', 'education': 'Highest Education',
-    'veteran': 'Veteran Status', 'disability': 'Disability Status',
-    'race': 'Race/Ethnicity', 'gender': 'Gender', 'pronouns': 'Pronouns', 'unknown': 'Custom Field',
-    'age18': 'Legal Age (18+)', 'previousemployed': 'Prior Employment', 'privacyconsent': 'Privacy Agreement',
-    'aiconsent': 'AI Processing Consent', 'aiusage': 'AI Tools Usage', 'govtofficial': 'Government Official',
-    'govtrelative': 'Government Relative', 'conflictinterest': 'Conflict of Interest',
-    'referredbyleader': 'Senior Referral', 'hispaniclatino': 'Hispanic / Latino',
-    'raceethnicity': 'Race / Ethnicity', 'company': 'Company Name', 'employmenttitle': 'Job Title',
-    'startmonth': 'Start Month', 'startyear': 'Start Year', 'endmonth': 'End Month',
-    'endyear': 'End Year', 'currentrole': 'Current Role', 'school': 'School / University',
-    'degree': 'Degree', 'discipline': 'Discipline / Major', 'screeningselect': 'Screening Question',
-    'workdescription': 'Work Description', 'password': 'Password', 'confirmpassword': 'Confirm Password', 'loginid': 'Login ID / Username'
+    'firstname': 'First Name', 'FIRST_NAME': 'First Name',
+    'lastname': 'Last Name', 'LAST_NAME': 'Last Name',
+    'fullname': 'Full Name', 'FULL_NAME': 'Full Name',
+    'preferredname': 'Preferred Name', 'PREFERRED_NAME': 'Preferred Name',
+    'email': 'Email', 'EMAIL': 'Email',
+    'phonetype': 'Phone Type', 'PHONE_TYPE': 'Phone Type',
+    'phone': 'Phone', 'PHONE': 'Phone',
+    'textconsent': 'SMS / Text Consent', 'TEXT_CONSENT': 'SMS / Text Consent',
+    'linkedin': 'LinkedIn', 'LINKEDIN': 'LinkedIn',
+    'github': 'GitHub', 'GITHUB': 'GitHub',
+    'portfolio': 'Portfolio', 'PORTFOLIO': 'Portfolio',
+    'resume': 'Resume/CV', 'RESUME': 'Resume/CV',
+    'coverletter': 'Cover Letter', 'COVER_LETTER': 'Cover Letter',
+    'summary': 'Summary', 'SUMMARY': 'Summary',
+    'location': 'Location', 'LOCATION': 'Location',
+    'city': 'City', 'CITY': 'City',
+    'state': 'State / Province', 'STATE': 'State / Province',
+    'country': 'Country', 'COUNTRY': 'Country',
+    'addresstype': 'Address Type', 'ADDRESS_TYPE': 'Address Type',
+    'address': 'Street Address', 'ADDRESS': 'Street Address',
+    'apt': 'Apartment/Suite', 'APT': 'Apartment/Suite',
+    'zip': 'ZIP Code', 'ZIP': 'ZIP Code',
+    'hearabout': 'Referral Source', 'HEAR_ABOUT': 'Referral Source',
+    'hearaboutdetail': 'Source Detail', 'HEAR_ABOUT_DETAIL': 'Source Detail',
+    'visa': 'Visa/Sponsorship', 'VISA': 'Visa/Sponsorship',
+    'salary': 'Expected Salary', 'SALARY': 'Expected Salary',
+    'noticeperiod': 'Notice Period', 'NOTICE_PERIOD': 'Notice Period',
+    'relocate': 'Relocate', 'RELOCATE': 'Relocate',
+    'education': 'Highest Education', 'EDUCATION': 'Highest Education',
+    'veteran': 'Veteran Status', 'VETERAN': 'Veteran Status',
+    'disability': 'Disability Status', 'DISABILITY': 'Disability Status',
+    'race': 'Race/Ethnicity', 'RACE': 'Race/Ethnicity',
+    'gender': 'Gender', 'GENDER': 'Gender',
+    'pronouns': 'Pronouns', 'PRONOUNS': 'Pronouns',
+    'unknown': 'Custom Field', 'UNKNOWN': 'Custom Field',
+    'age18': 'Legal Age (18+)', 'AGE_18': 'Legal Age (18+)',
+    'previousemployed': 'Prior Employment', 'PREVIOUS_EMPLOYED': 'Prior Employment',
+    'privacyconsent': 'Privacy Agreement', 'PRIVACY_CONSENT': 'Privacy Agreement',
+    'aiconsent': 'AI Processing Consent', 'AI_CONSENT': 'AI Processing Consent',
+    'aiusage': 'AI Tools Usage', 'AI_USAGE': 'AI Tools Usage',
+    'govtofficial': 'Government Official', 'GOVT_OFFICIAL': 'Government Official',
+    'govtrelative': 'Government Relative', 'GOVT_RELATIVE': 'Government Relative',
+    'conflictinterest': 'Conflict of Interest', 'CONFLICT_INTEREST': 'Conflict of Interest',
+    'referredbyleader': 'Senior Referral', 'REFERRED_BY_LEADER': 'Senior Referral',
+    'hispaniclatino': 'Hispanic / Latino', 'HISPANIC_LATINO': 'Hispanic / Latino',
+    'raceethnicity': 'Race / Ethnicity', 'RACE_ETHNICITY': 'Race / Ethnicity',
+    'company': 'Employer / Company', 'COMPANY': 'Employer / Company',
+    'expstate': 'Work State', 'EXP_STATE': 'Work State',
+    'employmenttitle': 'Role Title', 'EMPLOYMENT_TITLE': 'Role Title',
+    'startmonth': 'Start Month', 'START_MONTH': 'Start Month',
+    'startday': 'Start Day', 'START_DAY': 'Start Day',
+    'startyear': 'Start Year', 'START_YEAR': 'Start Year',
+    'endmonth': 'End Month', 'END_MONTH': 'End Month',
+    'endday': 'End Day', 'END_DAY': 'End Day',
+    'endyear': 'End Year', 'END_YEAR': 'End Year',
+    'currentrole': 'Current Role', 'CURRENT_ROLE': 'Current Role',
+    'school': 'School / University', 'SCHOOL': 'School / University',
+    'degree': 'Degree', 'DEGREE': 'Degree',
+    'discipline': 'Discipline / Major', 'DISCIPLINE': 'Discipline / Major',
+    'screeningselect': 'Screening Question', 'SCREENING_SELECT': 'Screening Question',
+    'workdescription': 'Work Description', 'WORK_DESCRIPTION': 'Work Description',
+    'reasonforleaving': 'Reason for Leaving', 'REASON_FOR_LEAVING': 'Reason for Leaving',
+    'password': 'Password', 'PASSWORD': 'Password',
+    'confirmpassword': 'Confirm Password', 'CONFIRM_PASSWORD': 'Confirm Password',
+    'loginid': 'Login ID / Username', 'LOGIN_ID': 'Login ID / Username'
   };
   // Everything interpolated into innerHTML that originates outside this file
   // (profile, session, AI answers, page labels) MUST pass through this.
@@ -79,14 +124,15 @@ window.AstrePilotHUD = (function () {
   }
 
   function getIconForType(type) {
-    if (['firstname', 'lastname', 'fullname', 'race', 'raceethnicity', 'gender', 'pronouns', 'veteran', 'disability'].includes(type)) return ICONS.user;
-    if (type === 'email') return ICONS.mail;
-    if (['phone', 'phonetype'].includes(type)) return ICONS.phone;
-    if (['location', 'city', 'state', 'country', 'address', 'apt', 'zip', 'company', 'employmenttitle', 'school', 'degree', 'discipline'].includes(type)) return ICONS.briefcase;
-    if (['linkedin', 'github', 'portfolio'].includes(type)) return ICONS.link;
-    if (['password', 'confirmpassword', 'loginid'].includes(type)) return ICONS.key;
-    if (['resume', 'coverletter', 'summary', 'screening', 'screeningselect', 'aiusage', 'workdescription'].includes(type)) return ICONS.text;
-    if (['visa', 'salary', 'noticeperiod', 'relocate', 'education', 'hearabout', 'hearaboutdetail', 'age18', 'previousemployed', 'privacyconsent', 'aiconsent', 'govtofficial', 'govtrelative', 'conflictinterest', 'referredbyleader', 'hispaniclatino', 'startmonth', 'startyear', 'endmonth', 'endyear', 'currentrole'].includes(type)) return ICONS.briefcase;
+    const t = (type || '').toLowerCase();
+    if (['firstname', 'lastname', 'fullname', 'preferredname', 'race', 'raceethnicity', 'gender', 'pronouns', 'veteran', 'disability'].includes(t)) return ICONS.user;
+    if (t === 'email') return ICONS.mail;
+    if (['phone', 'phonetype', 'textconsent'].includes(t)) return ICONS.phone;
+    if (['location', 'city', 'state', 'country', 'addresstype', 'address', 'apt', 'zip', 'company', 'expstate', 'employmenttitle', 'school', 'degree', 'discipline'].includes(t)) return ICONS.briefcase;
+    if (['linkedin', 'github', 'portfolio'].includes(t)) return ICONS.link;
+    if (['password', 'confirmpassword', 'loginid'].includes(t)) return ICONS.key;
+    if (['resume', 'coverletter', 'summary', 'screening', 'screeningselect', 'aiusage', 'workdescription', 'reasonforleaving'].includes(t)) return ICONS.text;
+    if (['visa', 'salary', 'noticeperiod', 'relocate', 'education', 'hearabout', 'hearaboutdetail', 'age18', 'previousemployed', 'privacyconsent', 'aiconsent', 'govtofficial', 'govtrelative', 'conflictinterest', 'referredbyleader', 'hispaniclatino', 'startmonth', 'startday', 'startyear', 'endmonth', 'endday', 'endyear', 'currentrole'].includes(t)) return ICONS.briefcase;
     return ICONS.text;
   }
 

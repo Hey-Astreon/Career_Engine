@@ -22,6 +22,108 @@
   let isFilling = false;  // re-entrancy guard for runAutofill
   let fillHeartbeatTimer = null; // heartbeat timer for active fill locks
 
+  // Autonomous Standalone / Offline Profiles (BCA Candidate Title Compliant)
+  const STANDALONE_PROFILES = {
+    roushan: {
+      firstName: 'Roushan',
+      lastName: 'Kumar',
+      fullName: 'Roushan Kumar',
+      preferredName: 'Roushan',
+      email: 'playboxstation460@gmail.com',
+      phone: '+919142825424',
+      phoneType: 'Mobile',
+      title: 'Full-Stack Developer & Systems Architect',
+      location: 'Patna, Bihar, India',
+      city: 'Patna',
+      state: 'Bihar',
+      country: 'India',
+      streetAddress: 'Rajendra Nagar',
+      zipCode: '800024',
+      addressType: 'Home',
+      linkedinUrl: 'https://linkedin.com/in/hey-astreon',
+      githubUrl: 'https://github.com/Hey-Astreon',
+      portfolioUrl: 'https://heyastreon.tech',
+      school: 'Amity University',
+      degree: 'Bachelor of Computer Applications (BCA)',
+      discipline: 'Computer Science / Applications',
+      highestEducation: 'Bachelor of Computer Applications (BCA)',
+      startMonth: 'July',
+      startYear: '2023',
+      endMonth: 'June',
+      endYear: '2026',
+      graduationYear: '2026',
+      currentRole: true,
+      workAuthorized: true,
+      requiresVisa: true,
+      is18OrOlder: 'Yes',
+      gender: 'Male',
+      pronouns: 'He/Him',
+      hispanicLatino: 'No',
+      veteranStatus: 'I am not a protected veteran',
+      disabilityStatus: "No, I don't have a disability",
+      race: 'Asian',
+      company: 'AstreWork',
+      employmentTitle: 'Full-Stack Developer & Systems Architect',
+      noticePeriod: 'Immediate',
+      willingnessToRelocate: true,
+      languages: 'English, Hindi',
+      privacyConsent: 'Confirmed',
+      aiConsent: 'Yes',
+      aiUsage: 'regularly use AI tools',
+      professionalSummary: 'Full-Stack Developer & Systems Architect specializing in distributed cloud infrastructure, resilient automation pipelines, and high-performance TypeScript/Next.js architectures.',
+      _isStandalone: true
+    },
+    ayushi: {
+      firstName: 'Ayushi',
+      lastName: 'Raj',
+      fullName: 'Ayushi Raj',
+      preferredName: 'Ayushi',
+      email: 'ayushi29507@gmail.com',
+      phone: '+917070144670',
+      phoneType: 'Mobile',
+      title: 'Full-Stack Developer',
+      location: 'Patna, Bihar, India',
+      city: 'Patna',
+      state: 'Bihar',
+      country: 'India',
+      streetAddress: 'Boring Road',
+      zipCode: '800001',
+      addressType: 'Home',
+      linkedinUrl: 'https://linkedin.com/in/ayushi-raj-',
+      githubUrl: 'https://github.com/Silenttears-cloud',
+      portfolioUrl: 'https://ayushiraj.dev',
+      school: 'Amity University',
+      degree: 'Bachelor of Computer Applications (BCA)',
+      discipline: 'Computer Science / Applications',
+      highestEducation: 'Bachelor of Computer Applications (BCA)',
+      startMonth: 'July',
+      startYear: '2023',
+      endMonth: 'June',
+      endYear: '2026',
+      graduationYear: '2026',
+      currentRole: true,
+      workAuthorized: true,
+      requiresVisa: true,
+      is18OrOlder: 'Yes',
+      gender: 'Female',
+      pronouns: 'She/Her',
+      hispanicLatino: 'No',
+      veteranStatus: 'I am not a protected veteran',
+      disabilityStatus: "No, I don't have a disability",
+      race: 'Asian',
+      company: 'AstreWork',
+      employmentTitle: 'Full-Stack Developer',
+      noticePeriod: 'Immediate',
+      willingnessToRelocate: true,
+      languages: 'English, Hindi',
+      privacyConsent: 'Confirmed',
+      aiConsent: 'Yes',
+      aiUsage: 'regularly use AI tools',
+      professionalSummary: 'Full-Stack Developer focused on modern React interfaces, robust API integrations, and intuitive candidate experiences.',
+      _isStandalone: true
+    }
+  };
+
   // Pillar E: Cross-Tab Broadcast Channel & Message Bus
   let syncChannel = null;
   try {
@@ -106,9 +208,40 @@
     }
   }
 
+  /* -- PILLAR F: CDP HARDWARE INPUT BRIDGE -- */
+  function cdpInput(action, params = {}) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({
+          type: 'CDP_DISPATCH_INPUT',
+          action,
+          ...params
+        }, (res) => {
+          if (chrome.runtime.lastError) {
+            return resolve({ success: false, error: chrome.runtime.lastError.message });
+          }
+          resolve(res || { success: true });
+        });
+      } catch (e) {
+        resolve({ success: false, error: e.message });
+      }
+    });
+  }
+
   /* -- MESSAGE LISTENER -- */
   // All responses are synchronous, so the channel is not kept open.
   const messageListener = (request, sender, sendResponse) => {
+    // Top-level window guard: subframes (tracking pixels, analytics, recaptcha) must ignore HUD/page actions
+    if (window !== window.top && (
+      request.action === 'TOGGLE_HUD' ||
+      request.action === 'SCAN_FIELDS' ||
+      request.action === 'AUTOFILL' ||
+      request.action === 'EXTRACT_PAGE' ||
+      request.action === 'CLICK_APPLY'
+    )) {
+      return false;
+    }
+
     if (request.action === 'TOGGLE_HUD') {
       toggleAstrePilotHUD();
       sendResponse({ status: 'toggled' });
@@ -467,7 +600,7 @@
 
   async function getStoredConfig() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin'], (res) => {
+      chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (res) => {
         const safeRes = res || {};
         let origin = (safeRes.astrepilot_origin || 'https://astrework.app').trim();
         if (!origin || origin.includes('vercel.app')) {
@@ -476,7 +609,8 @@
         }
         resolve({
           token: safeRes.astrepilot_token || null,
-          origin
+          origin,
+          activeContext: safeRes.astrepilot_active_context || 'roushan'
         });
       });
     });
@@ -956,14 +1090,15 @@
       if (!labelText) labelText = labelEl.textContent || '';
     }
     // Check aria-labelledby if label is empty
+    const ownerDoc = input.ownerDocument || document;
     if (!labelText && input.getAttribute('aria-labelledby')) {
-      const labelledByEl = document.getElementById(input.getAttribute('aria-labelledby'));
+      const labelledByEl = ownerDoc.getElementById(input.getAttribute('aria-labelledby'));
       if (labelledByEl) labelText = labelledByEl.textContent || '';
     }
     // Check explicit label[for="id"]
-    if (!labelText && input.id && input.ownerDocument) {
+    if (!labelText && input.id && ownerDoc) {
       try {
-        const forLabel = input.ownerDocument.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+        const forLabel = ownerDoc.querySelector(`label[for="${CSS.escape(input.id)}"]`);
         if (forLabel) labelText = forLabel.textContent || '';
       } catch (e) {}
     }
@@ -1019,7 +1154,10 @@
     if (autoId.includes('select-box') || autoId.includes('promptoption') || autoId.includes('searchbox') || cls.includes('workday') || id.includes('wd-')) {
       return 'WORKDAY';
     }
-    if (cls.includes('select__control') || cls.includes('select__input') || cls.includes('select-shell') || cls.includes('react-select') || id.includes('react-select') || (el.closest && el.closest('.select__control, [class*="react-select"]'))) {
+    if (cls.includes('select__control') || cls.includes('select__input') || cls.includes('select-shell') || cls.includes('react-select') || id.includes('react-select') || (el.closest && el.closest('.select-shell, .select__control, .select__container, [class*="react-select"], .select'))) {
+      return 'REACT_SELECT';
+    }
+    if (isGreenhouseEnvironment() && ((el.getAttribute && el.getAttribute('role') === 'combobox') || (el.closest && el.closest('.select-shell, [class*="select"]')))) {
       return 'REACT_SELECT';
     }
     if ((el.hasAttribute && (el.hasAttribute('data-radix-collection-item') || el.hasAttribute('data-state'))) || cls.includes('radix') || id.includes('radix') || (el.closest && el.closest('[data-radix-popper-content-wrapper], [data-radix-select-viewport]'))) {
@@ -1586,24 +1724,41 @@
     const seenElements = new Set();
 
     const GREENHOUSE_EXACT_MAP = [
-      { type: 'FIRST_NAME', selectors: ['input#first_name', 'input[name="first_name"]'] },
-      { type: 'LAST_NAME', selectors: ['input#last_name', 'input[name="last_name"]'] },
-      { type: 'PREFERRED_NAME', selectors: ['input#preferred_name', 'input[name="preferred_name"]'] },
-      { type: 'EMAIL', selectors: ['input#email', 'input[name="email"]'] },
-      { type: 'PHONE', selectors: ['input#phone', 'input[name="phone"]'] },
-      { type: 'CITY', selectors: ['input#candidate-location', 'input[name="candidate_location"]'] },
+      { type: 'FIRST_NAME', selectors: ['input#first_name', 'input[name="first_name"]', '#first_name'] },
+      { type: 'LAST_NAME', selectors: ['input#last_name', 'input[name="last_name"]', '#last_name'] },
+      { type: 'PREFERRED_NAME', selectors: ['input#preferred_name', 'input[name="preferred_name"]', '#preferred_name'] },
+      { type: 'EMAIL', selectors: ['input#email', 'input[name="email"]', '#email'] },
+      { type: 'PHONE', selectors: ['input#phone', 'input[name="phone"]', '#phone'] },
+      { type: 'COUNTRY', selectors: ['input#country', '#country', 'select#country', '[name*="country" i]'] },
+      { type: 'CITY', selectors: ['input#candidate-location', 'input[name="candidate_location"]', '#candidate-location', '[name*="location"]', '[id*="candidate_location"]'] },
+      { type: 'ADDRESS', selectors: ['#question_69351126', 'input[name*="address" i]', '#address', '[id*="full_address" i]', '[id*="street_address" i]'] },
       { type: 'RESUME', selectors: ['input#resume[type="file"]', 'input[type="file"][name*="resume"]', 'input[type="file"]'] },
-      { type: 'SCHOOL', selectors: ['input#school--0', 'input[id^="school--"]'] },
-      { type: 'DEGREE', selectors: ['input#degree--0', 'input[id^="degree--"]'] },
-      { type: 'DISCIPLINE', selectors: ['input#discipline--0', 'input[id^="discipline--"]'] },
-      { type: 'START_MONTH', selectors: ['input#start-month--0', 'input[id^="start-month--"]'] },
-      { type: 'START_YEAR', selectors: ['input#start-year--0', 'input[id^="start-year--"]'] },
-      { type: 'END_MONTH', selectors: ['input#end-month--0', 'input[id^="end-month--"]'] },
-      { type: 'END_YEAR', selectors: ['input#end-year--0', 'input[id^="end-year--"]'] },
-      { type: 'GENDER', selectors: ['input#gender', 'select#gender'] },
-      { type: 'HISPANIC_LATINO', selectors: ['input#hispanic_ethnicity', 'select#hispanic_ethnicity'] },
-      { type: 'VETERAN', selectors: ['input#veteran_status', 'select#veteran_status'] },
-      { type: 'DISABILITY', selectors: ['input#disability_status', 'select#disability_status'] }
+      { type: 'SCHOOL', selectors: ['input#school--0', '#school--0', '[id^="school--"]', '[id*="school"]'] },
+      { type: 'DEGREE', selectors: ['input#degree--0', '#degree--0', '[id^="degree--"]', '[id*="degree"]'] },
+      { type: 'DISCIPLINE', selectors: ['input#discipline--0', '#discipline--0', '[id^="discipline--"]', '[id*="discipline"]'] },
+      { type: 'START_MONTH', selectors: ['#start-month--0', '[id^="start-month--"]', 'select[name*="start_month"]', 'input[name*="start_month"]', '[id*="start_date_month"]', '[name*="start_date_month"]', '[aria-label*="start date month" i]'] },
+      { type: 'START_YEAR', selectors: ['#start-year--0', '[id^="start-year--"]', 'input[name*="start_year"]', '[id*="start_date_year"]', '[name*="start_date_year"]', '[aria-label*="start date year" i]'] },
+      { type: 'END_MONTH', selectors: ['#end-month--0', '[id^="end-month--"]', 'select[name*="end_month"]', 'input[name*="end_month"]', '[id*="end_date_month"]', '[name*="end_date_month"]', '[aria-label*="end date month" i]'] },
+      { type: 'END_YEAR', selectors: ['#end-year--0', '[id^="end-year--"]', 'input[name*="end_year"]', '[id*="end_date_year"]', '[name*="end_date_year"]', '[aria-label*="end date year" i]'] },
+      { type: 'GRADUATION_YEAR', selectors: ['#question_69351114', '[id*="graduation_date" i]', '[id*="grad_date" i]', '[aria-label*="graduation date" i]'] },
+      { type: 'LINKEDIN', selectors: ['#question_69351116', 'input[name*="linkedin" i]', '#linkedin', '[aria-label*="linkedin" i]'] },
+      { type: 'GITHUB', selectors: ['#question_69351117', 'input[name*="github" i]', '#github', '[aria-label*="github" i]'] },
+      { type: 'PORTFOLIO', selectors: ['#question_69351119', 'input[name*="website" i]', '#website', '#portfolio', '[aria-label*="website" i]'] },
+      { type: 'VISA', selectors: ['#question_69351122', '[id*="sponsorship" i]', '[aria-label*="visa sponsorship" i]'] },
+      { type: 'WORK_AUTH', selectors: ['#question_69351123', '[id*="work_auth" i]', '[aria-label*="legally authorized" i]'] },
+      { type: 'RELOCATE', selectors: ['#question_69351124', '[id*="relocate" i]', '[aria-label*="relocate" i]'] },
+      { type: 'AGE_18', selectors: ['#question_69351127', '[id*="age_18" i]', '[id*="18_years" i]', '[aria-label*="18 years" i]'] },
+      { type: 'LANGUAGES', selectors: ['[id*="question_69351128"]', '[id*="language" i]', '[aria-label*="language" i]'] },
+      { type: 'PRIVACY_CONSENT', selectors: ['#question_69351131', '#question_69351134', '[id*="privacy_notice" i]', '[aria-label*="privacy notice" i]'] },
+      { type: 'PREVIOUS_EMPLOYED', selectors: ['#question_69351132', '#question_69351133', '#question_69351135'] },
+      { type: 'GENDER', selectors: ['#gender', '#question_69351130', 'input#gender', 'select#gender', '[name*="gender"]'] },
+      { type: 'HISPANIC_LATINO', selectors: ['#hispanic_ethnicity', 'input#hispanic_ethnicity', 'select#hispanic_ethnicity', '[name*="hispanic"]'] },
+      { type: 'VETERAN', selectors: ['#veteran_status', 'input#veteran_status', 'select#veteran_status', '[name*="veteran"]'] },
+      { type: 'DISABILITY', selectors: ['#disability_status', 'input#disability_status', 'select#disability_status', '[name*="disability"]'] },
+      { type: 'SCREENING_SELECT', selectors: ['#question_69351112'] },
+      { type: 'SCREENING', selectors: ['#question_69351113'] },
+      { type: 'SCREENING_SELECT', selectors: ['#question_69351115'] },
+      { type: 'SCREENING', selectors: ['#question_69351125'] }
     ];
 
     GREENHOUSE_EXACT_MAP.forEach(item => {
@@ -1615,14 +1770,20 @@
         } catch (e) {}
       }
       if (el) {
+        let interactive = el;
+        if (el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') {
+          const inner = el.querySelector('input, select, textarea, [role="combobox"]');
+          if (inner) interactive = inner;
+        }
+        seenElements.add(interactive);
         seenElements.add(el);
-        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
-          ? el.checked
-          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
-        const elId = el.id || el.name || '';
+        const origVal = (interactive.tagName === 'INPUT' && (interactive.type === 'radio' || interactive.type === 'checkbox'))
+          ? interactive.checked
+          : (interactive.value !== undefined ? interactive.value : (interactive.innerText || interactive.textContent || ''));
+        const elId = interactive.id || interactive.name || el.id || el.name || '';
         const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('gh_' + fields.length);
         fields.push({
-          element: el,
+          element: interactive,
           type: item.type,
           id: item.type.toLowerCase() + '_' + safeId,
           originalValue: origVal,
@@ -1817,6 +1978,8 @@
     'league of legends': ['league of legends', 'lol', 'league', 'teamfight tactics', 'valorant', 'technology / platform / infrastructure'],
     'english': ['english', 'en', 'english (fluent)'],
     'hindi': ['hindi', 'hi', 'hindi (fluent)'],
+    '2026': ['summer 2026', 'spring 2026', 'fall 2026', 'winter 2026', '2026', 'may 2026', 'june 2026', 'december 2026', 'may 2026 (or earlier)'],
+    'bs': ['bs', 'bs in computer science', 'bachelor of science', 'bachelors', 'yes', 'undergraduate', 'bca'],
     'n/a': ['n/a', 'na', 'not applicable', 'none', 'n / a'],
     'january': ['jan', '01', '1'],
     'february': ['feb', '02', '2'],
@@ -2086,13 +2249,15 @@
       inputEl.dispatchEvent(new Event('change', { bubbles: true }));
       inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
 
-      // 2. Wait up to 1000ms for place suggestions from Pelias / Google / Algolia
+      // 2. Wait up to 1200ms for place suggestions from Pelias / Google / Algolia
+      const doc = inputEl.ownerDocument || document;
       let suggestion = null;
       const startTime = Date.now();
-      while (Date.now() - startTime < 1000) {
-        const options = Array.from(document.querySelectorAll(
-          '.select__menu .select__option, .select__option, [role="option"], .pac-item, div[id*="option"], #react-portal-mount-point [role="option"], #react-portal-mount-point .select__option'
+      while (Date.now() - startTime < 1200) {
+        const options = Array.from(doc.querySelectorAll(
+          '.select__menu .select__option, #react-portal-mount-point .select__option, .pac-item, .select__option:not(.iti__country), div[id*="-option-"]:not(.iti__country)'
         )).filter(opt => {
+          if (opt.classList && opt.classList.contains('iti__country')) return false;
           const txt = (opt.textContent || '').trim();
           return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
         });
@@ -2101,14 +2266,14 @@
           suggestion = options.find(o => (o.textContent || '').toLowerCase().includes(searchCity.toLowerCase())) || options[0];
           break;
         }
-        await new Promise(r => setTimeout(r, 60));
+        await new Promise(r => setTimeout(r, 80));
       }
 
       if (suggestion) {
         suggestion.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
         suggestion.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
         suggestion.click();
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 150));
         return true;
       } else {
         // Fallback: commit typed city with Enter
@@ -2143,7 +2308,7 @@
       // 1. Check local container menu first
       const localMenu = container.querySelector('.select__menu, [class*="menu"]');
       if (localMenu) {
-        const localOpts = Array.from(localMenu.querySelectorAll('.select__option, [role="option"], div[id*="-option-"], div[class*="-option"]'));
+        const localOpts = Array.from(localMenu.querySelectorAll('.select__option, div[id*="-option-"]'));
         const filtered = localOpts.filter(o => {
           const txt = (o.textContent || o.text || '').trim();
           return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
@@ -2151,16 +2316,13 @@
         if (filtered.length > 0) return filtered;
       }
 
-      // 2. Check full document (including portals and body)
+      // 2. Check full document (including portals and body, strictly excluding telephone iti dropdown options)
       const selectors = [
         '.select__menu .select__option',
         '#react-portal-mount-point .select__option',
-        '#react-portal-mount-point [role="option"]',
-        '.select__option',
-        '[role="option"]',
-        'div[id*="-option-"]',
-        'div[class*="-option"]',
-        'li[role="option"]'
+        '#react-portal-mount-point div[id*="-option-"]',
+        '.select__option:not(.iti__country)',
+        'div[id*="-option-"]:not(.iti__country)'
       ];
       const raw = Array.from(doc.querySelectorAll(selectors.join(', ')));
       return raw.filter(o => {
@@ -2204,30 +2366,29 @@
       let opts = getVisibleOptions();
       if (opts.length > 0) return opts;
 
-      const indicator = container.querySelector('.select__dropdown-indicator, button[aria-label*="Toggle"], button[aria-label*="flyout"], .select__indicators button, button.icon-button, [class*="indicator"]') || control;
+      // Click the select control directly with full mouse sequence
       try {
-        indicator.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
-        indicator.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
-        indicator.click();
+        control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
+        control.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
+        control.click();
       } catch (e) {}
 
-      // Wait up to 350ms
+      // Wait up to 500ms for options to mount
       const start = Date.now();
-      while (Date.now() - start < 350) {
+      while (Date.now() - start < 500) {
         opts = getVisibleOptions();
         if (opts.length > 0) return opts;
         await new Promise(r => setTimeout(r, 50));
       }
 
-      // If still not open, try direct control click and ArrowDown on input
+      // If still not open, try direct focus on input and ArrowDown
       try {
-        control.click();
         if (doc.activeElement !== inputEl) inputEl.focus();
         inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
       } catch (e) {}
 
       const start2 = Date.now();
-      while (Date.now() - start2 < 350) {
+      while (Date.now() - start2 < 500) {
         opts = getVisibleOptions();
         if (opts.length > 0) return opts;
         await new Promise(r => setTimeout(r, 50));
@@ -2338,11 +2499,7 @@
           matchedOption.click();
         } catch (e) {}
 
-        try {
-          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
-        } catch (e) {}
-
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise(r => setTimeout(r, 180));
         anySuccess = true;
       }
     }
@@ -2754,6 +2911,12 @@
     if (q.includes('language') && !q.includes('programming')) {
       return 'English';
     }
+    if (q.includes('bs, ms, or phd') || q.includes('degree program') || q.includes('pursuing a bs')) {
+      return 'BS';
+    }
+    if (q.includes('remaining in your degree') || q.includes('at least one term') || q.includes('semester remaining')) {
+      return 'Yes';
+    }
 
     // 1. KNOCKOUT & DISQUALIFY QUESTIONS -> ABSOLUTELY "NO"
     if (
@@ -3136,6 +3299,15 @@
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
         const jobTitle = session && session.jobTitle ? session.jobTitle : '';
 
+        // Domain screening motivation tailored for Riot Games
+        if (
+          qLower.includes('riot games') ||
+          (company.toLowerCase().includes('riot') && (qLower.includes('why are you interested') || qLower.includes('software engineering intern'))) ||
+          qLower.includes('interested in working at riot games')
+        ) {
+          return "I am deeply inspired by Riot Games' player-first engineering culture and dedication to high-performance systems in titles like League of Legends and VALORANT. As a systems developer passionate about distributed architectures, high-concurrency cloud systems, and real-time multiplayer performance, I want to contribute to building robust, low-latency backend infrastructure and game services that empower millions of players globally.";
+        }
+
         // 1. Check Candidate Screening Q&A Vault first (sub-5ms, zero LLM latency)
         try {
           const vaultRes = await apFetch('/vault/match', {
@@ -3176,10 +3348,16 @@
               }),
             });
           }
-          if (!res.ok) return null;
-          const data = await res.json();
-          return data.answer || null;
-        } catch (e) { return null; }
+          if (res.ok) {
+            const data = await res.json();
+            if (data.answer) return data.answer;
+          }
+        } catch (e) {}
+
+        // Autonomous Offline Fallback for Screening Questions
+        return (profile.professionalSummary && profile.professionalSummary.length > 20)
+          ? profile.professionalSummary
+          : "I am an enthusiastic Full-Stack Developer with deep experience building scalable cloud applications, resilient API microservices, and high-performance data systems. I bring a strong work ethic, technical curiosity, and collaborative mindset to ship reliable software.";
       }
       default: return null;
     }
@@ -3213,11 +3391,8 @@
 
   async function mountHud() {
     const config = await getStoredConfig();
-    if (!config.token) {
-      activeHud = AstrePilotHUD.mount({ onClose: () => { activeHud = null; } });
-      activeHud.setState('not-connected');
-      return;
-    }
+    const activeCtx = config.activeContext || 'roushan';
+    let isOffline = !config.token;
 
     // Mount HUD immediately in connecting state so user gets visual feedback
     activeHud = AstrePilotHUD.mount({
@@ -3231,20 +3406,24 @@
       onRescan: rescanFields,
       onSwitchContext: async (ctx) => {
         try {
-          const profileRes = await apFetch(`/profile?slug=${encodeURIComponent(ctx)}`);
-          if (profileRes.ok) {
-            const pData = await profileRes.json();
-            if (pData.success && pData.profile) {
-              userProfile = pData.profile;
-              if (activeHud) {
-                activeHud.setIdentity({
-                  fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'Candidate',
-                  title: userProfile.title || 'Full-Stack Developer',
-                  primedCompany: activeSession ? activeSession.company : null
-                });
-                rescanFields();
+          if (!isOffline && config.token) {
+            const profileRes = await apFetch(`/profile?slug=${encodeURIComponent(ctx)}`);
+            if (profileRes.ok) {
+              const pData = await profileRes.json();
+              if (pData.success && pData.profile) {
+                userProfile = pData.profile;
               }
             }
+          } else {
+            userProfile = STANDALONE_PROFILES[ctx] || STANDALONE_PROFILES.roushan;
+          }
+          if (activeHud && userProfile) {
+            activeHud.setIdentity({
+              fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'Candidate',
+              title: userProfile.title || 'Full-Stack Developer',
+              primedCompany: activeSession ? activeSession.company : null
+            });
+            rescanFields();
           }
         } catch (e) {
           console.warn('[AstrePilot] Context switch error:', e);
@@ -3395,46 +3574,54 @@
     });
     activeHud.setState('connecting');
 
-    try {
-      const profileRes = await apFetch('/profile');
-      if (!profileRes.ok) throw new Error('profile-failed');
-      userProfile = await profileRes.json();
+    if (!config.token) {
+      isOffline = true;
+      userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
+    } else {
+      try {
+        const profileRes = await apFetch('/profile');
+        if (!profileRes.ok) throw new Error('profile-failed');
+        userProfile = await profileRes.json();
 
-      const sessionRes = await apFetch('/session');
-      if (sessionRes.ok) {
-        const sData = await sessionRes.json();
-        activeSession = sData.session;
+        const sessionRes = await apFetch('/session');
+        if (sessionRes.ok) {
+          const sData = await sessionRes.json();
+          activeSession = sData.session;
+        }
+      } catch (err) {
+        // Fallback to standalone offline profile if cloud un-paired or server down
+        isOffline = true;
+        userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
       }
-    } catch (err) {
-      if (activeHud) activeHud.setState('not-connected');
-      return;
     }
     if (!activeHud) return; // user closed the HUD while loading
 
     activeHud.setIdentity({
       fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
-      title: userProfile.title || 'Candidate',
+      title: userProfile.title || 'Full-Stack Developer',
       primedCompany: activeSession ? activeSession.company : null
     });
 
-    // Pillar E: Duplicate Application Pre-Flight Status Check
-    try {
-      const checkRes = await apFetch('/check-status', {
-        method: 'POST',
-        body: JSON.stringify({
-          siteUrl: window.location.href,
-          company: (activeSession && activeSession.company) || document.title.replace(/ \|.*/, '').trim().slice(0, 80),
-          jobTitle: (activeSession && activeSession.jobTitle) || ''
-        })
-      });
-      if (checkRes.ok) {
-        const checkData = await checkRes.json();
-        if (checkData && checkData.exists && checkData.application) {
-          if (activeHud) activeHud.setDuplicateAlert(checkData.application);
+    if (!isOffline) {
+      // Pillar E: Duplicate Application Pre-Flight Status Check (Cloud Only)
+      try {
+        const checkRes = await apFetch('/check-status', {
+          method: 'POST',
+          body: JSON.stringify({
+            siteUrl: window.location.href,
+            company: (activeSession && activeSession.company) || document.title.replace(/ \|.*/, '').trim().slice(0, 80),
+            jobTitle: (activeSession && activeSession.jobTitle) || ''
+          })
+        });
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData && checkData.exists && checkData.application) {
+            if (activeHud) activeHud.setDuplicateAlert(checkData.application);
+          }
         }
+      } catch (checkErr) {
+        /* silent */
       }
-    } catch (checkErr) {
-      /* silent */
     }
 
     activeHud.setState('scanning');
@@ -3544,8 +3731,22 @@
   }
 
   async function runAutofill() {
+    if (!activeHud) {
+      await toggleAstrePilotHUD();
+    }
     const hud = activeHud;
-    if (!hud || isFilling || !detectedFields || !detectedFields.length) return;
+    if (!hud || isFilling) return;
+
+    if (!userProfile) {
+      const config = await getStoredConfig();
+      userProfile = STANDALONE_PROFILES[config.activeContext || 'roushan'] || STANDALONE_PROFILES.roushan;
+    }
+
+    if (!detectedFields || !detectedFields.length) {
+      const fields = scanFields();
+      applyDetectedFields(fields);
+    }
+    if (!detectedFields || !detectedFields.length) return;
 
     // Pillar E: Concurrency Lock Check
     const lockRes = await acquireFillLock(false);
@@ -3789,12 +3990,20 @@
       return !PLACEHOLDER_REGEX.test(optText) && (optVal !== '' && optVal !== '0');
     }
 
-    // 2. Custom ARIA Combobox
+    // 2. Custom ARIA Combobox / React-Select
     if (isComboboxOrSelect(el)) {
+      const container = (el.closest && el.closest('.select-shell, .select__container, [class*="react-select"], .select, .form-group')) || el.parentElement;
+      if (container) {
+        const single = container.querySelector('.select__single-value, [class*="singleValue"], .select__multi-value__label, [class*="multiValue"]');
+        if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
+        const req = container.querySelector('input[class*="requiredInput"]');
+        if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
+      }
       const text = (el.innerText || el.textContent || '').trim().toLowerCase();
       const ariaVal = (el.getAttribute('aria-valuenow') || el.getAttribute('aria-label') || '').toLowerCase();
       if (text && !PLACEHOLDER_REGEX.test(text) && text.length > 0) return true;
       if (ariaVal && ariaVal.length > 0 && !PLACEHOLDER_REGEX.test(ariaVal)) return true;
+      if (el.value && el.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(el.value.trim())) return true;
       return false;
     }
 

@@ -46,8 +46,9 @@ function broadcastToTabs(message, excludeTabId = null) {
   });
 }
 
-// Sweep locks held by closed tabs (Pillar E auto-cleanup)
+// Sweep locks held by closed tabs (Pillar E auto-cleanup) & detach CDP
 chrome.tabs.onRemoved.addListener((tabId) => {
+  detachCdp(tabId);
   let releasedAny = false;
   for (const [key, lock] of activeTabLocks.entries()) {
     if (lock.tabId === tabId) {
@@ -67,13 +68,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       lastApplyClickTime = 0; // Consume the event
       // Wait slightly to ensure page and content scripts are fully ready
       setTimeout(() => {
-        chrome.tabs.sendMessage(tabId, { action: 'TOGGLE_HUD' }).catch(() => {
+        chrome.tabs.sendMessage(tabId, { action: 'TOGGLE_HUD' }, { frameId: 0 }).catch(() => {
           // Fallback: Auto-inject if not already present
-          chrome.scripting.executeScript({ target: { tabId }, files: ['hud-ui.js'] }).then(() => {
-            chrome.scripting.insertCSS({ target: { tabId }, files: ['hud.css'] });
-            chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }).then(() => {
+          chrome.scripting.executeScript({ target: { tabId, frameIds: [0] }, files: ['hud-ui.js'] }).then(() => {
+            chrome.scripting.insertCSS({ target: { tabId, frameIds: [0] }, files: ['hud.css'] });
+            chrome.scripting.executeScript({ target: { tabId, frameIds: [0] }, files: ['content.js'] }).then(() => {
               setTimeout(() => {
-                chrome.tabs.sendMessage(tabId, { action: 'TOGGLE_HUD' }).catch(() => {});
+                chrome.tabs.sendMessage(tabId, { action: 'TOGGLE_HUD' }, { frameId: 0 }).catch(() => {});
               }, 500);
             });
           }).catch(err => console.error(err));
@@ -99,13 +100,13 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'toggle_astrepilot') {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (activeTab && activeTab.id) {
-      chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {
+      chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }, { frameId: 0 }).catch(() => {
         // Fallback: auto-inject into tab if not already running
-        chrome.scripting.executeScript({ target: { tabId: activeTab.id }, files: ['hud-ui.js'] }).then(() => {
-          chrome.scripting.insertCSS({ target: { tabId: activeTab.id }, files: ['hud.css'] });
-          chrome.scripting.executeScript({ target: { tabId: activeTab.id }, files: ['content.js'] }).then(() => {
+        chrome.scripting.executeScript({ target: { tabId: activeTab.id, frameIds: [0] }, files: ['hud-ui.js'] }).then(() => {
+          chrome.scripting.insertCSS({ target: { tabId: activeTab.id, frameIds: [0] }, files: ['hud.css'] });
+          chrome.scripting.executeScript({ target: { tabId: activeTab.id, frameIds: [0] }, files: ['content.js'] }).then(() => {
             setTimeout(() => {
-              chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {});
+              chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }, { frameId: 0 }).catch(() => {});
             }, 300);
           });
         }).catch(() => {});
@@ -298,6 +299,168 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     return true; // Keep channel open for async response
   }
+
+  // Pillar F: CDP (Chrome DevTools Protocol) Hardware Input Engine
+  if (request.type === 'CDP_DISPATCH_INPUT') {
+    const tabId = (sender && sender.tab && sender.tab.id) ? sender.tab.id : request.tabId;
+    if (!tabId) {
+      sendResponse({ success: false, error: 'No active tab ID for CDP' });
+      return false;
+    }
+
+    (async () => {
+      const attachRes = await ensureCdpAttached(tabId);
+      if (!attachRes.success) {
+        return sendResponse({ success: false, error: attachRes.error });
+      }
+
+      const action = request.action;
+      try {
+        if (action === 'ATTACH') {
+          return sendResponse({ success: true });
+        }
+
+        if (action === 'DETACH') {
+          await detachCdp(tabId);
+          return sendResponse({ success: true });
+        }
+
+        if (action === 'CLICK') {
+          const intX = Math.round(request.x);
+          const intY = Math.round(request.y);
+          await sendCdpCommand(tabId, 'Input.dispatchMouseEvent', {
+            type: 'mouseMoved',
+            x: intX,
+            y: intY
+          });
+          await sendCdpCommand(tabId, 'Input.dispatchMouseEvent', {
+            type: 'mousePressed',
+            x: intX,
+            y: intY,
+            button: 'left',
+            clickCount: 1
+          });
+          await new Promise(r => setTimeout(r, 40));
+          await sendCdpCommand(tabId, 'Input.dispatchMouseEvent', {
+            type: 'mouseReleased',
+            x: intX,
+            y: intY,
+            button: 'left',
+            clickCount: 1
+          });
+          return sendResponse({ success: true });
+        }
+
+        if (action === 'INSERT_TEXT') {
+          const text = String(request.text || '');
+          await sendCdpCommand(tabId, 'Input.insertText', { text });
+          return sendResponse({ success: true });
+        }
+
+        if (action === 'SELECT_ALL_AND_TYPE') {
+          const text = String(request.text || '');
+          // Ctrl+A / Backspace to clear existing placeholder/text
+          await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+            type: 'rawKeyDown',
+            windowsVirtualKeyCode: 65,
+            key: 'a',
+            code: 'KeyA',
+            modifiers: 2
+          });
+          await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            windowsVirtualKeyCode: 65,
+            key: 'a',
+            code: 'KeyA'
+          });
+          await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+            type: 'rawKeyDown',
+            windowsVirtualKeyCode: 8,
+            key: 'Backspace',
+            code: 'Backspace'
+          });
+          await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            windowsVirtualKeyCode: 8,
+            key: 'Backspace',
+            code: 'Backspace'
+          });
+          await new Promise(r => setTimeout(r, 40));
+          await sendCdpCommand(tabId, 'Input.insertText', { text });
+          return sendResponse({ success: true });
+        }
+
+        if (action === 'KEY') {
+          const key = request.key;
+          if (key === 'Enter') {
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'rawKeyDown',
+              windowsVirtualKeyCode: 13,
+              nativeVirtualKeyCode: 13,
+              key: 'Enter',
+              code: 'Enter',
+              text: '\r',
+              unmodifiedText: '\r'
+            });
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'keyUp',
+              windowsVirtualKeyCode: 13,
+              nativeVirtualKeyCode: 13,
+              key: 'Enter',
+              code: 'Enter'
+            });
+          } else if (key === 'ArrowDown') {
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'rawKeyDown',
+              windowsVirtualKeyCode: 40,
+              nativeVirtualKeyCode: 40,
+              key: 'ArrowDown',
+              code: 'ArrowDown'
+            });
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'keyUp',
+              windowsVirtualKeyCode: 40,
+              nativeVirtualKeyCode: 40,
+              key: 'ArrowDown',
+              code: 'ArrowDown'
+            });
+          } else if (key === 'Escape') {
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'rawKeyDown',
+              windowsVirtualKeyCode: 27,
+              key: 'Escape',
+              code: 'Escape'
+            });
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'keyUp',
+              windowsVirtualKeyCode: 27,
+              key: 'Escape',
+              code: 'Escape'
+            });
+          } else if (key === 'Tab') {
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'rawKeyDown',
+              windowsVirtualKeyCode: 9,
+              key: 'Tab',
+              code: 'Tab'
+            });
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'keyUp',
+              windowsVirtualKeyCode: 9,
+              key: 'Tab',
+              code: 'Tab'
+            });
+          }
+          return sendResponse({ success: true });
+        }
+
+        sendResponse({ success: false, error: 'Unknown action: ' + action });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true; // Keep channel open for async response
+  }
 });
 
 // 4. Initialize default settings on install
@@ -312,3 +475,55 @@ chrome.runtime.onInstalled.addListener(() => {
   });
   console.log('[AstrePilot] Extension installed successfully.');
 });
+
+// 5. CDP Helper Core
+const attachedTabs = new Set();
+
+async function ensureCdpAttached(tabId) {
+  if (attachedTabs.has(tabId)) return { success: true };
+  return new Promise((resolve) => {
+    chrome.debugger.attach({ tabId }, '1.3', () => {
+      if (chrome.runtime.lastError) {
+        const msg = chrome.runtime.lastError.message || '';
+        if (msg.includes('already attached')) {
+          attachedTabs.add(tabId);
+          return resolve({ success: true });
+        }
+        console.warn('[AstrePilot CDP] Attach error:', msg);
+        return resolve({ success: false, error: msg });
+      }
+      attachedTabs.add(tabId);
+      resolve({ success: true });
+    });
+  });
+}
+
+function detachCdp(tabId) {
+  if (!attachedTabs.has(tabId)) return Promise.resolve({ success: true });
+  return new Promise((resolve) => {
+    chrome.debugger.detach({ tabId }, () => {
+      attachedTabs.delete(tabId);
+      resolve({ success: true });
+    });
+  });
+}
+
+if (chrome.debugger && chrome.debugger.onDetach) {
+  chrome.debugger.onDetach.addListener((source) => {
+    if (source && source.tabId) {
+      attachedTabs.delete(source.tabId);
+    }
+  });
+}
+
+function sendCdpCommand(tabId, method, params = {}) {
+  return new Promise((resolve) => {
+    chrome.debugger.sendCommand({ tabId }, method, params, (result) => {
+      if (chrome.runtime.lastError) {
+        return resolve({ success: false, error: chrome.runtime.lastError.message });
+      }
+      resolve({ success: true, result });
+    });
+  });
+}
+

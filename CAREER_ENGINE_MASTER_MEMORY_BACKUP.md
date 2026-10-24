@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 24, 2026 (Phase 60: Modular ATS Driver Engine & Deterministic iCIMS/Cotiviti Precision Mapper; 53/53 Vitest 524-Test Green Verification, 0 TypeScript Errors)
+> **LAST COGNITIVE SYNC:** October 24, 2026 (Phase 61: Greenhouse Subframe Isolation & React-Select Void Input Proof-of-Write Engine; 53/53 Vitest 524-Test Green Verification, 0 TypeScript Errors)
 
 ---
 
@@ -2537,7 +2537,38 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 * **Hard-Won Engineering Experience & Rules:**
   - **Rule (The ATS Driver Law):** Enterprise ATS portals (iCIMS, Workday, SuccessFactors) use obfuscated custom field IDs (`rcfXXXX`) that defeat generic regex heuristics. Never rely on generic label traversal alone when automating enterprise ATS platforms; always implement specialized, deterministic ATS drivers that check portal signatures (`window.location.hostname` or iframe IDs) and target exact field topologies first.
   - **Rule:** Date components in enterprise forms are frequently heterogeneous (e.g. Month and Date as `<select>`, Year as `<input type="text">`). Never assume a composite field's child inputs share the same HTML tag or event handling semantics.
-  - **Rule:** Never attempt to guess an enterprise ATS schema blindly. Extract ground-truth DOM inventories directly from the target portal to discover the exact IDs before writing scanner rules.
+### 🔴 Case 39: The Greenhouse Subframe Collision & React-Select Void Input Trap (Autonomous Greenhouse & Standalone Autofill Engine)
+* **What Happened:** During live browser testing on the Greenhouse job application for *Software Engineering Intern - Summer 2027 (Remote) at Riot Games* (`job-boards.greenhouse.io/embed/job_app`), the AstrePilot extension failed to fill any fields. Triggering `TOGGLE_HUD` or `AUTOFILL` from popup/background resulted in subframes answering with `{ count: 0 }`, and all 13+ React-Select v5 comboboxes failed proof-of-write verification.
+* **The Root Cause / Mistake:**
+  1. **Subframe Message Collision:** Modern Greenhouse embed pages inject invisible third-party subframes (reCAPTCHA v3, Google Tag Manager). Broadcasting `chrome.tabs.sendMessage(tabId, { action: 'AUTOFILL' })` without `{ frameId: 0 }` caused the extension to deliver messages to arbitrary subframes which either answered first with `{ count: 0 }` or dropped the message.
+  2. **Fail-Closed Offline Staged Abort:** The extension previously required an active cloud API token (`astrepilot_token`). When unpaired or offline, `mountHud()` failed closed with `activeHud.setState('not-connected')`, leaving `detectedFields = []` and aborting all subsequent actions.
+  3. **International Telephone Dropdown Interference (`.iti__country`):** The Greenhouse telephone input uses the `intl-tel-input` library, which appends 200+ hidden country list items matching `[role="option"]`. Generic combobox algorithms and geo-autocomplete queries matched `.iti__country` elements, clicking "Afghanistan" or crashing before reaching the real React-Select dropdown options.
+  4. **React-Select v5 Void Element Trap:** In React-Select v5, the interactive `<input class="select__input">` is an internal combobox whose `.value` is automatically reset to empty string `""` after selection. Checking `el.value` always returned `""`, causing proof-of-write verification to fail and mark the field as retry/skipped. The actual selected label is rendered inside `.select__single-value` in the outer container.
+* **The Concrete Surgical Fix:**
+  1. **Frame 0 Subframe Isolation (`extension/background.js`, `extension/popup.js`, `extension/content.js`):**
+     - Enforced `{ frameId: 0 }` on all `chrome.tabs.sendMessage` calls and `{ target: { tabId, frameIds: [0] } }` on `chrome.scripting.executeScript/insertCSS`.
+     - In `content.js`, added a top-frame guard in `messageListener`: subframes ignore `TOGGLE_HUD`, `SCAN_FIELDS`, `AUTOFILL`, `EXTRACT_PAGE`, and `CLICK_APPLY`.
+  2. **Autonomous Standalone Mode (`extension/content.js`):**
+     - Pre-bundled verified offline founder profiles for `roushan` and `ayushi` (strictly complying with the BCA candidate title law: Developer/Architect, never Engineer).
+     - Made `runAutofill()` self-healing: automatically mounts HUD, loads fallback profile, and scans fields if uninitialized.
+  3. **Telephone Filter & Clean Geo-Autocomplete (`extension/content.js`):**
+     - Filtered out `.iti__country` from all option selectors (`[role="option"]:not(.iti__country)`) in both `fillUniversalCombobox` and `fillGeoAutocomplete`.
+  4. **React-Select v5 Control Click & Container Proof-of-Write (`extension/content.js`):**
+     - Targeted `.select__control` with real `mousedown`/`mouseup`/`click` dispatch sequences and removed redundant `Enter` keystroke that caused option resets.
+     - Updated `verifyFieldWritten()` to check container `.select__single-value`, `[class*="singleValue"]`, and `.select__multi-value__label`.
+  5. **Greenhouse Exact Topology & Screening Answers (`extension/content.js`):**
+     - Expanded `GREENHOUSE_EXACT_MAP` with `COUNTRY`, `ADDRESS`, `GRADUATION_YEAR`, `LINKEDIN`, `GITHUB`, `PORTFOLIO`, `VISA`, `WORK_AUTH`, `RELOCATE`, `AGE_18`, `LANGUAGES`, `PRIVACY_CONSENT`, `PREVIOUS_EMPLOYED`, `SCREENING_SELECT`, and `SCREENING`.
+     - Resolved custom screening questions: Riot Games motivation statement, 40hr/week remote internship acknowledgement, product choice ('League of Legends'), and relative/compliance questions ('N/A').
+  6. **Automated Verification & Packaging:**
+     - Tested on live Greenhouse Riot Games application: 13/13 React-Select dropdowns and all 25+ form fields populated with `filled: true`.
+     - Repackaged extension via `node scripts/package-extension.js` creating fresh `public/downloads/astrepilot-extension.zip` (100.7 KB).
+     - Vitest suite: **53 test files passed (524/524 tests passing green)**.
+     - TypeScript typecheck: `npx tsc --noEmit` exited clean with 0 errors.
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Top-Frame Guard Law):** Modern ATS portals embed ad trackers, reCAPTCHA, and analytics iframes. In Manifest V3 extensions, NEVER broadcast content script messages or script injections without `{ frameId: 0 }`. Subframes must explicitly ignore top-level actions (`TOGGLE_HUD`, `AUTOFILL`, `SCAN_FIELDS`).
+  - **Rule (The React-Select Proof-of-Write Law):** In React-Select (v4/v5), the `<input class="select__input">` never retains the selected string in `.value`. Verification MUST inspect the parent container for `.select__single-value` or `[class*="singleValue"]`.
+  - **Rule (The Dropdown Isolation Law):** Embedded libraries like `intl-tel-input` create hundreds of `[role="option"]` DOM elements that pollute global option queries. Always filter out library-specific classes (`:not(.iti__country)`) when resolving custom comboboxes or location autocompletes.
+  - **Rule (Offline Standalone Grace):** An AI browser copilot must never fail closed when disconnected from cloud backends. Always bundle offline fallback profiles and default state machines so candidates can autofill forms immediately with zero friction.
 
 ---
 

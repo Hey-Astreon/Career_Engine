@@ -87,17 +87,17 @@ document.addEventListener('DOMContentLoaded', async () => {
    */
   async function sendToTab(tabId, action) {
     try {
-      // Try sending directly first (content script already running)
-      await chrome.tabs.sendMessage(tabId, { action });
+      // Try sending directly first (content script already running on top frame)
+      await chrome.tabs.sendMessage(tabId, { action }, { frameId: 0 });
     } catch (e) {
-      // Content script not active — inject everything in order
+      // Content script not active — inject everything in order into frame 0
       try {
-        await chrome.scripting.executeScript({ target: { tabId }, files: ['hud-ui.js'] });
-        await chrome.scripting.insertCSS({ target: { tabId }, files: ['hud.css'] });
-        await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+        await chrome.scripting.executeScript({ target: { tabId, frameIds: [0] }, files: ['hud-ui.js'] });
+        await chrome.scripting.insertCSS({ target: { tabId, frameIds: [0] }, files: ['hud.css'] });
+        await chrome.scripting.executeScript({ target: { tabId, frameIds: [0] }, files: ['content.js'] });
         // Wait a tick for scripts to initialise, then send message
         await new Promise(r => setTimeout(r, 400));
-        await chrome.tabs.sendMessage(tabId, { action }).catch(() => {});
+        await chrome.tabs.sendMessage(tabId, { action }, { frameId: 0 }).catch(() => {});
       } catch (injectErr) {
         console.error('[AstrePilot Popup] Injection failed:', injectErr);
         if (injectErr.message.includes('Cannot access')) {
