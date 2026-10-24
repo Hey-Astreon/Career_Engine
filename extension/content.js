@@ -2005,7 +2005,7 @@
     if (['WORK_AUTH', 'AGE_18', 'PRIVACY_CONSENT', 'AI_CONSENT', 'TEXT_CONSENT'].includes(fieldType) || targetLower === 'yes' || targetLower === 'true' || targetLower.includes('agree')) {
       const yesMatch = pool.find(o => {
         const t = (o.textContent || o.text || '').trim().toLowerCase();
-        return (t === 'yes' || t.startsWith('yes') || t.includes('authorized') || t.includes('agree') || t.includes('confirm') || t.includes('consent') || t.includes('opt in') || t.includes('opt-in') || t.includes('i accept')) && !t.includes('no');
+        return (t === 'yes' || t.startsWith('yes') || t.includes('authorized') || t.includes('agree') || t.includes('confirm') || t.includes('consent') || t.includes('opt in') || t.includes('opt-in') || t.includes('i accept') || t.includes('acknowledge') || t.includes('i acknowledge')) && !t.includes('no');
       });
       if (yesMatch) return yesMatch;
     }
@@ -2125,10 +2125,34 @@
       return await fillGeoAutocomplete(inputEl, targetVal);
     }
 
-    const container = (inputEl.closest && inputEl.closest('.select-shell, .select__control, .select__container, [class*="react-select"], [class*="Select-control"]')) || inputEl.parentElement;
+    const container = (inputEl.closest && inputEl.closest('.select-shell, .select__container, [class*="react-select"], [class*="Select-control"], .select')) || inputEl.parentElement;
     if (!container) return false;
 
     const control = container.querySelector('.select__control') || container;
+    const doc = container.ownerDocument || document;
+    const win = doc.defaultView || window;
+
+    // Helper: query currently visible options from portal mount point or document
+    const getVisibleOptions = () => {
+      const mountPoint = doc.getElementById('react-portal-mount-point');
+      const root = mountPoint || doc;
+      const raw = Array.from(root.querySelectorAll(
+        '#react-portal-mount-point [role="option"], #react-portal-mount-point .select__option, #react-portal-mount-point div[id*="option"], .select__option, [role="option"], div[id*="-option-"], div[class*="-option"], li[role="option"]'
+      ));
+      return raw.filter(o => {
+        const txt = (o.textContent || o.text || '').trim();
+        return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+      });
+    };
+
+    // Helper: check if a valid selection has already been rendered in this container
+    const isContainerPopulated = () => {
+      const single = container.querySelector('.select__single-value, [class*="singleValue"], .select__multi-value__label, [class*="multiValue"]');
+      if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
+      const req = container.querySelector('input[class*="requiredInput"]');
+      if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
+      return false;
+    };
 
     // Handle Multi-Select (e.g. LANGUAGES)
     const targets = Array.isArray(targetVal) ? targetVal : (fieldType === 'LANGUAGES' ? String(targetVal).split(',').map(s => s.trim()) : [targetVal]);
@@ -2137,39 +2161,63 @@
     for (const singleVal of targets) {
       if (!singleVal) continue;
 
-      // 1. Open the dropdown cleanly without double-toggling
-      control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10, view: window }));
-      if (document.activeElement !== inputEl) inputEl.focus();
-      inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
-      await new Promise(r => setTimeout(r, 80));
+      // 1. OPEN THE DROPDOWN MENU
+      let options = getVisibleOptions();
+      if (options.length === 0) {
+        // A. If dedicated toggle button exists (e.g. Greenhouse Toggle flyout), click it directly
+        const toggleBtn = container.querySelector('button[aria-label*="Toggle"], button[aria-label*="flyout"], .select__indicators button, button.icon-button');
+        if (toggleBtn) {
+          try { toggleBtn.click(); } catch (e) {}
+        }
 
-      // 2. If it's a searchable input, type search query to filter
-      const searchStr = String(singleVal).trim();
-      if (inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+        // B. Dispatch full Pointer & Mouse sequences on .select__control
         try {
-          const proto = window.HTMLInputElement.prototype;
+          control.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: win }));
+          control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, buttons: 1, clientX: 10, clientY: 10, view: win }));
+          control.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: win }));
+          control.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0, clientX: 10, clientY: 10, view: win }));
+          control.click();
+        } catch (e) {}
+
+        // C. Focus and dispatch ArrowDown on input
+        try {
+          if (doc.activeElement !== inputEl) inputEl.focus();
+          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
+        } catch (e) {}
+
+        // Wait up to 700ms for options to appear
+        const openStart = Date.now();
+        while (Date.now() - openStart < 700) {
+          options = getVisibleOptions();
+          if (options.length > 0) break;
+          await new Promise(r => setTimeout(r, 60));
+        }
+      }
+
+      // 2. If options still didn't appear and input is searchable, type to trigger filter/portal
+      const searchStr = String(singleVal).trim();
+      if (options.length === 0 && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+        try {
+          inputEl.focus();
+          const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
           const setter = Object.getOwnPropertyDescriptor(proto, 'value');
           if (setter && setter.set) { setter.set.call(inputEl, searchStr); } else { inputEl.value = searchStr; }
           inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
           inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
         } catch (e) {}
-      }
 
-      // 3. Await menu and options in document or #react-portal-mount-point
-      let options = [];
-      const startTime = Date.now();
-      while (Date.now() - startTime < 600) {
-        options = Array.from(document.querySelectorAll(
-          '.select__option, [role="option"], #react-portal-mount-point [role="option"], #react-portal-mount-point .select__option, div[id*="option"]'
-        )).filter(opt => opt.getBoundingClientRect().height > 0 || opt.offsetParent !== null);
-
-        if (options.length > 0) break;
-        await new Promise(r => setTimeout(r, 50));
+        const searchStart = Date.now();
+        while (Date.now() - searchStart < 600) {
+          options = getVisibleOptions();
+          if (options.length > 0) break;
+          await new Promise(r => setTimeout(r, 60));
+        }
       }
 
       if (options.length === 0) continue;
 
-      // 4. Resolve semantic match with rich fallbacks
+      // 3. Resolve semantic match with rich fallbacks
       let matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
 
       // School fallback: if Amity University not in list, select "Other" or "Not Listed"
@@ -2208,21 +2256,32 @@
       if (!matchedOption && (fieldType === 'PRIVACY_CONSENT' || singleVal.toLowerCase().includes('agree') || singleVal.toLowerCase() === 'yes')) {
         matchedOption = options.find(o => {
           const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('i accept') || t.includes('i agree') || t.includes('agree') || t === 'yes';
+          return t.includes('i accept') || t.includes('i agree') || t.includes('agree') || t === 'yes' || t.includes('acknowledge');
         });
       }
 
+      // 4. Click the matched option with full Pointer + Mouse sequence
       if (matchedOption) {
-        matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
-        matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
-        matchedOption.click();
+        const optWin = matchedOption.ownerDocument.defaultView || win;
+        try {
+          matchedOption.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: optWin }));
+          matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, buttons: 1, view: optWin }));
+          matchedOption.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: optWin }));
+          matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0, view: optWin }));
+          matchedOption.click();
+        } catch (e) {}
+
+        try {
+          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+        } catch (e) {}
+
+        await new Promise(r => setTimeout(r, 120));
         anySuccess = true;
-        await new Promise(r => setTimeout(r, 80));
       }
     }
 
     cleanupLingeringPopovers();
-    return anySuccess;
+    return anySuccess || isContainerPopulated();
   }
 
   async function fillRadixOrHeadless(triggerEl, targetVal, fieldType = '') {
@@ -2687,9 +2746,16 @@
       q.includes('reference check') ||
       q.includes('reliable internet') ||
       q.includes('comfortable with remote') ||
-      q.includes('relocate')
+      q.includes('relocate') ||
+      q.includes('40 hour') ||
+      q.includes('remote internship')
     ) {
       return 'Yes';
+    }
+
+    // 3. PRODUCT / GAME / TEAM PREFERENCE -> League of Legends / Technology
+    if (q.includes('product') || q.includes('interested in working on') || q.includes('project') || q.includes('team')) {
+      return 'League of Legends';
     }
 
     // Safety-first default against risk knockout: return 'No'
@@ -2979,6 +3045,10 @@
         if (
           qLower.includes('relative') ||
           qLower.includes('family member') ||
+          qLower.includes('family') ||
+          qLower.includes('friends') ||
+          qLower.includes('friend') ||
+          qLower.includes('significant other') ||
           qLower.includes('conflict of interest') ||
           qLower.includes('non-compete') ||
           qLower.includes('criminal') ||

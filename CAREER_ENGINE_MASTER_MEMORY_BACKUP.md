@@ -1160,7 +1160,7 @@ Located in `extension/`:
   - **3. Silicon Valley Tech Dominance Benchmark:** Formally pitted AstreWork against SimplifyJobs, Teal, JobRight, Huntr, and Workday with the explicit mandate to outperform billion-dollar competitors in speed, intelligence, and UX.
   - **4. System-Wide Synchronization:** Aligned `AGENTS.md` (Sections 1 & 2), `career-agent-expert/SKILL.md` (Section 0), and master memory Section 19.
 
-- [x] **Phase 60: Modular ATS Driver Engine & Deterministic iCIMS/Cotiviti Precision Mapper (Oct 24, 2026)**
+- [x] **Phase 60: Modular ATS Driver Engine, Deterministic iCIMS/Cotiviti Precision Mapper & Safety Screening Firewall (Oct 24, 2026)**
   - **1. Modular ATS Driver Architecture (`src/lib/autopilot/atsDrivers.ts`):** Established the specialized `AtsDriver` interface (Greenhouse, Lever, Ashby, Workday, Taleo, iCIMS, SmartRecruiters) separating portal-specific DOM logic from generic heuristic fallback loops.
   - **2. Live Ground-Truth DOM Telemetry Extraction:** Probed live Cotiviti tab (`careers-cotiviti.icims.com`) inside `#icims_content_iframe` with 38-element ground truth DOM dump, discovering that iCIMS uses obfuscated `rcfXXXX` custom field IDs for Experience and Referral inputs without semantic keywords.
   - **3. Deterministic iCIMS Field Precision Engine (`extension/content.js`):** Engineered `scanIcimsFields(targetDoc)` that deterministically maps exact iCIMS IDs:
@@ -1169,7 +1169,8 @@ Located in `extension/`:
     - Address Block: Address Type (`Home`), Street 1 & 2, City, State, Zip, Country.
     - Referral: `rcf3048` (How did you hear about us? $\rightarrow$ 'LinkedIn') and `rcf3049` (Specify further $\rightarrow$ 'Job Posting').
   - **4. Candidate Title Compliance Enforcement (BCA Developer Law):** Enforced regex replacement `replace(/\bEngineer\b/gi, 'Developer')` in all title previews and value resolutions.
-  - **5. Automated Testing & Verification:** Created `tests/ats_drivers.test.ts` (9 tests green). Verified all 52 test suites passed (518/518 green), `npx tsc --noEmit` exited clean with 0 errors, and repackaged `public/downloads/astrepilot-extension.zip` (94.5 KB). Ready for live browser reload and verification.
+  - **5. Safety Screening Firewall & React-Select V2 (`extension/content.js`):** Hardened `fillReactSelectV2` to support multi-stage flyout expansion across Greenhouse, Lever, and custom ATS portals. Expanded `resolveScreeningSelect` for product preferences and remote commitment acknowledgments. Hardened procedural question interceptor returning `'N/A'` for family/friends disclosure prompts.
+  - **6. Automated Testing & Verification:** Created `tests/astrepilot_icims_driver.test.ts` (6 tests green) and `tests/ats_drivers.test.ts` (9 tests green). All test suites passed, `npx tsc --noEmit` exited clean with 0 errors, and repackaged `public/downloads/astrepilot-extension.zip` (95.4 KB). Ready for live browser reload and verification.
 
 ---
 
