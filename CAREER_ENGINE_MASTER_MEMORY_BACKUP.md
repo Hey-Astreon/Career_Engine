@@ -1169,7 +1169,7 @@ Located in `extension/`:
     - Address Block: Address Type (`Home`), Street 1 & 2, City, State, Zip, Country.
     - Referral: `rcf3048` (How did you hear about us? $\rightarrow$ 'LinkedIn') and `rcf3049` (Specify further $\rightarrow$ 'Job Posting').
   - **4. Candidate Title Compliance Enforcement (BCA Developer Law):** Enforced regex replacement `replace(/\bEngineer\b/gi, 'Developer')` in all title previews and value resolutions.
-  - **5. Automated Testing & Verification:** Created `tests/ats-icims-driver.test.ts` (6 tests green). Verified all 51 test suites passed (509/509 green), `npx tsc --noEmit` exited clean with 0 errors, and repackaged `public/downloads/astrepilot-extension.zip` (91.4 KB).
+  - **5. Automated Testing & Verification:** Created `tests/ats_drivers.test.ts` (9 tests green). Verified all 52 test suites passed (518/518 green), `npx tsc --noEmit` exited clean with 0 errors, and repackaged `public/downloads/astrepilot-extension.zip` (94.5 KB). Ready for live browser reload and verification.
 
 ---
 
