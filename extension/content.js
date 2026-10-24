@@ -2071,25 +2071,31 @@
       const searchCity = valStr.split(',')[0].trim() || 'Patna';
 
       // 1. Write the search text into the input
-      const proto = (window.HTMLInputElement && window.HTMLInputElement.prototype) || Object.getPrototypeOf(inputEl);
-      const setter = Object.getOwnPropertyDescriptor(proto, 'value');
-      if (setter && setter.set) {
-        setter.set.call(inputEl, searchCity);
+      const win = (inputEl.ownerDocument && inputEl.ownerDocument.defaultView) || window;
+      const proto = (win.HTMLInputElement && win.HTMLInputElement.prototype) || Object.getPrototypeOf(inputEl);
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+      if (setter) {
+        setter.call(inputEl, searchCity);
       } else {
         inputEl.value = searchCity;
       }
+      if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
 
       inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchCity }));
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
       inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
 
-      // 2. Wait up to 600ms for place suggestions from Pelias / Google / Algolia
+      // 2. Wait up to 1000ms for place suggestions from Pelias / Google / Algolia
       let suggestion = null;
       const startTime = Date.now();
-      while (Date.now() - startTime < 600) {
+      while (Date.now() - startTime < 1000) {
         const options = Array.from(document.querySelectorAll(
-          '.select__option, [role="option"], .pac-item, div[id*="option"], #react-portal-mount-point [role="option"], #react-portal-mount-point .select__option'
-        )).filter(opt => opt.getBoundingClientRect().height > 0 || opt.offsetParent !== null);
+          '.select__menu .select__option, .select__option, [role="option"], .pac-item, div[id*="option"], #react-portal-mount-point [role="option"], #react-portal-mount-point .select__option'
+        )).filter(opt => {
+          const txt = (opt.textContent || '').trim();
+          return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+        });
 
         if (options.length > 0) {
           suggestion = options.find(o => (o.textContent || '').toLowerCase().includes(searchCity.toLowerCase())) || options[0];
@@ -2099,8 +2105,8 @@
       }
 
       if (suggestion) {
-        suggestion.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-        suggestion.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+        suggestion.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
+        suggestion.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
         suggestion.click();
         await new Promise(r => setTimeout(r, 100));
         return true;
@@ -2132,13 +2138,31 @@
     const doc = container.ownerDocument || document;
     const win = doc.defaultView || window;
 
-    // Helper: query currently visible options from portal mount point or document
+    // Helper: query currently visible options from local container OR document
     const getVisibleOptions = () => {
-      const mountPoint = doc.getElementById('react-portal-mount-point');
-      const root = mountPoint || doc;
-      const raw = Array.from(root.querySelectorAll(
-        '#react-portal-mount-point [role="option"], #react-portal-mount-point .select__option, #react-portal-mount-point div[id*="option"], .select__option, [role="option"], div[id*="-option-"], div[class*="-option"], li[role="option"]'
-      ));
+      // 1. Check local container menu first
+      const localMenu = container.querySelector('.select__menu, [class*="menu"]');
+      if (localMenu) {
+        const localOpts = Array.from(localMenu.querySelectorAll('.select__option, [role="option"], div[id*="-option-"], div[class*="-option"]'));
+        const filtered = localOpts.filter(o => {
+          const txt = (o.textContent || o.text || '').trim();
+          return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+        });
+        if (filtered.length > 0) return filtered;
+      }
+
+      // 2. Check full document (including portals and body)
+      const selectors = [
+        '.select__menu .select__option',
+        '#react-portal-mount-point .select__option',
+        '#react-portal-mount-point [role="option"]',
+        '.select__option',
+        '[role="option"]',
+        'div[id*="-option-"]',
+        'div[class*="-option"]',
+        'li[role="option"]'
+      ];
+      const raw = Array.from(doc.querySelectorAll(selectors.join(', ')));
       return raw.filter(o => {
         const txt = (o.textContent || o.text || '').trim();
         return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
@@ -2151,7 +2175,65 @@
       if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
       const req = container.querySelector('input[class*="requiredInput"]');
       if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
+      if (inputEl.value && inputEl.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(inputEl.value.trim())) return true;
       return false;
+    };
+
+    // Helper: simulate typing to trigger search/filter in React-Select
+    const typeSearchString = (searchStr) => {
+      if (!inputEl || inputEl.tagName !== 'INPUT' || inputEl.readOnly) return;
+      try {
+        inputEl.focus();
+        const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+        if (setter) {
+          setter.call(inputEl, searchStr);
+        } else {
+          inputEl.value = searchStr;
+        }
+        if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
+        inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+        inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
+      } catch (e) {}
+    };
+
+    // Helper: open the dropdown menu cleanly without toggle collisions
+    const openMenu = async () => {
+      let opts = getVisibleOptions();
+      if (opts.length > 0) return opts;
+
+      const indicator = container.querySelector('.select__dropdown-indicator, button[aria-label*="Toggle"], button[aria-label*="flyout"], .select__indicators button, button.icon-button, [class*="indicator"]') || control;
+      try {
+        indicator.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
+        indicator.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
+        indicator.click();
+      } catch (e) {}
+
+      // Wait up to 350ms
+      const start = Date.now();
+      while (Date.now() - start < 350) {
+        opts = getVisibleOptions();
+        if (opts.length > 0) return opts;
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      // If still not open, try direct control click and ArrowDown on input
+      try {
+        control.click();
+        if (doc.activeElement !== inputEl) inputEl.focus();
+        inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
+      } catch (e) {}
+
+      const start2 = Date.now();
+      while (Date.now() - start2 < 350) {
+        opts = getVisibleOptions();
+        if (opts.length > 0) return opts;
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      return opts;
     };
 
     // Handle Multi-Select (e.g. LANGUAGES)
@@ -2161,71 +2243,41 @@
     for (const singleVal of targets) {
       if (!singleVal) continue;
 
-      // 1. OPEN THE DROPDOWN MENU
-      let options = getVisibleOptions();
-      if (options.length === 0) {
-        // A. If dedicated toggle button exists (e.g. Greenhouse Toggle flyout), click it directly
-        const toggleBtn = container.querySelector('button[aria-label*="Toggle"], button[aria-label*="flyout"], .select__indicators button, button.icon-button');
-        if (toggleBtn) {
-          try { toggleBtn.click(); } catch (e) {}
-        }
+      // 1. Open the dropdown
+      let options = await openMenu();
 
-        // B. Dispatch full Pointer & Mouse sequences on .select__control
-        try {
-          control.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: win }));
-          control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, buttons: 1, clientX: 10, clientY: 10, view: win }));
-          control.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: win }));
-          control.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0, clientX: 10, clientY: 10, view: win }));
-          control.click();
-        } catch (e) {}
+      // 2. Attempt semantic matching on currently visible options
+      let matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
 
-        // C. Focus and dispatch ArrowDown on input
-        try {
-          if (doc.activeElement !== inputEl) inputEl.focus();
-          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
-        } catch (e) {}
-
-        // Wait up to 700ms for options to appear
-        const openStart = Date.now();
-        while (Date.now() - openStart < 700) {
-          options = getVisibleOptions();
-          if (options.length > 0) break;
-          await new Promise(r => setTimeout(r, 60));
-        }
-      }
-
-      // 2. If options still didn't appear and input is searchable, type to trigger filter/portal
+      // 3. If no match and input is searchable, TYPE the target string to filter!
       const searchStr = String(singleVal).trim();
-      if (options.length === 0 && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
-        try {
-          inputEl.focus();
-          const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
-          const setter = Object.getOwnPropertyDescriptor(proto, 'value');
-          if (setter && setter.set) { setter.set.call(inputEl, searchStr); } else { inputEl.value = searchStr; }
-          inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
-          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
-        } catch (e) {}
-
+      if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+        typeSearchString(searchStr);
         const searchStart = Date.now();
         while (Date.now() - searchStart < 600) {
           options = getVisibleOptions();
-          if (options.length > 0) break;
+          matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
+          if (matchedOption) break;
           await new Promise(r => setTimeout(r, 60));
         }
       }
 
-      if (options.length === 0) continue;
-
-      // 3. Resolve semantic match with rich fallbacks
-      let matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
-
-      // School fallback: if Amity University not in list, select "Other" or "Not Listed"
+      // 4. Domain & ATS Fallbacks:
+      // School fallback: if university not in list, try searching/selecting "Other"
       if (!matchedOption && (fieldType === 'SCHOOL' || singleVal.toLowerCase().includes('university') || singleVal.toLowerCase().includes('amity'))) {
         matchedOption = options.find(o => {
           const t = (o.textContent || o.text || '').toLowerCase();
           return t.includes('other') || t.includes('not listed') || t.includes('unlisted');
         });
+        if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+          typeSearchString('Other');
+          await new Promise(r => setTimeout(r, 300));
+          options = getVisibleOptions();
+          matchedOption = options.find(o => {
+            const t = (o.textContent || o.text || '').toLowerCase();
+            return t.includes('other') || t.includes('not listed') || t.includes('unlisted');
+          });
+        }
       }
 
       // Degree fallback: if BCA not in list, select "Bachelor's Degree" or "Bachelor's" or "Other"
@@ -2240,8 +2292,17 @@
       if (!matchedOption && fieldType === 'DISCIPLINE') {
         matchedOption = options.find(o => {
           const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('computer science') || t.includes('information technology') || t.includes('computing') || t.includes('other');
+          return t.includes('computer science') || t.includes('information technology') || t.includes('software') || t.includes('computing') || t.includes('other');
         });
+        if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+          typeSearchString('Computer Science');
+          await new Promise(r => setTimeout(r, 300));
+          options = getVisibleOptions();
+          matchedOption = options.find(o => {
+            const t = (o.textContent || o.text || '').toLowerCase();
+            return t.includes('computer science') || t.includes('other');
+          });
+        }
       }
 
       // Graduation Year fallback: if 2026 not in list, select closest future year
@@ -2260,14 +2321,20 @@
         });
       }
 
-      // 4. Click the matched option with full Pointer + Mouse sequence
+      // Product fallback: Riot Games / Tech products
+      if (!matchedOption && (fieldType === 'SCREENING_SELECT' || singleVal.toLowerCase().includes('league'))) {
+        matchedOption = options.find(o => {
+          const t = (o.textContent || o.text || '').toLowerCase();
+          return t.includes('league of legends') || t.includes('valorant') || t.includes('technology');
+        });
+      }
+
+      // 5. Click the matched option with full Pointer + Mouse sequence
       if (matchedOption) {
-        const optWin = matchedOption.ownerDocument.defaultView || win;
+        const optWin = matchedOption.ownerDocument?.defaultView || win;
         try {
-          matchedOption.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: optWin }));
-          matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, buttons: 1, view: optWin }));
-          matchedOption.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: optWin }));
-          matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0, view: optWin }));
+          matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: optWin }));
+          matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: optWin }));
           matchedOption.click();
         } catch (e) {}
 
@@ -2679,6 +2746,14 @@
   /* -- RESOLVE SCREENING SELECT (DETERMINISTIC ASYMMETRIC SAFETY FIREWALL) -- */
   function resolveScreeningSelect(element) {
     const q = getLabelText(element).toLowerCase();
+
+    // 0. SPECIALIZED CASE QUESTIONS (Non-Yes/No Options)
+    if (q.includes('last month') || (q.includes('tencent') && (q.includes('month') || q.includes('when')))) {
+      return 'n/a';
+    }
+    if (q.includes('language') && !q.includes('programming')) {
+      return 'English';
+    }
 
     // 1. KNOCKOUT & DISQUALIFY QUESTIONS -> ABSOLUTELY "NO"
     if (
@@ -3726,8 +3801,9 @@
     // 3. Radio / Checkbox
     if (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox')) {
       if (el.type === 'radio') {
+        const ownerDoc = el.ownerDocument || document;
         const radios = el.name
-          ? document.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
+          ? ownerDoc.querySelectorAll('input[type="radio"][name="' + CSS.escape(el.name) + '"]')
           : [el];
         for (let r of radios) {
           if (r.checked) return true;
