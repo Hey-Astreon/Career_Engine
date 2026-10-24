@@ -110,16 +110,17 @@ export async function GET(req: Request) {
         school: "Amity University",
         degree: profile.highestEducation ?? "Bachelor of Computer Applications (BCA)",
         discipline: "Computer Science / Applications",
+        startMonth: "July",
+        startYear: "2025",
+        endMonth: "July",
+        endYear: "2028",
+        graduationYear: "2028",
         // Employment fields
         company: profile.virtualExps[0]?.company ?? "AstreWork",
         employmentTitle: profile.virtualExps[0]?.roleTitle ?? profile.title ?? "Full-Stack Developer",
         workDescription: profile.virtualExps[0]
           ? `${profile.virtualExps[0].actionTaken}. ${profile.virtualExps[0].outcome}`
           : (profile.projects[0]?.architecture ?? professionalSummary),
-        startMonth: "January",
-        startYear: "2024",
-        endMonth: "Present",
-        endYear: "2026",
         currentRole: true,
         // Standard ATS compliance & screening answers
         is18OrOlder: "Yes",

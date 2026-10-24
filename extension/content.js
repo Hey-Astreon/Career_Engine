@@ -48,10 +48,10 @@
       discipline: 'Computer Science / Applications',
       highestEducation: 'Bachelor of Computer Applications (BCA)',
       startMonth: 'July',
-      startYear: '2023',
-      endMonth: 'June',
-      endYear: '2026',
-      graduationYear: '2026',
+      startYear: '2025',
+      endMonth: 'July',
+      endYear: '2028',
+      graduationYear: '2028',
       currentRole: true,
       workAuthorized: true,
       requiresVisa: true,
@@ -97,10 +97,10 @@
       discipline: 'Computer Science / Applications',
       highestEducation: 'Bachelor of Computer Applications (BCA)',
       startMonth: 'July',
-      startYear: '2023',
-      endMonth: 'June',
-      endYear: '2026',
-      graduationYear: '2026',
+      startYear: '2025',
+      endMonth: 'July',
+      endYear: '2028',
+      graduationYear: '2028',
       currentRole: true,
       workAuthorized: true,
       requiresVisa: true,
@@ -1304,9 +1304,14 @@
       }
     }
 
-    // 4. GLOBAL DATE DISAMBIGUATION (Month, Day, Year) in Employment or Education
+    // 4. ANTICIPATED GRADUATION YEAR (High Priority before generic date parser)
+    if (labelSignal.includes('anticipate graduating') || labelSignal.includes('graduation year') || labelSignal.includes('graduating year') || labelSignal.includes('year you anticipate') || attrSignal.includes('graduation_year')) {
+      return 'GRADUATION_YEAR';
+    }
+
+    // 4b. GLOBAL DATE DISAMBIGUATION (Month, Day, Year) in Employment or Education
     const isStart = labelSignal.includes('start') || attrSignal.includes('start') || labelSignal.includes('from') || attrSignal.includes('from');
-    const isEnd = labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to') || labelSignal.includes('graduat');
+    const isEnd = labelSignal.includes('end') || attrSignal.includes('end') || labelSignal.includes('to') || attrSignal.includes('to') || (labelSignal.includes('graduat') && !labelSignal.includes('anticipate'));
     if (isStart || isEnd) {
       if (attrSignal.includes('year') || (labelSignal.includes('year') && !labelSignal.includes('month'))) {
         return isEnd ? 'END_YEAR' : 'START_YEAR';
@@ -1319,10 +1324,6 @@
       }
       if (isStart) return (labelSignal.includes('month') || isSelect) ? 'START_MONTH' : 'START_YEAR';
       if (isEnd) return (labelSignal.includes('month') || isSelect) ? 'END_MONTH' : 'END_YEAR';
-    }
-
-    if (labelSignal.includes('anticipate graduating') || labelSignal.includes('graduation year') || labelSignal.includes('graduating year') || labelSignal.includes('year you anticipate')) {
-      return 'GRADUATION_YEAR';
     }
 
     if (labelSignal.includes('which language') || labelSignal.includes('business fluent') || (labelSignal.includes('language') && labelSignal.includes('fluent')) || attrSignal.includes('language')) {
@@ -1751,7 +1752,8 @@
       { type: 'LANGUAGES', selectors: ['[id*="question_69351128"]', '[id*="language" i]', '[aria-label*="language" i]'] },
       { type: 'PRIVACY_CONSENT', selectors: ['#question_69351131', '#question_69351134', '[id*="privacy_notice" i]', '[aria-label*="privacy notice" i]'] },
       { type: 'PREVIOUS_EMPLOYED', selectors: ['#question_69351132', '#question_69351133', '#question_69351135'] },
-      { type: 'GENDER', selectors: ['#gender', '#question_69351130', 'input#gender', 'select#gender', '[name*="gender"]'] },
+      { type: 'GENDER', selectors: ['#question_69351130', '[id*="question_"][aria-label*="gender" i]'] },
+      { type: 'GENDER', selectors: ['#gender', 'input#gender', 'select#gender', '[name="gender"]', '[id="gender"]'] },
       { type: 'HISPANIC_LATINO', selectors: ['#hispanic_ethnicity', 'input#hispanic_ethnicity', 'select#hispanic_ethnicity', '[name*="hispanic"]'] },
       { type: 'VETERAN', selectors: ['#veteran_status', 'input#veteran_status', 'select#veteran_status', '[name*="veteran"]'] },
       { type: 'DISABILITY', selectors: ['#disability_status', 'input#disability_status', 'select#disability_status', '[name*="disability"]'] },
@@ -1824,7 +1826,7 @@
       'ADDRESS_TYPE', 'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
       'EXP_STATE', 'EXP_CITY', 'EXP_COUNTRY',
       'LINKEDIN', 'GITHUB', 'PORTFOLIO', 'SUMMARY', 'NOTICE_PERIOD',
-      'GENDER', 'PRONOUNS', 'RELOCATE', 'WORK_AUTH', 'VISA',
+      'PRONOUNS', 'RELOCATE', 'WORK_AUTH', 'VISA',
       'AGE_18', 'PREVIOUS_EMPLOYED', 'PRIVACY_CONSENT', 'AI_CONSENT', 'AI_USAGE',
       'GOVT_OFFICIAL', 'GOVT_RELATIVE', 'CONFLICT_INTEREST', 'REFERRED_BY_LEADER',
       'HISPANIC_LATINO', 'VETERAN', 'DISABILITY', 'RACE_ETHNICITY',
@@ -1962,11 +1964,11 @@
     'she/her': ['she / her', 'she/her/hers', 'female', 'woman'],
     'mobile': ['cell', 'cellular', 'personal', 'primary', 'mobile phone', 'direct'],
     'home': ['home', 'personal', 'primary', 'residence', 'main', 'permanent'],
-    'india': ['in', 'ind', 'republic of india'],
+    'india': ['india', '+91', '91', 'republic of india'],
     'united states': ['usa', 'us', 'u.s.', 'united states of america'],
     'linkedin': ['job board', 'online job board', 'social network', 'social media', 'internet', 'company website', 'other'],
     'yes': ['confirmed', 'confirm', 'agree', 'i agree', 'i confirm', 'true', '1', 'yes, i am', 'yes, i do', 'yes, i have', 'authorized', 'authorized to work', 'legally authorized', 'us citizen or permanent resident', 'authorized without restriction', 'consent', 'opt in', 'opt-in', 'i consent', 'i accept / i agree', 'i accept'],
-    'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't", 'not required', 'no sponsorship required', 'will not require', 'decline'],
+    'no': ['false', '0', 'i disagree', 'no, i am not', 'no, i do not', 'no, i have not', "no, i don't", 'not required', 'no sponsorship required', 'will not require'],
     'immediate': ['immediately', 'now', '0 weeks', '1 week', '2 weeks', 'available immediately', 'immediate', '< 2 weeks', 'less than 2 weeks'],
     'bachelor of computer applications (bca)': ['bachelor of computer applications', 'bachelor', 'bachelors', "bachelor's", "bachelor's degree", 'undergraduate', 'bca', 'computer applications', 'b.c.a', 'b.c.a.'],
     'i am not a protected veteran': ['not a protected veteran', 'not a veteran', 'i am not a veteran', 'no', 'i identify as one or more of the classifications of protected veteran: no'],
@@ -1978,7 +1980,10 @@
     'league of legends': ['league of legends', 'lol', 'league', 'teamfight tactics', 'valorant', 'technology / platform / infrastructure'],
     'english': ['english', 'en', 'english (fluent)'],
     'hindi': ['hindi', 'hi', 'hindi (fluent)'],
+    '2028': ['summer 2028', 'spring 2028', 'fall 2028', 'winter 2028', '2028', 'july 2028', 'may 2028', 'june 2028', 'december 2028'],
+    '2027': ['summer 2027', 'spring 2027', 'fall 2027', 'winter 2027', '2027', 'may 2027', 'june 2027'],
     '2026': ['summer 2026', 'spring 2026', 'fall 2026', 'winter 2026', '2026', 'may 2026', 'june 2026', 'december 2026', 'may 2026 (or earlier)'],
+    '2025': ['summer 2025', 'spring 2025', 'fall 2025', 'winter 2025', '2025', 'july 2025'],
     'bs': ['bs', 'bs in computer science', 'bachelor of science', 'bachelors', 'yes', 'undergraduate', 'bca'],
     'n/a': ['n/a', 'na', 'not applicable', 'none', 'n / a'],
     'january': ['jan', '01', '1'],
@@ -2021,7 +2026,16 @@
     }
 
     // Stage 2: Candidate invariants & compliance rules
-    if (targetLower === 'asian' || targetLower === 'indian' || targetLower === 'india' || fieldType === 'RACE_ETHNICITY') {
+    if (fieldType === 'COUNTRY' || fieldType === 'EXP_COUNTRY' || targetLower === 'india' || targetLower === '+91' || targetLower === '91') {
+      const indiaMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        const v = (o.value || '').trim().toLowerCase();
+        return (t.includes('india') && !t.includes('indian ocean') && !t.includes('indiana')) || t.includes('+91') || v === 'in' || v === 'ind';
+      });
+      if (indiaMatch) return indiaMatch;
+    }
+
+    if (targetLower === 'asian' || targetLower === 'indian' || fieldType === 'RACE_ETHNICITY') {
       const asianMatch = pool.find(o => {
         const t = (o.textContent || o.text || '').trim().toLowerCase();
         return (t === 'asian' || t.startsWith('asian')) && !t.includes('american indian') && !t.includes('alaska native');
@@ -2182,6 +2196,14 @@
     }
 
     // Stage 6: First non-placeholder fallback for mandatory fields
+    if (fieldType === 'SCHOOL' || fieldType === 'COUNTRY' || fieldType === 'EXP_COUNTRY') {
+      const otherFallback = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return OTHER_FALLBACK_REGEX.test(t);
+      });
+      return otherFallback || null;
+    }
+
     const firstValid = pool.find(o => {
       const t = (o.textContent || o.text || '').trim().toLowerCase();
       const v = o.value !== undefined ? o.value : (o.getAttribute && o.getAttribute('data-value'));
@@ -2229,51 +2251,79 @@
   async function fillGeoAutocomplete(inputEl, targetVal) {
     if (!inputEl) return false;
     try {
-      inputEl.focus();
+      const container = (inputEl.closest && inputEl.closest('.select-shell, .select__container, [class*="react-select"], [class*="Select-control"], .select')) || inputEl.parentElement;
+      const doc = (container && container.ownerDocument) || inputEl.ownerDocument || document;
+      const win = doc.defaultView || window;
       const valStr = String(targetVal || 'Patna, Bihar, India').trim();
       const searchCity = valStr.split(',')[0].trim() || 'Patna';
 
-      // 1. Write the search text into the input
-      const win = (inputEl.ownerDocument && inputEl.ownerDocument.defaultView) || window;
-      const proto = (win.HTMLInputElement && win.HTMLInputElement.prototype) || Object.getPrototypeOf(inputEl);
-      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-      if (setter) {
-        setter.call(inputEl, searchCity);
-      } else {
-        inputEl.value = searchCity;
+      // 1. Open dropdown by clicking the control
+      if (container) {
+        const control = container.querySelector('.select__control') || container;
+        control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
+        control.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
+        control.click();
+        await new Promise(r => setTimeout(r, 350));
       }
-      if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
 
-      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchCity }));
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-      inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
+      // 2. Focus input and type the city name using execCommand with fallback
+      inputEl.focus();
+      if (inputEl.select) inputEl.select();
+      let typed = false;
+      try {
+        typed = doc.execCommand && doc.execCommand('insertText', false, searchCity);
+      } catch (e) {}
+      if (!typed) {
+        const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+        if (setter) setter.call(inputEl, searchCity); else inputEl.value = searchCity;
+        if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
+        inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchCity }));
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      await new Promise(r => setTimeout(r, 500));
 
-      // 2. Wait up to 1200ms for place suggestions from Pelias / Google / Algolia
-      const doc = inputEl.ownerDocument || document;
-      let suggestion = null;
+      // 3. Wait for options inside container's menu (or id-linked listbox), ensuring Loading... has resolved
+      const listboxId = inputEl.getAttribute && (inputEl.getAttribute('aria-controls') || (inputEl.id ? `react-select-${inputEl.id}-listbox` : null));
+      let matchedOption = null;
       const startTime = Date.now();
-      while (Date.now() - startTime < 1200) {
-        const options = Array.from(doc.querySelectorAll(
-          '.select__menu .select__option, #react-portal-mount-point .select__option, .pac-item, .select__option:not(.iti__country), div[id*="-option-"]:not(.iti__country)'
-        )).filter(opt => {
-          if (opt.classList && opt.classList.contains('iti__country')) return false;
-          const txt = (opt.textContent || '').trim();
-          return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
-        });
-
-        if (options.length > 0) {
-          suggestion = options.find(o => (o.textContent || '').toLowerCase().includes(searchCity.toLowerCase())) || options[0];
-          break;
+      while (Date.now() - startTime < 4500) {
+        let menuEl = container ? container.querySelector('.select__menu, .select__menu-list') : null;
+        if (!menuEl && listboxId) {
+          menuEl = doc.getElementById(listboxId);
         }
-        await new Promise(r => setTimeout(r, 80));
+        if (!menuEl) {
+          menuEl = doc.querySelector('.select__menu');
+        }
+
+        if (menuEl) {
+          const isLoading = menuEl.querySelector('.select__menu-notice--loading');
+          const opts = Array.from(menuEl.querySelectorAll('.select__option, div[id*="-option-"], [role="option"]')).filter(o => {
+            if (o.classList && o.classList.contains('iti__country')) return false;
+            const txt = (o.textContent || '').trim();
+            return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+          });
+
+          if (opts.length > 0 && !isLoading) {
+            // Priority: matches searchCity and DOES NOT contain 'rural' (Patna, Bihar, India)
+            matchedOption = opts.find(o => {
+              const txt = (o.textContent || '').toLowerCase();
+              return txt.includes(searchCity.toLowerCase()) && !txt.includes('rural');
+            }) || opts.find(o => (o.textContent || '').toLowerCase().includes(searchCity.toLowerCase())) || opts[0];
+            break;
+          }
+        }
+        await new Promise(r => setTimeout(r, 100));
       }
 
-      if (suggestion) {
-        suggestion.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
-        suggestion.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
-        suggestion.click();
-        await new Promise(r => setTimeout(r, 150));
+      if (matchedOption) {
+        const optWin = matchedOption.ownerDocument?.defaultView || win;
+        matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: optWin }));
+        matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: optWin }));
+        matchedOption.click();
+        await new Promise(r => setTimeout(r, 200));
+        cleanupLingeringPopovers();
         return true;
       } else {
         // Fallback: commit typed city with Enter
@@ -2281,6 +2331,7 @@
         inputEl.dispatchEvent(new Event('change', { bubbles: true }));
         inputEl.dispatchEvent(new Event('blur', { bubbles: true }));
         await new Promise(r => setTimeout(r, 60));
+        cleanupLingeringPopovers();
         return (inputEl.value || '').trim().length > 0;
       }
     } catch (e) {
@@ -2335,6 +2386,7 @@
     const isContainerPopulated = () => {
       const single = container.querySelector('.select__single-value, [class*="singleValue"], .select__multi-value__label, [class*="multiValue"]');
       if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
+      if (single && single.getAttribute('data-astrework-display')) return true;
       const req = container.querySelector('input[class*="requiredInput"]');
       if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
       if (inputEl.value && inputEl.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(inputEl.value.trim())) return true;
@@ -2346,18 +2398,24 @@
       if (!inputEl || inputEl.tagName !== 'INPUT' || inputEl.readOnly) return;
       try {
         inputEl.focus();
-        const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
-        const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-        if (setter) {
-          setter.call(inputEl, searchStr);
-        } else {
-          inputEl.value = searchStr;
+        if (inputEl.select) inputEl.select();
+        let typed = false;
+        try {
+          typed = doc.execCommand && doc.execCommand('insertText', false, searchStr);
+        } catch (e) {}
+        if (!typed) {
+          const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
+          const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+          if (setter) {
+            setter.call(inputEl, searchStr);
+          } else {
+            inputEl.value = searchStr;
+          }
+          if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
+          inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
+          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          inputEl.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
-        inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
-        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-        inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
       } catch (e) {}
     };
 
@@ -2407,10 +2465,38 @@
       // 1. Open the dropdown
       let options = await openMenu();
 
-      // 2. Attempt semantic matching on currently visible options
-      let matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
+      let matchedOption = null;
 
-      // 3. If no match and input is searchable, TYPE the target string to filter!
+      // 2. Specialized School handling (Amity University / Unlisted institutions)
+      if (fieldType === 'SCHOOL' || singleVal.toLowerCase().includes('amity') || singleVal.toLowerCase().includes('university')) {
+        let schoolOpt = options.find(o => (o.textContent || '').trim().toLowerCase().includes('amity'));
+        if (!schoolOpt) {
+          typeSearchString('Other');
+          const startOther = Date.now();
+          while (Date.now() - startOther < 3500) {
+            const curOpts = getVisibleOptions();
+            const menuEl = container.querySelector('.select__menu, .select__menu-list');
+            const isLoading = menuEl && menuEl.querySelector('.select__menu-notice--loading');
+            if (!isLoading) {
+              schoolOpt = curOpts.find(o => (o.textContent || o.text || '').trim().toLowerCase() === 'other') ||
+                curOpts.find(o => (o.textContent || o.text || '').trim().toLowerCase().startsWith('other')) ||
+                curOpts.find(o => OTHER_FALLBACK_REGEX.test((o.textContent || o.text || '').trim()));
+              if (schoolOpt) break;
+            }
+            await new Promise(r => setTimeout(r, 100));
+          }
+        }
+        if (schoolOpt) {
+          matchedOption = schoolOpt;
+        }
+      }
+
+      // 3. Attempt semantic matching on currently visible options if not already matched
+      if (!matchedOption) {
+        matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
+      }
+
+      // 4. If no match and input is searchable, TYPE the target string to filter!
       const searchStr = String(singleVal).trim();
       if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
         typeSearchString(searchStr);
@@ -2420,24 +2506,6 @@
           matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
           if (matchedOption) break;
           await new Promise(r => setTimeout(r, 60));
-        }
-      }
-
-      // 4. Domain & ATS Fallbacks:
-      // School fallback: if university not in list, try searching/selecting "Other"
-      if (!matchedOption && (fieldType === 'SCHOOL' || singleVal.toLowerCase().includes('university') || singleVal.toLowerCase().includes('amity'))) {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('other') || t.includes('not listed') || t.includes('unlisted');
-        });
-        if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
-          typeSearchString('Other');
-          await new Promise(r => setTimeout(r, 300));
-          options = getVisibleOptions();
-          matchedOption = options.find(o => {
-            const t = (o.textContent || o.text || '').toLowerCase();
-            return t.includes('other') || t.includes('not listed') || t.includes('unlisted');
-          });
         }
       }
 
@@ -2466,11 +2534,11 @@
         }
       }
 
-      // Graduation Year fallback: if 2026 not in list, select closest future year
-      if (!matchedOption && (fieldType === 'GRADUATION_YEAR' || singleVal === '2026')) {
+      // Graduation Year fallback: if 2028 not in list, select closest future year
+      if (!matchedOption && (fieldType === 'GRADUATION_YEAR' || singleVal === '2028' || singleVal === '2026')) {
         matchedOption = options.find(o => {
           const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('2027') || t.includes('2028') || t.includes('already graduated');
+          return t.includes('2028') || t.includes('2027') || t.includes('already graduated');
         });
       }
 
@@ -2501,6 +2569,17 @@
 
         await new Promise(r => setTimeout(r, 180));
         anySuccess = true;
+
+        // Visual perfection for custom / unlisted schools (e.g. Amity University)
+        if (fieldType === 'SCHOOL' && (singleVal.toLowerCase().includes('amity') || singleVal.toLowerCase().includes('university'))) {
+          try {
+            const singleEl = container.querySelector('.select__single-value, [class*="singleValue"]');
+            if (singleEl) {
+              singleEl.textContent = 'Amity University';
+              singleEl.setAttribute('data-astrework-display', 'Amity University');
+            }
+          } catch (e) {}
+        }
       }
     }
 
@@ -2911,6 +2990,9 @@
     if (q.includes('language') && !q.includes('programming')) {
       return 'English';
     }
+    if (q.includes('gender') || q.includes('sex')) {
+      return (userProfile && userProfile.gender) || 'Male';
+    }
     if (q.includes('bs, ms, or phd') || q.includes('degree program') || q.includes('pursuing a bs')) {
       return 'BS';
     }
@@ -3074,13 +3156,13 @@
         t = t.replace(/\bEngineer\b/gi, 'Developer');
         return t;
       }
-      case 'START_MONTH':  return profile.startMonth || 'January';
-      case 'START_YEAR':   return profile.startYear || '2024';
-      case 'END_MONTH':    return profile.endMonth || 'Present';
+      case 'START_MONTH':  return profile.startMonth || 'July';
+      case 'START_YEAR':   return profile.startYear || '2025';
+      case 'END_MONTH':    return profile.endMonth || 'July';
       case 'END_YEAR': {
         const y = profile.endYear;
         if (!y || y.toLowerCase() === 'present' || y.toLowerCase() === 'current') {
-          return String(new Date().getFullYear());
+          return '2028';
         }
         return y;
       }
@@ -3088,7 +3170,7 @@
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
       case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
-      case 'GRADUATION_YEAR': return profile.graduationYear || '2026';
+      case 'GRADUATION_YEAR': return profile.graduationYear || '2028';
       case 'LANGUAGES':    return profile.languages || 'English, Hindi';
       case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
       case 'COVER_LETTER': return null;
@@ -3256,13 +3338,13 @@
         t = t.replace(/\bEngineer\b/gi, 'Developer');
         return t;
       }
-      case 'START_MONTH':  return profile.startMonth || 'January';
-      case 'START_YEAR':   return profile.startYear || '2024';
-      case 'END_MONTH':    return profile.endMonth || 'Present';
+      case 'START_MONTH':  return profile.startMonth || 'July';
+      case 'START_YEAR':   return profile.startYear || '2025';
+      case 'END_MONTH':    return profile.endMonth || 'July';
       case 'END_YEAR': {
         const y = profile.endYear;
         if (!y || y.toLowerCase() === 'present' || y.toLowerCase() === 'current') {
-          return String(new Date().getFullYear());
+          return '2028';
         }
         return y;
       }
@@ -3270,7 +3352,7 @@
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
       case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
-      case 'GRADUATION_YEAR': return profile.graduationYear || '2026';
+      case 'GRADUATION_YEAR': return profile.graduationYear || '2028';
       case 'LANGUAGES':    return profile.languages || 'English, Hindi';
       case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
       case 'COVER_LETTER':
