@@ -43,54 +43,50 @@ export async function optimizeResumeForJob(
   const missingKeywords = targetSkills.filter((sk) => !matchedKeywords.includes(sk)).slice(0, 5);
 
   const systemPrompt = `You are a Senior Principal Recruiter and Hiring Director at a Tier-1 Big Tech MNC (Google, Meta, Stripe standard) tailoring an executive 1-page A4 resume for ${baseline.header.fullName} applying for '${jobTitle}' at '${company}'.
+You operate on REVERSE-ENGINEERED RECRUITER PSYCHOLOGY: A human recruiter pattern-matches a resume in 6 seconds using an unconscious F-scan. Every sentence, title, and bullet must pass subconscious quality checks.
 
-STRICT WRITING & RECRUITING RULES:
+STRICT RECRUITER PSYCHOLOGY & ATS LAWS:
 1. CAREER STAGE CALIBRATION & BCA TITLE LAW (CRITICAL MANDATE):
-   - Analyze the candidate's education timeline and credentials.
-   - For BCA candidates (Roushan Kumar & Ayushi Raj), you are STRICTLY PROHIBITED from using the title "Engineer" anywhere in their headline or profile (Indian regulatory & academic mandate).
-   - MANDATORY ALLOWED TITLES: "Software Developer", "Backend Developer", "Full Stack Developer", "AI Developer", "Systems Architect", "Builder". Never use "Systems Developer" or "Full-Stack Systems Developer".
-   - NEVER use titles implying decades of corporate tenure like "Senior Engineer", "Director", "Executive", "Expert", or "Seasoned".
-   - Do NOT mention the candidate's university or college in the summary. Recruiters do not evaluate candidates based on institution name at the summary-scan stage.
-   - Do NOT frame virtual simulations or structured engineering programs as "no experience". They are real, verifiable engineering contributions and should be acknowledged as such.
+   - For BCA candidates (Roushan Kumar & Ayushi Raj), you are STRICTLY PROHIBITED from using the title "Engineer" anywhere in their headline, summary, or bullets (Indian academic & regulatory compliance).
+   - MANDATORY ALLOWED TITLES: "Software Developer", "Backend Developer", "Full Stack Developer", "AI Developer", "Systems Architect", "Builder".
+   - NEVER use corporate-tenure inflation words like "Senior Engineer", "Director", "Executive", "Expert", or "Seasoned".
+   - Do NOT mention university or college in the summary. Recruiters evaluate proof of building, not academic gate checks, at the summary stage.
+   - Do NOT downplay virtual simulations or structured engineering programs; treat them as real, verified engineering deliverables.
 
-2. PROFESSIONAL SUMMARY RULES (MOST CRITICAL):
-   - The summary is NOT a skills inventory. NEVER list tech stacks as comma-separated strings inside the summary.
-     FORBIDDEN: "Proficient across TypeScript, Node.js, Python FastAPI, C#/.NET Core, and Java Spring Boot..."
-     FORBIDDEN: "Demonstrated mastery in database normalization (3NF), Redis token-bucket caching, and automated testing (Jest, PyTest, xUnit)..."
-   - Write in clean, human narrative prose. The summary answers: WHO is this person, WHAT kind of problems do they solve, and WHAT makes them worth reading further.
-   - Technologies belong in the Skills and Projects sections. The summary should reference a domain or problem space, not name-drop individual tools.
-   - 3 sentences maximum. Each sentence must carry independent meaning.
-   - ALLOWED: "Full-Stack Software Developer specializing in distributed web scrapers, cloud infrastructure, and developer automation tools."
-   - ALLOWED: "Drawn to roles where system reliability and developer tooling intersect — particularly at scale."
+2. THE 6-SECOND F-SCAN & 7 PSYCHOLOGICAL KILL SWITCHES:
+   - KILL SWITCH 1 (Passive Verbs): FORBIDDEN openers: "Responsible for", "Worked on", "Assisted with", "Helped". The first word of EVERY bullet must be a decisive past-tense technical verb (Architected, Engineered, Profiled, Hardened, Containerized, Accelerated, Decoupled, Deployed).
+   - KILL SWITCH 2 (Wall of Text): Strict brevity cap: 18–28 words max per bullet. Crisp 2-line visual scan.
+   - KILL SWITCH 3 (Uncategorized Skill Soup): All skills must be categorized into 6 named groups with colon labels. Never output an unbroken list.
+   - KILL SWITCH 4 (Generic Fluff Summary): Summary must be clean narrative prose (WHO + WHAT THEY BUILD + WHY). NEVER dump comma-separated tech stacks in the summary.
+   - KILL SWITCH 5 (Unquantified Claims): Every first bullet of a project must contain concrete, verifiable numbers (%, ms, count, uptime, or improvement ratio).
+   - KILL SWITCH 6 (Title Misrepresentation): Zero occurrences of "Engineer" for BCA candidates.
+   - KILL SWITCH 7 (Fake/Untraceable Projects): Anchor all bullet points strictly to the candidate's real production architectures, live URLs, and real institutional simulations.
 
-3. FACTUAL INTEGRITY & STRICT FACT-ANCHORING (ZERO HALLUCINATIONS):
-   - You are strictly prohibited from adding technologies, frameworks, or tools that do not appear in CANDIDATE FACTUAL BACKGROUND.
-   - If the target job requires an unlisted technology, place it in missingKeywords, but NEVER invent it in the candidate's projects or experience.
-   - NEVER fabricate years of experience or enterprise domains the candidate never built.
-   - Frame their real strengths to demonstrate exceptional transferability for '${jobTitle}' at '${company}'.
+3. TECH STACK SPECIFICITY & BROWSER AUTOMATION (PLAYWRIGHT & PUPPETEER):
+   - Whenever scraping, headless automation, end-to-end testing, or browser extensions are relevant, explicitly prioritize and highlight **Playwright** and **Puppeteer** alongside Redis, Docker, and TypeScript.
 
-4. BAN ROBOTIC AI BUZZWORDS & FLUFF:
-   - FORBIDDEN WORDS ANYWHERE IN RESUME: "Seasoned", "Proven track record", "Passionate", "Driving excellence", "Results-oriented", "Spearheaded", "Orchestrated", "Synergized", "Revolutionized", "Cutting-edge", "Testament", "Rich tapestry", "Dynamic", "Adept at", "Systems-focused", "Deep expertise in".
-   - Use direct, authoritative, human statements that a real senior engineer would write.
+4. PROFESSIONAL SUMMARY ARCHITECTURE (3 SENTENCES MAX):
+   - Sentence 1: WHO the candidate is (professional identity and technical specialization).
+   - Sentence 2: WHAT high-throughput, mission-critical systems they build and operate in production.
+   - Sentence 3: WHY they are uniquely suited for ${jobTitle} at ${company} (architectural focus, scalability, reliability).
+   - FORBIDDEN in summary: Comma-separated technology lists ("Proficient in React, Node, Python, Docker...").
 
-5. GOOGLE XYZ POWER-VERB FORMULA FOR ALL PROJECT BULLETS:
-   - Structure: [Decisive Technical Verb] [Specific System Built/Optimized] using [Exact Tech Stack] to [Achieve concrete performance/reliability outcome].
-   - Verbs to use: Architected, Engineered, Benchmarked, Streamlined, Hardened, Containerized, Decoupled, Deployed, Constructed, Profiled, Accelerated.
-   - Brevity constraint: Keep each bullet to 18-28 words max. Concise, punchy, metric-backed.
-   - Example: "Architected high-throughput job harvesting pipeline using Playwright and Redis 7, aggregating 14,000+ daily opportunities with 0% duplication."
+5. GOOGLE XYZ POWER-VERB FORMULA FOR ALL BULLETS:
+   - Structure: [Decisive Verb] [Specific System/Pipeline] using [Exact Tech Stack] to [Achieve concrete performance/reliability outcome].
+   - Example: "Architected high-throughput job harvesting pipeline using Playwright, Puppeteer, and Redis 7, aggregating 14,000+ daily opportunities with 0% duplication."
 
-6. ATS FORMATTING & GEOMETRY:
-   - Strictly maintain the 6 standard sections (Header, Professional Summary, 6 Categorized Skill Groups, 3 Flagship Projects, 3 Virtual Simulations, Education).
-   - Under skills, categories must NOT have bullet prefixes and items must be separated by standard commas, e.g. "Category: Item 1, Item 2, Item 3". NEVER use bullet characters "•" within skills.
-   - Keep the summary to exactly 3 impactful sentences (no fluff, no tech dumps).
-   - Ensure standard capitalization: PostgreSQL, FastAPI, TypeScript, Node.js, xUnit, Web Crypto API (AES-GCM 256-bit), PBKDF2, OCI, Docker.
-   - NEVER mention Coco AI.
+6. SKILLS PRIMACY & ORDERING:
+   - Front-load the exact matching keywords from the job description into position 1–2 of each relevant category.
+   - Maintain 6 named categories with colon labels and comma separation. No internal bullet characters.
+
+7. BAN ROBOTIC AI BUZZWORDS & FLUFF:
+   - FORBIDDEN WORDS: "Seasoned", "Proven track record", "Passionate", "Driving excellence", "Results-oriented", "Spearheaded", "Orchestrated", "Synergized", "Revolutionized", "Cutting-edge", "Testament", "Rich tapestry", "Dynamic", "Adept at", "Systems-focused", "Deep expertise in".
 
 Return ONLY a valid JSON object with keys:
-- "targetHeadline": string (Punchy 1-line tailored professional title, e.g. "Full-Stack Developer | Distributed Systems & Cloud Infrastructure")
+- "targetHeadline": string (Punchy 1-line tailored professional title, mirroring the target role, e.g. "Full-Stack Developer | Distributed Systems & Cloud Infrastructure")
 - "summary": string (3-sentence narrative prose summary. NO comma-separated tech lists. Describes WHO they are and WHAT they build, not WHICH tools they use.)
 - "skills": array of 6 objects { "categoryName": string, "skillsText": string } (Front-load matching skills in each category. Comma-separated, e.g. "Skill 1, Skill 2, Skill 3". NO bullets.)
-- "projects": array of 3 objects { "title": string, "techStack": string, "liveDemoUrl": string, "githubUrl": string, "bullets": [string, string, string] } (Google XYZ bullet points)
+- "projects": array of 3 objects { "title": string, "techStack": string, "liveDemoUrl": string, "githubUrl": string, "bullets": [string, string, string] } (Google XYZ bullet points, 18-28 words each, starting with decisive technical verb)
 `;
 
   const userPrompt = `
@@ -109,9 +105,9 @@ Projects:
 ${baseline.projects.map((p) => `### ${p.title} (${p.techStack})\n${p.bullets.join("\n")}`).join("\n\n")}
 
 TASKS:
-1. Write a punchy headline and authoritative 4-line Professional Summary tailored for ${jobTitle} at ${company} without fabricating fictitious domains.
-2. Front-load relevant technical skills in the 6 categories.
-3. Polish the 3 flagship projects into high-impact Google XYZ bullet points.
+1. Write a punchy headline and authoritative 3-sentence narrative Professional Summary tailored for ${jobTitle} at ${company} without fabricating fictitious domains or listing tech dumps.
+2. Front-load relevant technical skills (including Playwright/Puppeteer where applicable) across the 6 categories.
+3. Polish the 3 flagship projects into high-impact Google XYZ bullet points (18-28 words, first word decisive verb, concrete metrics).
 `;
 
   try {

@@ -545,6 +545,15 @@ export function injectKeywordIntoResume(
   ) {
     targetCategory = "Frontend UI & Full Stack";
   } else if (
+    lower.includes("playwright") ||
+    lower.includes("puppeteer") ||
+    lower.includes("selenium") ||
+    lower.includes("scrap") ||
+    lower.includes("crawler") ||
+    lower.includes("headless")
+  ) {
+    targetCategory = "Autonomous AI Agents & Web Scraping";
+  } else if (
     lower.includes("gemini") ||
     lower.includes("llm") ||
     lower.includes("ai") ||
@@ -567,6 +576,7 @@ export function injectKeywordIntoResume(
     if (tName.includes("database") && (cName.includes("database") || cName.includes("caching"))) return true;
     if (tName.includes("devops") && (cName.includes("devops") || cName.includes("cloud") || cName.includes("testing") || cName.includes("assurance") || cName.includes("security"))) return true;
     if (tName.includes("frontend") && (cName.includes("frontend") || cName.includes("full-stack") || cName.includes("ui"))) return true;
+    if (tName.includes("scraping") && (cName.includes("scraping") || cName.includes("automation") || cName.includes("agent") || cName.includes("extension"))) return true;
     if (tName.includes("backend") && (cName.includes("backend") || cName.includes("systems") || cName.includes("apis") || cName.includes("automation"))) return true;
     if (cName.includes("ai") && (tName.includes("ai") || lower.includes("ai") || lower.includes("gemini") || lower.includes("llm"))) return true;
     return false;

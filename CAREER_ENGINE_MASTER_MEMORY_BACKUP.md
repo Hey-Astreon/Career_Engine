@@ -1197,6 +1197,13 @@ Located in `extension/`:
   - **3. User Live In-Browser Verification:** Roushan Kumar confirmed live execution on Chrome: 100% of fields filled cleanly (`ROUSHAN`, `KUMAR`, `roushanraut404@gmail.com`, `+91-9431483512`, tailored motivation text, and tailored resume `ROUSHAN_KUMAR_Resume_Gesture_US_Inc.pdf` attached).
   - **4. Verification:** 53 test suites passed (524 tests green), 0 TypeScript errors.
 
+- [x] **Phase 64: ATS Resume Maker Upgrade — Recruiter Cognitive Psychology, Playwright/Puppeteer Matrix & Anti-Underline Typography Alignment (Oct 25, 2026)**
+  - **1. Strategic Motivation & Recruiter Reverse-Engineering:** Upgraded `.agents/skills/ats-resume-maker/SKILL.md` to embody the recruiter's subconscious cognitive model during the 6-second F-scan. Codified the 7 Psychological Kill Switches (passive verbs, walls of text, uncategorized skill soup, generic summaries, unquantified bullets, title violations, untraceable projects) and the 7 Positive Triggers (brand halo, concrete metrics, problem-solution-outcome arc, scarcity signals).
+  - **2. Tech Stack Completeness (Playwright & Puppeteer):** Infused Playwright and Puppeteer across the 6-category skill architecture and keyword injection router (`src/lib/resumeBaseline.ts`). Any job mentioning headless browser automation, web scraping, or testing dynamically routes to `Autonomous AI Agents & Web Scraping` or `Browser Automation & Extensions`.
+  - **3. Anti-Underline Link Typography Law:** Addressed user directive ("And dont use underline in links like github, portfolio website, linkedin etc."). Underlines cause typographical pollution by cutting through descenders and disrupting horizontal reading flow. Enforced clean, color-differentiated links with `text-decoration: none` across `src/app/globals.css`, `src/app/(workspace)/resume-maker/page.tsx`, and `src/app/(workspace)/resume-builder/page.tsx`.
+  - **4. AI Resume Optimizer System Prompt Hardening (`src/lib/ai/resumeOptimizer.ts`):** Backported recruiter psychology rules into the live AI optimizer: mandatory decisive past-tense opening verbs (Kill Switch 1), strict 18–28 word bullet caps (Kill Switch 2), 3-sentence narrative summaries without tech dumps, and BCA candidate title compliance (Developer/Architect only, never Engineer).
+  - **5. Automated Testing & Verification:** Added unit tests in `tests/resume_optimizer.test.ts` for Playwright and Puppeteer baseline presence and keyword routing. All 9 tests passed in 7.1s; full TypeScript typecheck (`npx tsc --noEmit`) exited clean with 0 errors.
+
 ---
 
 ## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
@@ -2594,6 +2601,37 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule (The React-Select Proof-of-Write Law):** In React-Select (v4/v5), the `<input class="select__input">` never retains the selected string in `.value`. Verification MUST inspect the parent container for `.select__single-value` or `[class*="singleValue"]`.
   - **Rule (The Dropdown Isolation Law):** Embedded libraries like `intl-tel-input` create hundreds of `[role="option"]` DOM elements that pollute global option queries. Always filter out library-specific classes (`:not(.iti__country)`) when resolving custom comboboxes or location autocompletes.
   - **Rule (Offline Standalone Grace):** An AI browser copilot must never fail closed when disconnected from cloud backends. Always bundle offline fallback profiles and default state machines so candidates can autofill forms immediately with zero friction.
+
+### 🔴 Case 40: The Recruiter 6-Second Pattern-Match, Playwright/Puppeteer Matrix & Anti-Underline Typography Calibration
+* **What Happened:** During technical review of the ATS Resume Maker and candidate skill sets, we identified that while the mechanical A4 geometry was sound, the underlying decision framework lacked human cognitive empathy — specifically, how a real recruiter pattern-matches a resume in 6 seconds. Crucial tools in AstreWork's core stack (**Playwright** and **Puppeteer**) were absent from skill categories, and resume links featured default underlines that cluttered letter descenders and visual flow.
+* **The Root Cause / Mistake:**
+  1. **Mechanical vs Cognitive Gap:** The previous resume guidelines focused almost exclusively on physical layout constraints (297mm ceiling, padding, flex gutters) rather than the recruiter's mental model (F-scan eye movement, subconscious kill switches, first 4 words law).
+  2. **Missing Flagship Tools in Skills Ingestion:** Despite AstreWork relying heavily on Playwright and Puppeteer for headless scraping and browser automation, neither keyword was recognized in the 1-click keyword injection router, defaulting automation terms to generic categories.
+  3. **Link Underline Typographical Pollution:** Default browser link styling (`text-decoration: underline`) in the header (Portfolio, GitHub, LinkedIn) and projects (Live Demo, GitHub) bisected letter descenders (`g`, `y`, `p`, `q`, `j`), creating visual noise that disrupted rapid eye scanning.
+* **The Concrete Surgical Fix:**
+  1. **Comprehensive 14-Section SKILL.md Upgrade (`.agents/skills/ats-resume-maker/SKILL.md`):**
+     - Section 0: The 6-Second Recruiter Psychology Law & F-Pattern Cognitive Model.
+     - Section 3: Link Typography & Anti-Underline Aesthetics Law (`text-decoration: none`).
+     - Section 7: The Recruiter's Cognitive Hierarchy (Time Allocation Breakdown).
+     - Section 8: The 7 Psychological Kill Switches (Subconscious Rejection Triggers).
+     - Section 9: The Positive Psychological Triggers (What Earns the Callback).
+     - Section 10: ATS Parser Machine Model & Vulnerabilities.
+     - Section 11: The Optimal 6-Category Skills Architecture (Playwright & Puppeteer included).
+     - Section 12: Skill Ordering Intelligence Law (Primacy Anchoring).
+     - Section 13: Pre-Submission Quality Gate (18-point verification checklist).
+  2. **AI Optimizer System Prompt Alignment (`src/lib/ai/resumeOptimizer.ts`):**
+     - Injected the 7 Psychological Kill Switches, mandatory decisive past-tense verbs, 18–28 word brevity constraints, and 3-sentence narrative summaries.
+  3. **Keyword Injector & Baseline Routing (`src/lib/resumeBaseline.ts`):**
+     - Mapped `playwright`, `puppeteer`, `selenium`, `scrap`, `crawler` to `Autonomous AI Agents & Web Scraping` / `Browser Automation & Extensions`.
+  4. **DOM & CSS Underline Purge (`src/app/(workspace)/resume-maker/page.tsx`):**
+     - Removed `underline` classes and styled header and project links with `no-underline hover:text-blue-800`.
+  5. **Automated Verification:**
+     - Vitest: 9/9 tests passed in `tests/resume_optimizer.test.ts`.
+     - Typecheck: `npx tsc --noEmit` exited clean with 0 errors.
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The 6-Second F-Scan Law):** A recruiter never reads an entire resume; they scan the target headline (1.2s), brand halo (0.8s), first 4 words of project bullets (1.5s), and first 3 skills (0.5s). Resumes must be engineered to win within this subconscious pattern-matching window.
+  - **Rule (Anti-Underline Typography Law):** Underlines in executive technical resumes are visual clutter that breaks horizontal line scans and cuts through descenders. Modern ATS resumes must use clean, color-differentiated links with `text-decoration: none`.
+  - **Rule (Primacy Anchoring):** Recruiters read skills left-to-right and stop after 3–4 items. Position 1 of each category must always contain the exact matching keyword demanded by the target Job Description.
 
 ---
 

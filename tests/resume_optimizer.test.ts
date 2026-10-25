@@ -146,5 +146,34 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(updated.matchedKeywords).toContain("Terraform");
       expect(updated.missingKeywords).not.toContain("Terraform");
     });
+
+    it("injects Playwright into Autonomous Web Scraping / Browser Automation category", () => {
+      const baseline = getMasterResumeBaseline("roushan");
+      baseline.missingKeywords = ["Playwright", "Puppeteer"];
+      baseline.matchedKeywords = ["Docker"];
+
+      const updated = injectKeywordIntoResume(baseline, "Playwright");
+
+      const scrapingCat = updated.skills.find((s) => s.categoryName.includes("Web Scraping") || s.categoryName.includes("Automation"));
+      expect(scrapingCat?.skillsText).toContain("Playwright");
+      expect(updated.matchedKeywords).toContain("Playwright");
+      expect(updated.missingKeywords).not.toContain("Playwright");
+    });
+  });
+
+  describe("5. Recruiter Psychology & Tech Stack Verification", () => {
+    it("verifies Playwright and Puppeteer are present in core baselines", () => {
+      const roushan = getMasterResumeBaseline("roushan");
+      const ayushi = getMasterResumeBaseline("ayushi");
+
+      const roushanSkills = roushan.skills.map((s) => s.skillsText).join(" ");
+      expect(roushanSkills).toContain("Playwright");
+      expect(roushanSkills).toContain("Puppeteer");
+
+      const ayushiSkills = ayushi.skills.map((s) => s.skillsText).join(" ");
+      expect(ayushiSkills).toContain("Playwright");
+      expect(ayushiSkills).toContain("Puppeteer");
+    });
   });
 });
+

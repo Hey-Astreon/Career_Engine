@@ -1339,7 +1339,7 @@ export default function ResumeMakerPage() {
                           href={resumeData.header.portfolioUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-700 underline"
+                          className="text-blue-700 no-underline hover:text-blue-800"
                         >
                           {resumeData.header.portfolioUrl.replace(/^https?:\/\//, "")}
                         </a>
@@ -1352,7 +1352,7 @@ export default function ResumeMakerPage() {
                           href={resumeData.header.githubUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-700 underline"
+                          className="text-blue-700 no-underline hover:text-blue-800"
                         >
                           {resumeData.header.githubUrl.replace(/^https?:\/\//, "")}
                         </a>
@@ -1365,7 +1365,7 @@ export default function ResumeMakerPage() {
                           href={resumeData.header.linkedinUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-700 underline"
+                          className="text-blue-700 no-underline hover:text-blue-800"
                         >
                           {resumeData.header.linkedinUrl.replace(/^https?:\/\//, "")}
                         </a>
@@ -1422,7 +1422,7 @@ export default function ResumeMakerPage() {
                                 href={proj.liveDemoUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="underline"
+                                className="no-underline hover:text-blue-800"
                               >
                                 Live Demo
                               </a>
@@ -1432,7 +1432,7 @@ export default function ResumeMakerPage() {
                                 href={proj.githubUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="underline"
+                                className="no-underline hover:text-blue-800"
                               >
                                 GitHub
                               </a>
