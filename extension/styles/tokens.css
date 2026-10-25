@@ -1,0 +1,174 @@
+/* ══════════════════════════════════════════════════════════════════════
+   AstrePilot Unified Design System Tokens (tokens.css)
+   Shared foundation for Popup & In-Page Shadow DOM HUD
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root, :host {
+  /* Typography Scale */
+  --ap-font: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --ap-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-base: 13.5px;
+  --fs-lg: 15px;
+  --fs-xl: 17px;
+  --fs-stat: 22px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-base: 1.5;
+
+  --tracking-tight: -0.015em;
+  --tracking-caps: 0.05em;
+
+  /* 4-pt Spacing System */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* Corner Radii */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pill: 9999px;
+
+  /* Motion Curves */
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-fast: 0.15s var(--ease);
+  --trans-normal: 0.25s var(--ease);
+
+  /* Light Theme Color Palette (Refined Ice / Glass) */
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --ink-3: #8896ab;
+
+  --line: rgba(15, 23, 42, 0.08);
+  --line-strong: rgba(15, 23, 42, 0.14);
+
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-hover: rgba(255, 255, 255, 0.92);
+  --surface-solid: #ffffff;
+  --surface-muted: rgba(15, 23, 42, 0.04);
+  --surface-card: rgba(255, 255, 255, 0.65);
+
+  --accent: #0f172a;
+  --accent-hover: #1e293b;
+  --accent-text: #ffffff;
+
+  --brand: #2563eb;
+  --brand-soft: rgba(37, 99, 235, 0.1);
+
+  --ok: #059669;
+  --ok-soft: rgba(5, 150, 105, 0.1);
+  --warn: #d97706;
+  --warn-soft: rgba(217, 119, 6, 0.1);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 8px 32px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 1);
+  --shadow-pill: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  /* Compatibility aliases mapping to legacy HUD variables */
+  --ap-bg: var(--surface);
+  --ap-bg-solid: var(--surface-solid);
+  --ap-surface: var(--surface-card);
+  --ap-surface-hover: var(--surface-hover);
+  --ap-ink: var(--ink);
+  --ap-ink-2: var(--ink-2);
+  --ap-ink-3: var(--ink-3);
+  --ap-line: var(--line);
+  --ap-accent: var(--accent);
+  --ap-accent-hover: var(--accent-hover);
+  --ap-ai: var(--brand);
+  --ap-ai-soft: var(--brand-soft);
+  --ap-success: var(--ok);
+  --ap-success-soft: var(--ok-soft);
+  --ap-danger: var(--danger);
+  --ap-danger-soft: var(--danger-soft);
+  --ap-shadow: var(--shadow-lg);
+  --ap-shadow-pill: var(--shadow-pill);
+  --ap-inner-light: var(--inner-light);
+  --ap-radius-xl: var(--r-xl);
+  --ap-radius-md: var(--r-md);
+  --ap-radius-sm: var(--r-sm);
+  --ap-radius-pill: var(--r-pill);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root, :host {
+    /* Dark Theme Palette (Deep Slate & Glass) */
+    --ink: #f8fafc;
+    --ink-2: #cbd5e1;
+    --ink-3: #7c8ba1;
+
+    --line: rgba(255, 255, 255, 0.10);
+    --line-strong: rgba(255, 255, 255, 0.18);
+
+    --surface: rgba(30, 41, 59, 0.75);
+    --surface-hover: rgba(51, 65, 85, 0.88);
+    --surface-solid: #0f172a;
+    --surface-muted: rgba(255, 255, 255, 0.06);
+    --surface-card: rgba(30, 41, 59, 0.70);
+
+    --accent: #ffffff;
+    --accent-hover: #f1f5f9;
+    --accent-text: #0f172a;
+
+    --brand: #60a5fa;
+    --brand-soft: rgba(96, 165, 250, 0.15);
+
+    --ok: #34d399;
+    --ok-soft: rgba(52, 211, 153, 0.15);
+    --warn: #fbbf24;
+    --warn-soft: rgba(251, 191, 36, 0.15);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.15);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --shadow-pill: 0 10px 28px rgba(0, 0, 0, 0.45);
+    --inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    /* Legacy HUD variable aliases in dark mode */
+    --ap-bg: var(--surface);
+    --ap-bg-solid: var(--surface-solid);
+    --ap-surface: var(--surface-card);
+    --ap-surface-hover: var(--surface-hover);
+    --ap-ink: var(--ink);
+    --ap-ink-2: var(--ink-2);
+    --ap-ink-3: var(--ink-3);
+    --ap-line: var(--line);
+    --ap-accent: var(--accent);
+    --ap-accent-hover: var(--accent-hover);
+    --ap-ai: var(--brand);
+    --ap-ai-soft: var(--brand-soft);
+    --ap-success: var(--ok);
+    --ap-success-soft: var(--ok-soft);
+    --ap-danger: var(--danger);
+    --ap-danger-soft: var(--danger-soft);
+    --ap-shadow: var(--shadow-lg);
+    --ap-shadow-pill: var(--shadow-pill);
+    --ap-inner-light: var(--inner-light);
+  }
+}

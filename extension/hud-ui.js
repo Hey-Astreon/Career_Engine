@@ -194,7 +194,36 @@ window.AstrePilotHUD = (function () {
       try { window.__ASTREPILOT_HUD_INSTANCE__ = this; } catch (e) {}
     }
 
+    _ensureFonts() {
+      try {
+        if (document.getElementById('astrepilot-fonts')) return;
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.getURL) return;
+        const interUrl = chrome.runtime.getURL('fonts/Inter-Variable.woff2');
+        const monoUrl = chrome.runtime.getURL('fonts/JetBrainsMono-Variable.woff2');
+        const fontStyle = document.createElement('style');
+        fontStyle.id = 'astrepilot-fonts';
+        fontStyle.textContent = `
+          @font-face {
+            font-family: 'Inter Variable';
+            src: url('${interUrl}') format('woff2');
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: 'JetBrains Mono Variable';
+            src: url('${monoUrl}') format('woff2');
+            font-weight: 100 800;
+            font-style: normal;
+            font-display: swap;
+          }
+        `;
+        (document.head || document.documentElement).appendChild(fontStyle);
+      } catch (e) {}
+    }
+
     _buildDOM(cssString) {
+      this._ensureFonts();
       this.host = document.createElement('div');
       this.host.id = 'astrepilot-root';
       this.host.style.all = 'initial';

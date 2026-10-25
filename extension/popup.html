@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AstrePilot</title>
+  <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -11,14 +12,18 @@
     <!-- Header -->
     <header class="header">
       <div class="brand">
-        <div class="logo">AW</div>
-        <div>
+        <div class="logo">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
           <h1 class="title">AstrePilot</h1>
           <span class="subtitle">Autonomous Job Assistant</span>
         </div>
       </div>
       <div id="conn-badge" class="badge badge-disconnected">
-        <span class="dot"></span>
+        <span class="dot" aria-hidden="true"></span>
         <span id="conn-text">Disconnected</span>
       </div>
     </header>
@@ -27,38 +32,47 @@
     <main class="main">
       <!-- Loading State -->
       <div id="view-loading" class="view">
-        <div class="spinner"></div>
+        <div class="spinner" aria-hidden="true"></div>
         <p class="loading-text">Connecting to AstreWork…</p>
       </div>
 
       <!-- Connected View -->
       <div id="view-connected" class="view hidden">
         <div class="profile-card">
-          <div class="avatar" id="user-avatar">RK</div>
+          <div class="avatar" id="user-avatar" aria-label="Candidate Initials">RK</div>
           <div class="profile-info">
-            <h2 id="user-name" class="user-name">Candidate Name</h2>
-            <p id="user-title" class="user-title">Target Role / Headline</p>
+            <h2 id="user-name" class="user-name" title="Candidate Name">Candidate Name</h2>
+            <p id="user-title" class="user-title" title="Target Role / Headline">Target Role / Headline</p>
           </div>
         </div>
 
         <div class="env-selector-row">
           <span class="env-label">Server</span>
-          <div class="env-toggle-group">
+          <div class="env-toggle-group" role="tablist" aria-label="Server Target">
             <button id="btn-env-prod" class="btn-env-pill" type="button" title="Connect to Live Production (astrework.app)">astrework.app</button>
             <button id="btn-env-local" class="btn-env-pill" type="button" title="Connect to Localhost Dev Server (localhost:3000)">localhost:3000</button>
           </div>
         </div>
 
         <div id="primed-box" class="primed-box hidden">
-          <span class="primed-label">SESSION:</span>
-          <span id="primed-target" class="primed-target">Acme Corp</span>
+          <div class="primed-header">
+            <span class="primed-label">PRIMED SESSION</span>
+            <span class="primed-pulse" aria-hidden="true"></span>
+          </div>
+          <div id="primed-target" class="primed-target" title="Target Job Session">Acme Corp</div>
         </div>
 
         <div class="action-section">
-          <button id="btn-launch-hud" class="btn btn-primary">
+          <button id="btn-launch-hud" class="btn btn-primary" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+            </svg>
             <span>Launch AstrePilot</span>
           </button>
-          <button id="btn-autofill-direct" class="btn btn-secondary">
+          <button id="btn-autofill-direct" class="btn btn-secondary" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
             <span>Autofill Instantly</span>
           </button>
         </div>
@@ -68,10 +82,12 @@
             <span class="stat-val" id="stat-fills">0</span>
             <span class="stat-lbl">Fills</span>
           </div>
+          <div class="stat-divider" aria-hidden="true"></div>
           <div class="stat-item">
             <span class="stat-val" id="stat-fields">0</span>
             <span class="stat-lbl">Fields</span>
           </div>
+          <div class="stat-divider" aria-hidden="true"></div>
           <div class="stat-item">
             <span class="stat-val" id="stat-hours">0h</span>
             <span class="stat-lbl">Saved</span>
@@ -84,6 +100,13 @@
       <!-- Setup / Connect View -->
       <div id="view-setup" class="view hidden">
         <div class="setup-hero">
+          <div class="setup-icon-wrap" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7.5" cy="15.5" r="5.5"></circle>
+              <path d="m21 2-9.6 9.6"></path>
+              <path d="m15.5 7.5 3 3L22 7l-3-3"></path>
+            </svg>
+          </div>
           <h3>Connect Your Profile</h3>
           <p>Link AstrePilot with your AstreWork workspace to enable intelligent autofill.</p>
         </div>
@@ -99,12 +122,16 @@
         <div class="form-group">
           <label for="input-token">AstrePilot Token</label>
           <div class="token-input-row">
-            <input type="password" id="input-token" placeholder="Paste your token from Settings" class="text-input">
-            <button id="btn-auto-token" class="btn-mini" title="Auto-fetch from open AstreWork tab">Auto</button>
+            <input type="password" id="input-token" placeholder="Paste your token from Settings" class="text-input" autocomplete="off" spellcheck="false">
+            <button id="btn-auto-token" class="btn-mini" type="button" title="Auto-fetch from open AstreWork tab">Auto</button>
           </div>
         </div>
 
-        <button id="btn-connect" class="btn btn-primary">
+        <button id="btn-connect" class="btn btn-primary" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
           <span>Connect AstrePilot</span>
         </button>
 
@@ -114,8 +141,19 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <a id="link-dashboard" href="#" class="footer-link">Open AstreWork Dashboard →</a>
-      <button id="btn-settings-toggle" class="btn-icon-link" title="Settings / Disconnect">⚙</button>
+      <a id="link-dashboard" href="#" class="footer-link">
+        <span>Open Dashboard</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+      <button id="btn-settings-toggle" class="btn-icon-link" type="button" title="Settings / Disconnect" aria-label="Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
     </footer>
   </div>
 

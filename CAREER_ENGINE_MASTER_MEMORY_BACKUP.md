@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 25, 2026 (Phase 64: AstrePilot Download Resume Button Hijack Elimination & Verified PDF Streamer; 53/53 Vitest 526-Test Green Verification, 0 TypeScript Errors)
+> **LAST COGNITIVE SYNC:** October 25, 2026 (Phase 65: AstrePilot Toolbar Popup & In-Page HUD UI Precision Redesign, Bundled Variable Typography, and Unified Dark Mode Architecture; Full E2E Chromium Playwright Verification, 0 TypeScript Errors, 9/9 Optimizer Tests Passing)
 
 ---
 
@@ -1204,6 +1204,27 @@ Located in `extension/`:
   - **4. AI Resume Optimizer System Prompt Hardening (`src/lib/ai/resumeOptimizer.ts`):** Backported recruiter psychology rules into the live AI optimizer: mandatory decisive past-tense opening verbs (Kill Switch 1), strict 18–28 word bullet caps (Kill Switch 2), 3-sentence narrative summaries without tech dumps, and BCA candidate title compliance (Developer/Architect only, never Engineer).
   - **5. Automated Testing & Verification:** Added unit tests in `tests/resume_optimizer.test.ts` for Playwright and Puppeteer baseline presence and keyword routing. All 9 tests passed in 7.1s; full TypeScript typecheck (`npx tsc --noEmit`) exited clean with 0 errors.
   - **6. AstrePilot End-to-End Pipeline & Download Alignment:** Traced and verified the full journey: (1) Primed job sessions save tailored summaries & key skills to `AutopilotSession`, (2) AstrePilot `/api/autopilot/session` injects tailored 3-sentence summary into form textareas, (3) Connected `selectRecommendedResumeVariant` directly into `/api/resume/download/latest/route.ts` so AstrePilot's "Download Resume" and synthetic file injection automatically stream the exact tailored official A4 PDF, (4) Synchronized `STANDALONE_PROFILES` in `extension/content.js` and repackaged `astrepilot-extension.zip` (101.9 KB).
+
+- [x] **Phase 65: AstrePilot Toolbar Popup & In-Page HUD UI Precision Redesign, Bundled Variable Typography, and Unified Dark Mode Architecture (Oct 25, 2026)**
+  - **1. Strategic Design System & Tokens (`extension/styles/tokens.css`):** Architected the unified design system foundation for both popup and in-page HUD surfaces. Established 4-pt spacing grid (`--sp-1` to `--sp-8`), unified typography scales (`--fs-xs` to `--fs-stat`), elevation shadows, corner radii, and complete light (Refined Ice/Glass) and dark (Deep Slate/Glass) color token suites with 100% backward-compatible aliases for legacy HUD variables.
+  - **2. Bundled High-Density Variable Typography (`extension/fonts/`, `manifest.json`):** Eliminated host OS/Windows font drift (fallback to Segoe UI). Bundled `Inter-Variable.woff2` (47.1 KB) and `JetBrainsMono-Variable.woff2` (39.5 KB) directly inside the extension. Updated `web_accessible_resources` with `"fonts/*"` and `"styles/*"`.
+  - **3. Toolbar Popup UI Precision Overhaul (`extension/popup.html`, `extension/popup.css`, `extension/popup.js`):**
+    - Replaced crude text logo with crisp SVG brand mark matching the HUD.
+    - Re-architected `.primed-box` into a stacked card with uppercase label, pulsating status dot, and 2-line clamp with full-text hover tooltips, eliminating parent container horizontal overflow permanently (verified 360px exact width, 0px overflow).
+    - Replaced cramped environment switcher with equal-width segmented control pills (`astrework.app` vs `localhost:3000`).
+    - Established clear visual CTA button hierarchy: 44px solid slate gradient primary action ("Launch AstrePilot") vs 40px frosted glass secondary action ("Autofill Instantly").
+    - Transformed stats display to 3-column hairline-divided layout featuring 22px tabular-nums JetBrains Mono digits (`font-feature-settings: "tnum"`).
+    - Added full OS-following dark mode (`prefers-color-scheme: dark`) with deep slate `#0b1120` backdrop and high-contrast text.
+  - **4. In-Page Shadow DOM HUD Typography & Alignment Upgrade (`extension/hud.shadow.css`, `hud-ui.js`, `content.js`):**
+    - Engineered `_ensureFonts()` injecting `@font-face` rules for Inter and JetBrains Mono directly into `document.head` of host ATS pages, ensuring closed shadow DOM instances cleanly inherit bundled variable fonts.
+    - Upgraded `.hud-header` with 13.5px bold title, 10px uppercase tabular step badge, and 26px rounded icon buttons.
+    - Calibrated identity card, 10px-spaced field rows, tabular numbers on all field previews, progress track gradient, and floating collapsed pill (`.hud-pill`).
+  - **5. Extension Repackaging (`scripts/package-extension.js`):** Repackaged `public/downloads/astrepilot-extension.zip` (193.9 KB), bundling fonts and styles.
+  - **6. Automated End-to-End Playwright Verification (`scripts/verify-ui-upgrade.cjs`):**
+    - Executed live headless/unpacked Chromium test against mock API and live Riot Games Greenhouse job board.
+    - Verified 0px horizontal overflow on 360px popup card, correct tabular numeric font stacks, and active dark theme.
+    - Captured verified proof screenshots: `astrepilot_popup_light_proof.png`, `astrepilot_popup_dark_proof.png`, `astrepilot_hud_light_proof.png`, `astrepilot_hud_dark_proof.png`, and `astrepilot_hud_pill_proof.png`.
+    - Executed regression checks: `verify-download-button.cjs` passed (86.4 KB PDF downloaded), Vitest suite passed (9/9 green), TypeScript check clean (`0 errors`).
 
 ---
 
@@ -2680,6 +2701,44 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
 * **Hard-Won Engineering Experience & Rules:**
   - **Rule (Download Button Sanctity):** A button labeled "Download" with a download tray icon must ALWAYS trigger an actual file download to the user's device. Never hijack a download button to substitute an in-page form attachment.
   - **Rule (Direct Blob Anchors over Background Tabs):** In Manifest V3 extensions, never rely on `chrome.tabs.create({ active: false })` to trigger file downloads. Always stream the binary to the content script and trigger a DOM Blob anchor download (`URL.createObjectURL(blob) + a.click()`).
+
+### 🔴 Case 43: AstrePilot Toolbar Popup & In-Page HUD Precision UI/UX Redesign, Variable Typography, and Unified Dark Mode
+* **What Happened:**
+  - Following the ATS Resume Maker upgrade, the user reviewed AstrePilot's browser popup screenshot and highlighted multiple UI, alignment, and typographical defects:
+    1. Primed session card wrapped awkwardly on long job/company titles, disrupting the horizontal container bounds.
+    2. Server environment switcher pills were cramped and visually inconsistent.
+    3. Candidate headline truncated abruptly without tooltips.
+    4. Popup header had a plain text "AW" box and the footer used a raw Unicode character (`⚙`) instead of clean SVGs.
+    5. Fonts fell back to standard Windows OS fonts (Segoe UI) rather than crisp Linear/Apple design typography.
+    6. Toolbar popup lacked dark mode, while the HUD had dark mode, creating an inconsistent brand experience.
+* **The Root Cause / Mistake:**
+  1. **Design Token Drift:** The popup (`popup.css`) and HUD (`hud.shadow.css`) had evolved with disparate ad-hoc CSS variables, leading to margin inconsistencies (10px, 14px, 16px, 20px, 24px) rather than a rigid 4-pt grid system.
+  2. **Unbundled System Fonts:** The extension lacked bundled font binaries, leaving typography dependent on host machine defaults.
+  3. **Single-Row Flexbox Hijack:** `.primed-box` was declared as a horizontal flex row with `justify-content: space-between`. When session target strings exceeded 20 characters (e.g. `Riot Games (Staff Software Developer (Infrastructure))`), the label and value collided, forcing awkward wrapping.
+* **How We Solved It:**
+  1. **Unified Design System (`extension/styles/tokens.css`):** Formally architected unified design tokens shared across all extension surfaces. Defined a strict 4-pt spacing grid (`--sp-1` to `--sp-8`), font scales (`--fs-xs` to `--fs-stat`), elevation shadows, corner radii, and complete light (Refined Ice/Glass) and dark (Deep Slate `#0b1120` / `#0f172a`) palettes with legacy HUD compatibility aliases.
+  2. **Bundled High-Density Variable Typography (`extension/fonts/`):** Bundled `Inter-Variable.woff2` and `JetBrainsMono-Variable.woff2`. Registered them in `manifest.json` under `web_accessible_resources`. Added `_ensureFonts()` in `hud-ui.js` and `content.js` to inject `@font-face` into `document.head` of host pages, allowing closed shadow roots to inherit Inter and JetBrains Mono seamlessly.
+  3. **Toolbar Popup Redesign (`popup.html`, `popup.css`, `popup.js`):**
+     - Replaced text logo and Unicode gear with crisp SVG icons.
+     - Re-architected `.primed-box` into a stacked card featuring an uppercase label, pulsating blue status dot, and 2-line clamp with full-text title tooltips. Verified exact 360px container width with 0px horizontal overflow.
+     - Built equal-width segmented control pills (`flex: 1`) for server switching (`astrework.app` vs `localhost:3000`).
+     - Established clear CTA visual hierarchy: 44px solid slate gradient primary action ("Launch AstrePilot") vs 40px frosted glass secondary action ("Autofill Instantly").
+     - Rebuilt stats card into a 3-column hairline-divided layout featuring 22px tabular-nums JetBrains Mono digits (`font-variant-numeric: tabular-nums`).
+     - Added full OS-following dark mode (`prefers-color-scheme: dark`).
+  4. **In-Page Shadow DOM HUD Styling Alignment (`hud.shadow.css`):**
+     - Aligned all header, card, field list, progress bar, and settings drawer components to the 4-pt grid and variable font tokens.
+     - Ensured field preview values and counters render in monospace tabular numbers.
+     - Polished collapsed floating pill (`.hud-pill`) with high-elevation glass shadow and tabular field count badges.
+  5. **Distribution & Packaging (`scripts/package-extension.js`):** Repackaged `public/downloads/astrepilot-extension.zip` (193.9 KB).
+  6. **Automated End-to-End Playwright Verification (`scripts/verify-ui-upgrade.cjs`):**
+     - Headless Chromium launched with unpacked extension.
+     - Verified popup renders at exact 360px width with 0px overflow in both light and dark mode.
+     - Navigated to live Riot Games Greenhouse job board, mounted HUD, verified fonts injected, captured light and dark mode expanded HUD screenshots, and captured collapsed pill screenshot.
+     - Ran regression verification: `verify-download-button.cjs` passed (86.4 KB PDF downloaded), Vitest suite passed (9/9 green), TypeScript check clean (`0 errors`).
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Bundled Variable Fonts in Extensions):** Never rely on host OS or webpage fonts for browser extension UIs. Always bundle self-contained variable font files (`.woff2`) inside the extension package and inject `@font-face` into the host document's head to guarantee identical, Tier-1 typography across all operating systems and websites.
+  - **Rule (Stacked Card Pattern for Dynamic Text):** In narrow fixed-width components (e.g. 360px popups or 368px HUDs), dynamic user or session strings must NEVER share a single horizontal flex line with descriptive labels. Always stack the label above the text and apply a 2-line clamp with `word-break: break-word` and a `title` tooltip to guarantee zero horizontal container clipping.
+  - **Rule (Tabular Numerics for Metrics):** All numbers in stats rows, counters, and step badges must enforce `font-variant-numeric: tabular-nums; font-feature-settings: "tnum"`. This prevents horizontal layout jitter when counters update dynamically.
 
 ---
 

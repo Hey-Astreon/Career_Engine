@@ -159,7 +159,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       setConnectedBadge(true);
       userName.textContent = profile.fullName || 'AstreWork Candidate';
+      userName.title = userName.textContent;
       userTitle.textContent = profile.title || 'Developer';
+      userTitle.title = userTitle.textContent;
 
       // Highlight active environment pill
       const isLocal = cleanOrigin.includes('localhost') || cleanOrigin.includes('127.0.0.1');
@@ -177,7 +179,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (sessionRes && sessionRes.ok) {
         const sData = await sessionRes.json();
         if (sData.session && sData.session.company) {
-          primedTarget.textContent = sData.session.company + (sData.session.jobTitle ? ' (' + sData.session.jobTitle + ')' : '');
+          const targetStr = sData.session.company + (sData.session.jobTitle ? ' (' + sData.session.jobTitle + ')' : '');
+          primedTarget.textContent = targetStr;
+          primedTarget.title = targetStr;
           primedBox.classList.remove('hidden');
         } else {
           primedBox.classList.add('hidden');

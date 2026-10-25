@@ -52,7 +52,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["hud.shadow.css", "icons/*"],
+      "resources": ["hud.shadow.css", "icons/*", "fonts/*", "styles/*"],
       "matches": ["<all_urls>"]
     }
   ]
