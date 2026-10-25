@@ -3,6 +3,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { db } from "@/lib/db";
+import { selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
 
 export const dynamic = "force-dynamic";
 
@@ -36,29 +37,14 @@ export async function GET(req: Request) {
     const folder = normalizedSlug === "ayushi" ? "2_Ayushi_Raj" : "3_Roushan_Kumar";
     const defaultFileName = normalizedSlug === "ayushi" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
 
-    // Auto-select specialized resume variant based on extracted job requirements
-    let targetFileName = defaultFileName;
-    const jobTitle = (session?.jobTitle || "").toLowerCase();
-
-    if (normalizedSlug === "roushan") {
-      if (jobTitle.includes("full stack") || jobTitle.includes("frontend") || jobTitle.includes("web")) {
-        targetFileName = "Roushan_Kumar_Full_Stack_Developer_Resume.pdf";
-      } else if (jobTitle.includes("backend") || jobTitle.includes("distributed") || jobTitle.includes("system") || jobTitle.includes("cloud")) {
-        targetFileName = "Roushan_Kumar_Backend_Developer_Resume.pdf";
-      } else if (jobTitle.includes("ai") || jobTitle.includes("machine learning") || jobTitle.includes("llm") || jobTitle.includes("deep learning")) {
-        targetFileName = "Roushan_Kumar_AI_Developer_Resume.pdf";
-      } else if (jobTitle.includes("python")) {
-        targetFileName = "Roushan_Kumar_Python_Developer_Resume.pdf";
-      }
-    } else if (normalizedSlug === "ayushi") {
-      if (jobTitle.includes("ai") || jobTitle.includes("product") || jobTitle.includes("machine learning")) {
-        targetFileName = "Ayushi_Raj_AI_Product_Developer_Resume.pdf";
-      } else if (jobTitle.includes("full stack") || jobTitle.includes("frontend")) {
-        targetFileName = "Ayushi_Raj_Full_Stack_Developer_Resume.pdf";
-      } else if (jobTitle.includes("backend")) {
-        targetFileName = "Ayushi_Raj_Backend_Developer_Resume.pdf";
-      }
-    }
+    // Auto-select specialized resume variant based on the primed job session using the 8-variant recommendation engine
+    const recommended = selectRecommendedResumeVariant(
+      normalizedSlug,
+      session?.jobTitle || "",
+      session?.jdText || "",
+      session?.company || ""
+    );
+    let targetFileName = recommended.fileName || defaultFileName;
 
     const basePath = path.join(process.cwd(), "public", "candidates", folder);
     let resolvedPath = path.join(basePath, targetFileName);
