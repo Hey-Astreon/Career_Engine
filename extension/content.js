@@ -1900,6 +1900,9 @@
         const computed = (targetDoc.defaultView || window).getComputedStyle(canonicalEl);
         if ((computed.display === 'none' || computed.visibility === 'hidden') && !isCheckOrRadio && !isCB && !isFileInput && !isDropzone) return;
 
+        const idAttr = (canonicalEl.getAttribute('id') || '').toLowerCase();
+        const nameAttr = (canonicalEl.getAttribute('name') || '').toLowerCase();
+
         // Filter out OneTrust / Cookie consent banners & widgets
         if (idAttr.startsWith('ot-') || idAttr.includes('onetrust') || idAttr.includes('vendor-search') || idAttr.includes('cookie') || (canonicalEl.closest && canonicalEl.closest('#onetrust-banner-sdk, [id*="onetrust"], .ot-sdk-container, [id*="cookie"]'))) {
           return;
@@ -1907,7 +1910,6 @@
 
         // Filter out site-wide career search filters & navigation inputs (e.g. iCIMS footer search)
         if (canonicalEl.type === 'search') return;
-        const nameAttr = (canonicalEl.getAttribute('name') || '').toLowerCase();
         const idAttrClean = idAttr;
         if (canonicalEl.closest) {
           const isSearchContainer = canonicalEl.closest('form[role="search"], [role="search"], .search-box, .search-form, .job-search, header, footer, .iCIMS_JobSearch, #job-search, .search-wrapper');
