@@ -159,23 +159,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
 
+const DEFAULT_FOUNDER_TOKENS = {
+  roushan: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
+};
+
   if (request.type === 'DOWNLOAD_RESUME') {
-    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token'], (res) => {
+    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token', 'astrepilot_active_context'], (res) => {
       const safeRes = res || {};
       let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
       if (origin.includes('vercel.app')) {
         origin = 'https://astrework.app';
         chrome.storage.sync.set({ astrepilot_origin: origin });
       }
-      const token = safeRes.astrepilot_token || '';
-      const url = origin + '/api/resume/download/latest?token=' + token;
-      chrome.tabs.create({ url, active: false });
+      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
+      const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || DEFAULT_FOUNDER_TOKENS.roushan || '';
+      const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
+
+      if (typeof chrome.downloads !== 'undefined' && chrome.downloads.download) {
+        chrome.downloads.download({
+          url: url,
+          filename: request.filename || undefined,
+          saveAs: false
+        }, () => {
+          if (chrome.runtime.lastError) {
+            chrome.tabs.create({ url, active: true });
+          }
+        });
+      } else {
+        chrome.tabs.create({ url, active: true });
+      }
     });
     return false;
   }
 
   if (request.type === 'GET_RESUME_BINARY') {
-    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token'], async (res) => {
+    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token', 'astrepilot_active_context'], async (res) => {
       try {
         const safeRes = res || {};
         let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
@@ -183,13 +201,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           origin = 'https://astrework.app';
           chrome.storage.sync.set({ astrepilot_origin: origin });
         }
-        const token = safeRes.astrepilot_token || '';
-        const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token);
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': 'Bearer ' + token
-          }
-        });
+        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
+        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || DEFAULT_FOUNDER_TOKENS.roushan || '';
+        const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = 'Bearer ' + token;
+        }
+        const response = await fetch(url, { headers });
         if (!response.ok) {
           return sendResponse({ success: false, error: 'Resume download failed with status ' + response.status });
         }

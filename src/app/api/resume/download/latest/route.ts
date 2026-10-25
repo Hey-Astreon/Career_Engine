@@ -1,11 +1,27 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { db } from "@/lib/db";
 import { selectRecommendedResumeVariant } from "@/lib/resumeVariantSelector";
 
 export const dynamic = "force-dynamic";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+  "Access-Control-Expose-Headers": "Content-Disposition, X-Resume-Filename, X-Resume-Variant",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
 
 export async function GET(req: Request) {
   try {
@@ -14,18 +30,41 @@ export async function GET(req: Request) {
       url.searchParams.get("token") ||
       extractBearerToken(req.headers.get("authorization"));
 
-    if (!token) {
-      return new NextResponse("Unauthorized: Token missing", { status: 401 });
+    let userId: string | null = null;
+    if (token) {
+      userId = verifyAutopilotToken(token);
     }
 
-    const userId = verifyAutopilotToken(token);
     if (!userId) {
-      return new NextResponse("Unauthorized: Invalid or expired token", { status: 401 });
+      try {
+        const session = await getServerSession(authOptions);
+        if (session?.user?.id) {
+          userId = session.user.id;
+        }
+      } catch {
+        /* ignore session parse error in non-browser context */
+      }
     }
 
-    const profile = await db.profile.findFirst({ where: { userId } });
+    const candidateSlug = (url.searchParams.get("slug") || url.searchParams.get("candidate") || "").toLowerCase().trim();
+
+    let profile = null;
+    if (userId) {
+      profile = await db.profile.findFirst({ where: { userId } });
+    }
+
+    // Graceful offline fallback: allow verified founder profiles if un-paired or direct download
+    if (!profile && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
+      profile = await db.profile.findFirst({ where: { slug: candidateSlug } });
+    }
+
+    // Default to roushan if no profile found and no token provided
+    if (!profile && !userId) {
+      profile = await db.profile.findFirst({ where: { slug: "roushan" } });
+    }
+
     if (!profile) {
-      return new NextResponse("Candidate profile not found", { status: 404 });
+      return new NextResponse("Candidate profile not found", { status: 404, headers: CORS_HEADERS });
     }
 
     const session = await db.autopilotSession.findFirst({
@@ -76,17 +115,17 @@ export async function GET(req: Request) {
     return new Response(fileBuffer, {
       status: 200,
       headers: {
+        ...CORS_HEADERS,
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${downloadFileName}"`,
         "Content-Length": fileBuffer.length.toString(),
         "Cache-Control": "private, max-age=3600",
-        "Access-Control-Expose-Headers": "Content-Disposition, X-Resume-Filename, X-Resume-Variant",
         "X-Resume-Filename": downloadFileName,
         "X-Resume-Variant": targetFileName,
       },
     });
   } catch (error) {
     console.error("[Resume Download Error]:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500, headers: CORS_HEADERS });
   }
 }

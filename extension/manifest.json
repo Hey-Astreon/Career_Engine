@@ -13,7 +13,8 @@
     "storage",
     "activeTab",
     "scripting",
-    "debugger"
+    "debugger",
+    "downloads"
   ],
   "host_permissions": [
     "*://*/*"

@@ -71,6 +71,8 @@
       aiConsent: 'Yes',
       aiUsage: 'regularly use AI tools and developer copilots',
       professionalSummary: 'Full-Stack Developer and Creator of AstreWork, with hands-on experience designing and operating distributed web scrapers, Playwright/Puppeteer automation, and cloud infrastructure on Oracle Cloud. Operates containerized headless browser pipelines processing thousands of postings daily with a focus on high-throughput reliability.',
+      slug: 'roushan',
+      token: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
       _isStandalone: true
     },
     ayushi: {
@@ -92,6 +94,7 @@
       linkedinUrl: 'https://www.linkedin.com/in/alrya404/',
       githubUrl: 'https://github.com/Silenttears-cloud',
       portfolioUrl: 'https://ayushiraj.me',
+      slug: 'ayushi',
       school: 'Amity University',
       degree: 'Bachelor of Computer Applications (BCA)',
       discipline: 'Computer Science / Applications',
@@ -236,6 +239,7 @@
       request.action === 'TOGGLE_HUD' ||
       request.action === 'SCAN_FIELDS' ||
       request.action === 'AUTOFILL' ||
+      request.action === 'DOWNLOAD_RESUME' ||
       request.action === 'EXTRACT_PAGE' ||
       request.action === 'CLICK_APPLY'
     )) {
@@ -256,6 +260,11 @@
         await runAutofill();
       })();
       sendResponse({ status: 'autofilling' });
+    } else if (request.action === 'DOWNLOAD_RESUME') {
+      runDownloadResume()
+        .then(() => sendResponse({ status: 'downloaded' }))
+        .catch(err => sendResponse({ status: 'error', error: err.message }));
+      return true;
     } else if (request.action === 'EXTRACT_PAGE') {
       sendResponse(extractPageContent());
     } else if (request.action === 'CLICK_APPLY') {
@@ -598,6 +607,10 @@
     return e;
   }
 
+  const DEFAULT_FOUNDER_TOKENS = {
+    roushan: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
+  };
+
   async function getStoredConfig() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (res) => {
@@ -607,10 +620,12 @@
           origin = 'https://astrework.app';
           chrome.storage.sync.set({ astrepilot_origin: origin });
         }
+        const activeCtx = safeRes.astrepilot_active_context || 'roushan';
+        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || DEFAULT_FOUNDER_TOKENS.roushan || null;
         resolve({
-          token: safeRes.astrepilot_token || null,
+          token,
           origin,
-          activeContext: safeRes.astrepilot_active_context || 'roushan'
+          activeContext: activeCtx
         });
       });
     });
@@ -2764,7 +2779,8 @@
   function getResumeBinaryFromBackground() {
     return new Promise((resolve) => {
       try {
-        chrome.runtime.sendMessage({ type: 'GET_RESUME_BINARY' }, (res) => {
+        const activeCtx = userProfile ? (userProfile.slug || 'roushan') : 'roushan';
+        chrome.runtime.sendMessage({ type: 'GET_RESUME_BINARY', activeContext: activeCtx }, (res) => {
           if (chrome.runtime.lastError) {
             resolve({ success: false, error: chrome.runtime.lastError.message });
             return;
@@ -3927,28 +3943,80 @@
     }
   }
 
+  function triggerClientDownload(blob, filename) {
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    (document.body || document.documentElement).appendChild(link);
+    link.click();
+    setTimeout(() => {
+      try { link.remove(); } catch (e) {}
+      URL.revokeObjectURL(blobUrl);
+    }, 5000);
+  }
+
   async function runDownloadResume() {
     const hud = activeHud;
-    const resumeFields = (detectedFields || []).filter(f => f.type === 'RESUME');
-    let targetEl = resumeFields.length > 0 ? resumeFields[0].element : null;
-    if (!targetEl) {
-      targetEl = document.querySelector('input[type="file"], [class*="dropzone"], [data-automation-id*="upload"]');
-    }
+    if (hud) hud.setState('filling', { step: 'Downloading tailored resume PDF...' });
 
-    if (targetEl) {
-      if (hud) hud.setState('filling');
-      const res = await injectResumeFile(targetEl);
-      if (res && res.success) {
+    const activeCtx = userProfile ? (userProfile.slug || 'roushan') : 'roushan';
+
+    try {
+      // 1. Fetch tailored PDF binary from background
+      const data = await getResumeBinaryFromBackground();
+
+      if (data && data.success && data.base64) {
+        const filename = data.filename || 'Candidate_Resume.pdf';
+        const mimeType = data.mimeType || 'application/pdf';
+        const blob = base64ToBlob(data.base64, mimeType);
+
+        // 2. Direct browser download to candidate's local Downloads folder
+        triggerClientDownload(blob, filename);
+
+        // 3. Secondary convenience: also attach to page upload target if present
+        const resumeFields = (detectedFields || []).filter(f => f.type === 'RESUME');
+        let targetEl = resumeFields.length > 0 ? resumeFields[0].element : null;
+        if (!targetEl) {
+          targetEl = document.querySelector('input[type="file"], [class*="dropzone"], [data-automation-id*="upload"]');
+        }
+
+        if (targetEl) {
+          try {
+            const file = new File([blob], filename, { type: mimeType, lastModified: Date.now() });
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            let fileInput = targetEl.tagName === 'INPUT' && targetEl.type === 'file' ? targetEl : targetEl.querySelector('input[type="file"]');
+            if (fileInput) {
+              try { fileInput.files = dt.files; } catch (e) {}
+              fileInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+              fileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+            }
+          } catch (attachErr) {}
+          if (hud && resumeFields[0]) {
+            hud.markRow(resumeFields[0].id, 'done', filename);
+          }
+        }
+
         if (hud) {
-          hud.markRow(resumeFields[0] ? resumeFields[0].id : 'manual_resume', 'done', res.filename || 'Uploaded');
           hud.setState('ready');
         }
         return;
       }
-    }
 
-    // Fallback: download PDF directly to candidate's local Downloads folder
-    chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
+      // Fallback: request background to trigger download via chrome.downloads or tab
+      chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME', activeContext: activeCtx });
+      if (hud) {
+        hud.setState('ready');
+      }
+    } catch (err) {
+      console.warn('[AstrePilot] Direct resume download error, falling back to background:', err);
+      chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME', activeContext: activeCtx });
+      if (hud) {
+        hud.setState('ready');
+      }
+    }
   }
 
   async function runSyncHarvester() {

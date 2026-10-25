@@ -191,6 +191,7 @@ window.AstrePilotHUD = (function () {
 
       this._buildDOM(options.css || '');
       this._attachEvents();
+      try { window.__ASTREPILOT_HUD_INSTANCE__ = this; } catch (e) {}
     }
 
     _buildDOM(cssString) {
