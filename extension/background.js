@@ -16,6 +16,7 @@ const ATS_URL_PATTERNS = [
   'jobvite.com',
   'workable.com',
   'recruitee.com',
+  'breezy.hr',
   'linkedin.com/jobs',
   'indeed.com',
   'icims.com',
@@ -172,7 +173,7 @@ const DEFAULT_FOUNDER_TOKENS = {
         chrome.storage.sync.set({ astrepilot_origin: origin });
       }
       const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
-      const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || DEFAULT_FOUNDER_TOKENS.roushan || '';
+      const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : '');
       const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
 
       if (typeof chrome.downloads !== 'undefined' && chrome.downloads.download) {
@@ -202,7 +203,7 @@ const DEFAULT_FOUNDER_TOKENS = {
           chrome.storage.sync.set({ astrepilot_origin: origin });
         }
         const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
-        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || DEFAULT_FOUNDER_TOKENS.roushan || '';
+        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : '');
         const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
         const headers = {};
         if (token) {

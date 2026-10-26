@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
+import { isDeveloperEmail, isDeveloperProfileSlug } from "@/lib/authCandidate";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -24,10 +25,28 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401, headers: CORS });
     }
 
-    const profile = await db.profile.findFirst({
-      where: { userId },
-      include: { projects: true, virtualExps: true },
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
     });
+
+    const { searchParams } = new URL(req.url);
+    const requestedSlug = searchParams.get("slug")?.trim().toLowerCase();
+
+    let profile = null;
+    if (requestedSlug && isDeveloperEmail(user?.email) && isDeveloperProfileSlug(requestedSlug)) {
+      profile = await db.profile.findFirst({
+        where: { slug: requestedSlug },
+        include: { projects: true, virtualExps: true },
+      });
+    }
+
+    if (!profile) {
+      profile = await db.profile.findFirst({
+        where: { userId },
+        include: { projects: true, virtualExps: true },
+      });
+    }
 
     if (!profile) {
       return NextResponse.json(

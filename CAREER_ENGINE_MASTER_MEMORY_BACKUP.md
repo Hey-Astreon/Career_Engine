@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 26, 2026 (Phase 66: Ayushi Raj Profile & Geolocation Calibration — Mirzapur, Nawada, PIN 805110 & Visa Normalization; Turso Cloud LibSQL, dev.db, Standalone Ext Sync)
+> **LAST COGNITIVE SYNC:** October 26, 2026 (Phase 67: AstrePilot Breezy HR Specialized ATS Driver, Bot Trap Honeypot Exclusion, and Candidate Context Slug Synchronization)
 
 ---
 
@@ -1236,6 +1236,26 @@ Located in `extension/`:
   - **4. Resume Baseline & Extension Standalone Sync:** Synchronized `src/lib/resumeBaseline.ts` (`location: "Nawada, Bihar, India"`) and `extension/content.js` (`STANDALONE_PROFILES.ayushi`).
   - **5. Extension Repackaging:** Rebuilt `public/downloads/astrepilot-extension.zip` (193.9 KB).
   - **6. Verification & Quality:** Full TypeScript check `npx tsc --noEmit` clean (0 errors) and Vitest `tests/resume_optimizer.test.ts` passed (9/9 green).
+
+- [x] **Phase 67: AstrePilot Breezy HR Specialized ATS Driver, Bot Trap Honeypot Exclusion & Dual-Candidate Live Testing (Oct 26, 2026)**
+  - **1. Breezy HR ATS Driver Architecture:** Engineered `isBreezyEnvironment()` and deterministic `scanBreezyFields()` in `extension/content.js` to natively detect and map all standard Breezy HR elements:
+    - Resume: `input#main-attachment` / `input[name="cResume"]` (`type: RESUME`)
+    - Name: `input[name="cName"]` (`type: FULL_NAME`)
+    - Email: `input[name="cEmail"]` (`type: EMAIL`)
+    - Phone: `input[name="cPhoneNumber"]` (`type: PHONE`)
+    - Consent: `input[name="smsConsent"]` (`type: TEXT_CONSENT`)
+    - Address: `#fullAddress` / `input[name="cAddress"]` (`type: ADDRESS`)
+    - Summary: `textarea[name="cSummary"]` (`type: SUMMARY`)
+    - Cover Letter: `textarea[name="cCoverLetter"]` (`type: COVER_LETTER`)
+  - **2. Honeypot Bot Trap Firewall:** Formally blacklisted Breezy HR's hidden bot traps (`input[name*="hp_"]`, `input[id*="hp_"]`, `.apply-field-extra`) in `scanBreezyFields` and generic `scanFields()`. Prevents silent application disqualification.
+  - **3. AngularJS Scope Digest Synchronization:** Added `win.angular` scope digest triggers in `setNativeValue` to force AngularJS 1.x dirty-checking models (`ng-model`) to synchronize immediately on synthetic typing.
+  - **4. Background URL Patterns Registration:** Registered `'breezy.hr'` in `ATS_URL_PATTERNS` inside `extension/background.js` for automatic badge illumination.
+  - **5. Candidate Context Slug Router:** Updated `/api/autopilot/profile` to support `?slug=ayushi` / `?slug=roushan` for authenticated founder co-developers with candidate context privacy guards (`isDeveloperEmail`), and added slug mismatch fallback in `extension/content.js`.
+  - **6. Dual-Profile End-to-End Live Browser Proof:** Verified live autofill on `https://1-glance-inc.breezy.hr/p/9ef34bc35794-full-stack-developer-intern/apply`:
+    - Roushan Kumar: 8/8 fields filled (`Indrapuri, North Patel Nagar, Patna, Bihar`, resume attached, honeypot empty).
+    - Ayushi Raj: 8/8 fields filled (`Mirzapur, Nawada, Bihar`, `ayushi29507@gmail.com`, `+918709852305`, resume attached, honeypot empty).
+    - Proof screenshots: `breezy_hud_roushan.png`, `breezy_filled_roushan.png`, `breezy_hud_ayushi.png`, `breezy_filled_ayushi.png`.
+  - **7. Regressions & Build:** Vitest 9/9 green, TypeScript clean (`0 errors`), extension zip re-packaged (194.6 KB).
 
 ---
 
@@ -2750,6 +2770,36 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule (Bundled Variable Fonts in Extensions):** Never rely on host OS or webpage fonts for browser extension UIs. Always bundle self-contained variable font files (`.woff2`) inside the extension package and inject `@font-face` into the host document's head to guarantee identical, Tier-1 typography across all operating systems and websites.
   - **Rule (Stacked Card Pattern for Dynamic Text):** In narrow fixed-width components (e.g. 360px popups or 368px HUDs), dynamic user or session strings must NEVER share a single horizontal flex line with descriptive labels. Always stack the label above the text and apply a 2-line clamp with `word-break: break-word` and a `title` tooltip to guarantee zero horizontal container clipping.
   - **Rule (Tabular Numerics for Metrics):** All numbers in stats rows, counters, and step badges must enforce `font-variant-numeric: tabular-nums; font-feature-settings: "tnum"`. This prevents horizontal layout jitter when counters update dynamically.
+
+### 🔴 Case 44: Breezy HR Specialized ATS Driver, Bot Trap Honeypot Defense, AngularJS Scope Sync & Candidate Context Routing
+* **What Happened:** The user requested testing AstrePilot on the Breezy HR job application form (`https://1-glance-inc.breezy.hr/p/9ef34bc35794-full-stack-developer-intern/apply`). During initial inspection, AstrePilot did not illuminate an "ATS" badge, classified `cName` generically as `SCREENING`, missed `cAddress` and `cCoverLetter` when typing animation limits elapsed, and exposed the candidate to Breezy HR's hidden bot trap (`hp_7f2b`). Furthermore, when switching candidate context to Ayushi Raj (`slug: ayushi`), the remote API router defaulted back to Roushan's data due to a missing slug parameter in the `/api/autopilot/profile` request.
+* **The Root Cause / Mistake:**
+  1. **Missing ATS URL Pattern:** `breezy.hr` was missing from `ATS_URL_PATTERNS` in `extension/background.js`, preventing automatic URL recognition and action badge illumination.
+  2. **Breezy HR DOM Anatomy:** Breezy HR utilizes AngularJS (Angular 1.x) with `ng-model` bindings, `cName`, `cEmail`, `cPhoneNumber`, `fullAddress`, `cSummary`, `cCoverLetter`, an invisible file input (`input#main-attachment style="display:none;"`), and a hidden honeypot container (`.apply-field-extra input#hp_* style="position:absolute;left:-9999px;opacity:0"`).
+  3. **Bot Trap Honeypot Exposure:** Breezy HR deliberately injects an offscreen input (`id="hp_7f2b"`) to detect automated filling bots. Any script touching this field causes silent application disqualification.
+  4. **AngularJS Dirty-Checking Lifecycle:** AngularJS 1.x does not always catch standard synthetic input events without an explicit `$apply` or `$digest` trigger, requiring `win.angular.element(el).triggerHandler('change')`.
+  5. **Founder Context Routing Fallback:** `DEFAULT_FOUNDER_TOKENS` lacked an entry for `ayushi`, falling back to `DEFAULT_FOUNDER_TOKENS.roushan`. When `mountHud()` called `/api/autopilot/profile`, the production server evaluated the bearer token and returned Roushan's master profile, ignoring the client-side active context.
+* **The Concrete Surgical Fix:**
+  1. **Breezy HR Deterministic Driver (`extension/content.js`):**
+     - Implemented `isBreezyEnvironment(targetDocs)` detecting `*.breezy.hr` and Breezy form markers.
+     - Implemented `scanBreezyFields(targetDoc)` mapping `cResume` &rarr; `RESUME`, `cName` &rarr; `FULL_NAME`, `cEmail` &rarr; `EMAIL`, `cPhoneNumber` &rarr; `PHONE`, `smsConsent` &rarr; `TEXT_CONSENT`, `fullAddress` &rarr; `ADDRESS`, `cSummary` &rarr; `SUMMARY`, and `cCoverLetter` &rarr; `COVER_LETTER`.
+  2. **Strict Honeypot Firewall (`extension/content.js`):**
+     - Filtered out all honeypot inputs starting with `hp_`, containing `honeypot`, or nested inside `.apply-field-extra` or `[aria-hidden="true"]` across both specialized and generic scanners.
+  3. **AngularJS Scope Synchronization (`setNativeValue`):**
+     - Injected a safe hook that detects `win.angular`, triggers `triggerHandler('input')` and `triggerHandler('change')`, and invokes `scope.$apply()` when outside an active digest phase.
+  4. **Context-Aware API Router (`src/app/api/autopilot/profile/route.ts`):**
+     - Updated route to accept `?slug=ayushi` or `?slug=roushan` for authenticated founder co-developers verified via `isDeveloperEmail(user.email)`.
+     - In `extension/content.js`, prevented fallback to Roushan's token when `activeCtx === 'ayushi'`, and added an automatic slug mismatch fallback to `STANDALONE_PROFILES.ayushi`.
+  5. **Background Pattern Registration (`extension/background.js`):** Added `'breezy.hr'` to `ATS_URL_PATTERNS`.
+  6. **Automated Live End-to-End Verification (`scripts/test-breezy-live.cjs`):**
+     - Run 1 (Roushan): 8/8 fields filled (`Indrapuri, North Patel Nagar, Patna, Bihar`, resume PDF attached, honeypot untouched).
+     - Run 2 (Ayushi): 8/8 fields filled (`Mirzapur, Nawada, Bihar`, `ayushi29507@gmail.com`, `+918709852305`, resume PDF attached, honeypot untouched).
+     - Proof screenshots captured: `breezy_hud_roushan.png`, `breezy_filled_roushan.png`, `breezy_hud_ayushi.png`, `breezy_filled_ayushi.png`.
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Honeypot Bot Trap Exclusion):** Modern ATS platforms (Breezy HR, BambooHR, Lever) increasingly employ honeypot traps—offscreen, zero-height, or opacity-zero inputs with random IDs (`hp_*`). Scanners must explicitly identify and blackhole these elements before running classification algorithms. Touching a honeypot field is fatal to candidate deliverability.
+  - **Rule (Framework-Aware Event Dispatching):** Different ATS frameworks track form dirty state via different reactive primitives: React uses synthetic event wrappers over native value setters; Vue uses input event dispatching; AngularJS requires `triggerHandler('input')` and `scope.$apply()`. Extension input drivers must support all three layers defensively.
+  - **Rule (Candidate Context Integrity):** When multi-candidate switching is enabled, client-side requests must explicitly specify candidate context (`?slug=...`) and reject any server response whose payload slug conflicts with the active session context.
+
 
 ---
 

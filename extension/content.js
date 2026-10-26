@@ -615,17 +615,20 @@
     return new Promise((resolve) => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (res) => {
         const safeRes = res || {};
-        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').trim();
-        if (!origin || origin.includes('vercel.app')) {
-          origin = 'https://astrework.app';
-          chrome.storage.sync.set({ astrepilot_origin: origin });
-        }
-        const activeCtx = safeRes.astrepilot_active_context || 'roushan';
-        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || DEFAULT_FOUNDER_TOKENS.roushan || null;
-        resolve({
-          token,
-          origin,
-          activeContext: activeCtx
+        chrome.storage.local.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (localRes) => {
+          const merged = { ...safeRes, ...(localRes || {}) };
+          let origin = (merged.astrepilot_origin || 'https://astrework.app').trim();
+          if (!origin || origin.includes('vercel.app')) {
+            origin = 'https://astrework.app';
+            chrome.storage.sync.set({ astrepilot_origin: origin });
+          }
+          const activeCtx = merged.astrepilot_active_context || 'roushan';
+          const token = merged.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : null);
+          resolve({
+            token,
+            origin,
+            activeContext: activeCtx
+          });
         });
       });
     });
@@ -1012,7 +1015,7 @@
   const FIELD_PATTERNS = [
     { type: 'FIRST_NAME',   kw: ['first_name', 'firstname', 'fname', 'given_name', 'first-name', 'first name', 'givenname'] },
     { type: 'LAST_NAME',    kw: ['last_name', 'lastname', 'lname', 'family_name', 'surname', 'last-name', 'last name', 'familyname'] },
-    { type: 'FULL_NAME',    kw: ['full_name', 'fullname', 'legal_name', 'full-name', 'full-legal', 'full legal'] },
+    { type: 'FULL_NAME',    kw: ['full_name', 'fullname', 'legal_name', 'full-name', 'full-legal', 'full legal', 'full name', 'cname'] },
     { type: 'EMAIL',        kw: ['email', 'e-mail', 'email_address', 'emailaddress'] },
     { type: 'PHONE_TYPE',   kw: ['phone_type', 'phone type', 'phonetype', 'number_type', 'number type', 'telephone_type', 'telephonetype'] },
     { type: 'PHONE',        kw: ['phone', 'telephone', 'mobile', 'cell', 'contact_number', 'phone_number', 'phonenumber', 'phone number', 'contact number', 'mobile number'] },
@@ -1812,6 +1815,70 @@
     return { fields, seenElements };
   }
 
+  function isBreezyEnvironment(targetDocs = [document]) {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (host.includes('breezy.hr') || href.includes('breezy.hr')) return true;
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        if (doc.querySelector('input[name="cResume"], input[name="cName"], input[name="cEmail"], input#main-attachment, .bzyButtonColor')) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function scanBreezyFields(targetDoc) {
+    if (!targetDoc) return { fields: [], seenElements: new Set() };
+    const fields = [];
+    const seenElements = new Set();
+
+    // Breezy HR Deterministic Map
+    const BREEZY_EXACT_MAP = [
+      { type: 'RESUME', selectors: ['input#main-attachment', 'input[name="cResume"]', 'input[type="file"]'] },
+      { type: 'FULL_NAME', selectors: ['input[name="cName"]', 'input[placeholder*="Full Name" i]'] },
+      { type: 'EMAIL', selectors: ['input[name="cEmail"]', 'input[type="email"]'] },
+      { type: 'PHONE', selectors: ['input[name="cPhoneNumber"]', 'input[placeholder*="Phone Number" i]'] },
+      { type: 'TEXT_CONSENT', selectors: ['input[name="smsConsent"]', 'input[type="checkbox"][name*="sms" i]'] },
+      { type: 'ADDRESS', selectors: ['#fullAddress', 'input[name="cAddress"]', 'input[placeholder*="Address" i]'] },
+      { type: 'SUMMARY', selectors: ['textarea[name="cSummary"]'] },
+      { type: 'COVER_LETTER', selectors: ['textarea[name="cCoverLetter"]'] }
+    ];
+
+    // Explicitly blacklist Breezy HR honeypots to prevent bot traps
+    const honeypots = targetDoc.querySelectorAll('input[name*="hp_"], input[id*="hp_"], .apply-field-extra input');
+    honeypots.forEach(hp => seenElements.add(hp));
+
+    BREEZY_EXACT_MAP.forEach(item => {
+      let el = null;
+      for (const sel of item.selectors) {
+        try {
+          const found = targetDoc.querySelector(sel);
+          if (found) { el = found; break; }
+        } catch (e) {}
+      }
+      if (el && !seenElements.has(el)) {
+        seenElements.add(el);
+        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
+          ? el.checked
+          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
+        const elId = el.id || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('bzy_' + fields.length);
+        fields.push({
+          element: el,
+          type: item.type,
+          id: item.type.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'BreezyHR'
+        });
+      }
+    });
+
+    return { fields, seenElements };
+  }
+
   function scanFields() {
     let frameDocs = [];
     try {
@@ -1865,6 +1932,7 @@
 
     const isIcims = isIcimsEnvironment(targetDocs);
     const isGreenhouse = isGreenhouseEnvironment(targetDocs);
+    const isBreezy = isBreezyEnvironment(targetDocs);
 
     targetDocs.forEach(targetDoc => {
       const seenElements = new Set();
@@ -1889,6 +1957,17 @@
           seenElements.add(f.element);
         });
         ghSeen.forEach(el => seenElements.add(el));
+      }
+
+      // If on a Breezy HR portal, execute the deterministic Breezy driver
+      if (isBreezy) {
+        const { fields: bzyFields, seenElements: bzySeen } = scanBreezyFields(targetDoc);
+        bzyFields.forEach(f => {
+          results.push(f);
+          seenTypes[f.type] = true;
+          seenElements.add(f.element);
+        });
+        bzySeen.forEach(el => seenElements.add(el));
       }
 
       const inputs = targetDoc.querySelectorAll(COMBOBOX_QUERY);
@@ -1917,6 +1996,11 @@
 
         const idAttr = (canonicalEl.getAttribute('id') || '').toLowerCase();
         const nameAttr = (canonicalEl.getAttribute('name') || '').toLowerCase();
+
+        // Filter out Honeypot bot traps (Breezy HR hp_*, .apply-field-extra, offscreen traps)
+        if (idAttr.startsWith('hp_') || nameAttr.startsWith('hp_') || idAttr.includes('honeypot') || nameAttr.includes('honeypot') || (canonicalEl.closest && canonicalEl.closest('.apply-field-extra, [aria-hidden="true"]'))) {
+          return;
+        }
 
         // Filter out OneTrust / Cookie consent banners & widgets
         if (idAttr.startsWith('ot-') || idAttr.includes('onetrust') || idAttr.includes('vendor-search') || idAttr.includes('cookie') || (canonicalEl.closest && canonicalEl.closest('#onetrust-banner-sdk, [id*="onetrust"], .ot-sdk-container, [id*="cookie"]'))) {
@@ -2969,6 +3053,19 @@
           win.$(el).trigger('change');
         }
       } catch (e) {}
+      try {
+        if (win.angular) {
+          const ngEl = win.angular.element(el);
+          if (ngEl) {
+            ngEl.triggerHandler('input');
+            ngEl.triggerHandler('change');
+            const scope = (ngEl.scope && ngEl.scope()) || (ngEl.isolateScope && ngEl.isolateScope());
+            if (scope && !scope.$$phase && scope.$apply) {
+              scope.$apply();
+            }
+          }
+        }
+      } catch (ngErr) {}
     }
   }
 
@@ -3684,9 +3781,11 @@
       userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
     } else {
       try {
-        const profileRes = await apFetch('/profile');
-        if (!profileRes.ok) throw new Error('profile-failed');
+        const profileRes = await apFetch(`/profile?slug=${encodeURIComponent(activeCtx)}`);
         userProfile = await profileRes.json();
+        if (userProfile && activeCtx && userProfile.slug && userProfile.slug !== activeCtx) {
+          userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
+        }
 
         const sessionRes = await apFetch('/session');
         if (sessionRes.ok) {
