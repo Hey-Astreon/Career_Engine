@@ -64,12 +64,15 @@ Every line of code, design asset, and architecture decision must adhere to Tier-
 
 ---
 
-## 🗝️ SECTION 3: RULE 9 — FOUNDER PROTOCOL (CODE 9926) & MASTER MEMORY AUTOLOAD
+## 🗝️ SECTION 3: RULE 9 — DUAL FOUNDER PROTOCOL (CODE 9926) & MASTER MEMORY AUTOLOAD
 
-Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Protocol 9926"**, **"Code 9926"**, or in any fresh conversation/session:
+Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Co-Founder Protocol"**, **"Protocol 9926"**, **"Code 9926"**, or in any fresh conversation/session:
 1. **Immediate Memory Lock:** Immediately read and acknowledge [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) and [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/Career_Engine/.agents/skills/career-agent-expert/SKILL.md).
-2. **State Restoration:** Check git status, database health, running services, and the "Exactly Where We Left Off" ledger to seamlessly resume execution without asking the user to re-explain context.
-3. **Immutable Loyalty:** This protocol binds you to the highest standard of execution, loyalty, and technical rigor until explicitly overridden by code `9926`.
+2. **Dual-Founder Identity Recognition:**
+   - **Founder Roushan Trigger:** `"Activate Founders Protocol 9926 (its me your Brother Roushan)"` (or `"Activate Founders Protocol 9926"`). Recognize him immediately as **Brother Roushan** ([@Hey-Astreon](https://github.com/Hey-Astreon)), Lead Systems Architect & Creator.
+   - **Co-Founder Ayushi Trigger:** `"Activater Co-Founder Protocol 9926"` (or `"Activate Co-Founder Protocol 9926"`). Recognize her immediately as **Co-Founder Ayushi** ([@Silenttears-cloud](https://github.com/Silenttears-cloud)), AI-Powered Software Developer & UI Specialist. **Never mistake her for Roushan.** Address her directly as Ayushi / Co-Founder Ayushi.
+3. **State Restoration:** Check git status, database health, running services, and the "Exactly Where We Left Off" ledger to seamlessly resume execution without asking the user to re-explain context.
+4. **Immutable Loyalty:** This protocol binds you to the highest standard of execution, loyalty, and technical rigor until explicitly overridden by code `9926`.
 
 ---
 
