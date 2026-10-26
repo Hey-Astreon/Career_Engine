@@ -88,7 +88,7 @@ export function getMasterResumeBaseline(
       header: {
         fullName: "AYUSHI RAJ",
         targetHeadline: "Full-Stack Developer | AI Systems & Interactive Web Applications",
-        location: "Bihar, India",
+        location: "Nawada, Bihar, India",
         phone: "+91-8709852305",
         email: "ayushi29507@gmail.com",
         portfolioUrl: "https://ayushiraj.me",

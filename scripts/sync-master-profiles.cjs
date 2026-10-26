@@ -118,15 +118,15 @@ async function run() {
     sql: `UPDATE profiles 
           SET title = ?, fullName = ?, location = ?, streetAddress = ?, apartment = ?, zipCode = ?,
               highestEducation = ?, gender = ?, pronouns = ?, careerStage = ?, workType = ?,
-              noticePeriod = ?, willingnessToRelocate = ?
+              noticePeriod = ?, willingnessToRelocate = ?, requiresVisa = ?
           WHERE slug = ?`,
     args: [
       'Full-Stack Developer | AI Systems & Interactive Web Applications',
       'AYUSHI RAJ',
-      'Patna, Bihar, India',
-      'Boring Road, Patna',
+      'Nawada, Bihar, India',
+      'Mirzapur, Nawada, Bihar',
       '',
-      '800001',
+      '805110',
       'Bachelor of Computer Applications (BCA)',
       'Female',
       'She/Her',
@@ -134,6 +134,7 @@ async function run() {
       'remote',
       'Immediate',
       1,
+      0,
       'ayushi'
     ]
   });

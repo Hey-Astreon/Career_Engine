@@ -5,7 +5,7 @@
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDERS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 25, 2026 (Phase 65: AstrePilot Toolbar Popup & In-Page HUD UI Precision Redesign, Bundled Variable Typography, and Unified Dark Mode Architecture; Full E2E Chromium Playwright Verification, 0 TypeScript Errors, 9/9 Optimizer Tests Passing)
+> **LAST COGNITIVE SYNC:** October 26, 2026 (Phase 66: Ayushi Raj Profile & Geolocation Calibration — Mirzapur, Nawada, PIN 805110 & Visa Normalization; Turso Cloud LibSQL, dev.db, Standalone Ext Sync)
 
 ---
 
@@ -1225,6 +1225,17 @@ Located in `extension/`:
     - Verified 0px horizontal overflow on 360px popup card, correct tabular numeric font stacks, and active dark theme.
     - Captured verified proof screenshots: `astrepilot_popup_light_proof.png`, `astrepilot_popup_dark_proof.png`, `astrepilot_hud_light_proof.png`, `astrepilot_hud_dark_proof.png`, and `astrepilot_hud_pill_proof.png`.
     - Executed regression checks: `verify-download-button.cjs` passed (86.4 KB PDF downloaded), Vitest suite passed (9/9 green), TypeScript check clean (`0 errors`).
+
+- [x] **Phase 66: Ayushi Raj Profile & Geolocation Calibration — Mirzapur, Nawada, PIN 805110 & Visa Normalization (Oct 26, 2026)**
+  - **1. Address & Geolocation Calibration:** Calibrated Ayushi Raj's physical address from placeholder `Boring Road, Patna` to verified home address:
+    - Street Address: `Mirzapur, Nawada, Bihar`
+    - Location: `Nawada, Bihar, India` (City: `Nawada`, State: `Bihar`, Country: `India`)
+    - ZIP / Postal PIN Code: `805110` (Nawada HO standard postal PIN)
+  - **2. Visa Sponsorship Normalization:** Verified and locked `requiresVisa = false` across both database schemas and extension standalone profiles.
+  - **3. Dual Database Synchronization:** Updated both Turso Cloud LibSQL (`scripts/sync-master-profiles.cjs`) and local development SQLite database (`prisma/dev.db`), ensuring zero desync across cloud and local runtimes.
+  - **4. Resume Baseline & Extension Standalone Sync:** Synchronized `src/lib/resumeBaseline.ts` (`location: "Nawada, Bihar, India"`) and `extension/content.js` (`STANDALONE_PROFILES.ayushi`).
+  - **5. Extension Repackaging:** Rebuilt `public/downloads/astrepilot-extension.zip` (193.9 KB).
+  - **6. Verification & Quality:** Full TypeScript check `npx tsc --noEmit` clean (0 errors) and Vitest `tests/resume_optimizer.test.ts` passed (9/9 green).
 
 ---
 
