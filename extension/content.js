@@ -280,8 +280,87 @@
     return false;
   };
   chrome.runtime.onMessage.addListener(messageListener);
+
+  let childFrameSource = null;
+  let childFrameOrigin = null;
+
+  // Window message bus for Cross-Origin Subframe coordination (Pillar 1)
+  const windowMessageListener = (event) => {
+    if (!event || !event.data || typeof event.data !== 'object') return;
+
+    // A. Top-level window receiving telemetry from a child application iframe
+    if (window === window.top) {
+      if (event.data.type === 'ASTREPILOT_CHILD_FRAME_FIELDS') {
+        childFrameSource = event.source;
+        childFrameOrigin = event.origin;
+        if (event.data.fields && event.data.fields.length > 0) {
+          if (!detectedFields || detectedFields.length === 0) {
+            detectedFields = event.data.fields;
+            if (activeHud) {
+              activeHud.setDetectedFields(event.data.fields);
+            }
+          }
+        }
+      } else if (event.data.type === 'ASTREPILOT_CHILD_ROW_UPDATE') {
+        if (activeHud) {
+          activeHud.markRow(event.data.id, event.data.status, event.data.preview);
+        }
+      } else if (event.data.type === 'ASTREPILOT_CHILD_STATE_UPDATE') {
+        if (activeHud) {
+          activeHud.setState(event.data.state, event.data.data);
+        }
+      }
+    }
+
+    // B. Subframe window receiving execution triggers from Top-level HUD
+    if (window !== window.top) {
+      if (event.data.type === 'ASTREPILOT_CHILD_TRIGGER_AUTOFILL') {
+        if (event.data.profile) userProfile = event.data.profile;
+        if (event.data.session) activeSession = event.data.session;
+
+        const proxyHud = {
+          setState: (st, d) => {
+            try { window.top.postMessage({ type: 'ASTREPILOT_CHILD_STATE_UPDATE', state: st, data: d }, '*'); } catch (e) {}
+          },
+          markRow: (id, st, p) => {
+            try { window.top.postMessage({ type: 'ASTREPILOT_CHILD_ROW_UPDATE', id, status: st, preview: p }, '*'); } catch (e) {}
+          }
+        };
+
+        (async () => {
+          if (!detectedFields || !detectedFields.length) {
+            detectedFields = scanFields();
+          }
+          if (detectedFields && detectedFields.length > 0) {
+            await fillAllFields(proxyHud);
+          }
+        })();
+      }
+    }
+  };
+  window.addEventListener('message', windowMessageListener);
+
+  // If running in subframe, announce fields to top-level window after DOM idle
+  if (window !== window.top) {
+    setTimeout(() => {
+      try {
+        const inputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea');
+        if (inputs.length >= 2) {
+          const frameFields = scanFields();
+          if (frameFields && frameFields.length > 0) {
+            window.top.postMessage({
+              type: 'ASTREPILOT_CHILD_FRAME_FIELDS',
+              fields: frameFields.map(f => ({ type: f.type, id: f.id }))
+            }, '*');
+          }
+        }
+      } catch (e) {}
+    }, 400);
+  }
+
   window.__ASTREPILOT_CLEANUP__ = () => {
     chrome.runtime.onMessage.removeListener(messageListener);
+    window.removeEventListener('message', windowMessageListener);
     if (syncChannel) {
       try { syncChannel.close(); } catch (e) {}
       syncChannel = null;
@@ -1925,6 +2004,248 @@
     return { fields, seenElements };
   }
 
+  /* -- DEEP SHADOW DOM WALKER (PILLAR 1) -- */
+  function deepQuerySelectorAll(root, selector) {
+    if (!root) return [];
+    let results = [];
+    try {
+      results = Array.from(root.querySelectorAll(selector));
+    } catch (e) {}
+
+    try {
+      const doc = root.ownerDocument || (root.nodeType === 9 ? root : document);
+      const walker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+      let currentNode = walker.nextNode();
+      while (currentNode) {
+        if (currentNode.shadowRoot) {
+          try {
+            const shadowMatches = deepQuerySelectorAll(currentNode.shadowRoot, selector);
+            results = results.concat(shadowMatches);
+          } catch (err) {}
+        }
+        currentNode = walker.nextNode();
+      }
+    } catch (e) {}
+
+    return results;
+  }
+
+  /* -- WORKDAY DETERMINISTIC DRIVER (PILLAR 2) -- */
+  function isWorkdayEnvironment(targetDocs = [document]) {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (host.includes('myworkdayjobs.com') || host.includes('.myworkday.com') || href.includes('myworkdayjobs.com')) return true;
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        if (doc.querySelector('[data-automation-id="workdayApplication"], [data-automation-id="legalNameSection_firstName"], [data-automation-id="bottom-navigation-next-button"]')) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function scanWorkdayFields(targetDoc) {
+    if (!targetDoc) return { fields: [], seenElements: new Set() };
+    const fields = [];
+    const seenElements = new Set();
+
+    const WORKDAY_MAP = [
+      { type: 'FIRST_NAME', selectors: ['input[data-automation-id="legalNameSection_firstName"]', 'input[id*="legalNameSection_firstName"]'] },
+      { type: 'LAST_NAME', selectors: ['input[data-automation-id="legalNameSection_lastName"]', 'input[id*="legalNameSection_lastName"]'] },
+      { type: 'PREFERRED_NAME', selectors: ['input[data-automation-id="preferredNameSection_firstName"]'] },
+      { type: 'EMAIL', selectors: ['input[data-automation-id="email"]', 'input[type="email"]'] },
+      { type: 'PHONE', selectors: ['input[data-automation-id="phone-number"]', 'input[data-automation-id="phoneNumber"]'] },
+      { type: 'PHONE_TYPE', selectors: ['button[data-automation-id="phone-device-type"]', '[data-automation-id="phone-device-type"]'] },
+      { type: 'ADDRESS', selectors: ['input[data-automation-id="addressSection_addressLine1"]'] },
+      { type: 'APT', selectors: ['input[data-automation-id="addressSection_addressLine2"]'] },
+      { type: 'CITY', selectors: ['input[data-automation-id="addressSection_city"]'] },
+      { type: 'ZIP', selectors: ['input[data-automation-id="addressSection_postalCode"]'] },
+      { type: 'STATE', selectors: ['button[data-automation-id="addressSection_countryRegion"]', '[data-automation-id="addressSection_countryRegion"]'] },
+      { type: 'COUNTRY', selectors: ['button[data-automation-id="addressSection_country"]', '[data-automation-id="addressSection_country"]'] },
+      { type: 'RESUME', selectors: ['input[data-automation-id="file-upload-input-ref"]', '[data-automation-id="file-upload-drop-zone"] input[type="file"]', 'input[type="file"]'] },
+      { type: 'LINKEDIN', selectors: ['input[data-automation-id*="linkedin"]', 'input[data-automation-id="linkedinQuestion"]'] },
+      { type: 'PORTFOLIO', selectors: ['input[data-automation-id*="website"]', 'input[data-automation-id*="portfolio"]'] },
+      { type: 'HEAR_ABOUT', selectors: ['button[data-automation-id="sourcePrompt"]', '[data-automation-id="sourcePrompt"]'] },
+      { type: 'COMPANY', selectors: ['input[data-automation-id="company"]'] },
+      { type: 'EMPLOYMENT_TITLE', selectors: ['input[data-automation-id="jobTitle"]'] },
+      { type: 'WORK_DESCRIPTION', selectors: ['textarea[data-automation-id="description"]'] },
+      { type: 'SCHOOL', selectors: ['input[data-automation-id="school"]', 'button[data-automation-id="school"]'] },
+      { type: 'DEGREE', selectors: ['button[data-automation-id="degree"]', '[data-automation-id="degree"]'] },
+      { type: 'DISCIPLINE', selectors: ['button[data-automation-id="field-of-study"]', '[data-automation-id="field-of-study"]'] },
+      { type: 'GENDER', selectors: ['button[data-automation-id="gender"]', 'button[data-automation-id="genderPrompt"]'] },
+      { type: 'HISPANIC_LATINO', selectors: ['button[data-automation-id="hispanicOrLatino"]'] },
+      { type: 'VETERAN', selectors: ['button[data-automation-id="veteranStatus"]'] },
+      { type: 'DISABILITY', selectors: ['input[data-automation-id*="disability"]', 'button[data-automation-id*="disability"]'] }
+    ];
+
+    WORKDAY_MAP.forEach(item => {
+      let el = null;
+      for (const sel of item.selectors) {
+        try {
+          const found = targetDoc.querySelector(sel);
+          if (found) { el = found; break; }
+        } catch (e) {}
+      }
+      if (el && !seenElements.has(el)) {
+        seenElements.add(el);
+        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
+          ? el.checked
+          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
+        const elId = el.id || el.getAttribute('data-automation-id') || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('wd_' + fields.length);
+        fields.push({
+          element: el,
+          type: item.type,
+          id: item.type.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'Workday'
+        });
+      }
+    });
+
+    return { fields, seenElements };
+  }
+
+  /* -- ASHBY DETERMINISTIC DRIVER (PILLAR 2) -- */
+  function isAshbyEnvironment(targetDocs = [document]) {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (host.includes('ashbyhq.com') || href.includes('ashbyhq.com')) return true;
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        if (doc.querySelector('[data-testid="application-form"], .ashby-application-form, [data-testid="submit-application"]')) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function scanAshbyFields(targetDoc) {
+    if (!targetDoc) return { fields: [], seenElements: new Set() };
+    const fields = [];
+    const seenElements = new Set();
+
+    const ASHBY_MAP = [
+      { type: 'FULL_NAME', selectors: ['input[data-testid="name"]', 'input[name="name"]', 'input[autocomplete="name"]'] },
+      { type: 'EMAIL', selectors: ['input[data-testid="email"]', 'input[name="email"]', 'input[autocomplete="email"]'] },
+      { type: 'PHONE', selectors: ['input[data-testid="phone"]', 'input[name="phone"]', 'input[autocomplete="tel"]'] },
+      { type: 'RESUME', selectors: ['[data-testid="resume-upload-dropzone"] input[type="file"]', 'input[type="file"][accept*="pdf"]', 'input[type="file"]'] },
+      { type: 'LINKEDIN', selectors: ['input[name*="linkedin" i]', 'input[data-testid*="linkedin" i]'] },
+      { type: 'GITHUB', selectors: ['input[name*="github" i]', 'input[data-testid*="github" i]'] },
+      { type: 'PORTFOLIO', selectors: ['input[name*="portfolio" i]', 'input[data-testid*="portfolio" i]', 'input[name*="website" i]'] },
+      { type: 'CITY', selectors: ['input[name*="location" i]', 'input[data-testid*="location" i]'] }
+    ];
+
+    ASHBY_MAP.forEach(item => {
+      let el = null;
+      for (const sel of item.selectors) {
+        try {
+          const found = targetDoc.querySelector(sel);
+          if (found) { el = found; break; }
+        } catch (e) {}
+      }
+      if (el && !seenElements.has(el)) {
+        seenElements.add(el);
+        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
+          ? el.checked
+          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
+        const elId = el.id || el.getAttribute('data-testid') || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('ashby_' + fields.length);
+        fields.push({
+          element: el,
+          type: item.type,
+          id: item.type.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'Ashby'
+        });
+      }
+    });
+
+    return { fields, seenElements };
+  }
+
+  /* -- LEVER DETERMINISTIC DRIVER (PILLAR 2) -- */
+  function isLeverEnvironment(targetDocs = [document]) {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (host.includes('lever.co') || href.includes('lever.co')) return true;
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        if (doc.querySelector('.application-form, #btn-submit, input[name="urls[LinkedIn]"]')) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function scanLeverFields(targetDoc) {
+    if (!targetDoc) return { fields: [], seenElements: new Set() };
+    const fields = [];
+    const seenElements = new Set();
+
+    const LEVER_MAP = [
+      { type: 'FULL_NAME', selectors: ['input[name="name"]', '#name'] },
+      { type: 'EMAIL', selectors: ['input[name="email"]', '#email'] },
+      { type: 'PHONE', selectors: ['input[name="phone"]', '#phone'] },
+      { type: 'COMPANY', selectors: ['input[name="org"]', '#org'] },
+      { type: 'LINKEDIN', selectors: ['input[name="urls[LinkedIn]"]'] },
+      { type: 'GITHUB', selectors: ['input[name="urls[GitHub]"]'] },
+      { type: 'PORTFOLIO', selectors: ['input[name="urls[Portfolio]"]'] },
+      { type: 'RESUME', selectors: ['input[name="resume"]', 'input#resume-upload-input', 'input[type="file"]'] },
+      { type: 'SUMMARY', selectors: ['textarea[name="comments"]', 'textarea[name="additional-information"]'] }
+    ];
+
+    LEVER_MAP.forEach(item => {
+      let el = null;
+      for (const sel of item.selectors) {
+        try {
+          const found = targetDoc.querySelector(sel);
+          if (found) { el = found; break; }
+        } catch (e) {}
+      }
+      if (el && !seenElements.has(el)) {
+        seenElements.add(el);
+        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
+          ? el.checked
+          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
+        const elId = el.id || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('lever_' + fields.length);
+        fields.push({
+          element: el,
+          type: item.type,
+          id: item.type.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'Lever'
+        });
+      }
+    });
+
+    return { fields, seenElements };
+  }
+
+  /* -- CAPTCHA SENTINEL (PILLAR 5) -- */
+  function detectCaptchaChallenge(targetDocs = [document]) {
+    try {
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        const captchaEl = doc.querySelector(
+          'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="challenges.cloudflare.com"], .cf-turnstile, .g-recaptcha, [data-sitekey]'
+        );
+        if (captchaEl) {
+          const rect = captchaEl.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
   function scanFields() {
     let frameDocs = [];
     try {
@@ -1980,6 +2301,9 @@
     const isIcims = isIcimsEnvironment(targetDocs);
     const isGreenhouse = isGreenhouseEnvironment(targetDocs);
     const isBreezy = isBreezyEnvironment(targetDocs);
+    const isWorkday = isWorkdayEnvironment(targetDocs);
+    const isAshby = isAshbyEnvironment(targetDocs);
+    const isLever = isLeverEnvironment(targetDocs);
 
     targetDocs.forEach(targetDoc => {
       const seenElements = new Set();
@@ -2017,7 +2341,41 @@
         bzySeen.forEach(el => seenElements.add(el));
       }
 
-      const inputs = targetDoc.querySelectorAll(COMBOBOX_QUERY);
+      // If on a Workday portal, execute the deterministic Workday driver
+      if (isWorkday) {
+        const { fields: wdFields, seenElements: wdSeen } = scanWorkdayFields(targetDoc);
+        wdFields.forEach(f => {
+          results.push(f);
+          seenTypes[f.type] = true;
+          seenElements.add(f.element);
+        });
+        wdSeen.forEach(el => seenElements.add(el));
+      }
+
+      // If on an Ashby portal, execute the deterministic Ashby driver
+      if (isAshby) {
+        const { fields: ashFields, seenElements: ashSeen } = scanAshbyFields(targetDoc);
+        ashFields.forEach(f => {
+          results.push(f);
+          seenTypes[f.type] = true;
+          seenElements.add(f.element);
+        });
+        ashSeen.forEach(el => seenElements.add(el));
+      }
+
+      // If on a Lever portal, execute the deterministic Lever driver
+      if (isLever) {
+        const { fields: levFields, seenElements: levSeen } = scanLeverFields(targetDoc);
+        levFields.forEach(f => {
+          results.push(f);
+          seenTypes[f.type] = true;
+          seenElements.add(f.element);
+        });
+        levSeen.forEach(el => seenElements.add(el));
+      }
+
+      // Deep Shadow DOM query: finds all standard & Web Component inputs across open shadow roots
+      const inputs = deepQuerySelectorAll(targetDoc, COMBOBOX_QUERY);
 
       inputs.forEach(inp => {
         // Canonicalize container vs inner interactive element to prevent duplicate registrations
@@ -4145,6 +4503,26 @@
       const fields = scanFields();
       applyDetectedFields(fields);
     }
+
+    // CAPTCHA Sentinel: if a bot verification challenge is active, pause gracefully
+    if (detectCaptchaChallenge([document])) {
+      hud.setState('review_ready', {
+        warning: '🛡️ Human Verification Detected: Please solve the CAPTCHA challenge above. AstrePilot will resume automatically once solved.'
+      });
+      return;
+    }
+
+    // Cross-Origin Subframe Delegation: if fields reside in an embedded child iframe, delegate execution
+    if (childFrameSource && (!detectedFields || detectedFields.length === 0 || detectedFields.some(f => !f.element || !f.element.isConnected))) {
+      hud.setState('filling');
+      childFrameSource.postMessage({
+        type: 'ASTREPILOT_CHILD_TRIGGER_AUTOFILL',
+        profile: userProfile,
+        session: activeSession
+      }, '*');
+      return;
+    }
+
     if (!detectedFields || !detectedFields.length) return;
 
     // Pillar E: Concurrency Lock Check
