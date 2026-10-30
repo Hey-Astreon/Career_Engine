@@ -202,5 +202,74 @@ describe("Universal Combobox & Dropdown Engine (UCDE)", () => {
       const match = resolveSemanticOptionMatch(mysteryOptions, "Unknown Custom Value", "CUSTOM");
       expect(match).toEqual({ text: "Option Alpha (Standard)", value: "ALPHA" });
     });
+
+    describe("Preferred Office Location & Remote Smart Decision Logic", () => {
+      it("prioritizes 'Remote' in office location dropdowns (Pinterest Greenhouse case)", () => {
+        const greenhouseLocationOptions: SemanticOption[] = [
+          { text: "Select...", value: "" },
+          { text: "San Francisco", value: "sf" },
+          { text: "Palo Alto", value: "pa" },
+          { text: "Seattle", value: "sea" },
+          { text: "Remote", value: "remote" },
+        ];
+
+        // When field is PREFERRED_LOCATION with candidate's default Remote
+        const match = resolveSemanticOptionMatch(
+          greenhouseLocationOptions,
+          "Remote",
+          "PREFERRED_LOCATION"
+        );
+        expect(match).toEqual({ text: "Remote", value: "remote" });
+      });
+
+      it("identifies and selects Remote even when field was classified as generic LOCATION", () => {
+        const greenhouseLocationOptions: SemanticOption[] = [
+          { text: "Select...", value: "" },
+          { text: "San Francisco", value: "sf" },
+          { text: "Palo Alto", value: "pa" },
+          { text: "Seattle", value: "sea" },
+          { text: "Remote", value: "remote" },
+        ];
+
+        // Even if candidate's address "Patna, Bihar, India" was passed under LOCATION,
+        // the presence of a 'Remote' option in a location dropdown smartly triggers remote selection!
+        const match = resolveSemanticOptionMatch(
+          greenhouseLocationOptions,
+          "Patna, Bihar, India",
+          "LOCATION"
+        );
+        expect(match).toEqual({ text: "Remote", value: "remote" });
+      });
+
+      it("matches rich remote variants: 'Remote - US', 'Virtual', 'Work from Home'", () => {
+        const optionsWithVariants: SemanticOption[] = [
+          { text: "New York City (HQ)", value: "nyc" },
+          { text: "Remote - US / Americas", value: "remote_us" },
+          { text: "Austin, TX", value: "atx" },
+        ];
+
+        const match = resolveSemanticOptionMatch(
+          optionsWithVariants,
+          "Remote",
+          "PREFERRED_LOCATION"
+        );
+        expect(match).toEqual({ text: "Remote - US / Americas", value: "remote_us" });
+      });
+
+      it("falls back to first non-placeholder office when Remote is not offered", () => {
+        const inPersonOnlyOffices: SemanticOption[] = [
+          { text: "Select an office...", value: "" },
+          { text: "San Francisco (HQ)", value: "sf" },
+          { text: "Seattle", value: "sea" },
+        ];
+
+        const match = resolveSemanticOptionMatch(
+          inPersonOnlyOffices,
+          "Remote",
+          "PREFERRED_LOCATION"
+        );
+        expect(match).toEqual({ text: "San Francisco (HQ)", value: "sf" });
+      });
+    });
   });
 });

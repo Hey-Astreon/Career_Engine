@@ -1282,6 +1282,34 @@ Located in `extension/`:
     - Proof screenshots: `breezy_hud_roushan.png`, `breezy_filled_roushan.png`, `breezy_hud_ayushi.png`, `breezy_filled_ayushi.png`.
   - **7. Regressions & Build:** Vitest 9/9 green, TypeScript clean (`0 errors`), extension zip re-packaged (194.6 KB).
 
+- [x] **Phase 68: Preferred Office Location & Remote Smart Decision Engine (Oct 30, 2026)**
+  - **1. Greenhouse Pinterest Architecture & Defect Identification:** On `https://job-boards.greenhouse.io/embed/job_app?for=pinterest&token=78385778&jr_id=6abe96980e027c0f3b399b35`, the question *"What is your preferred office location?*" with options `['San Francisco', 'Palo Alto', 'Seattle', 'Remote']` failed with `Location: ⚠️ Retry Verification`.
+  - **2. Root Cause Analysis:**
+    - The field matched generic `LOCATION` in `FIELD_PATTERNS`.
+    - `resolveValue('LOCATION')` returned candidate's home city ("Patna, Bihar, India").
+    - `fillUniversalCombobox` & `fillReactSelectV2` inspected `triggerEl.id.includes('location')` or `fieldType === 'LOCATION'` and forcefully routed the field to `fillGeoAutocomplete`.
+    - `fillGeoAutocomplete` typed "Patna" into the React-Select dropdown, filtering out all 4 valid office options and finding 0 matches.
+  - **3. Genuine Geo Autocomplete Guard (`isTrueGeoAutocomplete`):**
+    - Built `isTrueGeoAutocomplete(triggerEl, fieldType)` in `extension/content.js` to strictly differentiate candidate residence inputs (`candidate-location`, `current-city`) from workplace preference dropdowns.
+    - Explicitly excludes any field containing `preferred`, `office`, `workplace`, `arrangement`, `desired`, `which office`, `where would you like to work`, or typed as `PREFERRED_LOCATION` or `WORKPLACE_TYPE`.
+  - **4. Smart Remote Decision Engine (`extension/content.js` & `src/lib/autopilot/comboboxEngine.ts`):**
+    - Added Stage 2a Remote Priority matching in `resolveSemanticOptionMatch`:
+      - Automatically detects workplace/location questions or dropdowns offering a `Remote` option.
+      - Priority 1: Exact or prefixed `Remote` / `Work from Home` / `Virtual` / `Remote - US`.
+      - Priority 2: Candidate's home city/country if present in options.
+      - Priority 3: "Flexible" / "Any Location" / "No Preference".
+      - Priority 4: First valid non-placeholder office fallback so required fields are never left blank.
+    - Classified `PREFERRED_LOCATION` and `WORKPLACE_TYPE` in `FIELD_PATTERNS`, `SINGLETON_TYPES`, and fast heuristics.
+    - Updated `resolveScreeningSelect`, `resolvePreview`, and `resolveValue` to return `profile.preferredLocation || 'Remote'`.
+  - **5. Candidate Profile & API Synchronization:**
+    - Added `preferredLocation: 'Remote'` and `workplacePreference: 'Remote'` to `STANDALONE_PROFILES.roushan`, `STANDALONE_PROFILES.ayushi`, and `src/app/api/autopilot/profile/route.ts`.
+    - Added HUD UI label mappings (`'preferredlocation': 'Preferred Location'`, `'workplacetype': 'Workplace Preference'`) with briefcase icon in `extension/hud-ui.js`.
+  - **6. Testing & Distribution:**
+    - Repackaged `public/downloads/astrepilot-extension.zip` (196.2 KB).
+    - Executed `scripts/verify-smart-location.cjs` (12/12 passed 100%).
+    - Added 4 test cases to `tests/universal-combobox-engine.test.ts` (17/17 passed).
+    - Full Vitest suite (26/26 passed), 0 TypeScript errors.
+
 ---
 
 ## 🧠 SECTION 18: MASTER RETROSPECTIVE — MISTAKES MADE, PROBLEMS FACED & SOLVED, AND HARD-WON ENGINEERING EXPERIENCE
@@ -2825,6 +2853,43 @@ Found by scanning every `route.ts` for session/token checks. Root cause: routes 
   - **Rule (Framework-Aware Event Dispatching):** Different ATS frameworks track form dirty state via different reactive primitives: React uses synthetic event wrappers over native value setters; Vue uses input event dispatching; AngularJS requires `triggerHandler('input')` and `scope.$apply()`. Extension input drivers must support all three layers defensively.
   - **Rule (Candidate Context Integrity):** When multi-candidate switching is enabled, client-side requests must explicitly specify candidate context (`?slug=...`) and reject any server response whose payload slug conflicts with the active session context.
 
+### 🔴 Case 45: Greenhouse Pinterest Preferred Office Location Dropdown Failure & Remote Decision Engine
+* **What Happened:**
+  - While applying on a live Greenhouse job board for Pinterest (`https://job-boards.greenhouse.io/embed/job_app?for=pinterest&token=78385778&jr_id=6abe96980e027c0f3b399b35`), AstrePilot failed on the required dropdown: *"What is your preferred office location?*" with options `['San Francisco', 'Palo Alto', 'Seattle', 'Remote']`.
+  - The HUD displayed `Location` with a status of `⚠️ Retry Verification`, requiring manual user intervention.
+  - The user rightfully observed: AstreWork is built for candidates applying to remote internships and jobs, so when presented with office locations that include a Remote option, the system must have autonomous self-smart logic to select "Remote" automatically.
+* **The Root Cause / Mistake:**
+  1. **Generic Classification Colliding with Residence:** The question *"What is your preferred office location?*" matched generic `LOCATION` in `FIELD_PATTERNS`.
+  2. **Geo Autocomplete Hijack:** `fillReactSelectV2` and `fillUniversalCombobox` contained an aggressive check: `if (fieldType === 'CITY' || fieldType === 'LOCATION' || (triggerEl.id && triggerEl.id.includes('location')))`. Because the question's container and ID contained `location`, AstrePilot forcefully routed this fixed-option React-Select combobox to `fillGeoAutocomplete`.
+  3. **Option List Wipeout:** `fillGeoAutocomplete` typed the candidate's home city ("Patna" / "Indrapuri") into the React-Select search input. This instantly filtered out all available options (`San Francisco`, `Palo Alto`, `Seattle`, `Remote`), resulting in a "No options" state, zero option clicks, and a verification failure (`⚠️ Retry Verification`).
+  4. **Lack of Remote Priority Heuristic:** Even if the dropdown opened, the previous scoring algorithm evaluated candidate profile location against the options, rather than understanding candidate workplace intent (applying for remote roles).
+* **The Concrete Surgical Fix:**
+  1. **Guard with `isTrueGeoAutocomplete` (`extension/content.js`):**
+     - Created `isTrueGeoAutocomplete(triggerEl, fieldType)` that validates if an input is genuinely asking for the candidate's physical home city/address.
+     - Strictly excludes any element with labels or attributes containing `preferred`, `office`, `workplace`, `arrangement`, `desired`, `which office`, `where would you like to work`, or where `fieldType` is `PREFERRED_LOCATION` or `WORKPLACE_TYPE`.
+     - Placed this guard in both `fillReactSelectV2` and `fillUniversalCombobox`.
+  2. **New Semantic Types (`PREFERRED_LOCATION` & `WORKPLACE_TYPE`):**
+     - Added targeted regex patterns to `FIELD_PATTERNS` to catch "preferred office location", "preferred office", "preferred location", "workplace preference", "work model", "hybrid or remote", etc.
+     - Registered in `SINGLETON_TYPES` and fast select heuristics.
+  3. **Stage 2a Remote Priority Decision Engine (`extension/content.js` & `src/lib/autopilot/comboboxEngine.ts`):**
+     - Built comprehensive remote synonyms: `['remote', 'remote (us)', 'remote - us', 'remote - united states', 'remote / virtual', 'remote eligible', 'work from home', 'wfh', 'virtual', 'home-based', 'anywhere', 'telecommute', 'flexible / remote']`.
+     - In `resolveSemanticOptionMatch`, when workplace or office location intent is detected (or when options present a `Remote` choice alongside physical cities), it executes Stage 2a Remote Priority:
+       - **Priority 1:** Selects `Remote` (or closest remote synonym like `Remote - US`).
+       - **Priority 2:** Selects candidate's home city or country if listed as an office option.
+       - **Priority 3:** Selects "Flexible" / "Any Location" / "No Preference".
+       - **Priority 4:** Gracefully falls back to the first valid non-placeholder office option so required fields are never submitted blank.
+  4. **Profile & HUD Synchronization:**
+     - Added `preferredLocation: 'Remote'` and `workplacePreference: 'Remote'` across `STANDALONE_PROFILES` (`roushan` & `ayushi`) and `/api/autopilot/profile`.
+     - Updated HUD label dictionary in `extension/hud-ui.js` with `'preferredlocation': 'Preferred Location'` and mapped to `ICONS.briefcase`.
+  5. **Verification & Testing:**
+     - Repackaged extension: `public/downloads/astrepilot-extension.zip` (196.2 KB).
+     - Automated test `scripts/verify-smart-location.cjs`: 12/12 checks passed 100%.
+     - Unit tests `tests/universal-combobox-engine.test.ts`: 17/17 passed (including Pinterest Greenhouse case).
+     - Full Vitest suite: 26/26 passed.
+* **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Preference vs. Residence Separation Law):** Questions asking "Where do you live?" (`LOCATION` / `CITY`) and "Where do you want to work?" (`PREFERRED_LOCATION` / `WORKPLACE_TYPE`) must never share the same classification or input driver. Residence fields use geo-autocomplete; preference fields are fixed-choice decision engines.
+  - **Rule (Remote Decision Law for Career Engines):** In modern hiring, remote job seekers cannot be burdened with picking arbitrary office locations when a `Remote` option is provided. Dropdown combobox matchers must autonomously prioritize `Remote` / `Work from Home` over physical cities.
+  - **Rule (Geo-Autocomplete Hijack Prevention):** Never route an element to a free-text geo-autocomplete driver solely because its ID contains the substring `location`. Always inspect element archetype, option children, and preference keywords before delegating to typing bots.
 
 ---
 

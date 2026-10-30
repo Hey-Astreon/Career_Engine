@@ -48,6 +48,8 @@ window.AstrePilotHUD = (function () {
     'coverletter': 'Cover Letter', 'COVER_LETTER': 'Cover Letter',
     'summary': 'Summary', 'SUMMARY': 'Summary',
     'location': 'Location', 'LOCATION': 'Location',
+    'preferredlocation': 'Preferred Location', 'PREFERRED_LOCATION': 'Preferred Location',
+    'workplacetype': 'Workplace Preference', 'WORKPLACE_TYPE': 'Workplace Preference',
     'city': 'City', 'CITY': 'City',
     'state': 'State / Province', 'STATE': 'State / Province',
     'country': 'Country', 'COUNTRY': 'Country',
@@ -128,7 +130,7 @@ window.AstrePilotHUD = (function () {
     if (['firstname', 'lastname', 'fullname', 'preferredname', 'race', 'raceethnicity', 'gender', 'pronouns', 'veteran', 'disability'].includes(t)) return ICONS.user;
     if (t === 'email') return ICONS.mail;
     if (['phone', 'phonetype', 'textconsent'].includes(t)) return ICONS.phone;
-    if (['location', 'city', 'state', 'country', 'addresstype', 'address', 'apt', 'zip', 'company', 'expstate', 'employmenttitle', 'school', 'degree', 'discipline'].includes(t)) return ICONS.briefcase;
+    if (['location', 'preferredlocation', 'workplacetype', 'city', 'state', 'country', 'addresstype', 'address', 'apt', 'zip', 'company', 'expstate', 'employmenttitle', 'school', 'degree', 'discipline'].includes(t)) return ICONS.briefcase;
     if (['linkedin', 'github', 'portfolio'].includes(t)) return ICONS.link;
     if (['password', 'confirmpassword', 'loginid'].includes(t)) return ICONS.key;
     if (['resume', 'coverletter', 'summary', 'screening', 'screeningselect', 'aiusage', 'workdescription', 'reasonforleaving'].includes(t)) return ICONS.text;

@@ -213,6 +213,22 @@ export const SYNONYM_DICTIONARY: Record<string, string[]> = {
   delhi: ["nct of delhi", "new delhi", "dl"],
   maharashtra: ["mh"],
   karnataka: ["ka", "bangalore", "bengaluru"],
+  remote: [
+    "remote",
+    "remote (us)",
+    "remote - us",
+    "remote - united states",
+    "remote / virtual",
+    "remote eligible",
+    "work from home",
+    "wfh",
+    "virtual",
+    "home-based",
+    "home based",
+    "anywhere",
+    "telecommute",
+    "flexible / remote",
+  ],
 };
 
 const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;
@@ -250,6 +266,57 @@ export function resolveSemanticOptionMatch<T extends SemanticOption>(
   // -------------------------------------------------------------
   // STAGE 2: Candidate Invariants & Compliance Rules
   // -------------------------------------------------------------
+  // Invariant 0: Preferred Office / Workplace / Remote Smart Priority
+  const hasWorkplaceOrLocationIntent =
+    fieldType === "PREFERRED_LOCATION" ||
+    fieldType === "WORKPLACE_TYPE" ||
+    targetLower === "remote" ||
+    targetLower.includes("remote") ||
+    (fieldType === "LOCATION" &&
+      pool.some((o) => {
+        const t = (o.text || "").trim().toLowerCase();
+        return t === "remote" || t.startsWith("remote -") || t.startsWith("remote (") || t.includes("remote");
+      }));
+
+  if (hasWorkplaceOrLocationIntent) {
+    const remoteOpt =
+      pool.find((o) => {
+        const t = (o.text || "").trim().toLowerCase();
+        const v = (o.value || "").trim().toLowerCase();
+        return (
+          t === "remote" ||
+          v === "remote" ||
+          t.startsWith("remote -") ||
+          t.startsWith("remote (") ||
+          t.startsWith("remote,") ||
+          t.includes("remote /") ||
+          t.includes("remote eligible") ||
+          t.includes("work from home") ||
+          t.includes("virtual") ||
+          t.includes("home-based") ||
+          t.includes("anywhere")
+        );
+      }) ||
+      pool.find((o) => {
+        const t = (o.text || "").trim().toLowerCase();
+        return t.includes("remote");
+      });
+
+    if (remoteOpt) return remoteOpt;
+
+    const flexOpt = pool.find((o) => {
+      const t = (o.text || "").trim().toLowerCase();
+      return t.includes("flexible") || t.includes("any location") || t.includes("no preference") || t.includes("hybrid");
+    });
+    if (flexOpt) return flexOpt;
+
+    const firstOffice = pool.find((o) => {
+      const t = (o.text || "").trim();
+      return t.length > 0 && !PLACEHOLDER_REGEX.test(t);
+    });
+    if (firstOffice) return firstOffice;
+  }
+
   // Invariant A: Indian Candidate -> Asian (NEVER American Indian or Alaska Native)
   if (
     targetLower === "asian" ||

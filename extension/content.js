@@ -34,6 +34,8 @@
       phoneType: 'Mobile',
       title: 'Full-Stack Developer | Distributed Systems & Cloud Infrastructure',
       location: 'Patna, Bihar, India',
+      preferredLocation: 'Remote',
+      workplacePreference: 'Remote',
       city: 'Patna',
       state: 'Bihar',
       country: 'India',
@@ -85,6 +87,8 @@
       phoneType: 'Mobile',
       title: 'Full-Stack Developer | AI Systems & Interactive Web Applications',
       location: 'Nawada, Bihar, India',
+      preferredLocation: 'Remote',
+      workplacePreference: 'Remote',
       city: 'Nawada',
       state: 'Bihar',
       country: 'India',
@@ -423,7 +427,7 @@
       const scoreExp = ['COMPANY', 'EMPLOYMENT_TITLE', 'START_MONTH', 'START_YEAR', 'END_MONTH', 'END_YEAR', 'CURRENT_ROLE'].reduce((acc, k) => acc + (counts[k] || 0), 0);
       const scoreEdu = ['SCHOOL', 'DEGREE', 'DISCIPLINE'].reduce((acc, k) => acc + (counts[k] || 0), 0);
       const scoreEeo = ['GENDER', 'PRONOUNS', 'VETERAN', 'DISABILITY', 'RACE_ETHNICITY', 'HISPANIC_LATINO'].reduce((acc, k) => acc + (counts[k] || 0), 0);
-      const scoreScreen = ['SCREENING', 'SCREENING_SELECT', 'COVER_LETTER', 'WORK_AUTH', 'VISA', 'SALARY', 'NOTICE_PERIOD'].reduce((acc, k) => acc + (counts[k] || 0), 0);
+      const scoreScreen = ['SCREENING', 'SCREENING_SELECT', 'COVER_LETTER', 'WORK_AUTH', 'VISA', 'SALARY', 'NOTICE_PERIOD', 'PREFERRED_LOCATION', 'WORKPLACE_TYPE'].reduce((acc, k) => acc + (counts[k] || 0), 0);
       const max = Math.max(scoreContact, scoreExp, scoreEdu, scoreEeo, scoreScreen);
       if (max > 0) {
         if (max === scoreContact) return { category: 'CONTACT_INFO', label: STEP_CATEGORY_LABELS.CONTACT_INFO };
@@ -1026,6 +1030,8 @@
     { type: 'CITY',         kw: ['city', 'town', 'municipality'] },
     { type: 'STATE',        kw: ['state', 'province', 'state_province', 'state/province', 'region', 'state or province'] },
     { type: 'COUNTRY',      kw: ['country', 'nation', 'country_region', 'country/region'] },
+    { type: 'PREFERRED_LOCATION', kw: ['preferred office location', 'preferred office', 'office location', 'preferred location', 'office preference', 'location preference', 'preferred workplace', 'workplace preference', 'work arrangement', 'desired office', 'desired location', 'which office', 'where would you like to work'] },
+    { type: 'WORKPLACE_TYPE', kw: ['workplace type', 'workplace arrangement', 'work model', 'remote hybrid on-site', 'remote or on-site', 'remote eligible'] },
     { type: 'LOCATION',     kw: ['current_location', 'city_state', 'city_country', 'current location', 'location'] },
     { type: 'HEAR_ABOUT_DETAIL', kw: ['specify further', 'please specify', 'source detail', 'referral detail', 'specify'] },
     { type: 'HEAR_ABOUT',   kw: ['how did you hear', 'hear about us', 'source', 'referral_source', 'how_did_you_hear', 'hear_about', 'hear about', 'referral'] },
@@ -1244,6 +1250,26 @@
       if (labelSignal.includes('relocate') || attrSignal.includes('relocate')) return 'RELOCATE';
       if (labelSignal.includes('authorized') || labelSignal.includes('work auth') || attrSignal.includes('work_auth')) return 'WORK_AUTH';
       if (labelSignal.includes('sponsorship') || labelSignal.includes('visa') || attrSignal.includes('visa')) return 'VISA';
+      if (
+        labelSignal.includes('preferred office') ||
+        labelSignal.includes('office location') ||
+        labelSignal.includes('preferred location') ||
+        labelSignal.includes('location preference') ||
+        labelSignal.includes('office preference') ||
+        labelSignal.includes('workplace preference') ||
+        labelSignal.includes('workplace') ||
+        labelSignal.includes('work arrangement') ||
+        labelSignal.includes('desired office') ||
+        labelSignal.includes('desired location') ||
+        labelSignal.includes('which office') ||
+        labelSignal.includes('where would you like to work') ||
+        attrSignal.includes('preferred_office') ||
+        attrSignal.includes('preferred_location') ||
+        attrSignal.includes('office_location') ||
+        attrSignal.includes('workplace')
+      ) {
+        return 'PREFERRED_LOCATION';
+      }
       if (labelSignal.includes('phone') || attrSignal.includes('phone')) return 'PHONE_TYPE'; // A select with phone is ALWAYS a phone type!
     }
 
@@ -1368,6 +1394,26 @@
     if (labelSignal.includes('veteran') || labelSignal.includes('vevraa')) return 'VETERAN';
     if (labelSignal.includes('disability') || labelSignal.includes('impairment')) return 'DISABILITY';
     if ((labelSignal.includes('race') || labelSignal.includes('ethnicity')) && !labelSignal.includes('hispanic')) return 'RACE_ETHNICITY';
+
+    if (
+      labelSignal.includes('preferred office') ||
+      labelSignal.includes('office location') ||
+      labelSignal.includes('preferred location') ||
+      labelSignal.includes('location preference') ||
+      labelSignal.includes('office preference') ||
+      labelSignal.includes('workplace preference') ||
+      labelSignal.includes('work arrangement') ||
+      labelSignal.includes('desired office') ||
+      labelSignal.includes('desired location') ||
+      labelSignal.includes('which office') ||
+      labelSignal.includes('where would you like to work') ||
+      attrSignal.includes('preferred_office') ||
+      attrSignal.includes('preferred_location') ||
+      attrSignal.includes('office_location') ||
+      attrSignal.includes('workplace')
+    ) {
+      return 'PREFERRED_LOCATION';
+    }
 
     let best = { type: null, score: 0 };
     FIELD_PATTERNS.forEach(p => {
@@ -1917,7 +1963,8 @@
       'GRADUATION_YEAR', 'LANGUAGES',
       'REASON_FOR_LEAVING', 'TEXT_CONSENT',
       'SCHOOL', 'DEGREE', 'DISCIPLINE',
-      'PREFERRED_NAME', 'HEAR_ABOUT', 'HEAR_ABOUT_DETAIL'
+      'PREFERRED_NAME', 'HEAR_ABOUT', 'HEAR_ABOUT_DETAIL',
+      'PREFERRED_LOCATION', 'WORKPLACE_TYPE'
     ]);
 
     const COMBOBOX_QUERY = [
@@ -2110,7 +2157,8 @@
     'uttar pradesh': ['up', 'u.p.'],
     'delhi': ['nct of delhi', 'new delhi', 'dl'],
     'maharashtra': ['mh'],
-    'karnataka': ['ka', 'bangalore', 'bengaluru']
+    'karnataka': ['ka', 'bangalore', 'bengaluru'],
+    'remote': ['remote', 'remote (us)', 'remote - us', 'remote - united states', 'remote / virtual', 'remote eligible', 'work from home', 'wfh', 'virtual', 'home-based', 'home based', 'anywhere', 'telecommute', 'flexible / remote']
   };
 
   const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;
@@ -2132,6 +2180,71 @@
     }
 
     // Stage 2: Candidate invariants & compliance rules
+    // Stage 2a: Preferred Office / Workplace / Remote Smart Priority
+    // For remote job seekers, when an application presents office or workplace choices, prioritize 'Remote'
+    const hasWorkplaceOrLocationIntent = 
+      fieldType === 'PREFERRED_LOCATION' ||
+      fieldType === 'WORKPLACE_TYPE' ||
+      targetLower === 'remote' ||
+      targetLower.includes('remote') ||
+      (fieldType === 'LOCATION' && pool.some(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t === 'remote' || t.startsWith('remote -') || t.startsWith('remote (') || t.includes('remote');
+      }));
+
+    if (hasWorkplaceOrLocationIntent) {
+      // 1. Highest priority: Exact or prefixed 'Remote' match
+      const remoteOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        const v = (o.value || (o.getAttribute && o.getAttribute('data-value')) || '').trim().toLowerCase();
+        return (
+          t === 'remote' ||
+          v === 'remote' ||
+          t.startsWith('remote -') ||
+          t.startsWith('remote (') ||
+          t.startsWith('remote,') ||
+          t.includes('remote /') ||
+          t.includes('remote eligible') ||
+          t.includes('work from home') ||
+          t.includes('virtual') ||
+          t.includes('home-based') ||
+          t.includes('anywhere')
+        );
+      }) || pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t.includes('remote');
+      });
+
+      if (remoteOpt) return remoteOpt;
+
+      // 2. Second priority: If no 'Remote', check candidate's home city or country (e.g. India / Bangalore)
+      if (typeof userProfile !== 'undefined' && userProfile) {
+        const cCity = (userProfile.city || '').toLowerCase();
+        const cCountry = (userProfile.country || '').toLowerCase();
+        if (cCity || cCountry) {
+          const geoMatch = pool.find(o => {
+            const t = (o.textContent || o.text || '').trim().toLowerCase();
+            return (cCity && t.includes(cCity)) || (cCountry && t.includes(cCountry) && !t.includes('indiana'));
+          });
+          if (geoMatch) return geoMatch;
+        }
+      }
+
+      // 3. Third priority: "Flexible" / "Any Location" / "No Preference" / "Hybrid"
+      const flexOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t.includes('flexible') || t.includes('any location') || t.includes('no preference') || t.includes('hybrid');
+      });
+      if (flexOpt) return flexOpt;
+
+      // 4. Fourth priority: First valid non-placeholder office option (e.g. primary headquarters)
+      const firstOffice = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim();
+        return t.length > 0 && !PLACEHOLDER_REGEX.test(t);
+      });
+      if (firstOffice) return firstOffice;
+    }
+
     if (fieldType === 'COUNTRY' || fieldType === 'EXP_COUNTRY' || targetLower === 'india' || targetLower === '+91' || targetLower === '91') {
       const indiaMatch = pool.find(o => {
         const t = (o.textContent || o.text || '').trim().toLowerCase();
@@ -2354,6 +2467,42 @@
     return false;
   }
 
+  function isTrueGeoAutocomplete(el, fieldType = '') {
+    if (!el) return false;
+    if (fieldType === 'PREFERRED_LOCATION' || fieldType === 'WORKPLACE_TYPE') return false;
+
+    const label = getLabelText(el).toLowerCase();
+    const idAttr = (el.id || '').toLowerCase();
+    const nameAttr = (el.name || '').toLowerCase();
+
+    // If label or id asks for office/workplace preference, it is NOT a geo autocomplete
+    if (
+      label.includes('preferred') ||
+      label.includes('office') ||
+      label.includes('workplace') ||
+      label.includes('arrangement') ||
+      label.includes('desired') ||
+      label.includes('which office') ||
+      label.includes('preference') ||
+      idAttr.includes('preferred') ||
+      idAttr.includes('office') ||
+      nameAttr.includes('preferred') ||
+      nameAttr.includes('office')
+    ) {
+      return false;
+    }
+
+    // True geo autocomplete markers (e.g. Greenhouse Candidate Location):
+    if (idAttr.includes('candidate-location') || idAttr.includes('candidate_location') || nameAttr.includes('candidate_location')) {
+      return true;
+    }
+    if ((fieldType === 'CITY' || fieldType === 'LOCATION') && (label.includes('candidate location') || label.includes('current location') || label.includes('where do you live') || label.includes('current city') || idAttr.includes('geo') || idAttr.includes('places'))) {
+      return true;
+    }
+
+    return false;
+  }
+
   async function fillGeoAutocomplete(inputEl, targetVal) {
     if (!inputEl) return false;
     try {
@@ -2448,8 +2597,8 @@
   async function fillReactSelectV2(inputEl, targetVal, fieldType = '') {
     if (!inputEl || !targetVal) return false;
 
-    // Handle Geo-autocomplete for city/location
-    if (fieldType === 'CITY' || fieldType === 'LOCATION' || (inputEl.id && inputEl.id.includes('location'))) {
+    // Handle Geo-autocomplete for candidate current residence/city
+    if (isTrueGeoAutocomplete(inputEl, fieldType)) {
       return await fillGeoAutocomplete(inputEl, targetVal);
     }
 
@@ -2664,6 +2813,30 @@
         });
       }
 
+      // Preferred Office / Workplace / Remote fallback
+      if (!matchedOption && (fieldType === 'PREFERRED_LOCATION' || fieldType === 'WORKPLACE_TYPE' || singleVal.toLowerCase() === 'remote')) {
+        matchedOption = options.find(o => {
+          const t = (o.textContent || o.text || '').toLowerCase();
+          return t === 'remote' || t.startsWith('remote') || t.includes('remote') || t.includes('virtual') || t.includes('work from home');
+        });
+        if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
+          typeSearchString('Remote');
+          await new Promise(r => setTimeout(r, 300));
+          options = getVisibleOptions();
+          matchedOption = options.find(o => {
+            const t = (o.textContent || o.text || '').toLowerCase();
+            return t.includes('remote');
+          });
+        }
+        if (!matchedOption) {
+          // If no remote option at all, select first non-placeholder office so required field is never blank
+          matchedOption = options.find(o => {
+            const t = (o.textContent || o.text || '').trim();
+            return t.length > 0 && !PLACEHOLDER_REGEX.test(t);
+          });
+        }
+      }
+
       // 5. Click the matched option with full Pointer + Mouse sequence
       if (matchedOption) {
         const optWin = matchedOption.ownerDocument?.defaultView || win;
@@ -2838,7 +3011,7 @@
     if (!triggerEl || !targetVal) return false;
 
     // Check for City / Location autocomplete combobox first
-    if (fieldType === 'CITY' || fieldType === 'LOCATION' || (triggerEl.id && triggerEl.id.includes('location'))) {
+    if (isTrueGeoAutocomplete(triggerEl, fieldType)) {
       return await fillGeoAutocomplete(triggerEl, targetVal);
     }
 
@@ -3096,7 +3269,9 @@
     GRADUATION_YEAR: 'Graduation Year', LANGUAGES: 'Languages',
     SCREENING_SELECT: 'Screening Question',
     WORK_DESCRIPTION: 'Work Description', PASSWORD: 'Password', CONFIRM_PASSWORD: 'Confirm Password', LOGIN_ID: 'Login ID / Username',
-    PREFERRED_NAME: 'Preferred Name'
+    PREFERRED_NAME: 'Preferred Name',
+    PREFERRED_LOCATION: 'Preferred Location',
+    WORKPLACE_TYPE: 'Workplace Preference'
   };
 
   /* -- RESOLVE SCREENING SELECT (DETERMINISTIC ASYMMETRIC SAFETY FIREWALL) -- */
@@ -3104,6 +3279,22 @@
     const q = getLabelText(element).toLowerCase();
 
     // 0. SPECIALIZED CASE QUESTIONS (Non-Yes/No Options)
+    // Preferred Office / Workplace / Remote Decision Logic
+    if (
+      q.includes('preferred office') ||
+      q.includes('office location') ||
+      q.includes('preferred location') ||
+      q.includes('location preference') ||
+      q.includes('workplace') ||
+      q.includes('work arrangement') ||
+      q.includes('remote or hybrid') ||
+      q.includes('remote, hybrid') ||
+      q.includes('which office') ||
+      q.includes('where would you like to work')
+    ) {
+      return (userProfile && userProfile.preferredLocation) || 'Remote';
+    }
+
     if (q.includes('last month') || (q.includes('tencent') && (q.includes('month') || q.includes('when')))) {
       return 'n/a';
     }
@@ -3215,6 +3406,8 @@
       case 'PHONE_TYPE':   return profile.phoneType || 'Mobile';
       case 'PHONE':        return profile.phone || null;
       case 'LOCATION':     return profile.location || null;
+      case 'PREFERRED_LOCATION':
+      case 'WORKPLACE_TYPE': return profile.preferredLocation || 'Remote';
       case 'CITY':         return profile.city || loc.city || null;
       case 'STATE':        return profile.state || loc.state || null;
       case 'COUNTRY':      return profile.country || loc.country || null;
@@ -3333,6 +3526,8 @@
         return rawPhone;
       }
       case 'LOCATION':    return profile.location;
+      case 'PREFERRED_LOCATION':
+      case 'WORKPLACE_TYPE': return profile.preferredLocation || 'Remote';
       case 'CITY':        return profile.city || loc.city || '';
       case 'STATE':       return profile.state || loc.state || '';
       case 'COUNTRY':     return profile.country || loc.country || '';

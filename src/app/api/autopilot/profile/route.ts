@@ -109,6 +109,8 @@ export async function GET(req: Request) {
         phone: profile.phone ?? "",
         phoneType: "Mobile",
         location: profile.location,
+        preferredLocation: "Remote",
+        workplacePreference: "Remote",
         city,
         state,
         country,
