@@ -62,7 +62,17 @@ export default function ApplicationsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // View Mode: "table" (Structured Table Report) vs "kanban" (Visual Stage Pipeline)
-  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
+  const [viewMode, setViewMode] = useState<"table" | "kanban">(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedMode = localStorage.getItem("astrework_applications_view_mode");
+        if (savedMode === "kanban" || savedMode === "table") return savedMode;
+      } catch {
+        /* ignore */
+      }
+    }
+    return "table";
+  });
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,18 +100,6 @@ export default function ApplicationsPage() {
     company: string;
     timestamp: number;
   } | null>(null);
-
-  // Load view mode preference from localStorage
-  useEffect(() => {
-    try {
-      const savedMode = localStorage.getItem("astrework_applications_view_mode");
-      if (savedMode === "kanban" || savedMode === "table") {
-        setViewMode(savedMode);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   const handleSetViewMode = (mode: "table" | "kanban") => {
     setViewMode(mode);
@@ -1012,14 +1010,14 @@ export default function ApplicationsPage() {
                 Select Tone / Intent:
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {[
+                {([
                   { id: "nudge", label: "Gentle Nudge", desc: "Friendly 1-week check-in" },
                   { id: "project_update", label: "Project Update", desc: "Share new code / milestone" },
                   { id: "referral", label: "Internal Inquiry", desc: "Reach out to recruiter" },
-                ].map((t) => (
+                ] as const).map((t) => (
                   <button
                     key={t.id}
-                    onClick={() => changeFollowupTone(t.id as any)}
+                    onClick={() => changeFollowupTone(t.id)}
                     className={`p-2.5 rounded-md border text-left transition-all ${
                       followupTone === t.id
                         ? "border-[var(--blue)] bg-[var(--blue-soft)] shadow-2xs"

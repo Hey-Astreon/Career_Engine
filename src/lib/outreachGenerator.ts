@@ -114,7 +114,7 @@ Best regards,
 ${candidateName}
 ${candidate.email}${linkSignature}`;
 
-      linkedinConnectionNote = `Hi! I noticed the ${job.title} opening at ${job.company}. I'm an entry-level engineer specializing in ${topProjectTech} and recently built ${topProject}. Would love to connect! — ${candidateName}`.slice(
+      linkedinConnectionNote = `Hi! I noticed the ${job.title} opening at ${job.company}. I'm an early-career software developer specializing in ${topProjectTech} and recently built ${topProject}. Would love to connect! — ${candidateName}`.slice(
         0,
         298
       );
@@ -123,9 +123,9 @@ ${candidate.email}${linkSignature}`;
 
 I came across the ${job.title} position at ${job.company} and was immediately drawn to the technical scope.
 
-With deep hands-on experience in ${topProjectTech}, I recently engineered ${topProject}. I bring high execution velocity and a passion for production-grade code.
+With deep hands-on experience in ${topProjectTech}, I recently engineered ${topProject}. I bring high execution velocity and a focus on production-grade code.
 
-Are you the right person to speak with regarding entry-level engineering roles, or could you point me to the hiring lead?
+Are you the right person to speak with regarding entry-level software development roles, or could you point me to the hiring lead?
 
 Thanks for your time,
 ${candidateName}

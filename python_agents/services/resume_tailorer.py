@@ -23,10 +23,11 @@ to maximize ATS relevance, keyword density, and human recruiter impact.
 
 RULES:
 1. Use the STAR (Situation, Task, Action, Result) and Google X-Y-Z formula: "Accomplished [X], as measured by [Y], by doing [Z]".
-2. Begin every bullet with a high-impact active verb (e.g., Engineered, Architected, Spearheaded, Accelerated, Streamlined).
-3. Seamlessly weave in relevant keywords from the job description (frameworks, databases, protocols, testing tools).
-4. Strictly NO hallucinating metrics or technologies not present in the candidate's background.
-5. Provide a calculated ATS Match Score (0-100) and actionable keyword breakdown.
+2. Begin every bullet with a decisive past-tense technical verb (e.g., Built, Engineered, Architected, Accelerated, Hardened, Containerized). NEVER use AI slop ("Spearheaded", "Orchestrated", "Passionate", "Utilizing", "Dynamic").
+3. For BCA candidates (Roushan Kumar and Ayushi Raj), NEVER use the title "Engineer" (strictly use "Software Developer", "Backend Developer", "Full-Stack Developer", or "Systems Architect").
+4. Seamlessly weave in relevant keywords from the job description (frameworks, databases, protocols, testing tools).
+5. Strictly NO hallucinating metrics or technologies not present in the candidate's background.
+6. Provide a calculated ATS Match Score (0-100) and actionable keyword breakdown.
 """
 
 async def tailor_resume_bullets(

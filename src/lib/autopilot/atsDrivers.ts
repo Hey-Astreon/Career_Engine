@@ -9,7 +9,7 @@
 export interface AtsFieldMapping {
   type: string;
   selectors: string[];
-  transform?: (val: any) => any;
+  transform?: (val: string) => string;
   required?: boolean;
 }
 

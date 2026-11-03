@@ -1,8 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import axios from "axios";
 import { LFXMentorshipProvider } from "@/lib/providers/lfx";
 import { PlatformSource, RemoteScope } from "@prisma/client";
 
 describe("LFXMentorshipProvider", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("initializes with correct name, providerKey, and timeout", () => {
     const provider = new LFXMentorshipProvider();
     expect(provider.name).toBe("LFX Mentorship (Linux Foundation)");
@@ -11,6 +16,19 @@ describe("LFXMentorshipProvider", () => {
   });
 
   it("fetches and normalizes active CNCF / Linux Foundation mentorship projects", async () => {
+    const mockMarkdown = `# LFX Mentorship Term
+
+### Kubernetes
+#### Software Developer Intern (Go & Kube-Scheduler)
+- Description: Build distributed scheduler telemetry pipelines and optimize Go controller queues for Kubernetes clusters.
+- Recommended Skills: Go, Kubernetes, Docker, Prometheus, Linux
+- Mentor: Jane Doe
+`;
+    vi.spyOn(axios, "get").mockResolvedValue({
+      status: 200,
+      data: mockMarkdown,
+    });
+
     const provider = new LFXMentorshipProvider();
     const result = await provider.fetch();
 

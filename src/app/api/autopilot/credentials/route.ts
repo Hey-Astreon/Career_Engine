@@ -28,7 +28,7 @@ async function resolveUserId(req: Request): Promise<string | null> {
   try {
     const session = await getServerSession(authOptions);
     if (session?.user?.id) return session.user.id;
-  } catch (e) {}
+  } catch {}
 
   return null;
 }
@@ -150,9 +150,9 @@ export async function GET(req: Request) {
     }));
 
     return NextResponse.json({ credentials: safeList }, { headers: CORS });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[api/autopilot/credentials/GET]", err);
-    return NextResponse.json({ error: err.message || "Internal error" }, { status: 500, headers: CORS });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Internal error" }, { status: 500, headers: CORS });
   }
 }
 
@@ -219,9 +219,9 @@ export async function POST(req: Request) {
       },
       { headers: CORS }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[api/autopilot/credentials/POST]", err);
-    return NextResponse.json({ error: err.message || "Internal error" }, { status: 500, headers: CORS });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Internal error" }, { status: 500, headers: CORS });
   }
 }
 
@@ -243,7 +243,7 @@ export async function DELETE(req: Request) {
       try {
         const body = await req.json();
         id = body.id;
-      } catch (e) {}
+      } catch {}
     }
 
     if (!id) {
@@ -263,8 +263,8 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true, deletedId: id }, { headers: CORS });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[api/autopilot/credentials/DELETE]", err);
-    return NextResponse.json({ error: err.message || "Internal error" }, { status: 500, headers: CORS });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Internal error" }, { status: 500, headers: CORS });
   }
 }

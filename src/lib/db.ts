@@ -58,7 +58,12 @@ export function cleanDbUrl(): { url: string; isRemote: boolean } {
 }
 
 function createPrismaClient() {
-  const { url: remoteUrl, authToken: remoteAuthToken, isRemote } = resolveTursoConfig();
+  const isTestEnv =
+    (process.env.VITEST === "true" || process.env.NODE_ENV === "test") &&
+    process.env.TEST_USE_TURSO !== "true";
+  const { url: remoteUrl, authToken: remoteAuthToken, isRemote } = isTestEnv
+    ? { url: "", authToken: undefined, isRemote: false }
+    : resolveTursoConfig();
 
   let url: string;
   let authToken: string | undefined;
@@ -68,7 +73,7 @@ function createPrismaClient() {
     authToken = remoteAuthToken;
     console.log(`[DB] Connected to Turso Cloud LibSQL (${url.replace(/:\/\/.*@/, "://***@")})`);
   } else {
-    if (process.env.CI || process.env.NODE_ENV === "production") {
+    if ((process.env.CI || process.env.NODE_ENV === "production") && !isTestEnv) {
       console.warn(`[DB WARNING] No remote Turso URL detected in CI/Production! Falling back to local SQLite.`);
     }
     url = `file:${path.join(process.cwd(), "prisma", "dev.db").replace(/\\/g, "/")}`;

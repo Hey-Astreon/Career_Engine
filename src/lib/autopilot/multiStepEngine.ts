@@ -163,7 +163,7 @@ export interface ButtonCandidate {
   value?: string;
   type?: string;
   getAttribute?: (attr: string) => string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -175,8 +175,6 @@ export function isNextStepButton(btn: ButtonCandidate): boolean {
   const txt = (btn.innerText || btn.textContent || btn.value || "").trim();
   const ariaLabel = (btn.getAttribute ? btn.getAttribute("aria-label") : "") || "";
   const automationId = (btn.getAttribute ? btn.getAttribute("data-automation-id") : "") || "";
-
-  const combined = `${txt} ${ariaLabel} ${automationId}`.trim();
 
   // If matches final submit, it is NOT an intermediate next button
   if (SUBMIT_APPLICATION_REGEX.test(txt)) return false;
@@ -207,8 +205,8 @@ export function isSubmitApplicationButton(btn: ButtonCandidate): boolean {
 /**
  * Finds the primary Next-Step button in a document or container.
  */
-export function findNextStepButton(root: { querySelectorAll?: (sel: string) => any } | null): any {
-  if (!root || typeof root.querySelectorAll !== "function") return null;
+export function findNextStepButton(root: { querySelectorAll?: (sel: string) => ArrayLike<ButtonCandidate> } | null): ButtonCandidate {
+  if (!root || typeof root.querySelectorAll !== "function") return null as unknown as ButtonCandidate;
 
   const selectors = [
     'button[data-automation-id*="next"]',
@@ -228,7 +226,7 @@ export function findNextStepButton(root: { querySelectorAll?: (sel: string) => a
       return el;
     }
   }
-  return null;
+  return null as unknown as ButtonCandidate;
 }
 
 /**
@@ -318,7 +316,7 @@ export function deserializeNavSession(raw: string | null): AstrePilotNavSession 
       return parsed as AstrePilotNavSession;
     }
     return null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

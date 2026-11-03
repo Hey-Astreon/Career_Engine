@@ -7,7 +7,7 @@ import {
   getMasterResumeBaseline,
 } from "../resumeBaseline";
 
-export const BANNED_AI_SLOP_REGEX = /\b(spearheaded|orchestrated|revolutionized|synergized|thrilled|passionate|cutting-edge|testament|rich tapestry|multifaceted|seamlessly|driving excellence|results-oriented|deep expertise in)\b/gi;
+export const BANNED_AI_SLOP_REGEX = /\b(spearheaded|orchestrated|revolutionized|synergized|thrilled|passionate|cutting-edge|testament|rich tapestry|multifaceted|seamlessly|driving excellence|results-oriented|deep expertise in|utilize|utilizing)\b/gi;
 
 
 export function sanitizeBcaHeadline(headline: string, profileSlugOrName?: string): string {
@@ -26,6 +26,7 @@ export function sanitizeAiSlop(text: string): string {
     .replace(/\b(?:spearheaded|orchestrated)\b/gi, "Engineered")
     .replace(/\b(?:revolutionized)\b/gi, "Restructured")
     .replace(/\b(?:synergized|leveraged)\b/gi, "Integrated")
+    .replace(/\b(?:utilizing|utilize)\b/gi, "using")
     .replace(/\b(?:cutting-edge)\b/gi, "High-performance")
     .replace(/\b(?:rich tapestry|testament|multifaceted)\b/gi, "Core architecture")
     .replace(/\b(?:seamlessly)\b/gi, "Directly")
@@ -227,16 +228,23 @@ function generateDynamicOptimizedFallback(
   matchedKeywords: string[],
   missingKeywords: string[]
 ): OptimizedResume {
-  const topSkillStr = targetSkills.length > 0 ? targetSkills.slice(0, 4).join(", ") : "REST APIs, distributed architecture, and AI-integrated tooling";
+  const isAyushi = baseline.header.fullName.toLowerCase().includes("ayushi");
+  const topSkillStr = targetSkills.length > 0 ? targetSkills.slice(0, 4).join(", ") : isAyushi ? "React 19, Next.js, TypeScript, and AI tooling" : "REST APIs, distributed systems, and cloud infrastructure";
 
-  const tailoredSummary = `Backend Developer with hands-on experience building production systems across ${topSkillStr} — work that has shipped to real users. Has contributed to structured engineering simulations at industry-grade organisations, working through actual codebases to deliver measurable outcomes. Focused on ${jobTitle} challenges at ${company}, particularly where system reliability, concurrency, and security intersect.`;
+  const tailoredSummary = isAyushi
+    ? `Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered applications across ${topSkillStr}. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), alongside client-side cryptographic vaults and interactive developer tooling, focused on delivering ${jobTitle} outcomes at ${company}.`
+    : `Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure across ${topSkillStr}. Built and operate AstreWork on Oracle Cloud (OCI ARM64), alongside AST code-graph sandboxes and zero-knowledge cryptographic tools, focused on delivering ${jobTitle} outcomes at ${company}.`;
 
   const tailoredSkills = baseline.skills.map((cat) => {
-    const matching = targetSkills.filter((s) => cat.skillsText.toLowerCase().includes(s.toLowerCase()));
-    if (matching.length > 0) {
+    const items = cat.skillsText.split(",").map((s) => s.trim()).filter(Boolean);
+    const matchedItems = items.filter((item) =>
+      targetSkills.some((ts) => item.toLowerCase().includes(ts.toLowerCase()))
+    );
+    const unmatchedItems = items.filter((item) => !matchedItems.includes(item));
+    if (matchedItems.length > 0) {
       return {
         categoryName: cat.categoryName,
-        skillsText: cat.skillsText,
+        skillsText: [...matchedItems, ...unmatchedItems].join(", "),
       };
     }
     return cat;
@@ -244,12 +252,13 @@ function generateDynamicOptimizedFallback(
 
   const atsRatio = targetSkills.length > 0 ? (matchedKeywords.length / targetSkills.length) : 0.85;
   const atsScore = Math.min(98, Math.max(70, Math.round(atsRatio * 100)));
+  const roleSuffix = isAyushi ? "Full-Stack & AI" : "Backend & Cloud";
 
   return {
     ...baseline,
     header: {
       ...baseline.header,
-      targetHeadline: sanitizeBcaHeadline(`${jobTitle} | Backend, Systems & Full-Stack Specialist`, baseline.header.fullName),
+      targetHeadline: sanitizeBcaHeadline(`${jobTitle} — ${roleSuffix}`, baseline.header.fullName),
     },
     summary: tailoredSummary,
     skills: tailoredSkills,

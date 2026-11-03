@@ -258,8 +258,8 @@ export default function ResumeMakerPage() {
       simulations: [
         ...prev.simulations,
         {
-          company: "Enterprise Company / Simulation",
-          roleTitle: "Software Engineering Simulation",
+          company: "Enterprise Company (Forage Virtual Experience)",
+          roleTitle: "Software Development Simulation",
           period: "Month Year",
           problemScope: "Addressed data concurrency bottlenecks across distributed API microservices.",
           actionTaken: "Implemented atomic transaction updates and optimized indexing schemas.",
@@ -291,12 +291,12 @@ export default function ResumeMakerPage() {
   // AI & Systems Summary Enhancer
   const enhanceSummaryWithMetrics = () => {
     const systemsTemplates = [
-      `Systems-focused Software Engineer with expertise in building low-latency REST APIs, concurrent microservice architectures, and robust web applications. Proficient in modern distributed frameworks and relational databases (3NF), with a proven track record of optimizing system throughput, reducing API latency under 200ms, and maintaining high test reliability across automated CI/CD pipelines.`,
-      `Performance-driven Full-Stack Engineer skilled in developing high-throughput TypeScript runtimes, scalable REST endpoints, and resilient database architectures. Demonstrated experience eliminating rendering bottlenecks by 40%, architecting zero-knowledge security protocols, and delivering enterprise-grade software products.`,
+      `Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure. Built and operate AstreWork on Oracle Cloud (OCI ARM64), where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.`,
+      `Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.`,
     ];
     const picked = systemsTemplates[Math.floor(Math.random() * systemsTemplates.length)];
     setResumeData((prev) => ({ ...prev, summary: picked }));
-    showToast("Summary enhanced with Tier-1 Systems keywords!");
+    showToast("Summary enhanced with calibrated developer impact!");
   };
 
   // Action Bar Handlers

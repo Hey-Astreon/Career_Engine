@@ -10,7 +10,7 @@ export async function seedCandidateProfiles() {
     const baseline = getMasterResumeBaseline(slug);
     const folder = slug === "ayushi" ? "2_Ayushi_Raj" : "3_Roushan_Kumar";
     const masterPdf = slug === "ayushi" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
-    const masterResumePath = `public/candidates/${folder}/${masterPdf}`;
+    const masterResumePath = `/candidates/${folder}/${masterPdf}`;
 
     console.log(`\nSyncing candidate profile [${slug}]: ${baseline.header.fullName}`);
 
@@ -64,8 +64,8 @@ export async function seedCandidateProfiles() {
           techStack: proj.techStack,
           liveDemoUrl: proj.liveDemoUrl,
           githubUrl: proj.githubUrl,
-          architecture: proj.bullets[0] || "Engineered core distributed systems and resilient workflows.",
-          bulletPoints: proj.bullets.join("\n"),
+          architecture: proj.bullets[0] || "Built core distributed systems and resilient workflows.",
+          bulletPoints: JSON.stringify(proj.bullets),
         },
       });
       console.log(`  -> Created project: ${proj.title.slice(0, 60)}...`);

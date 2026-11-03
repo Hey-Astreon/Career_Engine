@@ -57,7 +57,7 @@ Requirements:
     expect(letter).toContain("Software Engineer Intern");
     expect(letter).toContain("Formlabs");
     expect(letter).toContain("internship opportunity");
-    expect(letter).toContain("emerging software engineer");
+    expect(letter).toContain("early-career software developer");
     expect(letter).toContain("full-time remote hours to this internship");
     // Verify absence of senior corporate claims
     expect(letter).not.toContain("seasoned professional");

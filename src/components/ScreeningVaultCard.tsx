@@ -10,10 +10,6 @@ import {
   Copy,
   Check,
   Sparkles,
-  Zap,
-  BookOpen,
-  Filter,
-  Layers,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -74,7 +70,7 @@ export default function ScreeningVaultCard() {
   };
 
   useEffect(() => {
-    fetchVault();
+    void Promise.resolve().then(() => fetchVault());
   }, []);
 
   const toggleFavorite = async (id: string, currentStatus: boolean) => {

@@ -8,13 +8,14 @@ import os
 import asyncio
 import time
 import re
+import tempfile
 from typing import Dict, Any, Optional
 from playwright.async_api import async_playwright
 
 async def fill_application_form(
     url: str,
     candidate_profile: Optional[Dict[str, Any]] = None,
-    screenshot_dir: str = "scratch",
+    screenshot_dir: Optional[str] = None,
     auto_submit: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -22,18 +23,19 @@ async def fill_application_form(
     fills profile data, captures a full-page verification screenshot,
     and returns a structured application result.
     """
+    screenshot_dir = screenshot_dir or os.path.join(tempfile.gettempdir(), "astrework_applier")
     os.makedirs(screenshot_dir, exist_ok=True)
     profile = candidate_profile or {
         "fullName": "Roushan Kumar",
         "firstName": "Roushan",
         "lastName": "Kumar",
-        "email": "playboxstation460@gmail.com",
-        "phone": "+91 9876543210",
-        "linkedinUrl": "https://linkedin.com/in/roushan-kumar",
+        "email": "roushanraut404@gmail.com",
+        "phone": "+91 9431483512",
+        "linkedinUrl": "https://linkedin.com/in/astreon4547",
         "githubUrl": "https://github.com/Hey-Astreon",
-        "portfolioUrl": "https://astrework.app",
-        "city": "Bengaluru",
-        "location": "Bengaluru, India",
+        "portfolioUrl": "https://astreon.me",
+        "city": "Patna",
+        "location": "Patna, Bihar, India",
     }
 
     results = {

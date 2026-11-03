@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 74: Professional Summary & AstreWork High-Volume Scraping Calibration, Zero-Plagiarism Gate, Turso Cloud Profile Sync)
+> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 75: Full-System Codebase Quality Audit, Hidden Bug Remediation, Zero-Lint Cleanup, 7.5MB Dead Asset Purge & 100% Test Suite Verification)
 
 ---
 
@@ -1365,6 +1365,24 @@ Located in `extension/`:
   - **4. Upgraded `sync-master-profiles.cjs`:** Extended the synchronization script to delete and insert the 3 differentiated virtual experiences for both candidates alongside their 3 flagship projects into Turso Cloud LibSQL.
   - **5. Live Turso Cloud Sync Execution:** Executed `node scripts/sync-master-profiles.cjs` against Turso Cloud (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`), verifying 6 project rows and 6 simulation rows cleanly synced across both profiles.
   - **6. Chromium A4 DOM Geometry & Vitest Gates:** Regenerated Master PDFs and verified strict 1-page bounds (`overflow: false`, bottom gaps `9.81mm` and `13.68mm`, 0 shared bullets, 0 "Engineer" titles, 0 AI slop words). Vitest candidate test suite and TypeScript `tsc --noEmit` passing 100% with 0 errors. Committed & pushed to `main`.
+
+- [x] **Phase 75: Full-System Codebase Quality Audit, Hidden Bug Remediation, Zero-Lint Cleanup & 7.5MB Dead Asset Purge (Nov 3, 2026)**
+  - **1. AI Agent & Deterministic Scorer Bug Fixes (`src/lib/ai/`):**
+    - **`scorer.ts` & `batchScorer.ts`:** Fixed candidate title matching in `calculateDeterministicSignals` so Style B headlines (`"Software Developer — Backend & Cloud"`, `"Software Developer — Full-Stack & AI"`) match `/full[- ]?stack/i`, `cloud`, `ai`, `frontend`, and `backend` roles at `100` instead of penalizing down to `65`. Added `"playwright"`, `"puppeteer"`, `"selenium"`, `"prisma"`, `"turso"`, `"libsql"`, `"zustand"`, `"redux"`, `"monaco"`, `"vitest"` to `TECH_DICTIONARY` and `displayMap` (changing `"ai"` display label from `"AI Engineering"` to `"AI Development"`).
+    - **`drafter.ts`:** Fixed project title splitting from `.split(" - ")[0]` to `.split(/\s+[—–-]\s+/)[0]` so em-dash project headers split cleanly. Purged retired `"AI financial ledgers"`, `"emerging software engineer passionate about"`, `"Developer/Engineer"`, and `"utilizing"` phrasing.
+    - **`resumeOptimizer.ts`:** Added `utilize|utilizing` to `BANNED_AI_SLOP_REGEX` and `sanitizeAiSlop()`, made `generateDynamicOptimizedFallback()` candidate-aware (`isAyushi`), and implemented real front-loading of matched skills in `skillsText`.
+    - **`outreachGenerator.ts` & `screeningHelper.ts`:** Replaced `"entry-level engineer"` and `"a passion for"` with `"early-career software developer"` and `"a focus on"`, and enforced Section 5 BCA Title Law in `buildScreeningSystemPrompt`.
+  - **2. Database Test Isolation, API Route Hardening & UI Fallbacks:**
+    - **`src/lib/db.ts`:** Isolated Vitest (`process.env.VITEST === "true" || process.env.NODE_ENV === "test"`) so tests connect to local `file:./prisma/dev.db` unless `TEST_USE_TURSO === "true"`, protecting production Turso Cloud and eliminating offline DNS test failures.
+    - **`src/app/api/autopilot/profile/route.ts`:** Stripped parenthetical tags (`\s*\([^)]*\)`) from `profile.location` before parsing `city`/`state`/`country` (fixing `country = "India"` instead of `"India (Open to Remote)"`) and wired `getMasterResumeBaseline(profile.slug).summary` as the primary summary source.
+    - **`src/app/api/resume/download/latest/route.ts`:** Hardened founder slug fallback behind `!userId` to prevent third-party slug spoofing and fixed `prefer-const` lint error.
+    - **UI Pages & Starter Presets:** Synchronized `resumeBaseline.ts` starter presets, `resume-maker/page.tsx`, `resume-builder/page.tsx`, `simulate/apply/page.tsx`, `extension/content.js`, `python_agents/services/*.py`, and `scripts/seed-candidate-profiles.ts` with BCA Title Law and calibrated copy, and repackaged `public/downloads/astrepilot-extension.zip` (`198.9 KB`).
+  - **3. Zero ESLint Warnings & 7.5MB Dead Asset Purge:**
+    - Resolved all 44 ESLint warnings across 15 files (`npm run lint` $\rightarrow$ `0 errors, 0 warnings`).
+    - Deleted ~7.5 MB of unused images, duplicate root PNGs, obsolete DB backups (`prisma/dev.pre_*.db`), unused landing components (`Idea1HeroVisual.tsx`, `DataDustBackground.tsx`), retired interview kits (`kit_idbi_finsync.md`, `kit_axiom_gateway.md`, `kit_coco_ai.md`), Heroku remnants, and one-off scripts.
+  - **4. 100% Test Suite & TypeScript Verification:**
+    - Mocked external `axios` calls in `lfx-provider.test.ts`, `nodesk-provider.test.ts`, and `internlist-provider.test.ts` for deterministic offline execution.
+    - Verified `npx tsc --noEmit` (`0 errors`), `npm run lint` (`0 errors, 0 warnings`), and `npx vitest run` (`53/53` test files, `511/511` tests passing). Committed & pushed to `origin main`.
 
 ---
 
@@ -3207,3 +3225,24 @@ graph TD
   - **Rule:** When describing developer tools that touch hiring or job data, always describe the mechanism in **data engineering and distributed systems terminology** (*"pipelines harvest and deduplicate high-volume career listings"*) rather than consumer job-seeker vocabulary (*"collects job postings"*). This eliminates recruiter flight-risk anxiety while dramatically increasing technical prestige.
   - **Rule:** Every change to resume baselines must be atomically propagated to PDF generators, in-memory baselines (`resumeBaseline.ts`), local seeders (`seed.ts`), and cloud sync runners (`sync-master-profiles.cjs`).
 - **Status:** Complete, verified in Turso Cloud, and pushed to `main`.
+
+### Case 51: Full-System Codebase Quality Audit, Hidden Bug Remediation, Zero-Lint Cleanup & 7.5MB Dead Asset Purge (Nov 3, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. Following rapid multi-phase evolution across resumes, scrapers, and AI engines, subtle architectural drift had accumulated in downstream modules:
+     - `src/lib/ai/scorer.ts` & `batchScorer.ts` only checked `"full stack"` (space-separated) for title alignment, penalizing Ayushi's hyphenated `"Software Developer — Full-Stack & AI"` (`65` instead of `100`), and lacked `playwright`, `puppeteer`, `turso`, `libsql`, `prisma`, `zustand`, `monaco`, and `vitest` in `TECH_DICTIONARY`.
+     - `src/lib/ai/drafter.ts` split project titles on ASCII `" - "` instead of em-dash `" — "`, causing entire project headers and subtitles to inject into cover letters, alongside residual `"emerging software engineer passionate about"` and `"AI financial ledgers"` copy.
+     - `src/app/api/autopilot/profile/route.ts` split `profile.location` (`"Patna, Bihar, India (Open to Remote)"`) by comma without stripping parenthetical suffixes, producing `country = "India (Open to Remote)"` which broke strict ATS country dropdowns.
+     - `src/lib/db.ts` connected to production `TURSO_DATABASE_URL` even during `npx vitest run`, risking live cloud mutation and causing offline test failures.
+     - `extension/content.js` and `python_agents/services/*.py` still carried older standalone fallback titles/summaries, and ~7.5 MB of dead root PNGs, unused `public/` assets, 8 stale SQLite `.db` backups, retired interview kits, and 44 ESLint warnings cluttered the repository.
+- **Deep Root Cause Diagnosis:**
+  - String-splitting assumptions (`.split(" - ")`, `.split(",")`, `"full stack"`) broke silently when candidate metadata upgraded to typographic em-dashes (`—`), hyphenated compound modifiers (`Full-Stack`), and parenthetical availability tags (`(Open to Remote)`).
+  - Test environment detection in `src/lib/db.ts` checked `process.env.TURSO_DATABASE_URL` unconditionally without checking `process.env.VITEST` or `process.env.NODE_ENV === "test"`.
+- **The Concrete Surgical Fix:**
+  1. **AI Engine & Scorer Alignment:** Updated `scorer.ts`, `batchScorer.ts`, `drafter.ts`, `resumeOptimizer.ts`, `outreachGenerator.ts`, `screeningHelper.ts`, and `resumeBaseline.ts` to support em-dash splitting, hyphenated `Full-Stack` / `Cloud` / `AI` title matching, expanded `TECH_DICTIONARY`, candidate-aware (`isAyushi`) dynamic fallback summaries, front-loaded matched skills, and strict Section 5 BCA Title Law + Anti-AI Slop sanitization (`utilize/utilizing` banned).
+  2. **API, DB Test Isolation & Extension Sync:** Updated `src/lib/db.ts` to isolate Vitest to `file:./prisma/dev.db`, fixed `autopilot/profile/route.ts` location parsing (`country = "India"`), secured `resume/download/latest/route.ts` slug fallback, updated `extension/content.js` + `python_agents/services/*.py`, and repackaged `public/downloads/astrepilot-extension.zip` (`198.9 KB`).
+  3. **Zero-Lint & 7.5MB Dead Asset Purge:** Fixed all 44 ESLint warnings across 15 files (`npm run lint` $\rightarrow$ `0 errors, 0 warnings`), mocked external network calls in 3 provider unit tests, and purged 40+ unused images, DB backups, dead components, retired interview kits, and one-off scripts.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Typographic Delimiter Resilience):** Never split structured strings using literal ASCII `" - "` or raw `.split(",")` when user/candidate data may contain typographic em-dashes (`—`), en-dashes (`–`), or parenthetical qualifiers `(Open to Remote)`. Always use `/\s+[—–-]\s+/` for title splitting and strip `/\s*\([^)]*\)/g` before geographic comma parsing.
+  - **Rule 2 (Database Test Isolation):** Database singletons (`src/lib/db.ts`) must always check `process.env.VITEST === "true" || process.env.NODE_ENV === "test"` and route test runs to local SQLite (`file:./prisma/dev.db`) unless explicitly overridden (`TEST_USE_TURSO === "true"`).
+  - **Rule 3 (Zero-Warning Codebase Discipline):** Maintain `0 errors, 0 warnings` in `npm run lint` and `0 errors` in `npx tsc --noEmit` so new defects cannot hide inside warning noise.
+- **Status:** Complete, `53/53` test files (`511/511` tests) passing, `0` lint warnings, `0` TS errors, committed and pushed to `origin main`.

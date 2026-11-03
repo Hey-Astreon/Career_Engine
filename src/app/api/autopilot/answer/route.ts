@@ -53,30 +53,40 @@ export async function POST(req: Request) {
       );
     }
 
-    // Fetch profile for system prompt context
+    // Fetch profile with projects and simulations for system prompt context
     const profile = await db.profile.findFirst({
       where: { userId },
-      select: { fullName: true, title: true, location: true },
+      include: { projects: true, virtualExps: true },
     });
 
     let contextString = "";
-    if (typeof context === "string") {
+    if (typeof context === "string" && context.trim()) {
       contextString = context;
     } else {
-      const projectsText = context?.projects
-        ?.map((p) => `- ${p.title} (${p.techStack})${p.architecture ? ": " + p.architecture : ""}`)
-        .join("\n") ?? "";
+      const projectsList =
+        context && typeof context === "object" && Array.isArray(context.projects) && context.projects.length > 0
+          ? context.projects.map((p) => `- ${p.title} (${p.techStack})${p.architecture ? ": " + p.architecture : ""}`)
+          : (profile?.projects ?? []).map((p) => `- ${p.title} (${p.techStack}): ${p.architecture}`);
 
-      const expsText = context?.virtualExps
-        ?.map((e) => `- ${e.role} at ${e.company}${e.outcome ? ": " + e.outcome : ""}`)
-        .join("\n") ?? "";
+      const expsList =
+        context && typeof context === "object" && Array.isArray(context.virtualExps) && context.virtualExps.length > 0
+          ? context.virtualExps.map((e) => `- ${e.role} at ${e.company}${e.outcome ? ": " + e.outcome : ""}`)
+          : (profile?.virtualExps ?? []).map((e) => `- ${e.roleTitle} at ${e.company}: ${e.outcome}`);
+
+      const projectsText = projectsList.join("\n");
+      const expsText = expsList.join("\n");
 
       if (projectsText || expsText) {
         contextString = `CANDIDATE PROJECTS:\n${projectsText || "Various software projects"}\n\nCANDIDATE EXPERIENCE:\n${expsText || "Virtual simulations and hands-on project work"}`;
       }
     }
 
-    const systemPrompt = `You are answering a job application screening question on behalf of ${profile?.fullName ?? "a software developer"}, a ${profile?.title ?? "developer"} based in ${profile?.location ?? "India"}.
+    const isBca = /roushan|ayushi/i.test(profile?.fullName ?? "");
+    const bcaRule = isBca
+      ? `\n- BCA TITLE LAW (MANDATORY): NEVER refer to yourself as an "Engineer" (e.g. Software Engineer, Backend Engineer). Strictly use "Software Developer", "Backend Developer", "Full-Stack Developer", or "Systems Architect".`
+      : "";
+
+    const systemPrompt = `You are answering a job application screening question on behalf of ${profile?.fullName ?? "a software developer"}, a ${profile?.title ?? "Software Developer"} based in ${profile?.location ?? "India"}.
 
 ${contextString}
 
@@ -87,7 +97,7 @@ RULES FOR YOUR ANSWER:
 - Be specific and genuine — reference real projects or experiences when relevant.
 - CRITICAL: Do NOT hallucinate. If you lack specific experience for the question, answer truthfully by focusing on transferable skills and eagerness to learn.
 - Never invent past job titles, years of experience, certifications, or company names not provided in the context.
-- Never start with "I am excited to..." or sycophantic openers.
+- Never start with "I am excited to..." or sycophantic openers, and avoid AI buzzwords ("passionate", "spearheaded", "utilizing").${bcaRule}
 - If the question asks a simple procedural or yes/no question, reply directly with 1 phrase or word (e.g. "N/A" or "Yes").
 - Sound human, natural, and confident.`;
 

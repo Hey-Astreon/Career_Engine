@@ -222,29 +222,29 @@ export default function ResumeBuilderPage() {
 
     const coverLetter = `Dear Hiring Team at ${companyName},
 
-I am writing to express my strong interest in the ${roleTitle} role at ${companyName}. As a Systems and Backend Software Developer specializing in low-latency architectures, distributed APIs, and full-stack software development, I have architected high-performance systems spanning C#/.NET Core, Java Spring Boot, Python FastAPI, and modern TypeScript runtimes.
+I am writing to express my strong interest in the ${roleTitle} role at ${companyName}. As a Software Developer specializing in low-latency backend architectures, distributed APIs, and full-stack web development, I have built and deployed production systems across Python FastAPI, C#/.NET Core, Java Spring Boot, and modern TypeScript runtimes.
 
-Throughout my engineering work, I focus on building robust, fault-tolerant infrastructure with strict performance guarantees. My flagship projects include AstreWork—an autonomous career intelligence platform and distributed harvester on Oracle Cloud with containerized scrapers and sub-50ms response times—and Astra Vision, an automated AST code parser and execution sandbox featuring subprocess isolation and sub-200ms latency. Furthermore, my hands-on software engineering virtual experiences with Commonwealth Bank, Y Combinator (Shiptivity), and Walmart USA reinforced my adherence to 3NF database normalization, asynchronous event processing, and comprehensive unit testing (xUnit, Jest, PyTest).
+Across my technical work, I focus on building fault-tolerant infrastructure with clear performance guarantees. My flagship projects include AstreWork—an AI career platform and distributed job harvester on Oracle Cloud (OCI ARM64) with Dockerized Playwright and Puppeteer scrapers and sub-50ms API response times—Astra Vision, an AST code-graph parser and execution sandbox featuring subprocess isolation and sub-200ms latency, and Alyra Lock, a client-side AES-256-GCM zero-knowledge password vault. Furthermore, my virtual experience simulations reinforced my discipline in 3NF database normalization, asynchronous event processing, and automated unit testing (Vitest, xUnit, Jest, PyTest).
 
-${companyName}'s engineering culture and high technical standards align directly with my background in low-latency systems and clean architectural design. I am particularly excited about the prospect of contributing to your team's core services, optimizing API throughput, and solving complex engineering challenges at scale.
+${companyName}'s technical standards align directly with my background in low-latency systems and clean software design. I welcome the opportunity to contribute to your team's core services, optimize API throughput, and ship reliable product features.
 
-Thank you for your time and consideration. I would welcome the opportunity to discuss how my technical skills and disciplined engineering approach can drive immediate value for ${companyName}.
+Thank you for your time and consideration.
 
 Sincerely,
 ${candidateName}
 Portfolio: ${portfolio} | GitHub: ${github} | LinkedIn: ${linkedin}`;
 
-    const linkedInMessage = `Hi [Name], I noticed ${companyName} is hiring for ${roleTitle}. I’m a Backend & Systems Engineer specializing in low-latency REST APIs (FastAPI, .NET Core, Spring Boot) and AST compiler tools with sub-200ms execution times. I'd love to connect and share how my background aligns with your engineering roadmap: ${portfolio}`;
+    const linkedInMessage = `Hi [Name], I noticed ${companyName} is hiring for ${roleTitle}. I’m a Software Developer specializing in low-latency REST APIs (FastAPI, .NET Core, Node.js) and full-stack TypeScript systems with sub-200ms execution times. I'd love to connect and share how my background aligns with your product roadmap: ${portfolio}`;
 
-    const coldEmail = `Subject: ${roleTitle} application – ${candidateName} (Systems & Backend Specialist)
+    const coldEmail = `Subject: ${roleTitle} application – ${candidateName} (Software Developer)
 
 Hi [Hiring Lead / Founder],
 
-I’ve been following ${companyName}'s engineering milestones and wanted to reach out regarding the ${roleTitle} position.
+I’ve been following ${companyName}'s product milestones and wanted to reach out regarding the ${roleTitle} position.
 
-I build high-throughput, low-latency software systems across Python (FastAPI), C#/.NET Core, Java Spring Boot, and TypeScript. In my recent work on Astra Vision, I built a self-healing subprocess sandbox executing code graphs in under 200ms, complemented by production virtual simulation experience at Commonwealth Bank and YC Shiptivity.
+I build high-throughput, low-latency software systems across Python (FastAPI), TypeScript (Next.js/React 19), C#/.NET Core, and Java Spring Boot. In my recent work on AstreWork and Astra Vision, I built distributed Playwright/Puppeteer pipelines on Oracle Cloud and an isolated subprocess code-graph sandbox executing in under 200ms.
 
-I’d love to contribute to ${companyName}’s backend performance and core product scaling. You can explore my live demos and technical codebase at ${portfolio} and ${github}.
+I’d love to contribute to ${companyName}’s product velocity and system reliability. You can explore my live demos and codebase at ${portfolio} and ${github}.
 
 Would you have 10 minutes next week for a brief conversation?
 
@@ -258,7 +258,7 @@ Hi [Hiring Lead / Team],
 
 I wanted to follow up on my note from last week regarding the ${roleTitle} opening at ${companyName}. 
 
-I remain very enthusiastic about ${companyName}’s technical mission and would love to contribute my experience in low-latency APIs, database normalization, and automated testing to your team.
+I remain very interested in ${companyName}’s technical mission and would love to contribute my experience in low-latency APIs, database normalization, and automated testing to your team.
 
 Looking forward to connecting when your schedule allows.
 
@@ -273,7 +273,7 @@ ${portfolio}`;
   useEffect(() => {
     async function fetchKit() {
       const candidateName = activeProfile?.fullName || resumeData.header.fullName || "Candidate";
-      const targetRole = resumeData.targetRole || "Software Engineer";
+      const targetRole = resumeData.targetRole || "Software Developer";
       const targetCompany = resumeData.targetCompany || "Target Company";
 
       // Immediate high-quality client fallback so user is NEVER stuck loading
@@ -317,7 +317,7 @@ ${portfolio}`;
       };
 
       if (customMode && customDesc.trim()) {
-        payload.customJobTitle = customTitle.trim() || "Full Stack Software Engineer";
+        payload.customJobTitle = customTitle.trim() || "Full-Stack Software Developer";
         payload.customJobCompany = customCompany.trim() || "Target Company";
         payload.customJobDescription = customDesc.trim();
       } else if (jobId || selectedJobId) {

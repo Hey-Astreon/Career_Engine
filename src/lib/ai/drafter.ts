@@ -117,29 +117,29 @@ export function formatFormalCoverLetter(
     paragraphs.length = 0;
     if (isIntern) {
       paragraphs.push(
-        `I am writing to express my enthusiastic interest in the ${jobTitle} internship opportunity at ${company}. As an emerging software engineer passionate about ${skillList}, I have built rigorous hands-on projects and am eager to contribute fresh energy and rapid code execution to your engineering sprints.`
+        `I am writing to express my interest in the ${jobTitle} internship opportunity at ${company}. As an early-career software developer focused on ${skillList}, I have built and shipped production web applications and am ready to contribute clean, well-tested code to your sprints.`
       );
       paragraphs.push(
-        `Across my personal and academic engineering initiatives, I have architected and deployed production-ready applications from scratch. In AstreWork, I engineered a high-throughput job harvesting pipeline using Playwright and Redis 7 on Oracle Cloud (OCI), aggregating 14,000+ daily opportunities. In Astra Vision, I built an AST code-graph parsing engine with sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2).`
+        `Across my technical work, I have built and deployed production applications from scratch. In AstreWork, I built a distributed career platform and job harvesting pipeline using Playwright, Puppeteer, and Redis 7 on Oracle Cloud (OCI), deduplicating 14,000+ daily career listings. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2).`
       );
       paragraphs.push(
-        `I operate with high curiosity, rapid learning velocity, and strict automated testing standards (Jest, Pytest, TypeScript). I am available to commit full-time remote hours to this internship at ${company} without timezone or academic constraints, ready to learn alongside your senior engineers and deliver immediate value.`
+        `I work with high curiosity, rapid learning velocity, and strict automated testing standards (Vitest, Jest, Pytest, TypeScript). I am available to commit full-time remote hours to this internship at ${company} without timezone or schedule constraints, ready to collaborate with your team and deliver immediate value.`
       );
       paragraphs.push(
-        `Thank you for your time and consideration. I would welcome the opportunity to discuss how my technical competencies and project execution align with ${company}'s engineering priorities. You can review my live portfolio at ${candidate.portfolioUrl || "https://astreon.me"} and code repositories at ${candidate.githubUrl || "https://github.com"}.`
+        `Thank you for your time and consideration. I would welcome the opportunity to discuss how my technical skills and project execution align with ${company}'s priorities. You can review my live portfolio at ${candidate.portfolioUrl || "https://astreon.me"} and code repositories at ${candidate.githubUrl || "https://github.com"}.`
       );
     } else {
       paragraphs.push(
-        `I am writing to express my enthusiastic interest in the ${jobTitle} position at ${company}. As a ${candidate.title}, I specialize in engineering resilient software architectures with a strong focus on ${skillList}. I have followed ${company}'s engineering initiatives with great admiration and am eager to contribute directly to your product roadmap.`
+        `I am writing to express my interest in the ${jobTitle} position at ${company}. As a ${candidate.title}, I specialize in building reliable software systems with a strong focus on ${skillList}. I have followed ${company}'s technical work closely and am eager to contribute directly to your product roadmap.`
       );
       paragraphs.push(
-        `Across my technical work, I have architected and shipped high-performance systems from the ground up. In AstreWork, I engineered a distributed career platform and AstrePilot Chrome Extension (MV3) on Oracle Cloud with sub-50ms API response times. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2), guaranteeing user data privacy through client-side encryption.`
+        `Across my technical work, I have built and shipped high-performance systems from the ground up. In AstreWork, I built a distributed career platform and the AstrePilot Chrome Extension (MV3) on Oracle Cloud with sub-50ms API response times. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2), ensuring user data privacy through client-side encryption.`
       );
       paragraphs.push(
-        `I operate with high autonomy, automated test discipline (xUnit, Jest, Pytest), and clean architectural design patterns. Because of my flexible schedule, I am available to commit full-time remote hours to ${company} without timezone or academic constraints, bringing immediate shipping velocity and rigorous code quality to your team.`
+        `I work with high autonomy, automated test discipline (Vitest, xUnit, Jest, Pytest), and clean system design patterns. I am available to commit full-time remote hours to ${company} without timezone or schedule constraints, bringing immediate shipping velocity and strong code quality to your team.`
       );
       paragraphs.push(
-        `Thank you for your time and consideration. I would welcome the opportunity to discuss how my technical competencies and project execution align with ${company}'s engineering priorities. You can review my live portfolio at ${candidate.portfolioUrl || "https://astreon.me"} and code repositories at ${candidate.githubUrl || "https://github.com"}.`
+        `Thank you for your time and consideration. I would welcome the opportunity to discuss how my technical skills and project execution align with ${company}'s priorities. You can review my live portfolio at ${candidate.portfolioUrl || "https://astreon.me"} and code repositories at ${candidate.githubUrl || "https://github.com"}.`
       );
     }
   }
@@ -191,10 +191,10 @@ export function generateRecruiterMessage(
 I recently submitted my application for the ${jobTitle} internship at ${company} and wanted to introduce myself.
 
 I am a driven software developer specializing in building modern web applications and developer tooling${skillHighlight}. Key projects I've built and shipped:
-* **${p1.title.split(" - ")[0]}:** ${p1.architecture}
-* **${p2.title.split(" - ")[0]}:** ${p2.architecture}
+* **${p1.title.split(/\s+[—–-]\s+/)[0]}:** ${p1.architecture}
+* **${p2.title.split(/\s+[—–-]\s+/)[0]}:** ${p2.architecture}
 
-I am eager to contribute hands-on code to ${company}'s engineering roadmap and have full availability for a remote internship this term. You can explore my live demos at ${portfolio} and code on GitHub (${github}).
+I am eager to contribute hands-on code to ${company}'s product roadmap and have full availability for a remote internship this term. You can explore my live demos at ${portfolio} and code on GitHub (${github}).
 
 Would you be open to a quick 10-minute chat this week to discuss how my background fits your internship program?
 
@@ -208,12 +208,12 @@ ${candidate.email || ""}`;
 I recently submitted my application for the ${jobTitle} role at ${company} and wanted to reach out directly.
 
 I am a ${candidate.title} specializing in building high-performance systems and developer tooling${skillHighlight}. Key projects I've built and shipped:
-* **${p1.title.split(" - ")[0]}:** ${p1.architecture}
-* **${p2.title.split(" - ")[0]}:** ${p2.architecture}
+* **${p1.title.split(/\s+[—–-]\s+/)[0]}:** ${p1.architecture}
+* **${p2.title.split(/\s+[—–-]\s+/)[0]}:** ${p2.architecture}
 
-I have full availability for global remote engineering roles and prioritize fast shipping velocity with automated test rigor. You can explore my live demos at ${portfolio} and code on GitHub (${github}).
+I have full availability for global remote software development roles and prioritize fast shipping velocity with automated test rigor. You can explore my live demos at ${portfolio} and code on GitHub (${github}).
 
-Would you be open to a quick 10-minute chat this week to discuss how my background aligns with ${company}'s engineering roadmap?
+Would you be open to a quick 10-minute chat this week to discuss how my background aligns with ${company}'s product roadmap?
 
 Best regards,
 ${candidate.fullName}
@@ -236,22 +236,22 @@ export function generateColdEmail(
 
   const p1 = candidate.masterProjects[0] || { title: "AstreWork", architecture: "Autonomous career engine on OCI with Playwright and Redis 7" };
   const p2 = candidate.masterProjects[1] || { title: "Astra Vision", architecture: "AST code parsing with isolated runtime sandboxes under 200ms" };
-  const p3 = candidate.masterProjects[2] || { title: "Alyra Lock", architecture: "Client-side zero-knowledge vault utilizing Web Crypto AES-GCM (256-bit)" };
+  const p3 = candidate.masterProjects[2] || { title: "Alyra Lock", architecture: "Client-side zero-knowledge vault using Web Crypto AES-GCM (256-bit)" };
 
   return `Subject: ${jobTitle} (${skillSubject}) — ${candidate.fullName} (Portfolio & Systems Demos)
 
 Hi [Founder / CTO Name],
 
-I saw that ${company} is hiring for ${jobTitle}—I'm a big admirer of the engineering approach and product velocity you're building in this space.
+I saw that ${company} is hiring for ${jobTitle}—I admire the technical approach and product velocity you're building in this space.
 
 I am a ${candidate.title}. I specialize in building zero-to-one systems rapidly, with clean architecture, low-latency APIs, and comprehensive test coverage.
 
-Highlights of what I've engineered and shipped:
-1. **${p1.title.split(" - ")[0]}:** ${p1.architecture}
-2. **${p2.title.split(" - ")[0]}:** ${p2.architecture}
-3. **${p3.title.split(" - ")[0]}:** ${p3.architecture}
+Highlights of what I've built and shipped:
+1. **${p1.title.split(/\s+[—–-]\s+/)[0]}:** ${p1.architecture}
+2. **${p2.title.split(/\s+[—–-]\s+/)[0]}:** ${p2.architecture}
+3. **${p3.title.split(/\s+[—–-]\s+/)[0]}:** ${p3.architecture}
 
-I have 100% full-time availability for remote engineering initiatives with zero schedule conflicts.
+I have 100% full-time availability for remote software development initiatives with zero schedule conflicts.
 
 Live Portfolio: ${portfolio}
 GitHub: ${github}
@@ -313,12 +313,13 @@ Your goal is to produce application materials with maximum response rates from R
 
 ${isInternship ? `ROLE TYPE: INTERNSHIP.
 - The candidate is applying for an INTERNSHIP role.
-- Frame them as a high-potential, hungry Developer/Engineer who has built rigorous side projects and possesses strong CS fundamentals.
-- DO NOT use senior corporate jargon ("proven enterprise expertise", "seasoned architect", "10+ years").
-- Emphasize hunger, technical agility, academic/open-source architectures, and willingness to learn quickly from senior mentors.
-- Explicitly emphasize availability to commit to full-time remote internship hours.` : `CAREER STAGE CALIBRATION (CRITICAL):
-- Determine the candidate's career stage using their education dates and master profile. 
-- If the candidate is a student or new grad, DO NOT use senior corporate jargon ("proven expertise", "seasoned professional", "Specialist"). Frame them as a high-potential, hungry Developer/Engineer who has built rigorous side projects.
+- Frame them as a high-potential Software Developer who has built production-deployed projects and possesses strong CS fundamentals. NEVER use the title "Engineer" for Roushan Kumar or Ayushi Raj (use "Software Developer", "Backend Developer", "Full-Stack Developer", or "Systems Architect").
+- DO NOT use senior corporate jargon ("proven enterprise expertise", "seasoned architect", "10+ years") or AI slop ("passionate", "spearheaded", "utilizing", "dynamic").
+- Emphasize technical agility, real deployed systems, and willingness to learn quickly from senior mentors.
+- Explicitly emphasize availability to commit to full-time remote internship hours.` : `CAREER STAGE & BCA TITLE CALIBRATION (CRITICAL):
+- Determine the candidate's career stage using their education dates and master profile.
+- NEVER use the title "Engineer" for Roushan Kumar or Ayushi Raj (strictly use "Software Developer", "Backend Developer", "Full-Stack Developer", or "Systems Architect").
+- If the candidate is a student or new grad, DO NOT use senior corporate jargon ("proven expertise", "seasoned professional", "Specialist") or AI slop ("passionate", "spearheaded", "utilizing", "dynamic"). Frame them as a high-output Software Developer who has built production systems.
 - Adjust the tone of the cover letter, emails, and LinkedIn messages to be authentically matched to their true career stage.`}
 
 Return ONLY valid JSON with keys:
@@ -391,13 +392,13 @@ TASKS:
         : generateFollowUpDraft(candidate, company, jobTitle, jobDescription);
 
       return {
-        tailoredSummary: draft.tailoredSummary || (isInternship ? `Driven Software Developer focusing on high-velocity code execution for the ${jobTitle} internship at ${company}.` : `Specialist ${candidate.title} focusing on high-velocity delivery for ${jobTitle} at ${company}.`),
+        tailoredSummary: draft.tailoredSummary || (isInternship ? `Driven Software Developer focusing on high-velocity code execution for the ${jobTitle} internship at ${company}.` : `${candidate.title} focusing on high-velocity delivery for ${jobTitle} at ${company}.`),
         tailoredProjects: draft.tailoredProjects && draft.tailoredProjects.length > 0 ? draft.tailoredProjects : candidate.masterProjects.map(p => ({
           title: p.title,
           techStack: p.techStack,
           bullets: [
-            `Product Architecture: Engineered ${p.title} utilizing ${p.techStack} to support high-throughput operations.`,
-            `Engineering Challenge: Solved concurrency and latency bottlenecks with automated verification.`,
+            `Product Architecture: Built ${p.title} using ${p.techStack} to support high-throughput operations.`,
+            `Technical Challenge: Solved concurrency and latency bottlenecks with automated verification.`,
             `Performance & Security: Built zero-knowledge protocols and optimized response times under 200ms.`
           ]
         })),
@@ -430,8 +431,8 @@ function generateFallbackKit(
   const isInternship = tier === EarlyCareerTier.TIER_1_INTERNSHIP;
 
   const summary = isInternship
-    ? `Driven Software Developer with strong foundational expertise in ${skillString}. Proven track record of building AST code graph engines, AI financial ledgers, and zero-knowledge cryptography vaults, seeking to bring high learning velocity and clean code execution to the ${jobTitle} internship at ${company}.`
-    : `${candidate.title} with hands-on expertise in building production-grade distributed systems and modern applications using ${skillString}. Proven track record of architecting AST code graph parsing sandboxes, AI-integrated financial ledgers, and zero-knowledge cryptographic vaults, tailored for high-impact ${jobTitle} initiatives at ${company}.`;
+    ? `Software Developer with hands-on experience in ${skillString}. Built and deployed distributed job discovery pipelines (AstreWork), AST code-graph sandboxes (Astra Vision), and zero-knowledge cryptography vaults (Alyra Lock), ready to contribute clean code execution to the ${jobTitle} internship at ${company}.`
+    : `${candidate.title} with hands-on experience building production distributed systems and full-stack applications using ${skillString}. Built and deployed AstreWork (distributed career discovery platform and MV3 extension), Astra Vision (AST code-graph sandbox), and Alyra Lock (zero-knowledge cryptographic vault), tailored for ${jobTitle} initiatives at ${company}.`;
 
   const formattedLetter = formatFormalCoverLetter(
     candidate,
@@ -453,9 +454,9 @@ function generateFallbackKit(
       title: p.title,
       techStack: p.techStack,
       bullets: [
-        `Product Architecture: Architected a resilient system platform utilizing ${p.techStack} tailored for ${jobTitle} requirements at ${company}.`,
-        `Engineering Challenge: Engineered low-latency API endpoints and database transaction safety, keeping response latencies under 200ms.`,
-        `Performance & Security: Implemented comprehensive automated test coverage (xUnit/Jest/Pytest) and robust encryption protocols.`,
+        `Product Architecture: Built a resilient platform using ${p.techStack} tailored for ${jobTitle} requirements at ${company}.`,
+        `Technical Challenge: Engineered low-latency API endpoints and database transaction safety, keeping response latencies under 200ms.`,
+        `Performance & Security: Implemented comprehensive automated test coverage (Vitest/xUnit/Jest/Pytest) and strict encryption protocols.`,
       ],
     })),
     coverLetter: formattedLetter,

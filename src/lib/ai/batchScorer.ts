@@ -157,14 +157,23 @@ export function computeBatchFeedScores(
 
     const lowerTitle = job.title.toLowerCase();
     const lowerCandTitle = candidate.title.toLowerCase();
+    const isJobFullStack = /full[- ]?stack/i.test(lowerTitle);
+    const isCandFullStack = /full[- ]?stack/i.test(lowerCandTitle);
+    const isJobFrontend = /front[- ]?end|react|next\.?js|ui/i.test(lowerTitle);
+    const isCandFrontend = /front[- ]?end|full[- ]?stack|react/i.test(lowerCandTitle);
+    const isJobBackend = /back[- ]?end|api|distributed|systems|cloud/i.test(lowerTitle);
+    const isCandBackend = /back[- ]?end|full[- ]?stack|cloud|systems/i.test(lowerCandTitle);
+    const isJobAi = /\bai\b|llm|machine learning|genai/i.test(lowerTitle);
+    const isCandAi = /\bai\b|llm/i.test(lowerCandTitle);
     let titleCategoryScore = 50;
 
     if (
       (lowerTitle.includes("react") && lowerCandTitle.includes("react")) ||
       (lowerTitle.includes("python") && lowerCandTitle.includes("python")) ||
-      (lowerTitle.includes("backend") && lowerCandTitle.includes("backend")) ||
-      (lowerTitle.includes("frontend") && lowerCandTitle.includes("frontend")) ||
-      (lowerTitle.includes("full stack") && lowerCandTitle.includes("full stack"))
+      (isJobBackend && isCandBackend) ||
+      (isJobFrontend && isCandFrontend) ||
+      (isJobFullStack && isCandFullStack) ||
+      (isJobAi && isCandAi)
     ) {
       titleCategoryScore = 100;
     } else if (lowerTitle.includes("intern") || lowerTitle.includes("internship")) {

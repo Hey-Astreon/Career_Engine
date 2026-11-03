@@ -32,9 +32,12 @@ export interface SyntheticUploadResult {
 export interface SyntheticTargetElement {
   tagName?: string;
   type?: string;
-  files?: any;
-  dispatchEvent(event: any): boolean;
-  [key: string]: any;
+  id?: string;
+  name?: string;
+  className?: string;
+  files?: FileList | File[] | null;
+  dispatchEvent(event: Event | Record<string, unknown>): boolean;
+  addEventListener(type: string, listener: (evt: Event | Record<string, unknown>) => void): void;
 }
 
 export const RESUME_KEYWORDS: readonly string[] = [
@@ -126,10 +129,6 @@ export interface InputSignalAttributes {
  */
 export function isResumeUploadTarget(attrs: InputSignalAttributes): boolean {
   const isFile = attrs.type === "file" || (attrs.tagName === "INPUT" && attrs.type === "file");
-  const isDropzone =
-    (attrs.className && attrs.className.toLowerCase().includes("dropzone")) ||
-    (attrs.automationId && attrs.automationId.toLowerCase().includes("upload")) ||
-    (attrs.id && attrs.id.toLowerCase().includes("dropzone"));
 
   const combinedSignals = [
     attrs.id,
@@ -180,13 +179,13 @@ export function injectSyntheticFile(
     }
 
     // 1. Construct W3C DataTransfer instance if in DOM, or fallback to file array assignment
-    let dataTransfer: any = null;
+    let dataTransfer: DataTransfer | null = null;
     if (typeof DataTransfer !== "undefined") {
       try {
         dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         fileInput.files = dataTransfer.files;
-      } catch (dtErr) {
+      } catch {
         fileInput.files = [file];
       }
     } else {
@@ -204,7 +203,7 @@ export function injectSyntheticFile(
 
       fileInput.dispatchEvent(inputEvt);
       fileInput.dispatchEvent(changeEvt);
-    } catch (e) {
+    } catch {
       // Fallback
     }
 
@@ -231,7 +230,7 @@ export function injectSyntheticFile(
         } else {
           dropzoneContainer.dispatchEvent(dropPayload);
         }
-      } catch (dragErr) {
+      } catch {
         try {
           dropzoneContainer.dispatchEvent({
             type: "drop",
@@ -239,7 +238,7 @@ export function injectSyntheticFile(
             cancelable: true,
             dataTransfer: dataTransfer || { files: [file] },
           });
-        } catch (e) {}
+        } catch {}
       }
     }
 

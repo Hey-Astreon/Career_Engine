@@ -53,8 +53,8 @@ export async function GET(req: Request) {
       profile = await db.profile.findFirst({ where: { userId } });
     }
 
-    // Graceful offline fallback: allow verified founder profiles if un-paired or direct download
-    if (!profile && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
+    // Graceful offline fallback: allow verified founder profiles only when unauthenticated/unpaired
+    if (!profile && !userId && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
       profile = await db.profile.findFirst({ where: { slug: candidateSlug } });
     }
 
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
       session?.jdText || "",
       session?.company || ""
     );
-    let targetFileName = recommended.fileName || defaultFileName;
+    const targetFileName = recommended.fileName || defaultFileName;
 
     const basePath = path.join(process.cwd(), "public", "candidates", folder);
     let resolvedPath = path.join(basePath, targetFileName);

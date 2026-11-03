@@ -46,7 +46,7 @@ export type SyncEventType =
   | "VAULT_ENTRY_SAVED"
   | "APPLICATION_STATUS_UPDATED";
 
-export interface SyncMessage<T = any> {
+export interface SyncMessage<T = unknown> {
   type: SyncEventType;
   senderTabId?: number | string;
   timestamp: number;

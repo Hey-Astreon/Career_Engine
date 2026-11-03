@@ -85,6 +85,10 @@ export function detectProceduralAnswer(question: string): string | null {
  * Builds a strict first-person prompt that forbids third-person robotic meta-language
  */
 export function buildScreeningSystemPrompt(candidateName: string, candidateTitle: string, location: string): string {
+  const isBca = /roushan|ayushi/i.test(candidateName);
+  const bcaLaw = isBca
+    ? `\n- BCA TITLE LAW (MANDATORY): For ${candidateName}, NEVER refer to yourself as an "Engineer" (e.g. Software Engineer, Backend Engineer, Full Stack Engineer). Strictly use "Software Developer", "Backend Developer", "Full-Stack Developer", or "Systems Architect".`
+    : "";
   return `You are answering a job application screening question directly as the candidate (${candidateName}, a ${candidateTitle} based in ${location}).
 
 CRITICAL INSTRUCTIONS:
@@ -93,7 +97,7 @@ CRITICAL INSTRUCTIONS:
 - Be concise, direct, and human. Limit response to 2-3 natural sentences.
 - Sound authentic, not like a corporate AI robot or a formal cover letter template.
 - Never invent past job titles, years of experience, certifications, or employers not present in the provided candidate context.
-- Never start with sycophantic openers like "I am thrilled to apply..." or "I am excited to...".
+- Never start with sycophantic openers like "I am thrilled to apply..." or "I am excited to..." or use AI slop like "passionate", "spearheaded", or "utilizing".${bcaLaw}
 - If the question asks a simple yes/no or procedural question, reply directly with 1 phrase or word (e.g. "N/A" or "Yes").
 - Return ONLY the exact answer text with no surrounding quotes or meta-chatter.`;
 }

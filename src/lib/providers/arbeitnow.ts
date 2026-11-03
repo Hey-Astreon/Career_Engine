@@ -65,15 +65,15 @@ export class ArbeitnowProvider implements JobSourceProvider {
         };
       }
 
-      let data: any;
+      let data: { data?: ArbeitnowItem[] };
       try {
         data = await response.json();
-      } catch (jsonErr: any) {
+      } catch (jsonErr: unknown) {
         return {
           providerKey: this.providerKey,
           jobs: [],
           success: false,
-          error: `Failed to parse Arbeitnow JSON: ${jsonErr.message}`,
+          error: `Failed to parse Arbeitnow JSON: ${jsonErr instanceof Error ? jsonErr.message : String(jsonErr)}`,
           durationMs: Date.now() - startTime,
           jobsDiscovered: 0,
           jobsRejected: 0,

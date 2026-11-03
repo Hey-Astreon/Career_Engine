@@ -123,6 +123,29 @@ describe("InternListProvider", () => {
   });
 
   it("live fetch returns verified remote jobs with valid structure", async () => {
+    vi.spyOn(axios, "post").mockResolvedValue({
+      status: 200,
+      data: {
+        success: true,
+        result: {
+          total: 1,
+          jobList: [
+            {
+              jobId: "remote_swe_live_1",
+              properties: {
+                title: "Software Developer Intern",
+                company: "CloudScale Labs",
+                location: "Remote",
+                salary: "$40/hr",
+                workModel: "Remote",
+                qualifications: "Experience with TypeScript, Python, and REST APIs.",
+              },
+              postedAt: Date.now() - 1800000,
+            },
+          ],
+        },
+      },
+    });
     const result = await new InternListProvider().fetch();
     expect(result.success).toBe(true);
     expect(result.endpointTelemetry!.length).toBeGreaterThan(0);

@@ -31,11 +31,15 @@ function resolveMasterResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kum
 
 export function selectRecommendedResumeVariant(
   profileSlug: string,
-  _jobTitle: string = "",
-  _jobDescription: string = "",
-  _company: string = "",
-  _platform: string = ""
+  jobTitle: string = "",
+  jobDescription: string = "",
+  company: string = "",
+  platform: string = ""
 ): RecommendedResumeVariant {
+  void jobTitle;
+  void jobDescription;
+  void company;
+  void platform;
   const normalizedSlug = (profileSlug || "roushan").toLowerCase();
 
   if (normalizedSlug === "ayushi") {

@@ -32,7 +32,7 @@
       email: 'roushanraut404@gmail.com',
       phone: '+919431483512',
       phoneType: 'Mobile',
-      title: 'Full-Stack Developer | Distributed Systems & Cloud Infrastructure',
+      title: 'Software Developer — Backend & Cloud',
       location: 'Patna, Bihar, India',
       preferredLocation: 'Remote',
       workplacePreference: 'Remote',
@@ -72,7 +72,7 @@
       privacyConsent: 'Confirmed',
       aiConsent: 'Yes',
       aiUsage: 'regularly use AI tools and developer copilots',
-      professionalSummary: 'Full-Stack Developer and Creator of AstreWork, with hands-on experience designing and operating distributed web scrapers, Playwright/Puppeteer automation, and cloud infrastructure on Oracle Cloud. Operates containerized headless browser pipelines processing thousands of postings daily with a focus on high-throughput reliability.',
+      professionalSummary: 'Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure. Built and operate AstreWork on Oracle Cloud (OCI ARM64), where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
       slug: 'roushan',
       token: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
       _isStandalone: true
@@ -85,7 +85,7 @@
       email: 'ayushi29507@gmail.com',
       phone: '+918709852305',
       phoneType: 'Mobile',
-      title: 'Full-Stack Developer | AI Systems & Interactive Web Applications',
+      title: 'Software Developer — Full-Stack & AI',
       location: 'Nawada, Bihar, India',
       preferredLocation: 'Remote',
       workplacePreference: 'Remote',
@@ -126,7 +126,7 @@
       privacyConsent: 'Confirmed',
       aiConsent: 'Yes',
       aiUsage: 'regularly use AI tools and developer copilots',
-      professionalSummary: 'Full-Stack Software Developer and Co-Developer of AstreWork, specializing in AI-integrated web applications, autonomous browser extensions, and high-craft user interfaces. Architected AstreWork client-side ATS optimization engine, Gemini scoring studio, and the AstrePilot Chrome Extension.',
+      professionalSummary: 'Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.',
       _isStandalone: true
     }
   };

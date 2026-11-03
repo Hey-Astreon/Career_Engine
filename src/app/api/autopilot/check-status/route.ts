@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     const cleanCompany = (company || "").trim();
     const cleanTitle = (jobTitle || "").trim().replace(/\bengineer\b/gi, "Developer");
 
-    const orConditions: any[] = [];
+    const orConditions: Array<Record<string, unknown>> = [];
 
     if (canonicalUrl && canonicalUrl.length > 10 && !canonicalUrl.includes("localhost") && !canonicalUrl.includes("testbench")) {
       orConditions.push({ jobPosting: { url: canonicalUrl } });
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     }
 
     if (cleanCompany) {
-      const companyConditions: any[] = [{ jobPosting: { company: cleanCompany } }];
+      const companyConditions: Array<Record<string, unknown>> = [{ jobPosting: { company: cleanCompany } }];
       if (cleanTitle) {
         companyConditions.push({ jobPosting: { title: cleanTitle } });
       }
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     const diffMs = Date.now() - new Date(appDate).getTime();
     const daysAgo = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 
-    let parsedNotes: Record<string, any> = {};
+    let parsedNotes: Record<string, unknown> = {};
     if (existingApp.notes) {
       try {
         if (existingApp.notes.startsWith("{")) {

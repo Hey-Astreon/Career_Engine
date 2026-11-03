@@ -40,16 +40,18 @@ QUESTION TO ANSWER:
 
 TARGET POSITION:
 Company: {company or "Target Company"}
-Role: {job_title or "Software Engineer / Technical Role"}
+Role: {job_title or "Software Developer / Technical Role"}
 Job Context: {job_description or "Fast-paced technology role requiring strong problem solving."}
 
 CANDIDATE CONTEXT:
-{profile_summary or "High-velocity engineer with proven experience in TypeScript, Python, distributed systems, and modern web architectures."}
+{profile_summary or "Software Developer with hands-on experience in TypeScript, Python, distributed systems, and modern web architectures."}
 
 INSTRUCTIONS:
-Write an authentic, highly convincing response directly answering the question.
+Write an authentic, direct first-person response answering the question.
 - Format directly as the candidate's answer without preambles or meta commentary.
-- Highlight demonstrable skills and enthusiasm for {company or 'the company'}.
+- Never use the title "Engineer" for Roushan Kumar or Ayushi Raj (use "Software Developer", "Backend Developer", or "Full-Stack Developer").
+- Avoid AI buzzwords like "passionate", "spearheaded", "utilizing", or "thrilled".
+- Highlight demonstrable skills and genuine interest in {company or 'the company'}.
 {f'- Keep the answer under {max_length} characters.' if max_length else '- Keep to 1-2 focused paragraphs.'}
 """
 

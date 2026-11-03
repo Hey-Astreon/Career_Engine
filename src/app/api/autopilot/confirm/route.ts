@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     }
 
     // Parse and update notes
-    let notesObj: Record<string, any> = {};
+    let notesObj: Record<string, unknown> = {};
     if (targetApp.notes) {
       try {
         if (targetApp.notes.startsWith("{")) {

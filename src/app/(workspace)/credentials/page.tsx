@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, Plus, Search, Copy, Check, Eye, EyeOff, Trash2, ExternalLink, Sparkles, AlertCircle } from "lucide-react";
+import { KeyRound, ShieldCheck, Plus, Search, Copy, Check, Eye, EyeOff, Trash2, ExternalLink, Sparkles } from "lucide-react";
 
 interface SiteCredentialItem {
   id: string;
@@ -45,7 +45,7 @@ export default function CredentialVaultPage() {
   };
 
   useEffect(() => {
-    fetchCredentials();
+    void Promise.resolve().then(() => fetchCredentials());
   }, []);
 
   const handleCopy = (text: string, key: string) => {

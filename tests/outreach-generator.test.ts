@@ -47,7 +47,7 @@ describe("Outreach Generator", () => {
     expect(result.coldEmailSubject).toContain("New Grad Software Developer: New Grad Backend Engineer — Roushan Kumar");
     expect(result.coldEmailBody).toContain("entry-level / new-grad opportunity");
     expect(result.linkedinConnectionNote.length).toBeLessThanOrEqual(300);
-    expect(result.linkedinConnectionNote).toContain("entry-level engineer");
+    expect(result.linkedinConnectionNote).toContain("early-career software developer");
   });
 
   it("generates direct engineering proof materials", () => {

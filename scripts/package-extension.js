@@ -14,7 +14,7 @@ console.log('[AstrePilot] Packaging extension from:', extDir);
 
 try {
   if (process.platform === 'win32') {
-    execSync(`powershell -Command "Compress-Archive -Path '${extDir}\\*' -DestinationPath '${zipFile}' -Force"`, { stdio: 'inherit' });
+    execSync(`powershell -NoProfile -Command "$ProgressPreference = 'SilentlyContinue'; Compress-Archive -Path '${extDir}\\*' -DestinationPath '${zipFile}' -Force"`, { stdio: 'inherit' });
   } else {
     execSync(`cd "${extDir}" && zip -r "${zipFile}" ./*`, { stdio: 'inherit' });
   }

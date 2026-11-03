@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { isDeveloperEmail, isDeveloperProfileSlug } from "@/lib/authCandidate";
+import { getMasterResumeBaseline } from "@/lib/resumeBaseline";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +62,7 @@ export async function GET(req: Request) {
     const lastName = (nameParts.slice(1).join(" ") || nameParts[0]) ?? "";
 
     // Build professional summary from profile context
-    const projectNames = profile.projects.map((p) => p.title).slice(0, 3).join(", ");
+    const projectNames = profile.projects.map((p) => p.title.split(/\s+[—–-]\s+/)[0]).slice(0, 3).join(", ");
     const techStacks = [
       ...new Set(
         profile.projects.flatMap((p) =>
@@ -75,16 +76,20 @@ export async function GET(req: Request) {
       .map((e) => `${e.roleTitle} at ${e.company}`)
       .join("; ");
 
-    const professionalSummary = profile.virtualExps.length > 0
-      ? `${profile.title} with hands-on experience as ${experienceLines}. Built ${projectNames} using ${techStacks}. Passionate about remote-first engineering and delivering impact at scale.`
-      : `${profile.title} who has built ${projectNames} using ${techStacks}. Focused on writing clean, performant code and shipping products that solve real problems.`;
+    const isKnownFounder = profile.slug === "roushan" || profile.slug === "ayushi";
+    const professionalSummary = isKnownFounder
+      ? getMasterResumeBaseline(profile.slug).summary
+      : profile.virtualExps.length > 0
+        ? `${profile.title} with hands-on experience as ${experienceLines}. Built ${projectNames} using ${techStacks}. Focused on remote software development and delivering reliable production systems.`
+        : `${profile.title} who has built ${projectNames} using ${techStacks}. Focused on writing clean, performant code and shipping products that solve real problems.`;
 
-    // Parse granular location parts
+    // Parse granular location parts (strip parenthetical notes like "(Open to Remote)" first)
     let city = "";
     let state = "";
     let country = "";
     if (profile.location) {
-      const locParts = profile.location.split(",").map((s) => s.trim()).filter(Boolean);
+      const cleanLoc = profile.location.replace(/\s*\([^)]*\)/g, "").trim();
+      const locParts = cleanLoc.split(",").map((s) => s.trim()).filter(Boolean);
       if (locParts.length >= 3) {
         city = locParts[0];
         state = locParts[1];

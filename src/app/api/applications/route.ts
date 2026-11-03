@@ -284,7 +284,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
 
     if (status) {
       const prismaStatusMap: Record<string, ApplicationStatus> = {
@@ -301,7 +301,7 @@ export async function PATCH(req: Request) {
     }
 
     if (confirmed !== undefined) {
-      let notesObj: Record<string, any> = {};
+      let notesObj: Record<string, unknown> = {};
       if (existing.notes) {
         try {
           if (existing.notes.startsWith("{")) {
