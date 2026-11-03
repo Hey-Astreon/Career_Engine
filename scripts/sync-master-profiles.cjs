@@ -97,7 +97,7 @@ async function run() {
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bullets: [
-          "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that collect and deduplicate 14,000+ remote jobs daily across 7 platforms.",
+          "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms.",
           "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
           "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%."
         ]
@@ -144,7 +144,58 @@ async function run() {
         ]
       });
     }
-    console.log('✅ Roushan Kumar profile and 3 differentiated projects synced in Turso Cloud.');
+
+    // Clean and sync virtual experiences for Roushan
+    await client.execute({
+      sql: `DELETE FROM virtual_experiences WHERE profileId = ?`,
+      args: [roushanId]
+    });
+
+    const roushanSimulations = [
+      {
+        company: "Commonwealth Bank (CommBank)",
+        roleTitle: "Software Development Virtual Simulation",
+        period: "June 2026",
+        problemScope: "Diagnosed and resolved silent data-overwrite bugs across high-traffic C#/.NET Core financial API controllers backed by MongoDB.",
+        actionTaken: "Refactored C# Web API endpoints with $set atomic operators for partial document updates and patched concurrency race conditions.",
+        outcome: "Authored backend unit test suites using xUnit and Moq covering boundary conditions to guarantee transactional consistency.",
+      },
+      {
+        company: "Y Combinator (YC Startup - Shiptivity)",
+        roleTitle: "Software Development Virtual Simulation",
+        period: "June 2026",
+        problemScope: "Fixed priority-key collisions and transaction rollbacks during high-frequency task reordering in an embedded SQLite database.",
+        actionTaken: "Architected SQLite sequential priority re-indexing using atomic transaction blocks and patched OpenSSL compilation bottlenecks.",
+        outcome: "Reduced database write lock contention by 40% and improved Node.js build pipeline stability across legacy environments.",
+      },
+      {
+        company: "Walmart USA",
+        roleTitle: "Advanced Software Development Virtual Simulation",
+        period: "May 2026",
+        problemScope: "Solved indexing overhead and latency spikes in high-volume retail inventory processing queues fed by disparate data sources.",
+        actionTaken: "Implemented a generic K-ary Max Heap in Java using bitwise shift operators (<<, >>>) for rapid O(log n) priority retrieval.",
+        outcome: "Accelerated priority queue indexing by 35% and built automated Python ETL scripts (csv, sqlite3) for batch database loading.",
+      },
+    ];
+
+    for (const sim of roushanSimulations) {
+      await client.execute({
+        sql: `INSERT INTO virtual_experiences (id, profileId, company, roleTitle, period, problemScope, actionTaken, outcome, createdAt)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        args: [
+          randomUUID(),
+          roushanId,
+          sim.company,
+          sim.roleTitle,
+          sim.period,
+          sim.problemScope,
+          sim.actionTaken,
+          sim.outcome
+        ]
+      });
+    }
+
+    console.log('✅ Roushan Kumar profile, 3 differentiated projects, and 3 simulations synced in Turso Cloud.');
   }
 
   // 2. Update Ayushi Profile
@@ -242,12 +293,64 @@ async function run() {
         ]
       });
     }
-    console.log('✅ Ayushi Raj profile and 3 differentiated projects synced in Turso Cloud.');
+
+    // Clean and sync virtual experiences for Ayushi
+    await client.execute({
+      sql: `DELETE FROM virtual_experiences WHERE profileId = ?`,
+      args: [ayushiId]
+    });
+
+    const ayushiSimulations = [
+      {
+        company: "Commonwealth Bank (CommBank)",
+        roleTitle: "Software Development Virtual Simulation",
+        period: "June 2026",
+        problemScope: "Resolved UI state desynchronization and unvalidated input payloads on the CommBank Goal Manager dashboard.",
+        actionTaken: "Modernized the React/Redux Goal Manager UI with debounced form handlers and strict client-side financial validation schemas.",
+        outcome: "Built automated component integration tests covering state resets, ensuring 0% layout shift across mobile and desktop viewports.",
+      },
+      {
+        company: "Y Combinator (YC Startup - Shiptivity)",
+        roleTitle: "Software Development Virtual Simulation",
+        period: "June 2026",
+        problemScope: "Fixed dropped drag events, key-constraint warnings, and sluggish re-rendering on a real-time Kanban workflow board.",
+        actionTaken: "Integrated Dragula drag-and-drop state hooks in React and memoized card components to eliminate redundant rendering cycles.",
+        outcome: "Cut UI component re-render overhead by 30%, ensuring smooth 60 FPS card dragging across 500+ active task items.",
+      },
+      {
+        company: "Walmart USA",
+        roleTitle: "Advanced Software Development Virtual Simulation",
+        period: "May 2026",
+        problemScope: "Solved data entry bottlenecks and inconsistent record structures caused by unnormalized retail inventory spreadsheets.",
+        actionTaken: "Designed a normalized 3NF relational schema in SQLite and built automated Python validation scripts to clean corrupted CSV feeds.",
+        outcome: "Eliminated 100% of duplicate inventory SKUs and structured raw retail records into query-ready database tables.",
+      },
+    ];
+
+    for (const sim of ayushiSimulations) {
+      await client.execute({
+        sql: `INSERT INTO virtual_experiences (id, profileId, company, roleTitle, period, problemScope, actionTaken, outcome, createdAt)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        args: [
+          randomUUID(),
+          ayushiId,
+          sim.company,
+          sim.roleTitle,
+          sim.period,
+          sim.problemScope,
+          sim.actionTaken,
+          sim.outcome
+        ]
+      });
+    }
+
+    console.log('✅ Ayushi Raj profile, 3 differentiated projects, and 3 simulations synced in Turso Cloud.');
   }
 
   // Verification count
   const pCount = await client.execute(`SELECT count(*) as count FROM projects`);
-  console.log(`🎉 Master Profile Sync Verified! Total project rows in DB: ${pCount.rows[0].count}`);
+  const sCount = await client.execute(`SELECT count(*) as count FROM virtual_experiences`);
+  console.log(`🎉 Master Profile Sync Verified! Total project rows: ${pCount.rows[0].count}, Total virtual experience rows: ${sCount.rows[0].count}`);
 }
 
 run().catch((err) => {

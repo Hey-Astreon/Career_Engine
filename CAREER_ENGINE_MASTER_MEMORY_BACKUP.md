@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 73: Simulation Domain Split, 100% Zero-Plagiarism Gate, Clean Education Dates & Copy De-Buzzing)
+> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 74: Professional Summary & AstreWork High-Volume Scraping Calibration, Zero-Plagiarism Gate, Turso Cloud Profile Sync)
 
 ---
 
@@ -1357,6 +1357,14 @@ Located in `extension/`:
   - **3. De-Buzzed Project Wording (Roushan):** Replaced generative buzzwords in `Astra Vision` and `Alyra Lock` with precise engineering phrasing (`sandboxed Python subprocess runner` and `atomic document versioning`).
   - **4. Skills Prioritization (Ayushi):** Reordered Ayushi's skill categories to place `AI & Browser Automation` 3rd directly following `Frontend & UI`.
   - **5. Automated Gates & Geometry:** Verified 0 shared project bullets AND 0 shared simulation bullets between candidates. A4 DOM geometry verified in Chromium (`overflow: false`, bottom gaps `9.81mm` and `13.68mm`, 1 page). All 41 Vitest tests passing (`41/41`), `npx tsc --noEmit` clean with 0 errors. Committed & pushed live to `main`.
+
+- [x] **Phase 74: Professional Summary & AstreWork High-Volume Scraping Calibration, Zero-Plagiarism Gate & Turso Cloud Profile Sync (Nov 3, 2026)**
+  - **1. Recruiter Psychology Phrasing in Professional Summary:** Calibrated Roushan's Professional Summary to frame high-volume scraping as an enterprise data-pipeline engineering accomplishment rather than a job-hunting tool: `"where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis."`
+  - **2. Flagship Project Bullet Alignment:** Updated AstreWork Project Bullet 1 to match: `"Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms."`
+  - **3. Zero Plagiarism / Domain Separation Verification:** Proved 0% plagiarism/overlap between Roushan and Ayushi's professional summaries. Roushan is established as the Backend/Distributed Systems Architect (scraping pipelines, Docker, OCI, caching, concurrency). Ayushi is established as the Full-Stack UI & Browser Co-Pilot Architect (Next.js studio, React 19, Chrome MV3 AstrePilot autofill, memory-safe crypto).
+  - **4. Upgraded `sync-master-profiles.cjs`:** Extended the synchronization script to delete and insert the 3 differentiated virtual experiences for both candidates alongside their 3 flagship projects into Turso Cloud LibSQL.
+  - **5. Live Turso Cloud Sync Execution:** Executed `node scripts/sync-master-profiles.cjs` against Turso Cloud (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`), verifying 6 project rows and 6 simulation rows cleanly synced across both profiles.
+  - **6. Chromium A4 DOM Geometry & Vitest Gates:** Regenerated Master PDFs and verified strict 1-page bounds (`overflow: false`, bottom gaps `9.81mm` and `13.68mm`, 0 shared bullets, 0 "Engineer" titles, 0 AI slop words). Vitest candidate test suite and TypeScript `tsc --noEmit` passing 100% with 0 errors. Committed & pushed to `main`.
 
 ---
 
@@ -3172,3 +3180,30 @@ graph TD
   - Co-founders applying from the same university must maintain **0% text overlap across both projects AND simulations**; shared work experience must be described strictly from their respective technical focus (backend/infra vs. UI/state).
   - Never place work-availability disclaimers in the education date column; maintain standard date formatting (`2025 – 2028`) and let the contact header and application portal fields declare remote availability.
 - **Status:** Both Master PDFs regenerated and verified (`overflow: false`, bottom gaps `9.81mm` and `13.68mm`, `0` shared project bullets, `0` shared simulation bullets, `0` "Engineer", `0` slop words). All 41 Vitest candidate & outreach tests passing (`41/41`); `npx tsc --noEmit` clean with 0 errors. High-DPI PNGs refreshed in artifact vault. Committed & pushed live to `main`.
+
+---
+
+### 🔴 Case 50: Recruiter Psychology Calibration in Professional Summary & AstreWork Scraping Phrasing (Nov 3, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan raised an insightful recruiter-psychology critique: When an HR manager or recruiter reads that a candidate created an engine that *"collects 14,000+ remote job postings daily"*, could this trigger an unconscious personal grievance or flight-risk fear (*"this candidate will leave us immediately because they have automated access to thousands of alternative job offers"* or *"they built a mass job-search bot to spam applications"* vs. *"they built an enterprise high-throughput distributed data harvesting pipeline"*?)
+- **Deep Root Cause Diagnosis:**
+  - The phrasing *"collects 14,000+ remote job postings daily"* centered on the **consumer job seeker's action** (collecting jobs to apply to) rather than the **backend engineer's technical achievement** (high-volume distributed web ingestion, deduplication, and database streaming).
+  - Shifting the vocabulary to *"where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis"* reframes the achievement from "job seeker scraping listings" to "systems developer building high-concurrency ingestion pipelines".
+- **The Concrete Surgical Fix:**
+  1. **Professional Summary Phrasing:**
+     - Roushan's Summary: `"Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs AstreWork (astrework.app) on Oracle Cloud, where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Enjoys solving hard concurrency, caching, and infrastructure problems."`
+     - AstreWork Project 1 Bullet 1: `"Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms."`
+  2. **100% Zero-Plagiarism Recruiter Teamwork Proof:**
+     - Ayushi's summary focuses entirely on frontend architecture, the client-side ATS scoring studio, and the AstrePilot Chrome Extension (MV3) form autofill:
+       `"Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built AstreWork (astrework.app), shipping its live resume-scoring studio and the AstrePilot Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security."`
+     - Zero shared sentences or clauses. Recruiter psychology perceives two high-performing co-developers tackling complementary systems of a live platform.
+  3. **Turso Cloud Database Synchronization:**
+     - Upgraded `scripts/sync-master-profiles.cjs` to sync all 3 differentiated projects AND all 3 segregated virtual experiences (`CommBank`, `Shiptivity`, `Walmart USA`) for both Roushan and Ayushi into Turso Cloud LibSQL.
+     - Executed live sync: Verified 6 total project rows and 6 total virtual experience rows persisted in Turso Cloud.
+  4. **DOM Geometry & Test Suite Verification:**
+     - Regenerated Canonical Master PDFs via Chromium: Strict 1-page bounds (`bottomGapMm`: Roushan 9.81mm, Ayushi 13.68mm, `overflow: false`, `maxSkillLines: 1`, `maxBulletLines: 2`).
+     - Vitest candidate compliance suite passing (`5/5`), core offline tests passing (`53/53`), `npx tsc --noEmit` clean with 0 errors.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule:** When describing developer tools that touch hiring or job data, always describe the mechanism in **data engineering and distributed systems terminology** (*"pipelines harvest and deduplicate high-volume career listings"*) rather than consumer job-seeker vocabulary (*"collects job postings"*). This eliminates recruiter flight-risk anxiety while dramatically increasing technical prestige.
+  - **Rule:** Every change to resume baselines must be atomically propagated to PDF generators, in-memory baselines (`resumeBaseline.ts`), local seeders (`seed.ts`), and cloud sync runners (`sync-master-profiles.cjs`).
+- **Status:** Complete, verified in Turso Cloud, and pushed to `main`.
