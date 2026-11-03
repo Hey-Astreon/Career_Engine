@@ -110,7 +110,7 @@ async function run() {
         architecture: "FastAPI microservice backend parsing full-stack dependency graphs via Tree-Sitter AST compilers.",
         bullets: [
           "Backend Service: Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.",
-          "Sandbox Isolation: Wrote a self-healing Python subprocess runner with syscall and socket guards to block unauthorized file and network access at runtime.",
+          "Sandbox Isolation: Wrote a sandboxed Python subprocess runner with syscall and socket guards to intercept unauthorized file and network access and safely terminate rogue processes.",
           "AST & Vector Indexing: Wired Tree-Sitter AST parsers into ChromaDB vector search to resolve cross-file symbol references in under 200ms."
         ]
       },
@@ -123,7 +123,7 @@ async function run() {
         bullets: [
           "Zero-Knowledge API: Built an Express.js and MongoDB sync backend that stores only ciphertext blobs and IVs so plaintext secrets never leave the client.",
           "Cryptographic Core: Implemented AES-GCM (256-bit) encryption and 100,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.",
-          "Auth & Sync Hardening: Added JWT session rotation, strict CORS rules, and atomic vault replication that finishes encrypted syncs in under 200ms."
+          "Auth & Sync Hardening: Added JWT session rotation, strict CORS rules, and atomic document versioning that completes encrypted syncs in under 200ms."
         ]
       }
     ];

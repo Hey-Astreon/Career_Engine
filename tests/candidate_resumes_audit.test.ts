@@ -48,7 +48,18 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(shared).toEqual([]);
   });
 
-  it("verifies Roushan_Kumar_Resume.pdf has Style B headline, full-time availability, AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
+  it("verifies 100% simulation bullet uniqueness between Roushan and Ayushi (zero shared bullets)", () => {
+    const roushan = getMasterResumeBaseline("roushan");
+    const ayushi = getMasterResumeBaseline("ayushi");
+
+    const roushanSimBullets = roushan.simulations.flatMap((s) => [s.problemScope, s.actionTaken, s.engineeringOutcome]);
+    const ayushiSimBullets = ayushi.simulations.flatMap((s) => [s.problemScope, s.actionTaken, s.engineeringOutcome]);
+
+    const shared = roushanSimBullets.filter((b) => ayushiSimBullets.includes(b));
+    expect(shared).toEqual([]);
+  });
+
+  it("verifies Roushan_Kumar_Resume.pdf has Style B headline, clean education date, AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
     const pdfPath = path.join(roushanDir, "Roushan_Kumar_Resume.pdf");
     const buf = fs.readFileSync(pdfPath);
     const parsed = await extractPdfInfo(buf);
@@ -56,7 +67,8 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(parsed.numpages).toBe(1);
     expect(parsed.text).toContain("ROUSHAN KUMAR");
     expect(parsed.text).toContain("Software Developer — Backend & Cloud");
-    expect(parsed.text).toContain("2025 – 2028 (Full-Time Remote Available)");
+    expect(parsed.text).toContain("2025 – 2028");
+    expect(parsed.text).not.toContain("Full-Time Remote Available");
     expect(parsed.text).toContain("AstreWork");
     expect(parsed.text).toContain("Astra Vision");
     expect(parsed.text).toContain("Alyra Lock");
@@ -66,7 +78,7 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(parsed.text).not.toMatch(/\b(dynamic|utiliz\w*|passionate|spearhead\w*|leverag\w*)\b/i);
   });
 
-  it("verifies Ayushi_Raj_Resume.pdf has Style B headline, full-time availability, AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
+  it("verifies Ayushi_Raj_Resume.pdf has Style B headline, clean education date, AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
     const pdfPath = path.join(ayushiDir, "Ayushi_Raj_Resume.pdf");
     const buf = fs.readFileSync(pdfPath);
     const parsed = await extractPdfInfo(buf);
@@ -74,7 +86,8 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(parsed.numpages).toBe(1);
     expect(parsed.text).toContain("AYUSHI RAJ");
     expect(parsed.text).toContain("Software Developer — Full-Stack & AI");
-    expect(parsed.text).toContain("2025 – 2028 (Full-Time Remote Available)");
+    expect(parsed.text).toContain("2025 – 2028");
+    expect(parsed.text).not.toContain("Full-Time Remote Available");
     expect(parsed.text).toContain("AstreWork");
     expect(parsed.text).toContain("Alyra Lock");
     expect(parsed.text).toContain("Astra Vision");

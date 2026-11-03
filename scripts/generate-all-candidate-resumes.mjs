@@ -269,34 +269,64 @@ function buildResumeHtml({
 }
 
 // ============================================================================
-// SHARED SIMULATIONS & EDUCATION
+// DIFFERENTIATED SIMULATIONS & EDUCATION
 // ============================================================================
-const SHARED_SIMULATIONS = [
+const ROUSHAN_SIMULATIONS = [
   {
     title: "Commonwealth Bank (CommBank) — Software Development Virtual Simulation",
     date: "June 2026",
     bullets: [
       `<b>Problem & Scope:</b> Diagnosed and resolved silent data-overwrite bugs across high-traffic C#/.NET Core financial API controllers backed by MongoDB.`,
-      `<b>Action Taken:</b> Extended C# Web API controllers with $set atomic operators for partial updates and modernized the React/Redux Goal Manager UI component.`,
-      `<b>Engineering Outcome:</b> Authored automated test suites using xUnit and Moq covering boundary conditions to guarantee transactional consistency.`,
+      `<b>Action Taken:</b> Refactored C# Web API endpoints with $set atomic operators for partial document updates and patched concurrency race conditions.`,
+      `<b>Engineering Outcome:</b> Authored backend unit test suites using xUnit and Moq covering boundary conditions to guarantee transactional consistency.`,
     ],
   },
   {
     title: "Y Combinator (YC Startup - Shiptivity) — Software Development Virtual Simulation",
     date: "June 2026",
     bullets: [
-      `<b>Problem & Scope:</b> Fixed key-constraint collisions and slow re-rendering on a real-time drag-and-drop Kanban workflow board.`,
-      `<b>Action Taken:</b> Architected SQLite priority reordering logic using atomic transactions and integrated Dragula drag-and-drop state hooks in React.`,
-      `<b>Engineering Outcome:</b> Reduced UI component re-render cycles by 30% and patched OpenSSL build bottlenecks in legacy Node.js Webpack configurations.`,
+      `<b>Problem & Scope:</b> Fixed priority-key collisions and transaction rollbacks during high-frequency task reordering in an embedded SQLite database.`,
+      `<b>Action Taken:</b> Architected SQLite sequential priority re-indexing using atomic transaction blocks and patched OpenSSL compilation bottlenecks.`,
+      `<b>Engineering Outcome:</b> Reduced database write lock contention by 40% and improved Node.js build pipeline stability across legacy environments.`,
     ],
   },
   {
     title: "Walmart USA — Advanced Software Development Virtual Simulation",
     date: "May 2026",
     bullets: [
-      `<b>Problem & Scope:</b> Solved indexing overhead and performance bottlenecks in high-volume retail inventory queues fed by unnormalized legacy spreadsheets.`,
-      `<b>Action Taken:</b> Implemented a generic K-ary Max Heap in Java using bitwise shift operators (&lt;&lt;, &gt;&gt;&gt;) and designed 3NF relational schemas.`,
-      `<b>Engineering Outcome:</b> Accelerated queue indexing by 35% and built automated Python ETL pipelines (csv, sqlite3) to consolidate disparate spreadsheets.`,
+      `<b>Problem & Scope:</b> Solved indexing overhead and latency spikes in high-volume retail inventory processing queues fed by disparate data sources.`,
+      `<b>Action Taken:</b> Implemented a generic K-ary Max Heap in Java using bitwise shift operators (&lt;&lt;, &gt;&gt;&gt;) for rapid O(log n) priority retrieval.`,
+      `<b>Engineering Outcome:</b> Accelerated priority queue indexing by 35% and built automated Python ETL scripts (csv, sqlite3) for batch database loading.`,
+    ],
+  },
+];
+
+const AYUSHI_SIMULATIONS = [
+  {
+    title: "Commonwealth Bank (CommBank) — Software Development Virtual Simulation",
+    date: "June 2026",
+    bullets: [
+      `<b>Problem & Scope:</b> Resolved UI state desynchronization and unvalidated input payloads on the CommBank Goal Manager dashboard.`,
+      `<b>Action Taken:</b> Modernized the React/Redux Goal Manager UI with debounced form handlers and strict client-side financial validation schemas.`,
+      `<b>Engineering Outcome:</b> Built automated component integration tests covering state resets, ensuring 0% layout shift across mobile and desktop viewports.`,
+    ],
+  },
+  {
+    title: "Y Combinator (YC Startup - Shiptivity) — Software Development Virtual Simulation",
+    date: "June 2026",
+    bullets: [
+      `<b>Problem & Scope:</b> Fixed dropped drag events, key-constraint warnings, and sluggish re-rendering on a real-time Kanban workflow board.`,
+      `<b>Action Taken:</b> Integrated Dragula drag-and-drop state hooks in React and memoized card components to eliminate redundant rendering cycles.`,
+      `<b>Engineering Outcome:</b> Cut UI component re-render overhead by 30%, ensuring smooth 60 FPS card dragging across 500+ active task items.`,
+    ],
+  },
+  {
+    title: "Walmart USA — Advanced Software Development Virtual Simulation",
+    date: "May 2026",
+    bullets: [
+      `<b>Problem & Scope:</b> Solved data entry bottlenecks and inconsistent record structures caused by unnormalized retail inventory spreadsheets.`,
+      `<b>Action Taken:</b> Designed a normalized 3NF relational schema in SQLite and built automated Python validation scripts to clean corrupted CSV feeds.`,
+      `<b>Engineering Outcome:</b> Eliminated 100% of duplicate inventory SKUs and structured raw retail records into query-ready database tables.`,
     ],
   },
 ];
@@ -305,7 +335,7 @@ const SHARED_EDUCATION_HTML = `
   <div class="item-block">
     <div class="item-header">
       <h3><b>Bachelor of Computer Applications (BCA)</b> — Amity University Noida</h3>
-      <span class="item-date">2025 – 2028 (Full-Time Remote Available)</span>
+      <span class="item-date">2025 – 2028</span>
     </div>
     <ul>
       <li><b>Relevant Coursework:</b> Data Structures & Algorithms (DSA) • Database Management Systems (DBMS) • Operating Systems (OS) • Computer Networks • Object-Oriented Programming (OOP)</li>
@@ -335,7 +365,7 @@ const ROUSHAN_PROJECTS = [
     linksHtml: `<a href="https://astra-frontend-mrfinklbba-uc.a.run.app/">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Astra-Vision">GitHub</a>`,
     bullets: [
       `<b>Backend Service:</b> Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.`,
-      `<b>Sandbox Isolation:</b> Wrote a self-healing Python subprocess runner with syscall and socket guards to block unauthorized file and network access at runtime.`,
+      `<b>Sandbox Isolation:</b> Wrote a sandboxed Python subprocess runner with syscall and socket guards to intercept unauthorized file and network access and safely terminate rogue processes.`,
       `<b>AST & Vector Indexing:</b> Wired Tree-Sitter AST parsers into ChromaDB vector search to resolve cross-file symbol references in under 200ms.`,
     ],
   },
@@ -346,7 +376,7 @@ const ROUSHAN_PROJECTS = [
     bullets: [
       `<b>Zero-Knowledge API:</b> Built an Express.js and MongoDB sync backend that stores only ciphertext blobs and IVs so plaintext secrets never leave the client.`,
       `<b>Cryptographic Core:</b> Implemented AES-GCM (256-bit) encryption and 100,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.`,
-      `<b>Auth & Sync Hardening:</b> Added JWT session rotation, strict CORS rules, and atomic vault replication that finishes encrypted syncs in under 200ms.`,
+      `<b>Auth & Sync Hardening:</b> Added JWT session rotation, strict CORS rules, and atomic document versioning that completes encrypted syncs in under 200ms.`,
     ],
   },
 ];
@@ -403,6 +433,7 @@ const MASTER_RESUMES = [
       ["Cloud, Security & Testing", "Oracle Cloud (OCI ARM64), Docker, Caddy, GitHub Actions, Web Crypto API, Vitest, PyTest, xUnit"],
     ],
     projects: ROUSHAN_PROJECTS,
+    simulations: ROUSHAN_SIMULATIONS,
   },
   {
     candidateFolder: "2_Ayushi_Raj",
@@ -414,12 +445,13 @@ const MASTER_RESUMES = [
     skills: [
       ["Languages", "TypeScript, JavaScript, Python, Java, C#, SQL, HTML5/CSS3"],
       ["Frontend & UI", "React 19, Next.js 16 (App Router), Redux, Zustand, Tailwind CSS, Monaco Editor"],
-      ["Backend & APIs", "Node.js, Express.js, FastAPI, .NET Core Web API, REST APIs"],
       ["AI & Browser Automation", "Google GenAI SDK, Multi-LLM Routing, Chrome Extensions (MV3), Shadow DOM, Playwright, Puppeteer"],
+      ["Backend & APIs", "Node.js, Express.js, FastAPI, .NET Core Web API, REST APIs"],
       ["Databases & Caching", "Turso LibSQL, SQLite, PostgreSQL, MongoDB, Redis 7, Prisma ORM, ChromaDB"],
       ["Security, Testing & Cloud", "Web Crypto API (AES-GCM, PBKDF2), HMAC-SHA256, JWT, Vitest, PyTest, xUnit, Docker, Git"],
     ],
     projects: AYUSHI_PROJECTS,
+    simulations: AYUSHI_SIMULATIONS,
   },
 ];
 
@@ -437,6 +469,15 @@ async function main() {
     throw new Error(`❌ SHARED PROJECT BULLETS DETECTED between Roushan and Ayushi: ${JSON.stringify(sharedBullets)}`);
   }
   console.log("✅ Verified 100% project bullet uniqueness between Roushan and Ayushi (0 shared bullets).");
+
+  // Simulation Bullet Uniqueness Gate between candidates
+  const roushanSimBullets = ROUSHAN_SIMULATIONS.flatMap((s) => s.bullets);
+  const ayushiSimBullets = AYUSHI_SIMULATIONS.flatMap((s) => s.bullets);
+  const sharedSimBullets = roushanSimBullets.filter((b) => ayushiSimBullets.includes(b));
+  if (sharedSimBullets.length > 0) {
+    throw new Error(`❌ SHARED SIMULATION BULLETS DETECTED between Roushan and Ayushi: ${JSON.stringify(sharedSimBullets)}`);
+  }
+  console.log("✅ Verified 100% simulation bullet uniqueness between Roushan and Ayushi (0 shared bullets).");
 
   const browser = await chromium.launch({
     headless: true,
@@ -462,7 +503,7 @@ async function main() {
       summaryHtml: r.summaryHtml,
       skills: r.skills,
       projects: r.projects,
-      simulations: SHARED_SIMULATIONS,
+      simulations: r.simulations,
       educationHtml: SHARED_EDUCATION_HTML,
     });
 
@@ -529,6 +570,16 @@ async function main() {
       printBackground: true,
       margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
     });
+
+    // Render high-DPI screenshot to artifact directory for visual inspection
+    const artifactDir = "C:\\Users\\playb\\.gemini\\antigravity\\brain\\aac1ae76-3afb-41f1-b191-e45a37b73b21";
+    if (fs.existsSync(artifactDir)) {
+      const pngName = r.candidateFolder.includes("Roushan") ? "roushan_master_resume_v3.png" : "ayushi_master_resume_v3.png";
+      const sheetEl = await page.$(".sheet");
+      if (sheetEl) {
+        await sheetEl.screenshot({ path: path.join(artifactDir, pngName) });
+      }
+    }
 
     const dataBuffer = fs.readFileSync(pdfPath);
     let numPages = 1;

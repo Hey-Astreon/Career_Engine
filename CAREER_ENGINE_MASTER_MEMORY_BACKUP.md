@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 72: Style B Role Identity Calibration, Natural Human-Voice Summaries, 0% Bullet Overlap & 2028 Student Bias Neutralization)
+> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 73: Simulation Domain Split, 100% Zero-Plagiarism Gate, Clean Education Dates & Copy De-Buzzing)
 
 ---
 
@@ -1350,6 +1350,13 @@ Located in `extension/`:
   - Neutralized the `Expected July 2028` student filter bias by updating the education line to `2025 – 2028 (Full-Time Remote Available)`.
   - Added `sanitizeBcaHeadline()` in `resumeOptimizer.ts` and cleaned `outreachGenerator.ts` to permanently prevent `"Engineer"` title leaks.
   - Verified 36/36 Vitest tests passing and 0 TypeScript compile errors.
+
+- [x] **Phase 73: Simulation Domain Split, 100% Zero-Plagiarism Gate, Clean Education Dates & Copy De-Buzzing (Nov 3, 2026)**
+  - **1. Technical Simulations Domain Split (100% Zero-Plagiarism):** Differentiated all 3 virtual simulations (`CommBank`, `Shiptivity`, `Walmart USA`) across both candidates. Roushan focuses on C# Web API endpoints, MongoDB `$set` atomic updates, SQLite atomic transaction re-indexing, and Java K-ary Max Heap bitwise algorithms. Ayushi focuses on React/Redux Goal Manager UI state, Dragula event hooks, component re-render memoization, and SQLite 3NF retail schema modeling.
+  - **2. Clean Education Dates (`2025 – 2028`):** Stripped the defensive `(Full-Time Remote Available)` label from the education line across all generators, baselines, and test suites, restoring standard `2025 – 2028` while keeping `(Open to Remote)` in the contact header.
+  - **3. De-Buzzed Project Wording (Roushan):** Replaced generative buzzwords in `Astra Vision` and `Alyra Lock` with precise engineering phrasing (`sandboxed Python subprocess runner` and `atomic document versioning`).
+  - **4. Skills Prioritization (Ayushi):** Reordered Ayushi's skill categories to place `AI & Browser Automation` 3rd directly following `Frontend & UI`.
+  - **5. Automated Gates & Geometry:** Verified 0 shared project bullets AND 0 shared simulation bullets between candidates. A4 DOM geometry verified in Chromium (`overflow: false`, bottom gaps `9.81mm` and `13.68mm`, 1 page). All 41 Vitest tests passing (`41/41`), `npx tsc --noEmit` clean with 0 errors. Committed & pushed live to `main`.
 
 ---
 
@@ -3141,3 +3148,27 @@ graph TD
   - Co-founders sharing repository projects must scope their bullets strictly to their individual architectural domain (backend runtime vs. interactive UI/extension) to prevent hiring manager doubt.
   - When updating Master Resume copy and project bullets, always sync `generate-all-candidate-resumes.mjs`, `resumeBaseline.ts`, `prisma/seed.ts`, and `sync-master-profiles.cjs` in the same atomic commit so the live web builder, static PDF generator, database seeds, and Turso cloud remain 100% identical.
 - **Status:** Both Master PDFs regenerated with 100% geometry & compliance gates (`13.68mm` bottom gap, `maxSkillLines === 1`, `maxH3Lines === 1`, `0` shared bullets, `0` "Engineer", `0` slop words). All 40 Vitest candidate & outreach tests passing (40/40); `npx tsc --noEmit` clean with 0 errors.
+
+
+### 🔴 Case 49: Simulation Domain Split, Zero-Plagiarism Gate, Clean Education Dates & Copy De-Buzzing (Nov 3, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. While flagship projects had 0% bullet overlap, all 3 Virtual Simulations (`CommBank`, `Shiptivity`, `Walmart USA`) were 100% word-for-word identical across both resumes. A recruiter or ATS comparing both candidates from Amity University would immediately flag this as mutual copying or plagiarism rather than teamwork.
+  2. The education line used `2025 – 2028 (Full-Time Remote Available)`, which violated standard date column geometry, looked defensive, and was 100% redundant with the contact header's `(Open to Remote)`.
+  3. Roushan's project bullets contained AI-slop buzzwords (`self-healing Python subprocess runner` and `atomic vault replication`).
+  4. Ayushi's skills sequence listed `Backend & APIs` ahead of `AI & Browser Automation`, burying her strongest differentiator.
+- **Deep Root Cause Diagnosis:**
+  - Virtual simulations had been defined once in a global shared constant (`SHARED_SIMULATIONS`) and applied symmetrically without considering candidate domain specializations.
+- **The Concrete Surgical Fix:**
+  1. **Split Simulations into `ROUSHAN_SIMULATIONS` and `AYUSHI_SIMULATIONS`:**
+     - CommBank: Roushan focuses on C# Web API endpoints and MongoDB `$set` atomic updates; Ayushi focuses on React/Redux Goal Manager UI state and client validation.
+     - Shiptivity: Roushan focuses on SQLite atomic transaction re-indexing and OpenSSL build fixes; Ayushi focuses on Dragula event hooks and component memoization (30% re-render reduction).
+     - Walmart USA: Roushan focuses on Java K-ary Max Heap bitwise algorithms and Python ETL; Ayushi focuses on SQLite 3NF relational schemas and CSV data cleaning.
+     - Added automated uniqueness gate in `generate-all-candidate-resumes.mjs` and `candidate_resumes_audit.test.ts` asserting 0 shared simulation bullets between candidates.
+  2. **Cleaned Education Dates to Standard `2025 – 2028`:** Removed `(Full-Time Remote Available)` across all templates, baselines, and tests; retained `(Open to Remote)` in the contact line.
+  3. **De-Buzzed Copy (Roushan):** Replaced `self-healing subprocess runner` with `sandboxed Python subprocess runner`, and `atomic vault replication` with `atomic document versioning`.
+  4. **Reprioritized Skills (Ayushi):** Reordered skill categories to place `AI & Browser Automation` 3rd directly after `Frontend & UI`.
+  5. **Full Stack Atomic Synchronization:** Synchronized changes across `generate-all-candidate-resumes.mjs`, `resumeBaseline.ts`, `seed.ts`, `sync-master-profiles.cjs`, and `candidate_resumes_audit.test.ts`.
+- **Hard-Won Engineering Experience & Rules:**
+  - Co-founders applying from the same university must maintain **0% text overlap across both projects AND simulations**; shared work experience must be described strictly from their respective technical focus (backend/infra vs. UI/state).
+  - Never place work-availability disclaimers in the education date column; maintain standard date formatting (`2025 – 2028`) and let the contact header and application portal fields declare remote availability.
+- **Status:** Both Master PDFs regenerated and verified (`overflow: false`, bottom gaps `9.81mm` and `13.68mm`, `0` shared project bullets, `0` shared simulation bullets, `0` "Engineer", `0` slop words). All 41 Vitest candidate & outreach tests passing (`41/41`); `npx tsc --noEmit` clean with 0 errors. High-DPI PNGs refreshed in artifact vault. Committed & pushed live to `main`.
