@@ -464,6 +464,51 @@ export const WORKABLE_EXACT_MAP: AtsFieldMapping[] = [
   { type: 'SUMMARY', selectors: ['textarea[name="summary"]', 'textarea#summary'] }
 ];
 
+/**
+ * Deterministic Selector Mapping Table for Wellfound (AngelList Talent).
+ */
+export const WELLFOUND_EXACT_MAP: AtsFieldMapping[] = [
+  {
+    type: 'COVER_LETTER',
+    selectors: [
+      'textarea[name="userNote"]',
+      'textarea#userNote',
+      'textarea[placeholder*="note" i]',
+      'textarea[placeholder*="pitch" i]',
+      'textarea[placeholder*="why" i]',
+      'textarea[data-test*="note" i]',
+      'textarea'
+    ]
+  },
+  {
+    type: 'RESUME',
+    selectors: [
+      'input[type="file"][name*="resume" i]',
+      'input[type="file"]'
+    ]
+  },
+  {
+    type: 'PHONE',
+    selectors: ['input[name="phone" i]', 'input[type="tel"]']
+  },
+  {
+    type: 'CITY',
+    selectors: ['input[name="location" i]', 'input[placeholder*="location" i]']
+  },
+  {
+    type: 'LINKEDIN',
+    selectors: ['input[name*="linkedin" i]', 'input[placeholder*="linkedin" i]']
+  },
+  {
+    type: 'GITHUB',
+    selectors: ['input[name*="github" i]', 'input[placeholder*="github" i]']
+  },
+  {
+    type: 'PORTFOLIO',
+    selectors: ['input[name*="portfolio" i]', 'input[placeholder*="portfolio" i]', 'input[name*="website" i]']
+  }
+];
+
 export interface AtsDriverDefinition {
   engine: string;
   iframeSelector?: string;
@@ -599,6 +644,16 @@ export const taleoDriver: AtsDriverDefinition = {
   mappingList: TALEO_EXACT_MAP
 };
 
+export const wellfoundDriver: AtsDriverDefinition = {
+  engine: 'WELLFOUND',
+  submitButtonSelector: 'button[data-test="JobApplicationModalSubmitButton"], button[type="submit"]',
+  fieldMap: {
+    'TEXTAREA#userNote': 'COVER_LETTER',
+    'TEXTAREA[name="userNote"]': 'COVER_LETTER'
+  },
+  mappingList: WELLFOUND_EXACT_MAP
+};
+
 export function detectAtsEngine(url: string, htmlSnippet: string = ''): string {
   const target = (url || '').toLowerCase();
   const domText = (htmlSnippet || '').toLowerCase();
@@ -613,6 +668,7 @@ export function detectAtsEngine(url: string, htmlSnippet: string = ''): string {
   if (target.includes('workable.com') || domText.includes('apply.workable.com')) return 'WORKABLE';
   if (target.includes('taleo.net') || target.includes('oraclecloud.com') || domText.includes('taleo')) return 'TALEO';
   if (target.includes('breezy.hr') || domText.includes('breezy.hr')) return 'BREEZY';
+  if (target.includes('wellfound.com') || domText.includes('wellfound')) return 'WELLFOUND';
   return 'GENERIC';
 }
 

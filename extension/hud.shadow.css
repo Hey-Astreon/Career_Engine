@@ -8,12 +8,12 @@
   --ap-font: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   --ap-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --fs-xs: 11px;
-  --fs-sm: 12px;
-  --fs-md: 13px;
-  --fs-base: 13.5px;
-  --fs-lg: 14.5px;
-  --fs-xl: 16px;
+  --fs-xs: 10px;
+  --fs-sm: 11px;
+  --fs-md: 12px;
+  --fs-base: 12.5px;
+  --fs-lg: 13.5px;
+  --fs-xl: 15px;
 
   /* 4-pt Spacing System */
   --sp-1: 4px;
@@ -142,7 +142,7 @@ svg {
    HUD EXPANDED CARD
    ══════════════════════════════════════════════════════════════════════ */
 .hud-card {
-  width: 368px;
+  width: 328px;
   background: var(--ap-bg);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
@@ -164,7 +164,7 @@ svg {
 
 /* Header */
 .hud-header {
-  padding: 11px 14px;
+  padding: 9px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -285,10 +285,10 @@ svg {
    BODY
    ══════════════════════════════════════════════════════════════════════ */
 .hud-body {
-  padding: var(--sp-4);
+  padding: var(--sp-3);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-3);
   max-height: calc(100vh - 160px);
   overflow-y: auto;
 }
@@ -444,12 +444,12 @@ svg {
 .field-row {
   display: flex;
   align-items: flex-start;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: var(--ap-radius-sm);
   background: var(--ap-bg-solid);
   border: 1px solid var(--ap-line);
   transition: all 0.15s var(--ap-ease);
-  gap: 10px;
+  gap: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -593,15 +593,15 @@ svg {
 }
 
 .btn-primary {
-  height: 42px;
+  height: 36px;
   background: var(--ap-accent);
   color: var(--ap-accent-text);
   border: none;
-  padding: 0 var(--sp-4);
+  padding: 0 var(--sp-3);
   border-radius: var(--ap-radius-md);
   font-family: var(--ap-font);
   font-weight: 600;
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -628,15 +628,15 @@ svg {
 }
 
 .btn-secondary {
-  height: 38px;
+  height: 32px;
   background: var(--ap-surface);
   color: var(--ap-ink);
   border: 1px solid var(--ap-line);
-  padding: 0 var(--sp-4);
+  padding: 0 var(--sp-3);
   border-radius: var(--ap-radius-md);
   font-family: var(--ap-font);
   font-weight: 600;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   cursor: pointer;
   transition: all 0.15s var(--ap-ease);
   display: flex;
@@ -1147,4 +1147,68 @@ svg {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   COVER LETTER PREVIEW MODAL & ACTIONS
+   ══════════════════════════════════════════════════════════════════════ */
+.hud-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-3);
+  animation: ap-fade-in 0.2s var(--ap-ease);
+}
+
+.hud-modal-card {
+  background: var(--ap-bg-solid);
+  border: 1px solid var(--ap-line);
+  border-radius: var(--ap-radius-md);
+  box-shadow: var(--ap-shadow);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hud-modal-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ap-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ap-surface);
+}
+
+.hud-modal-title {
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--ap-ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-modal-body {
+  padding: 10px 12px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--ap-ink-2);
+  white-space: pre-wrap;
+  font-family: var(--ap-font);
+}
+
+.hud-modal-footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--ap-line);
+  display: flex;
+  gap: 6px;
+  background: var(--ap-surface);
 }

@@ -825,6 +825,11 @@
       const isInternList = hostname.includes('intern-list.com');
       
       if (!isWellfound && !isJobright && !isInternList) return null;
+
+      // CRITICAL SAFEGUARD: Never hijack the page with catalog harvesting if candidate is actively applying!
+      if (document.querySelector('textarea[name="userNote"], textarea#userNote, [data-test*="ApplicationModal"], [data-test*="apply"], [class*="ApplicationModal"], [class*="application-modal"], form[action*="apply"]')) {
+        return null;
+      }
       
       const source = isInternList ? 'INTERN_LIST' : (isJobright ? 'JOBRIGHT' : 'WELLFOUND');
       const harvested = [];
@@ -2229,6 +2234,65 @@
     return { fields, seenElements };
   }
 
+  /* -- WELLFOUND DETERMINISTIC DRIVER (ANGELLIST TALENT) -- */
+  function isWellfoundEnvironment(targetDocs = [document]) {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (!host.includes('wellfound.com') && !href.includes('wellfound.com')) return false;
+      for (const doc of targetDocs) {
+        if (!doc) continue;
+        if (doc.querySelector('textarea[name="userNote"], textarea#userNote, [data-test*="ApplicationModal"], [data-test="JobApplicationModalSubmitButton"], form[action*="apply"], textarea[placeholder*="note" i], textarea[placeholder*="pitch" i]')) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function scanWellfoundFields(targetDoc) {
+    if (!targetDoc) return { fields: [], seenElements: new Set() };
+    const fields = [];
+    const seenElements = new Set();
+
+    const WELLFOUND_MAP = [
+      { type: 'COVER_LETTER', selectors: ['textarea[name="userNote"]', 'textarea#userNote', 'textarea[placeholder*="note" i]', 'textarea[placeholder*="pitch" i]', 'textarea[placeholder*="why" i]', 'textarea[data-test*="note" i]', 'textarea'] },
+      { type: 'RESUME', selectors: ['input[type="file"][name*="resume" i]', 'input[type="file"]'] },
+      { type: 'PHONE', selectors: ['input[name="phone" i]', 'input[type="tel"]'] },
+      { type: 'CITY', selectors: ['input[name="location" i]', 'input[placeholder*="location" i]'] },
+      { type: 'LINKEDIN', selectors: ['input[name*="linkedin" i]', 'input[placeholder*="linkedin" i]'] },
+      { type: 'GITHUB', selectors: ['input[name*="github" i]', 'input[placeholder*="github" i]'] },
+      { type: 'PORTFOLIO', selectors: ['input[name*="portfolio" i]', 'input[placeholder*="portfolio" i]', 'input[name*="website" i]'] }
+    ];
+
+    WELLFOUND_MAP.forEach(item => {
+      let el = null;
+      for (const sel of item.selectors) {
+        try {
+          const found = targetDoc.querySelector(sel);
+          if (found) { el = found; break; }
+        } catch (e) {}
+      }
+      if (el && !seenElements.has(el)) {
+        seenElements.add(el);
+        const origVal = (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox'))
+          ? el.checked
+          : (el.value !== undefined ? el.value : (el.innerText || el.textContent || ''));
+        const elId = el.id || el.getAttribute('data-test') || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('wellfound_' + fields.length);
+        fields.push({
+          element: el,
+          type: item.type,
+          id: item.type.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'Wellfound'
+        });
+      }
+    });
+
+    return { fields, seenElements };
+  }
+
   /* -- CAPTCHA SENTINEL (PILLAR 5) -- */
   function detectCaptchaChallenge(targetDocs = [document]) {
     try {
@@ -2270,7 +2334,7 @@
     const results = [];
     const seenTypes = {};
     const SINGLETON_TYPES = new Set([
-      'RESUME',
+      'RESUME', 'COVER_LETTER',
       'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'PHONE_TYPE',
       'ADDRESS_TYPE', 'ADDRESS', 'APT', 'CITY', 'STATE', 'COUNTRY', 'ZIP',
       'EXP_STATE', 'EXP_CITY', 'EXP_COUNTRY',
@@ -2304,6 +2368,7 @@
     const isWorkday = isWorkdayEnvironment(targetDocs);
     const isAshby = isAshbyEnvironment(targetDocs);
     const isLever = isLeverEnvironment(targetDocs);
+    const isWellfound = isWellfoundEnvironment(targetDocs);
 
     targetDocs.forEach(targetDoc => {
       const seenElements = new Set();
@@ -2372,6 +2437,17 @@
           seenElements.add(f.element);
         });
         levSeen.forEach(el => seenElements.add(el));
+      }
+
+      // If on a Wellfound portal, execute the deterministic Wellfound driver
+      if (isWellfound) {
+        const { fields: wfFields, seenElements: wfSeen } = scanWellfoundFields(targetDoc);
+        wfFields.forEach(f => {
+          results.push(f);
+          seenTypes[f.type] = true;
+          seenElements.add(f.element);
+        });
+        wfSeen.forEach(el => seenElements.add(el));
       }
 
       // Deep Shadow DOM query: finds all standard & Web Component inputs across open shadow roots
@@ -3481,6 +3557,76 @@
     }
   }
 
+  /* -- SYNTHETIC COVER LETTER BINARY INJECTION -- */
+  function getCoverLetterBinaryFromBackground() {
+    return new Promise((resolve) => {
+      try {
+        const activeCtx = userProfile ? (userProfile.slug || 'roushan') : 'roushan';
+        const company = (activeSession && activeSession.company) ? activeSession.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
+        const jobTitle = (activeSession && activeSession.jobTitle) ? activeSession.jobTitle : '';
+        const jdText = (activeSession && activeSession.jdText) || extractPageContent();
+
+        chrome.runtime.sendMessage({
+          type: 'GET_COVER_LETTER_BINARY',
+          activeContext: activeCtx,
+          company,
+          jobTitle,
+          jobDescription: jdText
+        }, (res) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+            return;
+          }
+          resolve(res || { success: false, error: 'Empty response from background streamer' });
+        });
+      } catch (e) {
+        resolve({ success: false, error: e.message });
+      }
+    });
+  }
+
+  async function injectCoverLetterFile(targetEl) {
+    if (!targetEl) return { success: false, error: 'No target element provided' };
+
+    const data = await getCoverLetterBinaryFromBackground();
+    if (!data || !data.success || !data.base64) {
+      return { success: false, error: (data && data.error) || 'Failed to stream cover letter binary from background' };
+    }
+
+    try {
+      const filename = data.filename || 'Candidate_Cover_Letter.pdf';
+      const mimeType = data.mimeType || 'application/pdf';
+      const blob = base64ToBlob(data.base64, mimeType);
+      const file = new File([blob], filename, {
+        type: mimeType,
+        lastModified: Date.now()
+      });
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+
+      let fileInput = null;
+      if (targetEl.tagName === 'INPUT' && targetEl.type === 'file') {
+        fileInput = targetEl;
+      } else {
+        fileInput = targetEl.querySelector('input[type="file"]') ||
+          (targetEl.closest('form, [class*="application"], body') && targetEl.closest('form, [class*="application"], body').querySelector('input[type="file"]'));
+      }
+
+      if (fileInput) {
+        try {
+          fileInput.files = dt.files;
+        } catch (filesErr) {}
+        fileInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        fileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+      }
+
+      return { success: true, filename: filename };
+    } catch (err) {
+      return { success: false, error: err.message || 'Synthetic cover letter injection failed' };
+    }
+  }
+
   /* -- REACT / VUE NATIVE INPUT DISPATCHER -- */
   function setNativeValue(el, value, isFinal = true, fieldType = '') {
     if (!el) return;
@@ -4028,10 +4174,62 @@
       case 'GRADUATION_YEAR': return profile.graduationYear || '2028';
       case 'LANGUAGES':    return profile.languages || 'English, Hindi';
       case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
-      case 'COVER_LETTER':
+      case 'COVER_LETTER': {
+        const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
+        const jobTitle = session && session.jobTitle ? session.jobTitle : '';
+        const jdText = (session && session.jdText) || extractPageContent();
+        const isNoteOrPitch = field.element && (
+          field.element.getAttribute('name') === 'userNote' ||
+          field.element.id === 'userNote' ||
+          (field.element.getAttribute('placeholder') || '').toLowerCase().includes('pitch') ||
+          (field.element.getAttribute('placeholder') || '').toLowerCase().includes('note')
+        );
+
+        try {
+          const res = await apFetch('/cover-letter', {
+            method: 'POST',
+            body: JSON.stringify({
+              company,
+              jobTitle,
+              jobDescription: jdText,
+              candidateId: userProfile?.slug || 'roushan',
+              format: 'text'
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              const textToUse = (isNoteOrPitch && data.startupPitch) ? data.startupPitch : data.coverLetter;
+              if (activeHud) {
+                activeHud.setCoverLetter(data.coverLetter);
+              }
+              // Sync application kit in real time
+              apFetch('/kit-sync', {
+                method: 'POST',
+                body: JSON.stringify({
+                  company,
+                  jobTitle,
+                  jobDescription: jdText,
+                  coverLetter: data.coverLetter,
+                  startupPitch: data.startupPitch,
+                  candidateId: userProfile?.slug || 'roushan'
+                })
+              }).catch(() => {});
+              return textToUse;
+            }
+          }
+        } catch (e) {
+          console.warn('[AstrePilot] Cover letter generation error:', e);
+        }
+
+        // Offline / fallback pitch
+        return (profile.professionalSummary && profile.professionalSummary.length > 30)
+          ? profile.professionalSummary
+          : ("I am a dedicated Full-Stack Developer excited about the opportunity to contribute high-impact systems at " + company + ".");
+      }
       case 'SCREENING': {
         const labelText = getLabelText(field.element);
-        const question = labelText.slice(0, 300) || (field.type === 'COVER_LETTER' ? 'Write a cover letter' : 'Tell us about yourself');
+        const question = labelText.slice(0, 300) || 'Tell us about yourself';
         const qLower = question.toLowerCase();
 
         // Immediate procedural question interceptor (relatives, compliance, "Type NA")
@@ -4159,29 +4357,41 @@
       onDownloadResume: runDownloadResume,
       onSyncHarvester: runSyncHarvester,
       onRescan: rescanFields,
-      onSwitchContext: async (ctx) => {
+      onLogout: async () => {
         try {
-          if (!isOffline && config.token) {
-            const profileRes = await apFetch(`/profile?slug=${encodeURIComponent(ctx)}`);
-            if (profileRes.ok) {
-              const pData = await profileRes.json();
-              if (pData.success && pData.profile) {
-                userProfile = pData.profile;
-              }
-            }
-          } else {
-            userProfile = STANDALONE_PROFILES[ctx] || STANDALONE_PROFILES.roushan;
+          userProfile = null;
+          activeSession = null;
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+            await chrome.storage.sync.remove(['astrepilot_token', 'astrepilot_active_context', 'astrepilot_candidate_slug']);
           }
-          if (activeHud && userProfile) {
+          if (activeHud) {
+            activeHud.setIdentity(null);
+            rescanFields();
+          }
+        } catch (e) {
+          console.warn('[AstrePilot] Logout error:', e);
+        }
+      },
+      onLogin: async (token, profile) => {
+        try {
+          userProfile = profile;
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+            await chrome.storage.sync.set({
+              astrepilot_token: token,
+              astrepilot_active_context: profile.slug,
+              astrepilot_candidate_slug: profile.slug
+            });
+          }
+          if (activeHud) {
             activeHud.setIdentity({
-              fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'Candidate',
-              title: userProfile.title || 'Full-Stack Developer',
+              fullName: profile.fullName || ((profile.firstName || '') + ' ' + (profile.lastName || '')).trim() || 'Candidate',
+              title: profile.title || 'Full-Stack Developer',
               primedCompany: activeSession ? activeSession.company : null
             });
             rescanFields();
           }
         } catch (e) {
-          console.warn('[AstrePilot] Context switch error:', e);
+          console.warn('[AstrePilot] Login handler error:', e);
         }
       },
       onSwitchOrigin: async (origin) => {
@@ -4331,13 +4541,13 @@
 
     if (!config.token) {
       isOffline = true;
-      userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
+      userProfile = (config.activeContext && STANDALONE_PROFILES[config.activeContext]) ? STANDALONE_PROFILES[config.activeContext] : null;
     } else {
       try {
-        const profileRes = await apFetch(`/profile?slug=${encodeURIComponent(activeCtx)}`);
+        const profileRes = await apFetch(`/profile${activeCtx ? `?slug=${encodeURIComponent(activeCtx)}` : ''}`);
         userProfile = await profileRes.json();
         if (userProfile && activeCtx && userProfile.slug && userProfile.slug !== activeCtx) {
-          userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
+          userProfile = STANDALONE_PROFILES[activeCtx] || userProfile;
         }
 
         const sessionRes = await apFetch('/session');
@@ -4348,16 +4558,20 @@
       } catch (err) {
         // Fallback to standalone offline profile if cloud un-paired or server down
         isOffline = true;
-        userProfile = STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan;
+        userProfile = (config.activeContext && STANDALONE_PROFILES[config.activeContext]) ? STANDALONE_PROFILES[config.activeContext] : null;
       }
     }
     if (!activeHud) return; // user closed the HUD while loading
 
-    activeHud.setIdentity({
-      fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
-      title: userProfile.title || 'Full-Stack Developer',
-      primedCompany: activeSession ? activeSession.company : null
-    });
+    if (userProfile) {
+      activeHud.setIdentity({
+        fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
+        title: userProfile.title || 'Full-Stack Developer',
+        primedCompany: activeSession ? activeSession.company : null
+      });
+    } else {
+      activeHud.setIdentity(null);
+    }
 
     if (!isOffline) {
       // Pillar E: Duplicate Application Pre-Flight Status Check (Cloud Only)
@@ -4402,10 +4616,10 @@
     detectedFields = fields || [];
 
     const CORE_APPLICATION_TYPES = new Set([
-      'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'RESUME',
+      'FIRST_NAME', 'LAST_NAME', 'FULL_NAME', 'EMAIL', 'PHONE', 'RESUME', 'COVER_LETTER',
       'WORK_AUTH', 'VISA', 'SCREENING', 'SCREENING_SELECT', 'WORK_DESCRIPTION',
       'COMPANY', 'SCHOOL', 'PASSWORD', 'CONFIRM_PASSWORD', 'LOGIN_ID',
-      'PREFERRED_NAME', 'EMPLOYMENT_TITLE', 'EXP_STATE'
+      'PREFERRED_NAME', 'EMPLOYMENT_TITLE', 'EXP_STATE', 'NOTE', 'STARTUP_PITCH', 'WHY_US'
     ]);
     const hasCoreAppField = detectedFields.some(f => CORE_APPLICATION_TYPES.has(f.type));
 
@@ -4911,6 +5125,15 @@
           } else {
             chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
             hud.markRow(f.id, 'skipped', 'Downloaded to disk');
+          }
+        } else if (f.type === 'COVER_LETTER' && f.element.tagName === 'INPUT' && f.element.type === 'file') {
+          AstrePilotHUD.highlight(f.element);
+          const uploadRes = await injectCoverLetterFile(f.element);
+          if (uploadRes && uploadRes.success) {
+            filled++;
+            hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
+          } else {
+            hud.markRow(f.id, 'skipped', 'Upload failed');
           }
         } else if (isComboboxOrSelect(f.element)) {
           AstrePilotHUD.highlight(f.element);

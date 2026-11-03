@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 76: `.agents/` Skill Consolidation [80 Files -> 7 Master Domain Skills], Duplicate `AGENTS.md` Elimination, 65-File Prisma Bloat Purge & 3-Link Zero-Amnesia Cognitive Resurrection Chain)
+> **LAST COGNITIVE SYNC:** November 4, 2026 (Phase 77: AstrePilot v2.0 Architecture — Direct Auth, Wellfound Deterministic Engine, Tailored Cover Letter / Pitch Generator & Compact HUD Sizing)
 
 ---
 
@@ -1409,6 +1409,33 @@ Located in `extension/`:
     - **`cloud-cicd-infrastructure/SKILL.md`:** Merged `oracle-cloud-security` + `github-actions-watchtower-cicd` + OCI ARM64 `PUPPETEER_EXECUTABLE_PATH` + Prisma 7 LibSQL & Vitest DB isolation (`src/lib/db.ts`).
   - **4. Engineered the 3-Link Zero-Amnesia Cognitive Resurrection Chain:**
     - Cross-indexed root `AGENTS.md` $\leftrightarrow$ `CAREER_ENGINE_MASTER_MEMORY_BACKUP.md` $\leftrightarrow$ `.agents/skills/*/SKILL.md` (`80 files -> 7 files` in `.agents/`), guaranteeing 100% deterministic memory and skill acquisition on Turn 1 of any future session.
+
+- [x] **Phase 77: AstrePilot v2.0 Architecture — Direct Auth, Wellfound Deterministic Engine, Tailored Cover Letter / Pitch Generator & Compact HUD Sizing (Nov 4, 2026)**
+  - **1. Standalone Direct Authentication Pipeline (`POST /api/autopilot/auth`):**
+    - Built a zero-tab direct authentication endpoint in `src/app/api/autopilot/auth/route.ts` supporting standard email/password via `bcrypt.compare` and founder master code `9926`, issuing 90-day HMAC Bearer tokens with strict candidate profile isolation.
+    - Added direct sign-in and sign-out interfaces directly in `extension/popup.html`, `extension/popup.js`, and `extension/hud-ui.js`, completely freeing candidates from having an open AstreWork dashboard tab.
+  - **2. Strict Single-User Isolation & Elimination of Combined Candidate Switcher:**
+    - Eradicated the confusing dual switcher buttons (`roushan` vs `ayushi`) from `extension/hud-ui.js` (`settings-context-toggle`) and `extension/popup.html`.
+    - Profile state strictly displays the authenticated candidate only, with an explicit `[ 🚪 Sign Out of AstreWork ]` button (`action-logout`).
+  - **3. Wellfound (AngelList Talent) Deterministic Engine & Anti-Hijack Guard:**
+    - Added `WELLFOUND_EXACT_MAP` and exported `wellfoundDriver` in `src/lib/autopilot/atsDrivers.ts`.
+    - Integrated `isWellfoundEnvironment` and `scanWellfoundFields` into `extension/content.js`.
+    - Fixed the critical catalog harvester hijacking bug: `extractCatalogJobs()` now immediately aborts with `null` if any application modal or input (`textarea[name="userNote"]`, `[data-test*="ApplicationModal"]`, etc.) is present on the page.
+    - Added `COVER_LETTER`, `NOTE`, `STARTUP_PITCH`, and `WHY_US` to `CORE_APPLICATION_TYPES` so single-field application modals are never dismissed as job overviews.
+  - **4. Tailored Cover Letter, Startup Pitch & Synthetic PDF Engine:**
+    - Built `src/app/api/autopilot/cover-letter/route.ts` powered by `src/lib/ai/drafter.ts`, outputting tailored 3-paragraph cover letter text or ultra-fast (<2ms) standalone single-page PDF binary (`createSimpleTextPdf`).
+    - Handled Wellfound's `userNote` input with bespoke startup pitches and candidate portfolio links (`https://astreon.me` / `https://github.com/Hey-Astreon` for Roushan; `https://github.com/Silenttears-cloud` for Ayushi).
+    - Added synthetic cover letter upload via `injectCoverLetterFile` and `GET_COVER_LETTER_BINARY` in `extension/background.js` using W3C `DataTransfer`.
+    - Added in-HUD `[ ✍️ View / Copy Cover Letter ]` modal dialog with 1-click clipboard copy.
+  - **5. Real-Time Application Kit Persistence (`POST /api/autopilot/kit-sync`):**
+    - Persists active target role, extracted JD, tailored cover letter, and startup pitch into `AutopilotSession` in real time during autofill.
+  - **6. Precision Visual Polish & Compact HUD Sizing:**
+    - Streamlined HUD card width from `368px` to `328px` in `extension/hud.shadow.css`.
+    - Scaled typography down to `12.5px` base, `11px` sm, `10px` xs, tightened padding and button heights (`36px` primary, `32px` secondary), eliminating unwanted visual clutter.
+  - **7. Comprehensive Automated Test Suites & Extension Rebuild:**
+    - Created `tests/astrepilot-wellfound.test.ts` (5 tests) and `tests/astrepilot-auth-coverletter.test.ts` (8 tests).
+    - Verified `55/55` test files, `525/525` tests passing, `0` TS errors, `0` ESLint warnings.
+    - Rebuilt `public/downloads/astrepilot-extension.zip` (`203.0 KB`).
 
 ---
 
@@ -3297,3 +3324,29 @@ graph TD
   - **Rule 1 (Single Authoritative `AGENTS.md` Law):** Never create secondary `AGENTS.md` files inside `.agents/` or subdirectories unless strictly required for a monorepo sub-package. Keep all workspace-wide rules in the root `AGENTS.md`.
   - **Rule 2 (One Subsystem = One Skill Directory Law):** Keep `.agents/skills/` lean (7 cohesive domain skills, 1 `SKILL.md` per folder) and never check in generic third-party vendor documentation packages that pollute the `<skills>` discovery prompt.
 - **Status:** Complete, verified (`7/7` skills, `0` broken links, `53/53` test suites passing), committed and pushed to `origin main`.
+
+### Case 53: AstrePilot v2.0 — Wellfound Application Form Hijacking, In-Extension Direct Auth & Tailored Cover Letter Pipeline (Nov 4, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. **Wellfound Application Form Hijacking:** When applying to roles on `wellfound.com`, AstrePilot failed to identify the application modal and note input (`userNote`). Instead, the catalog harvester triggered, turning the HUD into a catalog sync screen ("Sync 50 Roles") and rendering autofill impossible.
+  2. **Confusing Dual-Candidate Settings Switcher:** When opening AstrePilot settings, the UI displayed two buttons (`Roushan Kumar` and `Ayushi Raj`) simultaneously and defaulted to Roushan Kumar, creating confusion and violating single-user privacy.
+  3. **No Direct Login/Logout Option:** AstrePilot required an active `astrework.app/dashboard` tab to auto-fetch tokens. There was no direct email/password login or sign-out option inside the extension popup or HUD.
+  4. **Missing Cover Letter & Startup Pitch Engine:** Remote job platforms requiring both Resume and Cover Letter failed because AstrePilot only handled resumes. Textareas requiring notes/pitches received generic 100-character screening answers without real-time sync with AstreWork's application kit (`AutopilotSession`).
+  5. **HUD Visual Density Bloat:** The HUD expanded card was oversized (`368px`) with loose padding and typography that obstructed active form inputs.
+- **Deep Root Cause Diagnosis:**
+  1. In `extension/content.js`, `CORE_APPLICATION_TYPES` omitted `COVER_LETTER`, `NOTE`, and `STARTUP_PITCH`. Because Wellfound candidates are already signed in, the application modal contains only a note textarea (`textarea[name="userNote"]`) and file upload. Since no core application field was matched, `detectedFields` was cleared to `[]`, which triggered `extractCatalogJobs()`. `extractCatalogJobs()` lacked an apply-mode guard, so it parsed the underlying Apollo cache and forced the HUD into catalog mode.
+  2. In `extension/hud-ui.js`, `settings.activeContext` was hardcoded to default to `'roushan'` and rendered a dual switcher component (`settings-context-toggle`) regardless of who was signed in.
+  3. No dedicated standalone REST API existed for extension authentication; authentication relied solely on extracting cookies from open browser tabs.
+  4. `src/lib/autopilot/atsDrivers.ts` lacked a driver definition for Wellfound, and `content.js` lacked support for synthetic `<input type="file">` cover letter injection.
+- **The Concrete Surgical Fix:**
+  1. **Anti-Hijacking Guard in `extractCatalogJobs` (`extension/content.js`):** Added immediate guard: `if (document.querySelector('textarea[name="userNote"], [data-test*="ApplicationModal"], [data-test*="apply"], [class*="ApplicationModal"], form[action*="apply"]')) return null;`. Added `COVER_LETTER`, `NOTE`, `STARTUP_PITCH`, and `WHY_US` to `CORE_APPLICATION_TYPES`.
+  2. **Wellfound Deterministic Engine (`src/lib/autopilot/atsDrivers.ts` & `extension/content.js`):** Added `WELLFOUND_EXACT_MAP` (mapping `userNote` to `COVER_LETTER` and detecting file uploads, phone, and social links), exported `wellfoundDriver`, and added `isWellfoundEnvironment` and `scanWellfoundFields`.
+  3. **Standalone Direct Auth (`POST /api/autopilot/auth`):** Created `src/app/api/autopilot/auth/route.ts` supporting email/password (`bcrypt.compare`) and founder master code `9926`, issuing 90-day HMAC Bearer tokens. Integrated into `extension/popup.html`, `popup.js`, and `hud-ui.js`.
+  4. **Strict Single-User Display & Sign-Out:** Completely removed `settings-context-toggle` and dual switcher buttons from `extension/hud-ui.js` and `extension/popup.html`. Added explicit `[ 🚪 Sign Out of AstreWork ]` button (`action-logout`) and inline sign-in form.
+  5. **Tailored Cover Letter & Synthetic PDF Engine (`POST /api/autopilot/cover-letter`):** Created endpoint using `src/lib/ai/drafter.ts`, outputting tailored cover letter text or ultra-fast (<2ms) standalone single-page PDF binary (`createSimpleTextPdf`). Added synthetic file upload via `injectCoverLetterFile` and `GET_COVER_LETTER_BINARY` in `extension/background.js` using W3C `DataTransfer`. Added in-HUD `[ ✍️ View / Copy Cover Letter ]` modal dialog.
+  6. **Real-Time Kit Persistence (`POST /api/autopilot/kit-sync`):** Persists target company, job title, extracted JD, tailored cover letter, and startup pitch into `AutopilotSession` during fill.
+  7. **Compact HUD Geometry:** Reduced card width from `368px` to `328px`, scaled typography to `12.5px` base, `11px` sm, `10px` xs, and tightened button/row padding.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Apply Modal Harvester Guard Law):** Catalog extraction engines (`extractCatalogJobs`) must NEVER execute if any candidate application dialog, modal, or apply textarea (`textarea[name="userNote"]`, `[data-test*="apply"]`, etc.) is active in the DOM. Form autofill must always strictly preempt background feed harvesting.
+  - **Rule 2 (Zero-Combined Identity in Client Tools Law):** Browser extensions and end-user tools must never display multi-user profile switchers in settings. Client state must always be strictly scoped to the single authenticated user (`profile.slug`), with clean Sign In and Sign Out actions.
+  - **Rule 3 (Dual-Modality Cover Letter Law):** Modern ATS portals require cover letters in two distinct forms: textareas (e.g. Wellfound notes, Breezy comments) and file uploads (e.g. Greenhouse, Workday, Lever). Autofill engines must support both text animation (`fillAnimated`) and binary synthetic file attachment (`DataTransfer` + `createSimpleTextPdf`) seamlessly.
+- **Status:** Complete, verified (`55/55` test suites, `525/525` tests passing, `0` TS errors, `0` ESLint warnings), extension zip rebuilt (`203.0 KB`), committed and pushed to `origin main`.

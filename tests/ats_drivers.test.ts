@@ -10,6 +10,7 @@ import {
   bamboohrDriver,
   workableDriver,
   taleoDriver,
+  wellfoundDriver,
   WORKDAY_EXACT_MAP,
   ASHBY_EXACT_MAP,
   LEVER_EXACT_MAP,
@@ -17,6 +18,7 @@ import {
   BAMBOOHR_EXACT_MAP,
   WORKABLE_EXACT_MAP,
   TALEO_EXACT_MAP,
+  WELLFOUND_EXACT_MAP,
 } from '@/lib/autopilot/atsDrivers';
 
 describe('ATS Driver Registry & Detection', () => {
@@ -81,6 +83,11 @@ describe('ATS Driver Registry & Detection', () => {
   it('correctly detects Breezy HR from URL', () => {
     const engine = detectAtsEngine('https://1-glance-inc.breezy.hr/p/9ef34bc35794-full-stack-developer-intern/apply');
     expect(engine).toBe('BREEZY');
+  });
+
+  it('correctly detects Wellfound from URL', () => {
+    const engine = detectAtsEngine('https://wellfound.com/jobs/312456-full-stack-developer');
+    expect(engine).toBe('WELLFOUND');
   });
 
   it('falls back to GENERIC for unknown job board URLs', () => {
@@ -173,6 +180,12 @@ describe('ATS Driver Registry & Detection', () => {
 
       expect(workableDriver.engine).toBe('WORKABLE');
       expect(WORKABLE_EXACT_MAP.length).toBeGreaterThanOrEqual(6);
+
+      expect(wellfoundDriver.engine).toBe('WELLFOUND');
+      expect(WELLFOUND_EXACT_MAP.length).toBeGreaterThanOrEqual(5);
+      const wellfoundTypes = WELLFOUND_EXACT_MAP.map(m => m.type);
+      expect(wellfoundTypes).toContain('COVER_LETTER');
+      expect(wellfoundTypes).toContain('RESUME');
     });
   });
 });

@@ -763,3 +763,53 @@ kbd {
   outline: 2px solid var(--brand);
   outline-offset: 1px;
 }
+
+.btn-icon-danger {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--trans-fast);
+  flex-shrink: 0;
+}
+
+.btn-icon-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.auth-error-msg {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  font-size: 11.5px;
+  margin-bottom: var(--sp-3);
+  line-height: 1.35;
+}
+
+.advanced-token-details {
+  margin-top: var(--sp-3);
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-2);
+}
+
+.advanced-token-summary {
+  font-size: 11px;
+  color: var(--ink-3);
+  cursor: pointer;
+  user-select: none;
+  font-weight: var(--fw-medium);
+}
+
+.advanced-token-summary:hover {
+  color: var(--ink-2);
+}

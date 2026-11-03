@@ -241,6 +241,54 @@ const DEFAULT_FOUNDER_TOKENS = {
     return true; // Keep message channel open for async response
   }
 
+  if (request.type === 'GET_COVER_LETTER_BINARY') {
+    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token', 'astrepilot_active_context'], async (res) => {
+      try {
+        const safeRes = res || {};
+        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
+        if (origin.includes('vercel.app')) {
+          origin = 'https://astrework.app';
+          chrome.storage.sync.set({ astrepilot_origin: origin });
+        }
+        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
+        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : '');
+        const url = origin + '/api/autopilot/cover-letter';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = 'Bearer ' + token;
+        }
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            candidateId: activeCtx,
+            company: request.company,
+            jobTitle: request.jobTitle,
+            jobDescription: request.jobDescription,
+            format: 'pdf'
+          })
+        });
+        if (!response.ok) {
+          return sendResponse({ success: false, error: 'Cover letter generation failed with status ' + response.status });
+        }
+        const data = await response.json();
+        if (!data || !data.success || !data.pdfBase64) {
+          return sendResponse({ success: false, error: (data && data.error) || 'Failed to generate cover letter PDF' });
+        }
+        sendResponse({
+          success: true,
+          base64: data.pdfBase64,
+          filename: data.fileName || 'Candidate_Cover_Letter.pdf',
+          mimeType: 'application/pdf',
+          coverLetter: data.coverLetter
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message || 'Failed to stream cover letter' });
+      }
+    });
+    return true; // Keep message channel open for async response
+  }
+
   // Pillar E: Multi-Tab Concurrency Lock Handlers
   if (request.type === 'ACQUIRE_FILL_LOCK') {
     const tabId = (sender && sender.tab) ? sender.tab.id : request.tabId;

@@ -44,6 +44,13 @@
             <h2 id="user-name" class="user-name" title="Candidate Name">Candidate Name</h2>
             <p id="user-title" class="user-title" title="Target Role / Headline">Target Role / Headline</p>
           </div>
+          <button id="btn-logout" class="btn-icon-danger" type="button" title="Sign Out of AstreWork" aria-label="Sign Out">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
         </div>
 
         <div class="env-selector-row">
@@ -56,7 +63,7 @@
 
         <div id="primed-box" class="primed-box hidden">
           <div class="primed-header">
-            <span class="primed-label">PRIMED SESSION</span>
+            <span class="primed-label">PRIMED APPLICATION KIT</span>
             <span class="primed-pulse" aria-hidden="true"></span>
           </div>
           <div id="primed-target" class="primed-target" title="Target Job Session">Acme Corp</div>
@@ -67,7 +74,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
             </svg>
-            <span>Launch AstrePilot</span>
+            <span>Launch AstrePilot HUD</span>
           </button>
           <button id="btn-autofill-direct" class="btn btn-secondary" type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -102,13 +109,12 @@
         <div class="setup-hero">
           <div class="setup-icon-wrap" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="7.5" cy="15.5" r="5.5"></circle>
-              <path d="m21 2-9.6 9.6"></path>
-              <path d="m15.5 7.5 3 3L22 7l-3-3"></path>
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
             </svg>
           </div>
-          <h3>Connect Your Profile</h3>
-          <p>Link AstrePilot with your AstreWork workspace to enable intelligent autofill.</p>
+          <h3>Sign In to AstreWork</h3>
+          <p>Sign in to sync your profile, resume, tailored cover letters, and application kit.</p>
         </div>
 
         <div class="form-group">
@@ -120,22 +126,37 @@
         </div>
 
         <div class="form-group">
-          <label for="input-token">AstrePilot Token</label>
-          <div class="token-input-row">
-            <input type="password" id="input-token" placeholder="Paste your token from Settings" class="text-input" autocomplete="off" spellcheck="false">
-            <button id="btn-auto-token" class="btn-mini" type="button" title="Auto-fetch from open AstreWork tab">Auto</button>
-          </div>
+          <label for="input-email">Email Address</label>
+          <input type="email" id="input-email" placeholder="you@example.com" class="text-input" autocomplete="email" spellcheck="false">
         </div>
 
-        <button id="btn-connect" class="btn btn-primary" type="button">
+        <div class="form-group">
+          <label for="input-password">Password / Access Code</label>
+          <input type="password" id="input-password" placeholder="Password or Founder Code (9926)" class="text-input" autocomplete="current-password" spellcheck="false">
+        </div>
+
+        <div id="login-error-msg" class="auth-error-msg hidden"></div>
+
+        <button id="btn-login" class="btn btn-primary" type="button">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
           </svg>
-          <span>Connect AstrePilot</span>
+          <span id="btn-login-text">Sign In</span>
         </button>
 
-        <a id="link-get-token" href="#" class="help-link">Where do I find my token?</a>
+        <!-- Advanced Token Collapsible -->
+        <details class="advanced-token-details">
+          <summary class="advanced-token-summary">Advanced: Token Sign In</summary>
+          <div class="form-group" style="margin-top: 8px;">
+            <div class="token-input-row">
+              <input type="password" id="input-token" placeholder="Paste token from AstreWork Settings" class="text-input" autocomplete="off" spellcheck="false">
+              <button id="btn-auto-token" class="btn-mini" type="button" title="Auto-fetch from open AstreWork tab">Auto</button>
+            </div>
+            <button id="btn-connect" class="btn btn-secondary" type="button" style="margin-top: 6px;">Connect with Token</button>
+          </div>
+        </details>
       </div>
     </main>
 

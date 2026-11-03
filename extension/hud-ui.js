@@ -154,13 +154,13 @@ window.AstrePilotHUD = (function () {
       this.remoteLock = null;
 
       this.previousState = 'ready';
+      this.coverLetter = null;
       this.settings = {
         autoPassword: true,
         autoAdvance: false,
         strictVerify: true,
         autoTailor: true,
-        origin: 'https://astrework.app',
-        activeContext: 'roushan'
+        origin: 'https://astrework.app'
       };
 
       // Restore position if possible
@@ -178,14 +178,13 @@ window.AstrePilotHUD = (function () {
       // Load saved settings from chrome.storage.sync
       try {
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-          chrome.storage.sync.get(['ap_auto_password', 'ap_auto_advance', 'ap_strict_verify', 'ap_auto_tailor', 'astrepilot_origin', 'ap_candidate_context'], (res) => {
+          chrome.storage.sync.get(['ap_auto_password', 'ap_auto_advance', 'ap_strict_verify', 'ap_auto_tailor', 'astrepilot_origin'], (res) => {
             if (res) {
               if (res.ap_auto_password !== undefined) this.settings.autoPassword = Boolean(res.ap_auto_password);
               if (res.ap_auto_advance !== undefined) this.settings.autoAdvance = Boolean(res.ap_auto_advance);
               if (res.ap_strict_verify !== undefined) this.settings.strictVerify = Boolean(res.ap_strict_verify);
               if (res.ap_auto_tailor !== undefined) this.settings.autoTailor = Boolean(res.ap_auto_tailor);
               if (res.astrepilot_origin) this.settings.origin = res.astrepilot_origin;
-              if (res.ap_candidate_context) this.settings.activeContext = res.ap_candidate_context;
             }
           });
         }
@@ -336,19 +335,83 @@ window.AstrePilotHUD = (function () {
         else if (btn.classList.contains('action-settings-back') || btn.classList.contains('action-settings-done')) {
           this.toggleSettings();
         }
-        else if (btn.classList.contains('btn-context-switch')) {
-          const ctx = btn.getAttribute('data-context');
-          if (ctx) {
-            this.settings.activeContext = ctx;
+        else if (btn.classList.contains('action-logout')) {
+          if (confirm('Sign out of AstreWork on AstrePilot?')) {
             try {
               if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-                chrome.storage.sync.set({ ap_candidate_context: ctx });
+                chrome.storage.sync.remove(['astrepilot_token', 'astrepilot_active_context', 'astrepilot_candidate_slug', 'astrepilot_profile']);
               }
             } catch (err) {}
-            if (this.options.onSwitchContext) {
-              this.options.onSwitchContext(ctx);
+            this.profile = null;
+            if (this.options.onLogout) {
+              this.options.onLogout();
             }
             this._renderBody();
+          }
+        }
+        else if (btn.classList.contains('action-inline-login')) {
+          const emailInput = this.shadow.getElementById('ap-hud-email');
+          const passInput = this.shadow.getElementById('ap-hud-password');
+          const email = (emailInput?.value || '').trim();
+          const password = (passInput?.value || '').trim();
+          if (!email || !password) {
+            alert('Please enter your email and password / access code.');
+            return;
+          }
+          btn.textContent = 'Signing in…';
+          btn.disabled = true;
+          const origin = (this.settings.origin || 'https://astrework.app').replace(/\/$/, '');
+          fetch(origin + '/api/autopilot/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data && data.success && data.token) {
+                const slug = data.profile?.slug || (email.toLowerCase().includes('ayushi') ? 'ayushi' : 'roushan');
+                this.profile = data.profile;
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                  chrome.storage.sync.set({
+                    astrepilot_token: data.token,
+                    astrepilot_active_context: slug,
+                    astrepilot_candidate_slug: slug
+                  });
+                }
+                if (this.options.onLogin) {
+                  this.options.onLogin(data.token, data.profile);
+                }
+                this._renderBody();
+              } else {
+                alert((data && data.error) || 'Login failed. Please check credentials.');
+              }
+            })
+            .catch(err => {
+              alert('Login request failed: ' + err.message);
+            })
+            .finally(() => {
+              btn.textContent = 'Sign In to AstreWork';
+              btn.disabled = false;
+            });
+        }
+        else if (btn.classList.contains('action-view-cover-letter')) {
+          this.showCoverLetterModal();
+        }
+        else if (btn.classList.contains('action-close-modal')) {
+          this.hideModal();
+        }
+        else if (btn.classList.contains('action-copy-cover-letter')) {
+          const text = this.coverLetter || (this.meta && this.meta.coverLetter) || '';
+          if (text) {
+            navigator.clipboard.writeText(text).then(() => {
+              const orig = btn.innerText;
+              btn.innerText = '✓ Copied to Clipboard!';
+              btn.style.background = 'var(--ap-success, #059669)';
+              setTimeout(() => {
+                btn.innerText = orig;
+                btn.style.background = '';
+              }, 2000);
+            }).catch(() => {});
           }
         }
         else if (btn.classList.contains('btn-env-switch')) {
@@ -569,6 +632,50 @@ window.AstrePilotHUD = (function () {
     setIdentity(profile) {
       this.profile = profile;
       this._renderBody();
+    }
+
+    setCoverLetter(text) {
+      this.coverLetter = text;
+      this._renderBody();
+    }
+
+    showCoverLetterModal() {
+      const text = this.coverLetter || (this.meta && this.meta.coverLetter) || 'No cover letter generated yet. Click Autofill to generate a tailored cover letter matched to this job description.';
+      let modal = this.shadow.getElementById('ap-cover-letter-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'ap-cover-letter-modal';
+        modal.className = 'hud-modal-overlay';
+        const card = this.shadow.querySelector('.hud-card');
+        if (card) card.appendChild(modal);
+      }
+      modal.innerHTML = `
+        <div class="hud-modal-card">
+          <div class="hud-modal-header">
+            <div class="hud-modal-title">
+              <span>✍️</span> Tailored Cover Letter
+            </div>
+            <button type="button" class="btn-subtle action-close-modal" style="padding: 2px 6px; font-size: 14px;">✕</button>
+          </div>
+          <div class="hud-modal-body">${esc(text)}</div>
+          <div class="hud-modal-footer">
+            <button type="button" class="btn-primary action-copy-cover-letter" style="flex: 1; font-size: 11px; height: 32px;">
+              📋 Copy to Clipboard
+            </button>
+            <button type="button" class="btn-secondary action-close-modal" style="font-size: 11px; height: 32px;">
+              Close
+            </button>
+          </div>
+        </div>
+      `;
+      modal.style.display = 'flex';
+    }
+
+    hideModal() {
+      const modal = this.shadow.getElementById('ap-cover-letter-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
     }
 
     setFields(fields) {
@@ -951,6 +1058,11 @@ window.AstrePilotHUD = (function () {
               <button class="btn-primary action-confirm-submit" style="background: var(--ap-success, #059669); border-color: var(--ap-success, #059669); color: white; margin-bottom: 6px;">
                 🎉 Mark as Submitted
               </button>
+              ${(this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) ? `
+                <button type="button" class="btn-secondary action-view-cover-letter" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; margin-bottom: 6px;">
+                  ✍️ View / Copy Cover Letter
+                </button>
+              ` : ''}
               <div style="display: flex; gap: 6px;">
                 <button class="btn-secondary action-close" style="flex: 1;">Close</button>
                 <button class="btn-secondary action-undo" style="flex: 1;">Undo Fill</button>
@@ -997,6 +1109,11 @@ window.AstrePilotHUD = (function () {
             <button class="btn-primary action-fill" ${this.state==='scanning'?'disabled':''}>
               ${ICONS.fillAction} ${btnText}
             </button>
+            ${(this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) ? `
+              <button type="button" class="btn-secondary action-view-cover-letter" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; margin-top: 6px;">
+                ✍️ View / Copy Cover Letter
+              </button>
+            ` : ''}
             <div class="footnote">Review before you submit · Alt⇧A</div>
           `;
         }
@@ -1062,14 +1179,18 @@ window.AstrePilotHUD = (function () {
         autoAdvance: false,
         strictVerify: true,
         autoTailor: true,
-        origin: 'https://astrework.app',
-        activeContext: 'roushan'
+        origin: 'https://astrework.app'
       };
 
-      const isRoushan = !settings.activeContext || settings.activeContext === 'roushan';
-      const candidateName = this.profile ? (this.profile.fullName || (isRoushan ? 'Roushan Kumar' : 'Ayushi Raj')) : (isRoushan ? 'Roushan Kumar' : 'Ayushi Raj');
-      const candidateRole = this.profile ? (this.profile.title || 'Full-Stack Developer') : 'Full-Stack Developer';
-      const addressDisplay = 'Indrapuri, North Patel Nagar, Patna, Bihar · PIN 800024';
+      const profile = this.profile;
+      const isAuthed = !!profile && !!profile.fullName;
+      const candidateName = profile ? profile.fullName : 'Not Signed In';
+      const candidateRole = profile ? (profile.title || 'Full-Stack Developer') : 'Sign in to link AstreWork profile';
+      const addressDisplay = profile ? (profile.location || profile.city || 'Indrapuri, North Patel Nagar, Patna, Bihar · PIN 800024') : '';
+      
+      const initials = candidateName && candidateName !== 'Not Signed In'
+        ? candidateName.split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()
+        : 'AW';
 
       return `
         <div class="hud-settings-panel">
@@ -1081,27 +1202,36 @@ window.AstrePilotHUD = (function () {
             <button type="button" class="btn-subtle action-settings-done" style="color: var(--ap-ai); font-weight: 700;">Done</button>
           </div>
 
-          <!-- Section 1: Candidate Identity & Founder Context -->
+          <!-- Section 1: Candidate Identity & Single Profile -->
           <div class="settings-section">
             <div class="settings-section-header">
               <span class="section-tag">Candidate Profile</span>
-              <span class="section-badge">Verified</span>
+              <span class="section-badge">${isAuthed ? 'Verified' : 'Guest'}</span>
             </div>
             <div class="settings-profile-card">
-              <div class="settings-avatar">${isRoushan ? 'RO' : 'AY'}</div>
+              <div class="settings-avatar">${esc(initials)}</div>
               <div class="settings-profile-meta">
                 <div class="settings-profile-name">${esc(candidateName)}</div>
                 <div class="settings-profile-role">${esc(candidateRole)}</div>
-                <div class="settings-profile-geo">📍 ${esc(addressDisplay)}</div>
+                ${addressDisplay ? `<div class="settings-profile-geo">📍 ${esc(addressDisplay)}</div>` : ''}
               </div>
             </div>
-            <div class="settings-context-toggle">
-              <button type="button" class="btn-context-switch ${isRoushan ? 'is-active' : ''}" data-context="roushan">
-                Roushan Kumar
-              </button>
-              <button type="button" class="btn-context-switch ${!isRoushan ? 'is-active' : ''}" data-context="ayushi">
-                Ayushi Raj
-              </button>
+            
+            <div class="settings-auth-actions" style="margin-top: 10px;">
+              ${isAuthed ? `
+                <button type="button" class="action-logout" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 12px; font-size: 11.5px; font-weight: 600; border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-danger-soft); color: var(--ap-danger); background: var(--ap-danger-soft); cursor: pointer;">
+                  <span>🚪</span> Sign Out of AstreWork
+                </button>
+              ` : `
+                <div class="settings-login-box" style="padding: 10px; background: var(--ap-surface); border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-line);">
+                  <div style="font-size: 11px; color: var(--ap-ink-2); margin-bottom: 8px;">Sign in with your AstreWork account:</div>
+                  <input type="email" id="ap-hud-email" placeholder="Email (e.g. playboxstation460@gmail.com)" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
+                  <input type="password" id="ap-hud-password" placeholder="Password or Founder Code (9926)" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
+                  <button type="button" class="btn-primary action-inline-login" style="width: 100%; justify-content: center; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: 4px; cursor: pointer;">
+                    Sign In to AstreWork
+                  </button>
+                </div>
+              `}
             </div>
           </div>
 

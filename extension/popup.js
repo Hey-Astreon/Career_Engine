@@ -29,9 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnSettingsToggle = document.getElementById('btn-settings-toggle');
   const btnEnvProd = document.getElementById('btn-env-prod');
   const btnEnvLocal = document.getElementById('btn-env-local');
+  const btnLogout = document.getElementById('btn-logout');
+  const btnLogin = document.getElementById('btn-login');
+  const btnLoginText = document.getElementById('btn-login-text');
 
   const inputOrigin = document.getElementById('input-origin');
   const inputToken = document.getElementById('input-token');
+  const inputEmail = document.getElementById('input-email');
+  const inputPassword = document.getElementById('input-password');
+  const loginErrorMsg = document.getElementById('login-error-msg');
 
   const linkDashboard = document.getElementById('link-dashboard');
   const linkGetToken = document.getElementById('link-get-token');
@@ -242,6 +248,74 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.close();
     }
   });
+
+  // Direct Sign In via Email & Password / Founder Access Code
+  if (btnLogin) {
+    btnLogin.addEventListener('click', async () => {
+      const email = (inputEmail?.value || '').trim();
+      const password = (inputPassword?.value || '').trim();
+      const origin = (inputOrigin?.value || 'https://astrework.app').trim().replace(/\/$/, '');
+
+      if (!email || !password) {
+        if (loginErrorMsg) {
+          loginErrorMsg.textContent = 'Please enter both email and password / access code.';
+          loginErrorMsg.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (loginErrorMsg) loginErrorMsg.classList.add('hidden');
+      if (btnLoginText) btnLoginText.textContent = 'Signing in…';
+      btnLogin.disabled = true;
+
+      try {
+        const res = await fetch(origin + '/api/autopilot/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.token) {
+          throw new Error(data.error || 'Invalid credentials');
+        }
+
+        const candidateSlug = data.profile?.slug || (email.toLowerCase().includes('ayushi') ? 'ayushi' : 'roushan');
+        await new Promise((resolve) => {
+          chrome.storage.sync.set({
+            astrepilot_token: data.token,
+            astrepilot_origin: origin,
+            astrepilot_active_context: candidateSlug,
+            astrepilot_candidate_slug: candidateSlug
+          }, resolve);
+        });
+
+        initialize();
+      } catch (err) {
+        if (loginErrorMsg) {
+          loginErrorMsg.textContent = err.message || 'Login failed. Please check your credentials.';
+          loginErrorMsg.classList.remove('hidden');
+        }
+      } finally {
+        if (btnLoginText) btnLoginText.textContent = 'Sign In';
+        btnLogin.disabled = false;
+      }
+    });
+  }
+
+  // Sign Out
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async () => {
+      await new Promise((resolve) => {
+        chrome.storage.sync.remove([
+          'astrepilot_token',
+          'astrepilot_active_context',
+          'astrepilot_candidate_slug',
+          'astrepilot_profile'
+        ], resolve);
+      });
+      initialize();
+    });
+  }
 
   // Connect Manual
   btnConnect.addEventListener('click', async () => {

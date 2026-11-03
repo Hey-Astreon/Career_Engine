@@ -166,6 +166,18 @@ ${emailStr}${phoneStr}`;
 }
 
 /**
+ * High-convenience alias for generating a formal cover letter without raw pre-existing drafts.
+ */
+export function generateCoverLetter(
+  candidate: CandidateContext,
+  company: string,
+  jobTitle: string,
+  jobDescription: string = ""
+): string {
+  return formatFormalCoverLetter(candidate, company, jobTitle, "", jobDescription);
+}
+
+/**
  * Generates tailored Recruiter LinkedIn InMail / DM (<150 words) with high response rate hook.
  */
 export function generateRecruiterMessage(
