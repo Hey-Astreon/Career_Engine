@@ -3135,8 +3135,8 @@ graph TD
      - `Alyra Lock`: Roushan emphasizes zero-knowledge Express/MongoDB API, AES-GCM crypto core, and JWT sync hardening; Ayushi emphasizes client-side React vault UI, memory-safe ephemeral state, and fast encrypted search.
      - Added automated uniqueness assertion in `main()` verifying 0 shared project bullets between candidates.
   4. **Neutralized `"July 2028"` Student Bias:** Updated education period to `2025 – 2028 (Full-Time Remote Available)` across both resumes.
-  5. **BCA Compliance Sanitization:** Added `sanitizeBcaHeadline()` in `resumeOptimizer.ts` to ensure candidate headlines never output `"Engineer"`, and replaced all hardcoded `"Engineer"` strings in `outreachGenerator.ts` with `"Software Developer"`.
+  5. **BCA Compliance Sanitization:** Added `sanitizeBcaHeadline()` in `resumeOptimizer.ts` to ensure candidate headlines never output `"Engineer"`, replaced all hardcoded `"Engineer"` strings in `outreachGenerator.ts` with `"Software Developer"`, and aligned `tests/outreach-generator.test.ts` to assert the compliant developer title.
 - **Hard-Won Engineering Experience & Rules:**
   - Keep role headlines to 4–5 words maximum using recognized industry formats (`Role — Specialization`); never glue two roles together with an ampersand (`"Backend & Full-Stack"`).
   - Co-founders sharing repository projects must scope their bullets strictly to their individual architectural domain (backend runtime vs. interactive UI/extension) to prevent hiring manager doubt.
-- **Status:** Both Master PDFs regenerated with 100% geometry & compliance gates (`13.68mm` bottom gap, `maxSkillLines === 1`, `maxH3Lines === 1`, `0` shared bullets, `0` "Engineer", `0` slop words). All 36 Vitest tests passing across 5 test files; `npx tsc --noEmit` clean with 0 errors.
+- **Status:** Both Master PDFs regenerated with 100% geometry & compliance gates (`13.68mm` bottom gap, `maxSkillLines === 1`, `maxH3Lines === 1`, `0` shared bullets, `0` "Engineer", `0` slop words). All 36 Vitest candidate & outreach tests passing (40/40 including outreach generator); `npx tsc --noEmit` clean with 0 errors. Committed & pushed live to `main`.

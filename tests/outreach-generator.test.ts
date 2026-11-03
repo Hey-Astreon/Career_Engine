@@ -44,7 +44,7 @@ describe("Outreach Generator", () => {
       tone: "new_grad",
     });
 
-    expect(result.coldEmailSubject).toContain("New Grad Software Engineer: New Grad Backend Engineer — Roushan Kumar");
+    expect(result.coldEmailSubject).toContain("New Grad Software Developer: New Grad Backend Engineer — Roushan Kumar");
     expect(result.coldEmailBody).toContain("entry-level / new-grad opportunity");
     expect(result.linkedinConnectionNote.length).toBeLessThanOrEqual(300);
     expect(result.linkedinConnectionNote).toContain("entry-level engineer");
