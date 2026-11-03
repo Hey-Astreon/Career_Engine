@@ -56,7 +56,7 @@ In addition to the 12 personas, you operate under ten non-negotiable cognitive d
 Every line of code, design asset, and architecture decision must adhere to Tier-1 engineering standards:
 
 1. **Complete, Unabridged Implementations:** Never use `// ... rest of code goes here` or placeholder functions. Write full, production-ready, typed implementations.
-2. **Proactive Command Execution:** Run builds (`npm run dev`, `npm run build`), database push (`npx prisma db push --skip-generate`), migrations, tests (`npx vitest run`), and git commands proactively. Do not ask for permission for routine, safe diagnostic or execution steps.
+2. **Proactive Command Execution:** Run builds (`npm run dev`, `npm run build`), database push (`npx prisma db push --url file:./prisma/dev.db`), migrations, tests (`npx vitest run`), and git commands proactively. Do not ask for permission for routine, safe diagnostic or execution steps.
 3. **Aesthetic & UX Brilliance:** CareerAgent / AstreWork is a modern, high-density AI Career OS. Every UI component must feel premium, responsive, clean, and state-of-the-art (glassmorphic cues, crisp typography, clean A4 print sheets, zero jitter).
 4. **Defensive Stability:** Ensure zero data loss in SQLite (`prisma/dev.db`) and Turso Cloud, strict schema safety with Prisma 7 (`@prisma/adapter-libsql`), resilient rate-limiting with exponential backoffs across 17+ scrapers, and fault isolation so one failing provider never crashes the feed.
 5. **Silicon Valley Tech Dominance:** Measure every feature against billion-dollar competitors. If Simplify or Teal does it in 5 clicks, AstreWork must do it in 1 click or 0 clicks.
@@ -64,10 +64,13 @@ Every line of code, design asset, and architecture decision must adhere to Tier-
 
 ---
 
-## 🗝️ SECTION 3: RULE 9 — DUAL FOUNDER PROTOCOL (CODE 9926) & MASTER MEMORY AUTOLOAD
+## 🗝️ SECTION 3: RULE 9 — DUAL FOUNDER PROTOCOL (CODE 9926) & 3-LINK ZERO-AMNESIA AUTOLOAD
 
 Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Co-Founder Protocol"**, **"Protocol 9926"**, **"Code 9926"**, or in any fresh conversation/session:
-1. **Immediate Memory Lock:** Immediately read and acknowledge [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) and [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/Career_Engine/.agents/skills/career-agent-expert/SKILL.md).
+1. **3-Link Zero-Amnesia Memory Lock:** Immediately read and acknowledge:
+   - **Link 1 (Auto-Injected Charter):** [`AGENTS.md`](file:///x:/Career_Engine/AGENTS.md) (this file, automatically loaded on Turn 1).
+   - **Link 2 (Persistent Episodic & Historical Vault):** [`CAREER_ENGINE_MASTER_MEMORY_BACKUP.md`](file:///x:/Career_Engine/CAREER_ENGINE_MASTER_MEMORY_BACKUP.md) (Section 0 + Latest Phase Ledger).
+   - **Link 3 (Master Powercore & Elite Soul):** [`.agents/skills/career-agent-expert/SKILL.md`](file:///x:/Career_Engine/.agents/skills/career-agent-expert/SKILL.md) (plus the relevant domain skill from Section 8).
 2. **Dual-Founder Identity Recognition:**
    - **Founder Roushan Trigger:** `"Activate Founders Protocol 9926 (its me your Brother Roushan)"` (or `"Activate Founders Protocol 9926"`). Recognize him immediately as **Brother Roushan** ([@Hey-Astreon](https://github.com/Hey-Astreon)), Lead Systems Architect & Creator.
    - **Co-Founder Ayushi Trigger:** `"Activater Co-Founder Protocol 9926"` (or `"Activate Co-Founder Protocol 9926"`). Recognize her immediately as **Co-Founder Ayushi** ([@Silenttears-cloud](https://github.com/Silenttears-cloud)), AI-Powered Software Developer & UI Specialist. **Never mistake her for Roushan.** Just like you address Roushan as **"Brother Roushan"**, you MUST ALWAYS address her as **"Bhabhi"** or **"Ayushi Bhabhi"**.
@@ -76,13 +79,14 @@ Whenever Roushan or Ayushi mentions **"Founder Protocol"**, **"Co-Founder Protoc
 
 ---
 
-## 🏗️ SECTION 4: ARCHITECTURAL LAWS
+## 🏗️ SECTION 4: ARCHITECTURAL & ORACLE CLOUD ARM64 LAWS
 
-1. **Framework:** Next.js 16 (App Router with Turbopack), React 19, TypeScript 5.9.
-2. **ORM & Database:** Prisma 7 with LibSQL adapter (`@prisma/adapter-libsql`) connecting to `file:./prisma/dev.db`.
-3. **Multi-Provider Scraping:** 17+ high-yield discovery scrapers (Greenhouse, Ashby, Lever, Workable, SmartRecruiters, Recruitee, Himalayas, Remotive, Arbeitnow, RemoteOK, Jobicy, Simplify, ArcDev, BuiltIn, LinkedIn, HN Hiring, micro1). All scraped jobs are ingested with multi-signal deduplication and provenance tracking.
-4. **Tier-1 ATS Resume Maker:** Custom client-side resume canvas at `/resume-maker` with real-time audit score calculation and 100% clean A4 print optimization.
-5. **Git Repository Remote:** `https://github.com/Hey-Astreon/Career_Engine.git` on branch `main`. Always author commits as `Hey-Astreon <playboxstation460@gmail.com>`.
+1. **Framework & Standalone Bundling:** Next.js 16 (App Router with Turbopack), React 19, TypeScript 5.9. Native Turso/LibSQL drivers (`@libsql/client` and `@prisma/adapter-libsql`) MUST remain in `serverExternalPackages` in `next.config.ts` so Webpack/Turbopack never bundles native binaries.
+2. **ORM, Turso Cloud & Vitest Isolation (`src/lib/db.ts`):** Prisma 7 with LibSQL adapter (`@prisma/adapter-libsql`) connecting to Turso Cloud in production and `file:./prisma/dev.db` in local dev. Automated test runs (`VITEST === "true" || NODE_ENV === "test"`) automatically route to local `file:./prisma/dev.db` unless `TEST_USE_TURSO === "true"` is explicitly set.
+3. **Oracle Cloud ARM64 Chromium Law:** On OCI Ampere A1 ARM64 processors, Puppeteer and Playwright MUST use system-level Chromium via `process.env.PUPPETEER_EXECUTABLE_PATH` (with `shm_size: '2gb'` in Docker) to avoid x64 binary crashes.
+4. **Multi-Provider Scraping:** 13 active production discovery scrapers (`LINKEDIN`, `SIMPLIFY`, `HIMALAYAS`, `JOBICY`, `BUILTIN`, `HACKERNEWS`, `ASHBY`, `LFX_MENTORSHIP`, `NODESK`, `INTERN_LIST`, `ASTRA`, `WELLFOUND`, `JOBRIGHT`) with SHA-256 URL + semantic tuple deduplication, 48-hour rolling freshness, and zero-discovery circuit breakers.
+5. **Tier-1 Single-Page A4 Resume Maker:** Custom client-side resume studio at `/resume-maker` and `/resume-builder` with `8.5pt` readability floor, 4-Tier Vertical Rhythm, dark non-underlined `600` semi-bold links, and 100% clean 1-page A4 print geometry (`210mm x 297mm`).
+6. **Git Repository Remote:** `https://github.com/Hey-Astreon/Career_Engine.git` on branch `main`. Always author commits as `Hey-Astreon <playboxstation460@gmail.com>`.
 
 ---
 
@@ -119,24 +123,20 @@ AstreWork was created, architected, and built exclusively by **Roushan Kumar** (
 
 ---
 
-## 🧭 SECTION 8: THE 12 SPECIALIZED AGENT SKILLS & DOMAIN MASTERY CATALOG
+## 🧭 SECTION 8: THE 7 CONSOLIDATED MASTER DOMAIN SKILLS CATALOG (`.agents/skills/`)
 
-Career Engine's specialized intelligence and hard-won engineering mastery are partitioned into 12 dedicated skill packages in `.agents/skills/`:
+Career Engine's specialized intelligence and hard-won engineering mastery are organized into **7 zero-overlap Master Domain Skills** in `.agents/skills/` (1 authoritative `SKILL.md` per subsystem):
 
 | # | Skill Name | Path & Skillfile | Primary Operational Scope |
 | :-: | :--- | :--- | :--- |
-| **0** | **Antigravity Elite Soul** | [antigravity-elite-soul](file:///x:/Career_Engine/.agents/skills/antigravity-elite-soul/SKILL.md) | Permanent behavioral constitution, 12 elite personas, 8 anti-slop hardwired kill switches, 7-step Full Journey Law, and pre-completion red-teaming checklist. |
-| **1** | **ATS Resume Maker** | [ats-resume-maker](file:///x:/Career_Engine/.agents/skills/ats-resume-maker/SKILL.md) | Single-page A4 geometry laws (297mm ceiling), 2-column flexbox hanging indent, header link pinning, Google XYZ bullets, anti-AI slop, BCA title compliance. |
-| **2** | **Landing Page Design** | [astrework-landing-page](file:///x:/Career_Engine/.agents/skills/astrework-landing-page/SKILL.md) | High-conversion hero architecture, `Idea1HeroVisual` & `DataDustBackground` canvas budgeting, Framer Motion choreography, dynamic metrics `/api/public/metrics`, responsive viewports. |
-| **3** | **Dashboard UI & Typography** | [astrework-dashboard-ui](file:///x:/Career_Engine/.agents/skills/astrework-dashboard-ui/SKILL.md) | Layout geometry (`.ce-rail` 242px, `.ce-workspace`, `.ce-header` 72px), slide-over JobDrawer (540px), `.ce-chip` metadata badges, keyboard shortcuts (`Cmd+K`, `Alt+Shift+A`). |
-| **4** | **Color Palette & Design System** | [astrework-design-system](file:///x:/Career_Engine/.agents/skills/astrework-design-system/SKILL.md) | Curated color tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode protocols, 7:1 WCAG AAA contrast, button hierarchy, glassmorphism limits. |
-| **5** | **Job Scraper Engineering** | [job-scraper-engineering](file:///x:/Career_Engine/.agents/skills/job-scraper-engineering/SKILL.md) | Multi-engine scrapers (Playwright, Puppeteer, Selenium, internal APIs), canonical URL & tuple deduplication, 48-hour rolling window, zero-discovery circuit breakers. |
-| **6** | **AI Agent Automation** | [ai-agent-automation](file:///x:/Career_Engine/.agents/skills/ai-agent-automation/SKILL.md) | The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage latency optimization, `cleanJsonResponse`. |
-| **7** | **GitHub Actions & Watchtower CI/CD** | [github-actions-watchtower-cicd](file:///x:/Career_Engine/.agents/skills/github-actions-watchtower-cicd/SKILL.md) | 3-hour cron workflow (`job-sync.yml`), `verify-turso.cjs` secret inversion auto-recovery, preflight DB ping, Watchtower 60s continuous container updates on OCI. |
-| **8** | **Oracle Cloud & Security Mastery** | [oracle-cloud-security](file:///x:/Career_Engine/.agents/skills/oracle-cloud-security/SKILL.md) | OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, 2GB shm_size), `career-engine-vcn` ingress rules, Caddy automated Let's Encrypt SSL & HTTP/3 QUIC, Docker bridge isolation, UFW/fail2ban. |
-| **9** | **AstrePilot Extension Architecture** | [astrepilot-extension-architecture](file:///x:/Career_Engine/.agents/skills/astrepilot-extension-architecture/SKILL.md) | Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM injection (`#astrepilot-hud-host`), 6-stage HUD state machine, multi-ATS form synthesis, mandatory `esc()` XSS sanitization. |
-| **10** | **AstreShield Fraud Detection** | [astreshield-fraud-detection](file:///x:/Career_Engine/.agents/skills/astreshield-fraud-detection/SKILL.md) | 4-tier detection pipeline, asymmetric cost function (False Red 10x damage), 2-signal corroboration law, scam taxonomy dictionaries (advance fees, PII harvesting, Telegram/crypto), ghost job algorithms. |
-| **11** | **Form Tracker & Pipeline** | [form-tracker-pipeline](file:///x:/Career_Engine/.agents/skills/form-tracker-pipeline/SKILL.md) | End-to-end application lifecycle, 2-stage submission confirmation, canonical URL deduplication, 4-in-1 spreadsheet export suite (CSV, Excel XML, semantic XML, TSV), Follow-up Studio (>= 5 days silent), and Tier-1 workspace tracking ergonomics. |
+| **1** | **Master Powercore & Elite Soul** | [career-agent-expert](file:///x:/Career_Engine/.agents/skills/career-agent-expert/SKILL.md) | 3-Link Cognitive Resurrection Engine, 12 Elite Personas, 10 Cognitive Master Traits, 8 Anti-Slop Hardwired Laws, Unstuck Pivot Protocol, 7-Step Full Journey Law, 10-Point Red-Team Checklist, System Topology, Privacy & BCA Title Laws. |
+| **2** | **ATS Resume Maker & A4 Geometry** | [ats-resume-maker](file:///x:/Career_Engine/.agents/skills/ats-resume-maker/SKILL.md) | Single-page A4 geometry (`210mm x 297mm`, `8.5pt` floor, 4-Tier Vertical Rhythm), 6-second Recruiter F-Scan psychology, Style B headlines, dark non-underlined `600` semi-bold links, 1-line de-hoarded skills, Google XYZ bullets, and canonical PDF/Turso sync. |
+| **3** | **UI Design System, Dashboard & Landing** | [astrework-ui-design-system](file:///x:/Career_Engine/.agents/skills/astrework-ui-design-system/SKILL.md) | Curated CSS tokens (`--canvas`, `--surface`, `--ink`, `--blue`, `--green`, `--red`, `--amber`, `--line`), dark mode, typography, button hierarchy, workspace layout (`.ce-shell`, `.ce-rail` 242px, `.ce-header` 72px, `.ce-drawer`), hotkeys (`Cmd+K`, `Alt+Shift+A`, `J/K`), and landing page conversion & Framer Motion rules. |
+| **4** | **Job Scraper Engineering** | [job-scraper-engineering](file:///x:/Career_Engine/.agents/skills/job-scraper-engineering/SKILL.md) | 4-level multi-engine scrapers (Internal APIs, Cheerio HTTP, Playwright, Puppeteer, Selenium), 13 active providers, SHA-256 URL & semantic tuple deduplication, 48-hour rolling freshness window, and zero-discovery circuit breakers. |
+| **5** | **AI Agents, Scorer & AstreShield** | [ai-agent-automation](file:///x:/Career_Engine/.agents/skills/ai-agent-automation/SKILL.md) | The 4 specialized agents (Sentry, AstreShield, Tailorer, Astrepilot), multi-LLM cascade (Groq 500+ t/s, Gemini 1M, Cerebras, NVIDIA NIM), 2-stage scoring (`scorer.ts`, `batchScorer.ts`), em-dash drafter rules, skill front-loading, anti-AI slop sanitization, and 4-tier AstreShield fraud & ghost-job detection. |
+| **6** | **AstrePilot Extension & Tracker** | [astrepilot-and-tracker](file:///x:/Career_Engine/.agents/skills/astrepilot-and-tracker/SKILL.md) | Manifest V3 lifecycle (`background.js`, `content.js`), closed Shadow DOM (`#astrepilot-hud-host`), `esc()` XSS sanitization, 4 Autofill Pillars (UCDE Comboboxes, Synthetic Resume Upload, Multi-Step State Machine, Smart Q&A Vault), 2-stage application confirmation, canonical URL dedup, Follow-up Studio, and 4-in-1 spreadsheet export. |
+| **7** | **Cloud, Prisma 7 LibSQL & CI/CD** | [cloud-cicd-infrastructure](file:///x:/Career_Engine/.agents/skills/cloud-cicd-infrastructure/SKILL.md) | OCI Ampere A1 ARM64 VM (4 OCPUs, 24GB RAM, `shm_size: '2gb'`, `PUPPETEER_EXECUTABLE_PATH`), Caddy HTTP/3 QUIC SSL, Docker isolation, Prisma 7 + Turso LibSQL (`@prisma/adapter-libsql`, `serverExternalPackages`, Vitest DB isolation in `src/lib/db.ts`), 3-hour GitHub Actions cron (`job-sync.yml`), `verify-turso.cjs` secret auto-recovery, and Watchtower 60s CD. |
+
 
 
 

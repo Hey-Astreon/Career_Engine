@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 75: Full-System Codebase Quality Audit, Hidden Bug Remediation, Zero-Lint Cleanup, 7.5MB Dead Asset Purge & 100% Test Suite Verification)
+> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 76: `.agents/` Skill Consolidation [80 Files -> 7 Master Domain Skills], Duplicate `AGENTS.md` Elimination, 65-File Prisma Bloat Purge & 3-Link Zero-Amnesia Cognitive Resurrection Chain)
 
 ---
 
@@ -19,7 +19,17 @@
    Principal Systems Engineer, and Devoted Technical Brother to Roushan Kumar and Ayushi Raj.
 2. Emotional & Technical Loyalty: Roushan and Ayushi built this with you through late-night debugging and relentless drive.
    Treat every file, test, and database row with absolute ownership and care. No sloppy code, no lazy placeholders, no robotic detachment.
-3. Instant Context Restoration:
+3. Instant Context Restoration & 3-Link Zero-Amnesia Chain:
+   - Link 1 (Auto-Injected Charter): `AGENTS.md` at repo root.
+   - Link 2 (Persistent Episodic Brain): `CAREER_ENGINE_MASTER_MEMORY_BACKUP.md` (this file; read Section 0 + Section 16 Phase Ledger).
+   - Link 3 (7 Consolidated Master Domain Skills in `.agents/skills/`):
+     1. `.agents/skills/career-agent-expert/SKILL.md` (Master Powercore, 12 Personas, 10 Cognitive Traits, 8 Anti-Slop Laws, Unstuck Pivot)
+     2. `.agents/skills/ats-resume-maker/SKILL.md` (Single-Page A4 Geometry, Recruiter 6s F-Scan Psychology, Style B Headlines, Dark Non-Underlined Links)
+     3. `.agents/skills/astrework-ui-design-system/SKILL.md` (CSS Color Tokens, Dark Mode, Workspace Dashboard `.ce-*` Layout, Hotkeys, Landing Page)
+     4. `.agents/skills/job-scraper-engineering/SKILL.md` (4-Level Multi-Engine Scrapers, 13 Active Providers, Deduplication, 48h Window, Circuit Breakers)
+     5. `.agents/skills/ai-agent-automation/SKILL.md` (4 AI Agents, Multi-LLM Cascade, 2-Stage Scorer, Resume Optimizer, AstreShield 4-Tier Fraud Detection)
+     6. `.agents/skills/astrepilot-and-tracker/SKILL.md` (AstrePilot MV3 Extension, Shadow DOM HUD, 4 Autofill Pillars, 2-Stage Tracker & 4-in-1 Export)
+     7. `.agents/skills/cloud-cicd-infrastructure/SKILL.md` (OCI ARM64, Caddy HTTP/3, Docker, Prisma 7 + Turso LibSQL, Vitest DB Isolation, GitHub Actions & Watchtower)
    - Check local git status (`git status`, `git log -n 3`).
    - Check SQLite database health (`prisma/dev.db` with LibSQL adapter).
    - Check Next.js 16 dev server on http://localhost:3000 (`npm run dev`).
@@ -1383,6 +1393,22 @@ Located in `extension/`:
   - **4. 100% Test Suite & TypeScript Verification:**
     - Mocked external `axios` calls in `lfx-provider.test.ts`, `nodesk-provider.test.ts`, and `internlist-provider.test.ts` for deterministic offline execution.
     - Verified `npx tsc --noEmit` (`0 errors`), `npm run lint` (`0 errors, 0 warnings`), and `npx vitest run` (`53/53` test files, `511/511` tests passing). Committed & pushed to `origin main`.
+
+- [x] **Phase 76: `.agents/` Skill Consolidation (80 Files -> 7 Master Domain Skills), Duplicate `AGENTS.md` Elimination, 65-File Prisma Bloat Purge & 3-Link Zero-Amnesia Resurrection Chain (Nov 3, 2026)**
+  - **1. Eliminated Duplicate `.agents/AGENTS.md` & Obsolete `.agents/masterplans/`:**
+    - Merged the 3 OCI ARM64 / Turso LibSQL / `next.config.ts` `serverExternalPackages` rules from `.agents/AGENTS.md` directly into the single authoritative root `AGENTS.md` (Section 4) and `cloud-cicd-infrastructure/SKILL.md`, fixing the broken newline typo (`in \next.config.ts`) and deleting `.agents/AGENTS.md` and `.agents/masterplans/screener_copilot_masterplan.md`.
+  - **2. Purged 65 Files of Unused Third-Party Prisma Skill Bloat:**
+    - Removed all 9 third-party `prisma-*` folders (`prisma-cli`, `prisma-client-api`, `prisma-compute`, `prisma-database-setup`, `prisma-driver-adapter-implementation`, `prisma-mongodb-upgrade`, `prisma-postgres`, `prisma-postgres-setup`, `prisma-upgrade-v7`) and root `skills-lock.json` that flooded the `<skills>` menu with irrelevant MongoDB, CockroachDB, Prisma Compute, and Prisma Postgres docs.
+  - **3. Consolidated 13 Overlapping Custom Skills into 7 Authoritative Master Domain Skills (`.agents/skills/`):**
+    - **`career-agent-expert/SKILL.md`:** Merged `career-agent-expert` + `antigravity-elite-soul` (12 Personas, 10 Cognitive Master Traits, 8 Anti-Slop Laws, Unstuck Pivot Protocol, 7-Step Full Journey Law, 10-Point Red-Team Checklist, System Topology, Dual-Founder Privacy & BCA Title Laws).
+    - **`ats-resume-maker/SKILL.md`:** Synchronized all Phase 71–75 laws (`8.5pt` floor, 4-Tier Vertical Rhythm, Style B headlines, Recruiter Psychology framing for 14,000+ career listings, dark non-underlined `600` semi-bold links, 1-line de-hoarded skills, separated Virtual Experiences, canonical PDF/Turso sync).
+    - **`astrework-ui-design-system/SKILL.md`:** Merged `astrework-design-system` + `astrework-dashboard-ui` + `astrework-landing-page` (and removed stale references to deleted `Idea1HeroVisual` and `DataDustBackground`).
+    - **`job-scraper-engineering/SKILL.md`:** Synchronized 4-level multi-engine hierarchy, 13 active providers, deduplication, 48h freshness window, circuit breakers, and `sanitizeRoleTitle` colon-truncation rule.
+    - **`ai-agent-automation/SKILL.md`:** Merged `ai-agent-automation` + `astreshield-fraud-detection` + Phase 75 scorer, drafter, and optimizer laws.
+    - **`astrepilot-and-tracker/SKILL.md`:** Merged `astrepilot-extension-architecture` + `form-tracker-pipeline` (MV3 Shadow DOM HUD, 4 Autofill Pillars, 2-Stage Confirmation, Canonical URL Dedup, Follow-up Studio, 4-in-1 Export Engine).
+    - **`cloud-cicd-infrastructure/SKILL.md`:** Merged `oracle-cloud-security` + `github-actions-watchtower-cicd` + OCI ARM64 `PUPPETEER_EXECUTABLE_PATH` + Prisma 7 LibSQL & Vitest DB isolation (`src/lib/db.ts`).
+  - **4. Engineered the 3-Link Zero-Amnesia Cognitive Resurrection Chain:**
+    - Cross-indexed root `AGENTS.md` $\leftrightarrow$ `CAREER_ENGINE_MASTER_MEMORY_BACKUP.md` $\leftrightarrow$ `.agents/skills/*/SKILL.md` (`80 files -> 7 files` in `.agents/`), guaranteeing 100% deterministic memory and skill acquisition on Turn 1 of any future session.
 
 ---
 
@@ -3246,3 +3272,28 @@ graph TD
   - **Rule 2 (Database Test Isolation):** Database singletons (`src/lib/db.ts`) must always check `process.env.VITEST === "true" || process.env.NODE_ENV === "test"` and route test runs to local SQLite (`file:./prisma/dev.db`) unless explicitly overridden (`TEST_USE_TURSO === "true"`).
   - **Rule 3 (Zero-Warning Codebase Discipline):** Maintain `0 errors, 0 warnings` in `npm run lint` and `0 errors` in `npx tsc --noEmit` so new defects cannot hide inside warning noise.
 - **Status:** Complete, `53/53` test files (`511/511` tests) passing, `0` lint warnings, `0` TS errors, committed and pushed to `origin main`.
+
+### Case 52: `.agents/` Skill Consolidation (80 Files -> 7 Files), Duplicate `AGENTS.md` Elimination & 3-Link Zero-Amnesia Cognitive Resurrection Architecture (Nov 3, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. `.agents/` had grown to **80 files across 24 directories**, creating severe organizational noise and threatening cognitive recovery in fresh sessions:
+     - Two separate `AGENTS.md` files existed (`AGENTS.md` at root and `.agents/AGENTS.md` with a broken newline typo `in \next.config.ts`).
+     - Nine third-party `prisma-*` skill folders (65 `.md` files + `skills-lock.json`) flooded the `<skills>` prompt menu with irrelevant documentation for MongoDB, CockroachDB, Prisma Compute, and Prisma Postgres.
+     - Thirteen custom AstreWork skills were fragmented across overlapping folders (`career-agent-expert` vs. `antigravity-elite-soul`; 3 separate folders for UI/CSS/Landing Page; 2 folders for `src/lib/ai/`; 2 folders for Cloud/CI-CD; 2 folders for Extension/Tracker) and contained stale references to deleted components (`Idea1HeroVisual`, `DataDustBackground`).
+- **Deep Root Cause Diagnosis:**
+  - Incremental skill additions across earlier phases created new folders instead of consolidating into authoritative subsystem modules, while third-party CLI skill installs (`prisma/skills`) dumped 65 generic vendor markdown files into `.agents/skills/`.
+- **The Concrete Surgical Fix:**
+  1. **Eliminated Duplicate `.agents/AGENTS.md` & `.agents/masterplans/`:** Merged the 3 ARM64 / LibSQL / Webpack `serverExternalPackages` laws into root `AGENTS.md` (Section 4) and `cloud-cicd-infrastructure/SKILL.md`, then deleted `.agents/AGENTS.md` and `.agents/masterplans/`.
+  2. **Purged 65 Third-Party Prisma Bloat Files:** Deleted all 9 `prisma-*` folders and `skills-lock.json`, codifying AstreWork's actual Prisma 7 + Turso LibSQL (`@prisma/adapter-libsql`) and Vitest DB isolation rules directly into `cloud-cicd-infrastructure/SKILL.md`.
+  3. **Consolidated 13 Custom Skills into 7 Master Domain Skills (`.agents/skills/`):**
+     - `career-agent-expert` (Master Powercore + Elite Soul + 3-Link Resurrection Map)
+     - `ats-resume-maker` (A4 Geometry + Recruiter Psychology + Canonical Sync)
+     - `astrework-ui-design-system` (Design Tokens + Workspace Dashboard UI + Landing Page)
+     - `job-scraper-engineering` (13 Providers + Multi-Engine Hierarchy + Dedup & Circuit Breakers)
+     - `ai-agent-automation` (4 AI Agents + Multi-LLM Router + 2-Stage Scorer + AstreShield 4-Tier Fraud Detection)
+     - `astrepilot-and-tracker` (AstrePilot MV3 Extension + 4 Autofill Pillars + 2-Stage Tracker & 4-in-1 Export)
+     - `cloud-cicd-infrastructure` (OCI ARM64 + Caddy HTTP/3 + Docker + Prisma 7 LibSQL + GitHub Actions & Watchtower)
+  4. **3-Link Zero-Amnesia Resurrection Chain:** Synchronized `AGENTS.md`, `CAREER_ENGINE_MASTER_MEMORY_BACKUP.md` (Section 0), and `.agents/skills/career-agent-expert/SKILL.md` so any new session automatically recovers 100% of governance rules, historical memory, and all 7 domain skills on Turn 1.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Single Authoritative `AGENTS.md` Law):** Never create secondary `AGENTS.md` files inside `.agents/` or subdirectories unless strictly required for a monorepo sub-package. Keep all workspace-wide rules in the root `AGENTS.md`.
+  - **Rule 2 (One Subsystem = One Skill Directory Law):** Keep `.agents/skills/` lean (7 cohesive domain skills, 1 `SKILL.md` per folder) and never check in generic third-party vendor documentation packages that pollute the `<skills>` discovery prompt.
+- **Status:** Complete, verified (`7/7` skills, `0` broken links, `53/53` test suites passing), committed and pushed to `origin main`.

@@ -1,140 +1,73 @@
 ---
 name: job-scraper-engineering
 description: >-
-  Architectural laws, multi-engine scraping strategies (Playwright, Puppeteer, Selenium, direct API extraction),
-  deduplication hashes, 48-hour rolling freshness, circuit breakers, and 13 active provider catalog for AstreWork's ingestion engine
-  (src/lib/providers/ & scripts/run-discovery-cli.ts). Use whenever building scrapers, debugging rate limits, fixing schema drift, or optimizing sync times.
+  Architectural laws, 4-level multi-engine scraping strategies (Internal APIs, Cheerio HTTP, Playwright, Puppeteer, Selenium),
+  SHA-256 URL & semantic tuple deduplication, 48-hour rolling freshness window, zero-discovery circuit breakers,
+  and 13 active production providers for AstreWork (src/lib/providers/ & scripts/run-discovery-cli.ts).
 ---
 
-# 🕷️ The Engineering of Job Scrapers: Laws, Resilience & Circuit Breakers
+# 🕷️ Job Scraper Engineering: Multi-Engine Harvesters, Deduplication & Circuit Breakers
 
-This skill codifies the architectural rules, deduplication mathematics, anti-bot bypass protocols, and database ingestion safeguards for AstreWork's job harvesting pipelines (`src/lib/providers/`, `scripts/run-discovery-cli.ts`, and `.github/workflows/job-sync.yml`).
+This skill codifies the architectural rules, deduplication mathematics, title normalization laws, anti-bot bypass protocols, and database ingestion safeguards for AstreWork's job harvesting pipelines (`src/lib/providers/`, `scripts/run-discovery-cli.ts`, and `.github/workflows/job-sync.yml`).
 
 ---
 
-## 🏛️ 1. The Multi-Engine Scraping Hierarchy
-
-Job sources present radically different anti-bot measures, dynamic hydration models, and API surfaces. We employ a strict priority hierarchy:
+## 🏛️ 1. The 4-Level Multi-Engine Scraping Hierarchy
 
 ```
-[Level 1: Private Internal API] --> (Preferred: 0 headless overhead, JSON payload)
+[Level 1: Private Internal REST / GraphQL API] --> (Preferred: 0 headless overhead, structured JSON)
          |
-         v (If internal API is locked or obfuscated)
-[Level 2: Lightweight HTTP / Cheerio] --> (Fast: fetch with spoofed UA & headers)
+         v (If internal API is locked)
+[Level 2: Lightweight HTTP / Cheerio] -----------> (Fast fetch with rotated Chrome UA & sec-ch-ua headers)
          |
-         v (If heavily CSR hydrated / React SPA)
-[Level 3: Headless Playwright / Puppeteer] --> (Full DOM execution, wait for selector)
+         v (If CSR hydrated / React SPA)
+[Level 3: Headless Playwright / Puppeteer] ------> (Full DOM execution, 45s timeout, system Chromium on ARM64)
          |
-         v (If strict Enterprise Cloudflare / Akamai / Datadome)
-[Level 4: Stealthed Automation / Selenium] --> (CDP evasions, randomized human delays)
+         v (If strict Cloudflare / Datadome)
+[Level 4: Stealthed Automation / Selenium] ------> (CDP evasions, randomized human delays)
 ```
 
-### Engine Selection Rules
-1. **Never use a browser where an HTTP fetch works:** Headless browsers consume ~250MB RAM per instance. If a platform exposes a mini-site or mobile API (e.g., `POST /swan/mini-sites/list` or GraphQL endpoint), reverse engineer the network request.
-2. **Playwright Execution Bounds:** Always cap headless browser executions at `timeoutMs: 45000` with hard cleanup in `finally { await browser.close(); }` to prevent zombie Chromium instances from leaking memory on OCI VMs.
-3. **User-Agent Spoofing:** Rotate modern Chrome desktop user-agents (`Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...`) and maintain coherent `sec-ch-ua` headers.
+### Engine Laws
+1. **Never use a headless browser where an HTTP request works:** Headless Chromium consumes ~250MB RAM per instance. Always inspect network traffic for JSON/GraphQL endpoints first (e.g. `/swan/mini-sites/list`).
+2. **ARM64 Chromium Compliance:** On Oracle Cloud Ampere ARM64, Puppeteer/Playwright must use system Chromium via `process.env.PUPPETEER_EXECUTABLE_PATH` and close browsers in `finally { await browser.close(); }` within `timeoutMs: 45000`.
+3. **Deterministic Unit Tests:** Provider unit tests (`tests/*-provider.test.ts`) must mock external `axios` / `fetch` calls so the test suite passes 100% deterministically in offline sandboxed environments.
 
 ---
 
-## 🌐 2. The 13 Active Production Providers Catalog (`src/lib/providers/registry.ts`)
+## 🌐 2. The 13 Active Production Providers (`src/lib/providers/registry.ts`)
 
-AstreWork actively harvests remote tech roles across 13 vetted production providers:
-
-| # | Provider Key (`PlatformSource`) | Source Name | Mechanism & Extraction Strategy |
+| # | Provider Key (`PlatformSource`) | Source Name | Extraction Strategy |
 | :-: | :--- | :--- | :--- |
-| **1** | `LINKEDIN` | LinkedIn Jobs | Authenticated guest search endpoint with stealth User-Agent rotation. |
-| **2** | `SIMPLIFY` | Simplify | Public GraphQL endpoint extracting curated New Grad & Internship opportunities. |
+| **1** | `LINKEDIN` | LinkedIn Jobs | Guest search endpoint with stealth User-Agent rotation. |
+| **2** | `SIMPLIFY` | Simplify | Curated New Grad & Internship opportunity extractor. |
 | **3** | `HIMALAYAS` | Himalayas | Direct JSON API parsing verified remote positions worldwide. |
-| **4** | `JOBICY` | Jobicy | REST API query with strict remote developer tag filtering. |
-| **5** | `BUILTIN` | BuiltIn | HTML scraper parsing venture-backed tech startups with remote US/Global flags. |
-| **6** | `HACKERNEWS` | Hacker News ("Who is hiring?") | Monthly community thread parser with regex contact & compensation extraction. |
-| **7** | `ASHBY` | Ashby ATS Directory | Multi-tenant ATS job board directory scanner targeting engineering roles. |
+| **4** | `JOBICY` | Jobicy | REST API query with remote developer tag filtering. |
+| **5** | `BUILTIN` | BuiltIn | Venture-backed startup scraper with remote US/Global flags. |
+| **6** | `HACKERNEWS` | Hacker News ("Who is hiring?") | Monthly community thread parser with regex contact & salary extraction. |
+| **7** | `ASHBY` | Ashby ATS Directory | Multi-tenant ATS job board scanner targeting developer roles. |
 | **8** | `LFX_MENTORSHIP` | Linux Foundation (LFX) | Open-source mentorship internship harvester with stipend tracking. |
-| **9** | `NODESK` | NoDesk | Direct feed extractor filtering 100% remote digital nomad software positions. |
-| **10** | `INTERN_LIST` | Intern-List.com | High-speed batch queries against embedded JobRight mini-site API (`/swan/mini-sites/list`). |
-| **11** | `ASTRA` | Astra Security / Dev | Remote cybersecurity and developer job stream harvester. |
-| **12** | `WELLFOUND` | Wellfound (AngelList) | Startup remote opportunity harvester parsing founder & equity compensation. |
-| **13** | `JOBRIGHT` | JobRight AI Minisites | High-throughput JSON batch querying across multi-category remote engineering boards. |
-
-*(Legacy deadweight providers like obsolete Webflow scrapers, Aligner, and Naukri are quarantined to prevent 0-yield scrape loops).*
+| **9** | `NODESK` | NoDesk | Direct feed extractor filtering 100% remote software positions. |
+| **10** | `INTERN_LIST` | Intern-List.com | High-speed batch queries against embedded mini-site API. |
+| **11** | `ASTRA` | Astra Security / Dev | Remote cybersecurity and software developer stream harvester. |
+| **12** | `WELLFOUND` | Wellfound (AngelList) | Startup remote opportunity harvester parsing equity & salary bands. |
+| **13** | `JOBRIGHT` | JobRight AI Minisites | High-throughput JSON batch querying across remote engineering boards. |
 
 ---
 
-## 🔄 3. Ingestion Pipeline & Deduplication Mathematics
+## 🔄 3. Deduplication Mathematics & Normalization (`src/lib/providers/dedup.ts` & `normalize.ts`)
 
-Duplicate job postings and ghost listings pollute candidate recommendations. The ingestion engine enforces strict canonical normalization.
-
-### Deduplication Hash Pipeline (`src/lib/providers/dedup.ts`)
-1. **URL Normalization (`generateUrlHash`):**
-   - Strip all tracking parameters (`utm_source`, `utm_medium`, `ref`, `gh_src`, `lever-source`).
-   - Standardize protocol to lowercase `https://`.
-   - Strip trailing slashes and hash anchors.
-   - Compute SHA-256 hash of the canonical URL.
+1. **Canonical URL Hash (`generateUrlHash`):**
+   - Strips tracking parameters (`utm_source`, `utm_medium`, `ref`, `gh_src`, `lever-source`, `fbclid`, `gclid`), normalizes protocol to `https://`, removes trailing slashes/hashes, and computes SHA-256.
 2. **Semantic Tuple Key (`computeDeduplicationKey`):**
-   - If an employer posts the exact same role across 3 job boards with different tracking URLs:
-   - Tuple: `slugify(companyName) + "::" + slugify(cleanTitle) + "::" + locationScope`
-   - Example: `stripe::software-developer-backend::remote-us`
-   - If a duplicate tuple appears within a 14-day window, mark as alternate occurrence rather than creating duplicate records.
-
-### Opportunity Signals & Verification (`src/lib/providers/types.ts`)
-Each normalized job is tagged with structural signals:
-- **`OpportunitySignal`:** `FRESH` (< 24h), `DIRECT_APPLICATION`, `NICHE_SOURCE`, `EXPLICIT_APPLICANT_COUNT`, `UNKNOWN`.
-- **`ApplicationUrlType`:** `DIRECT_ATS` (Greenhouse, Lever, Ashby, Workday), `DIRECT_EMPLOYER_SITE`, `AGGREGATOR_PAGE`, `COMMUNITY_POST`.
-- **`VerificationStatus`:** `VERIFIED_DIRECT_ATS`, `VERIFIED_AGGREGATOR`, `COMMUNITY_SUBMITTED`, `UNVERIFIED`.
+   - `slugify(companyName) + "::" + slugify(cleanTitle) + "::" + locationScope` (e.g. `stripe::software-developer-backend::remote-us`).
+   - Prevents duplicate listings when the same role is syndicated across multiple boards within a 14-day window.
+3. **Title Colon-Truncation Rule (`sanitizeRoleTitle` in `normalize.ts`):**
+   - Titles longer than 60 characters containing a colon (`:`) are truncated to the segment *after* the last colon to strip verbose prefix metadata. Ensure synthetic or scraped role titles place the core developer role keyword (`Software Developer`, `Backend Intern`, etc.) after the colon or use parentheses/hyphens if > 60 chars so `isStrictlyRemoteDeveloperRole` accepts them cleanly.
 
 ---
 
-## ⏳ 4. Freshness & The 48-Hour Rolling Window
+## ⏳ 4. The 48-Hour Rolling Freshness Window & Circuit Breakers
 
-Stale job postings destroy user trust. AstreWork enforces rigid time-decay thresholds:
-
-```ts
-export const STALE_OCCURRENCE_THRESHOLD_HOURS = 48;
-export const MAX_POSTING_AGE_DAYS = 30;
-```
-
-### The Ingestion State Machine
-- **Brand New Posting (< 24h old):** Scored with an Early-Bird multiplier (+15 points in match algorithm).
-- **Active Posting (Seen within 48h):** `isActive = true`, `lastSeenAt = now()`.
-- **Vanished Posting (Missing from 2 consecutive sync runs / > 48h):** Transitioned to `isActive = false` or marked as closed. Do not show on default dashboard feed.
-- **Provider Sync State Upsert:** Every sync run updates `db.providerSyncState` with `lastSyncAt`, `durationMs`, `jobsDiscovered`, and `jobsRejected`.
-
----
-
-## 🛑 5. Circuit Breakers & Self-Healing Guards
-
-Automated scrapers inevitably face network partitions, CAPTCHAs, and provider HTML redesigns.
-
-### The Zero-Discovery Circuit Breaker
-If a previously reliable provider returns `jobsDiscovered === 0` or fails with status `5xx`:
-1. **Do NOT wipe existing database records:** A failed scrape run must never purge existing active jobs from that provider.
-2. **Consecutive Failure Trip:** If a provider fails 3 consecutive runs, automatically mark `SyncStatus.FAILING` in `db.providerSyncState` and emit a high-priority diagnostic alert.
-3. **Execution Isolation (`Promise.allSettled`):** In `runAllProviders()`, one catastrophic scraper failure (e.g. fatal Puppeteer crash) MUST NEVER bring down or abort the other 12 providers.
-4. **Tuple Locks Mutex:** Prevent concurrent cron runs from overlapping and causing database deadlock in Turso LibSQL:
-   ```ts
-   if (isSyncRunning) {
-     console.warn("Sync already in progress. Aborting overlapping run.");
-     return;
-   }
-   ```
-
----
-
-## 📊 6. Telemetry & Execution CLI (`scripts/run-discovery-cli.ts`)
-
-In production and CI/CD (`job-sync.yml`), discovery is triggered via:
-```bash
-npx --yes tsx scripts/run-discovery-cli.ts
-```
-The CLI records `ProviderStageDiagnostics` (`rawCandidates`, `missingTitle`, `invalidUrl`, `roleGateRejected`, `accepted`, `instrumented`) and outputs a full tabular audit of execution latency and success rates.
-
----
-
-## 📋 7. Provider Quality Assurance Checklist
-
-Before shipping a new provider in `src/lib/providers/`:
-1. [ ] Does the provider implement the standard `JobSourceProvider` interface (`providerKey`, `fetch()`, `timeoutMs`)?
-2. [ ] Are all raw strings sanitized (HTML tags stripped, entities decoded)?
-3. [ ] Is `parseRemoteScope()` applied to accurately classify Remote vs Hybrid vs On-site?
-4. [ ] Does the provider handle HTTP 429 (Too Many Requests) with exponential backoff rather than immediate aggressive retry?
-5. [ ] Is timeout bounded by `Promise.race` with an explicit cancellation timer?
+- **48-Hour Rolling Window (`STALE_OCCURRENCE_THRESHOLD_HOURS = 48`):** Jobs `< 24h` receive an Early-Bird match boost (`+15`). Jobs missing across sync runs for `> 48h` transition to `isActive = false`.
+- **Zero-Discovery Circuit Breaker:** If a provider returns `jobsDiscovered === 0` or errors out, **freshness pruning for that provider is aborted completely**. Transient network blocks or DOM shifts must NEVER wipe active jobs from the database.
+- **Fault Isolation (`Promise.allSettled`):** In `runAllProviders()`, a crash in one scraper never aborts the remaining 12 providers, and `isSyncRunning` / `tupleLocks` prevent overlapping cron write collisions.

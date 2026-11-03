@@ -2,109 +2,100 @@
 name: ai-agent-automation
 description: >-
   The 4 specialized AI agents, multi-provider LLM routing cascade (Groq, Gemini, Cerebras, NVIDIA NIM),
-  two-stage scoring latency optimization, and anti-hallucination guardrails for AstreWork (src/lib/ai/).
-  Use whenever modifying AI prompt templates, LLM routing, resume tailoring models, or scoring algorithms.
+  two-stage deterministic + semantic scoring (scorer.ts, batchScorer.ts), resume tailoring & skill front-loading
+  (resumeOptimizer.ts), cover letter/outreach drafting (drafter.ts), anti-AI slop sanitization, and the 4-tier
+  AstreShield fraud & ghost-job detection pipeline (astreShield.ts, astreShield.dict.ts) for AstreWork (src/lib/ai/).
 ---
 
-# 🤖 The 4 AI Agents: Specialization, Routing & Automation Mastery
+# 🤖 AI Agent Automation, Two-Stage Scoring & AstreShield Fraud Detection Mastery
 
-This skill defines the autonomous multi-agent architecture powering AstreWork (`src/lib/ai/router.ts`, `src/lib/ai/scorer.ts`, `src/lib/ai/tailorer.ts`, and `src/lib/ai/astreShield.ts`).
-
----
-
-## 👥 1. The 4 Specialized AI Agents
-
-AstreWork rejects monolithic AI prompts. Intelligence is partitioned into 4 distinct, highly specialized agents:
-
-```
-                          [Astrewave Master Orchestrator]
-                                         |
-     +-------------------+---------------+-------------------+-------------------+
-     |                   |                                   |                   |
-     v                   v                                   v                   v
-[1. Opportunity]   [2. AstreShield]                   [3. Resume Tailoring] [4. Astrepilot]
-[    Sentry    ]   [   Guardian   ]                   [      Engine       ] [   Copilot   ]
-(Harvest & Parse)  (Detect Scam/Ghost)                (ATS Match & XYZ)     (Extension Autofill)
-```
-
-### Agent Roster & Missions
-1. **Opportunity Sentry (Ingestion Intelligence):**
-   - Extracts structured metadata from unstructured job descriptions (salary bands, remote eligibility, seniority levels, required stack).
-   - Flags early-bird postings within minutes of appearance.
-2. **AstreShield Guardian (Fraud & Scam Interceptor):**
-   - Protects job seekers by analyzing employer reputation, recruitment fraud patterns (WhatsApp, Telegram, check scams, crypto, paid training).
-   - Evaluates ghost postings (open > 90 days with no hiring intent).
-3. **Resume Tailoring Engine (ATS Optimizer):**
-   - Re-balances resume keywords against specific Job Descriptions.
-   - Enforces the Google XYZ formula (`Accomplished [X] as measured by [Y] by doing [Z]`).
-   - Strictly preserves candidate truth without hallucinating experiences or skills.
-4. **Astrepilot Copilot (Browser Autopilot):**
-   - Operates inside the Chrome extension (`extension/content.js`).
-   - Maps candidate profiles to complex multi-step ATS application forms (Workday, Greenhouse, Lever, Taleo, Ashby) with 100% human-in-the-loop auditability.
+This unified skill governs the entire `src/lib/ai/` intelligence layer: multi-LLM failover routing (`router.ts`), 2-stage ATS scoring (`scorer.ts`, `batchScorer.ts`), semantic resume optimization (`resumeOptimizer.ts`), cover letter & outreach drafting (`drafter.ts`, `outreachGenerator.ts`), screener Q&A (`screeningHelper.ts`), and 4-tier fraud/ghost-job interception (`astreShield.ts`, `astreShield.dict.ts`).
 
 ---
 
-## ⚡ 2. Universal Multi-Provider Routing Cascade (`src/lib/ai/router.ts`)
+## 👥 PART 1: THE 4 SPECIALIZED AI AGENTS & MULTI-LLM ROUTING CASCADE
 
-To guarantee zero-downtime, sub-second latency, and resilience against API provider rate limits, AstreWork executes an automatic failover cascade:
+AstreWork partitions intelligence into 4 specialized agents backed by a 5-stage automatic failover cascade (`src/lib/ai/router.ts`):
 
 ```
-[1. Groq: openai/gpt-oss-120b] (500+ tokens/sec, ultra-fast 0.3s response)
-              |  (On timeout / rate limit / missing key)
-              v
-[2. Google Gemini: gemini-3.8-flash] (1M token context, deep reasoning)
-              |  (On failover)
-              v
-[3. Cerebras: qwen-3.8-27b] (High-throughput open weights)
-              |  (On failover)
-              v
-[4. NVIDIA NIM: meta/llama-4-maverick] (Enterprise cloud inference)
-              |  (On complete network partition)
-              v
-[5. Local Heuristic Fallback] (Regex extraction, TF-IDF keyword overlap, 0 cost)
+[1. Groq: openai/gpt-oss-120b] ---------> (500+ tokens/sec, ~0.3s latency, 8,000ms timeout)
+              |
+              v (On rate limit / timeout / missing key)
+[2. Google Gemini: gemini-3.8-flash] ---> (1M token context, deep reasoning, 12,000ms timeout)
+              |
+              v (On failover)
+[3. Cerebras: qwen-3.8-27b] ------------> (Wafer-scale inference, 8,000ms timeout)
+              |
+              v (On failover)
+[4. NVIDIA NIM: meta/llama-4-maverick] -> (Enterprise cloud fallback, 10,000ms timeout)
+              |
+              v (On complete network partition / offline mode)
+[5. Local Deterministic Fallback] ------> (0ms latency, $0 cost, candidate-aware heuristics)
 ```
 
-### Routing Parameters
-- **Temperature:** Hardcoded to `0.2` across all models to minimize variance and guarantee deterministic JSON schemas.
-- **Timeout Limits:** Groq: `8,000ms`, Gemini: `12,000ms`, Cerebras: `8,000ms`, NVIDIA: `10,000ms`.
-- **Response Format:** Enforce `{ type: "json_object" }` on capable providers.
+- **Temperature:** `0.2` across all providers for deterministic JSON structure.
+- **Mandatory JSON Sanitizer (`cleanJsonResponse`):** Always strip markdown code fences (` ```json ... ``` `) before calling `JSON.parse()`.
 
 ---
 
-## 🏎️ 3. Two-Stage Latency Optimization (0ms Base Scoring)
+## 🏎️ PART 2: TWO-STAGE SCORING & TITLE/SKILL MATCHING (`scorer.ts` & `batchScorer.ts`)
 
-Calling an LLM on 2,000 incoming jobs per hour would cost thousands of dollars and introduce seconds of latency. We use a two-stage filter:
+### 1. Stage 1: Deterministic Base Match (0ms Latency, \$0 Cost)
+- Computes exact keyword overlap against `TECH_DICTIONARY` (`src/lib/ai/scorer.ts`), which includes modern stack keywords (`playwright`, `puppeteer`, `selenium`, `prisma`, `turso`, `libsql`, `zustand`, `redux`, `monaco`, `vitest`, `typescript`, `react`, `nextjs`, `nodejs`, `python`, `csharp`, `docker`, `redis`, etc.).
+- **Display Label Law:** Map `"ai"` to `"AI Development"` (never `"AI Engineering"`).
+- **Hyphenated & Style B Title Matching Law (`calculateDeterministicSignals`):**
+  - Candidate headlines use Style B formatting (`"Software Developer — Backend & Cloud"`, `"Software Developer — Full-Stack & AI"`).
+  - Title alignment checks MUST match `/full[- ]?stack/i` (both `"full stack"` and `"full-stack"`), `cloud`, `ai`, `frontend`, and `backend` so matching roles receive the full `100` title alignment score instead of dropping to `65`.
 
-### Stage 1: Deterministic Base Match (0ms Latency, $0 Cost)
-- Runs locally in Node.js runtime.
-- Computes exact keyword intersection between Candidate Skills and Job Requirements.
-- Evaluates hard constraints: Experience years, Location / Remote Scope, Minimum Salary requirement.
-- Jobs scoring `< 45%` in Stage 1 are immediately shelved without LLM invocation.
-
-### Stage 2: Composite Semantic Scoring (LLM Enhanced)
-- Only triggered for jobs passing Stage 1 threshold or when a candidate clicks into the JobDrawer.
-- Evaluates conceptual alignment, project domain relevance, and architectural depth.
-- Returns comprehensive feedback: `strengths`, `gaps`, `customPitch`, and `tailoredScore`.
+### 2. Stage 2: Composite Semantic Scoring (LLM Enhanced)
+- Triggered for high-affinity postings or when inspecting a job in the drawer/match studio, returning grounded `strengths`, `gaps`, `pitch`, and composite score.
 
 ---
 
-## 🛡️ 4. Anti-Hallucination & JSON Hygiene
+## ✍️ PART 3: RESUME OPTIMIZER, DRAFTER & ANTI-SLOP LAWS (`resumeOptimizer.ts` & `drafter.ts`)
 
-Large language models frequently wrap responses in markdown or inject imagined credentials.
+### 1. Anti-AI Slop Sanitization (`BANNED_AI_SLOP_REGEX`)
+- `resumeOptimizer.ts` enforces `BANNED_AI_SLOP_REGEX` and `sanitizeAiSlop()`, banning and auto-replacing:
+  - `utilize` / `utilizing` $\rightarrow$ `use` / `using`
+  - `spearheaded` $\rightarrow$ `built` / `led`
+  - `leveraged` / `leveraging` $\rightarrow$ `used` / `using`
+  - `passionate` / `dynamic` / `synergized` / `testament` / `self-healing` (in project bullets).
+- **Candidate-Aware Fallbacks (`generateDynamicOptimizedFallback`):** Checks `isAyushi` (`profile.slug === "ayushi"` or `/ayushi/i.test(profile.name)`) so offline fallback summaries and bullets preserve Ayushi Bhabhi's Full-Stack/UI/AstrePilot domain vs. Brother Roushan's Backend/Cloud/Scraper domain.
+- **Skill Front-Loading:** In `generateDynamicOptimizedFallback`, matched job keywords present in a skill category's `skillsText` are sorted to the front of that comma-separated list (Positions 1–2) to maximize recruiter F-scan primacy.
 
-### The `cleanJsonResponse` Rule
-Never pass raw LLM text into `JSON.parse()`. Always pipe through `cleanJsonResponse()`:
-```ts
-function cleanJsonResponse(rawText: string): string {
-  if (!rawText) return "";
-  let text = rawText.trim();
-  if (text.startsWith("```")) {
-    text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-  }
-  return text;
-}
+### 2. Typographic Delimiter Resilience in Cover Letters (`drafter.ts`)
+- Project titles use typographic em-dashes (`"AstreWork — Autonomous Career Discovery & Application Platform (OCI, Docker, Redis)"`).
+- Always split project titles with `.split(/\s+[—–-]\s+/)[0].trim()` (never literal `.split(" - ")[0]`) so only the clean project name (`"AstreWork"`) is interpolated into cover letter prose.
+- Never reference retired projects (`IDBI`, `FinSync`, `Axiom Gateway`, `Coco AI`) or prohibited `"Engineer"` candidate titles in `drafter.ts`, `outreachGenerator.ts`, or `screeningHelper.ts`.
+
+---
+
+## 🛡️ PART 4: ASTRESHIELD 4-TIER FRAUD & GHOST JOB DETECTION (`astreShield.ts` & `astreShield.dict.ts`)
+
+```
+[Job Posting Ingestion]
+         │
+         ▼
+[Layer 1: Lexical Integrity] ------> (Typo density, Cyrillic/Greek homoglyphs, ALL CAPS abuse)
+         │
+         ▼
+[Layer 2: Semantic Red Flags] -----> (PII harvesting, advance fee/check scams, crypto/MLM, @telegram/WhatsApp)
+         │
+         ▼
+[Layer 3: Structural Credibility] -> (Trusted ATS domain bonuses vs. suspicious .xyz/.top TLDs & vague JDs)
+         │
+         ▼ (If borderline AMBER: 40–74)
+[Layer 4: AI Intent Analysis] -----> (LLM deep contextual legitimacy audit)
+         │
+         ▼
+[Final Trust Verdict: GREEN (75–100) | AMBER (40–74) | RED (< 40)]
 ```
 
-### The Candidate Truth Invariant
-Prompts must contain this non-negotiable instruction:
-> *"You are an expert resume optimizer. You must NEVER invent, fabricate, or hallucinate companies, degrees, tools, or metrics not present in the candidate's master profile. You may rephrase, quantify, and elevate existing achievements, but all facts must remain 100% grounded in truth."*
+### 1. The Asymmetric Cost Function & Two-Signal Corroboration Law
+$$\text{Damage}(\text{False Red}) \gg \text{Damage}(\text{False Green})$$
+- Flagging a legitimate employer as a scam (`False Red`) inflicts $10\times$ more career damage than a cautious `AMBER` warning.
+- **The Two-Signal Law:** Every job starts at `100` Trust Points. A single signal from any single layer can **NEVER** produce a `RED` (`< 40`) verdict on its own; `RED` requires at least **2 independent corroborating signals** across patterns.
+
+### 2. Ghost Job Heuristics & UI Transparency
+- Detects zombie postings active `> 90 days`, repetitive re-posting cycles, and nebulous JDs with unrealistic salary spreads (`\$40k–\$240k`).
+- Every `ShieldFlag` cites its exact `signalId`, `label`, `impact`, `layer`, and `evidence` snippet. `RED` cards are visually dimmed (`.shield-blocked-card`), never silently deleted.

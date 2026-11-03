@@ -1,7 +1,0 @@
-# Oracle Cloud ARM64 Deployment Constraints
-
-When working on this project, always adhere to the following:
-- **Puppeteer**: Must use the system-level Chromium (via process.env.PUPPETEER_EXECUTABLE_PATH) to avoid crashing on ARM64 processors. Never rely on the default x64 download.
-- **Next.js Standalone**: The Turso driver (@libsql/client and @prisma/adapter-libsql) MUST be ignored by Webpack by adding them to serverExternalPackages in 
-ext.config.ts. If they are bundled, the native binaries will break.
-- **Database**: We use Turso with Prisma LibSQL adapter in production.
