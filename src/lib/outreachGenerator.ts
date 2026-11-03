@@ -40,7 +40,7 @@ export function generateDeterministicOutreach(params: {
   const { job, candidate, tone = "direct" } = params;
 
   const candidateName = candidate.fullName || "Candidate";
-  const candidateRole = candidate.role || "Software Engineer";
+  const candidateRole = candidate.role || "Software Developer";
   const topProject = candidate.topProject || "high-throughput cloud applications";
   const topProjectTech = candidate.topProjectTech || "TypeScript, Next.js, and distributed services";
   const link = candidate.portfolioUrl || candidate.githubUrl || "";
@@ -64,7 +64,7 @@ export function generateDeterministicOutreach(params: {
 
 I noticed your open ${job.title} position and wanted to reach out directly.
 
-As an aspiring Software Engineer, I focus on building performant software with ${topProjectTech}. Recently, I engineered ${topProject}, implementing scalable architecture, clean API patterns, and reliable systems.
+As an aspiring Software Developer, I focus on building performant software with ${topProjectTech}. Recently, I engineered ${topProject}, implementing scalable architecture, clean API patterns, and reliable systems.
 
 I am actively looking for a Summer 2026 internship / co-op where I can contribute to production-grade engineering while learning from senior mentors on the ${job.company} team.
 
@@ -74,7 +74,7 @@ Best regards,
 ${candidateName}
 ${candidate.email}${linkSignature}`;
 
-      linkedinConnectionNote = `Hi! I saw the ${job.title} role at ${job.company}. I'm a student engineer specializing in ${topProjectTech} and recently built ${topProject}. Would love to connect regarding internship opportunities! — ${candidateName}`.slice(
+      linkedinConnectionNote = `Hi! I saw the ${job.title} role at ${job.company}. I'm a student developer specializing in ${topProjectTech} and recently built ${topProject}. Would love to connect regarding internship opportunities! — ${candidateName}`.slice(
         0,
         298
       );
@@ -83,7 +83,7 @@ ${candidate.email}${linkSignature}`;
 
 I came across the ${job.title} opening at ${job.company} and was excited by the team's engineering scope.
 
-As a student engineer with hands-on experience in ${topProjectTech}, I recently shipped ${topProject}. I am actively seeking a Summer 2026 software engineering internship / co-op.
+As a student developer with hands-on experience in ${topProjectTech}, I recently shipped ${topProject}. I am actively seeking a Summer 2026 software engineering internship / co-op.
 
 Could you point me toward the right recruiter or engineering lead managing the internship program?
 
@@ -99,12 +99,12 @@ ${candidate.linkedinUrl || link || ""}`;
       break;
 
     case "new_grad":
-      coldEmailSubject = `New Grad Software Engineer: ${job.title} — ${candidateName}`;
+      coldEmailSubject = `New Grad Software Developer: ${job.title} — ${candidateName}`;
       coldEmailBody = `Hi Team at ${job.company},
 
 I noticed the open ${job.title} role and wanted to introduce myself directly.
 
-As an early-career engineer specializing in ${topProjectTech}, I recently shipped ${topProject}. Throughout my work, I have prioritized strong software engineering fundamentals: test coverage, clean modular code, and reliable deployments.
+As an early-career software developer specializing in ${topProjectTech}, I recently shipped ${topProject}. Throughout my work, I have prioritized strong software engineering fundamentals: test coverage, clean modular code, and reliable deployments.
 
 I am seeking an entry-level / new-grad opportunity where I can make an immediate engineering impact from day one.
 

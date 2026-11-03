@@ -11,10 +11,10 @@ async function main() {
     where: { slug: "roushan" },
     update: {
       fullName: "ROUSHAN KUMAR",
-      title: "Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
+      title: "Software Developer — Backend & Cloud",
       email: "roushanraut404@gmail.com",
       phone: "+91-9431483512",
-      location: "Patna, Bihar, India",
+      location: "Patna, Bihar, India (Open to Remote)",
       portfolioUrl: "https://astreon.me",
       githubUrl: "https://github.com/Hey-Astreon",
       linkedinUrl: "https://linkedin.com/in/astreon4547",
@@ -23,10 +23,10 @@ async function main() {
     create: {
       slug: "roushan",
       fullName: "ROUSHAN KUMAR",
-      title: "Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
+      title: "Software Developer — Backend & Cloud",
       email: "roushanraut404@gmail.com",
       phone: "+91-9431483512",
-      location: "Patna, Bihar, India",
+      location: "Patna, Bihar, India (Open to Remote)",
       portfolioUrl: "https://astreon.me",
       githubUrl: "https://github.com/Hey-Astreon",
       linkedinUrl: "https://linkedin.com/in/astreon4547",
@@ -40,20 +40,20 @@ async function main() {
     data: [
       {
         profileId: roushan.id,
-        title: "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)",
-        techStack: "Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud (OCI), Docker, Caddy",
+        title: "AstreWork — Autonomous Career Engine & Distributed Harvester",
+        techStack: "Next.js 16, Python, OCI, Docker, Redis",
         liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bulletPoints: JSON.stringify([
           "Creator & Lead Backend Developer: Engineered distributed scrapers on Oracle Cloud (OCI ARM64) aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
-          "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
-          "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%."
+          "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 with Watchtower CI/CD and Caddy HTTP/3 reverse proxy, maintaining 99.9% uptime and sub-50ms API latency.",
+          "Distributed Persistence: Architected data storage across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU caching, cutting repeated query latency by 85%."
         ]),
       },
       {
         profileId: roushan.id,
-        title: "Astra Vision - Developer Sandbox & Code Graph Parser",
+        title: "Astra Vision — AI Sandbox & Code Graph Parser",
         techStack: "FastAPI, Python, Monaco, Tree-Sitter, ChromaDB",
         liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
         githubUrl: "https://github.com/Hey-Astreon/Astra-Vision",
@@ -66,7 +66,7 @@ async function main() {
       },
       {
         profileId: roushan.id,
-        title: "Alyra Lock - Secure Zero-Knowledge Password Vault",
+        title: "Alyra Lock — Zero-Knowledge Password Vault",
         techStack: "React, TypeScript, Express, MongoDB, Web Crypto API",
         liveDemoUrl: "https://alyra-lock.vercel.app/",
         githubUrl: "https://github.com/Hey-Astreon/Zero-Knowledge-Password-Manager",
@@ -86,7 +86,7 @@ async function main() {
       {
         profileId: roushan.id,
         company: "Commonwealth Bank (CommBank)",
-        roleTitle: "Software Engineering Virtual Simulation",
+        roleTitle: "Software Development Virtual Simulation",
         period: "June 2026",
         problemScope: "Diagnosed and resolved silent data overwrite bugs across high-traffic C#/.NET Core financial API controllers handling MongoDB document updates.",
         actionTaken: "Extended C# Web API controllers with $set atomic operators for partial payload updates and modernized an interactive React/Redux Goal Manager UI component.",
@@ -95,16 +95,16 @@ async function main() {
       {
         profileId: roushan.id,
         company: "Y Combinator (YC Startup - Shiptivity)",
-        roleTitle: "Software Engineering Virtual Simulation",
+        roleTitle: "Software Development Virtual Simulation",
         period: "June 2026",
         problemScope: "Fixed key constraint collisions and slow re-rendering performance on a real-time drag-and-drop Kanban workflow board.",
-        actionTaken: "Architected dynamic SQLite priority reordering logic using atomic transactions to update priority ranks sequentially.",
+        actionTaken: "Architected SQLite priority reordering logic using atomic transactions to update priority ranks sequentially.",
         outcome: "Reduced UI component re-render cycles by 30% and patched OpenSSL compilation bottlenecks in legacy Node.js Webpack configurations.",
       },
       {
         profileId: roushan.id,
         company: "Walmart USA",
-        roleTitle: "Advanced Software Engineering Virtual Simulation",
+        roleTitle: "Advanced Software Development Virtual Simulation",
         period: "May 2026",
         problemScope: "Solved indexing overhead and performance bottlenecks in high-volume retail inventory processing queues.",
         actionTaken: "Implemented a generic K-ary Max Heap structure in Java using fast bitwise shift operators (<<, >>>) and built 3NF database schemas.",
@@ -118,10 +118,10 @@ async function main() {
     where: { slug: "ayushi" },
     update: {
       fullName: "AYUSHI RAJ",
-      title: "Full-Stack Developer | AI Systems & Interactive Web Applications",
+      title: "Software Developer — Full-Stack & AI",
       email: "ayushi29507@gmail.com",
       phone: "+91-8709852305",
-      location: "Bihar, India",
+      location: "Bihar, India (Open to Remote)",
       portfolioUrl: "https://ayushiraj.me",
       githubUrl: "https://github.com/Silenttears-cloud",
       linkedinUrl: "https://www.linkedin.com/in/alrya404/",
@@ -130,10 +130,10 @@ async function main() {
     create: {
       slug: "ayushi",
       fullName: "AYUSHI RAJ",
-      title: "Full-Stack Developer | AI Systems & Interactive Web Applications",
+      title: "Software Developer — Full-Stack & AI",
       email: "ayushi29507@gmail.com",
       phone: "+91-8709852305",
-      location: "Bihar, India",
+      location: "Bihar, India (Open to Remote)",
       portfolioUrl: "https://ayushiraj.me",
       githubUrl: "https://github.com/Silenttears-cloud",
       linkedinUrl: "https://www.linkedin.com/in/alrya404/",
@@ -147,20 +147,20 @@ async function main() {
     data: [
       {
         profileId: ayushi.id,
-        title: "AstreWork — Autonomous Career Platform & AstrePilot Extension (Next.js 16, Chrome MV3, Gemini API)",
-        techStack: "Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension (Manifest V3), Turso LibSQL, Redis 7, TailwindCSS",
+        title: "AstreWork — AI Career Platform & AstrePilot Extension",
+        techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
         liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
         architecture: "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bulletPoints: JSON.stringify([
-          "Co-Developer & Lead Frontend Architect: Engineered client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, achieving sub-second evaluation across live postings.",
-          "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
-          "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift."
+          "Co-Developer & Lead Frontend Architect: Engineered the client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, evaluating live postings in under a second.",
+          "AstrePilot Chrome Extension (MV3): Built an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby applications in ~15 seconds.",
+          "Reactive UI Architecture: Engineered a responsive React 19 and Next.js 16 workspace with Zustand state management, live ATS audit checklists, and print-perfect A4 rendering."
         ]),
       },
       {
         profileId: ayushi.id,
-        title: "Alyra Lock - Secure Zero-Knowledge Password Vault",
+        title: "Alyra Lock — Zero-Knowledge Password Vault",
         techStack: "React, TypeScript, Express, MongoDB, Web Crypto API",
         liveDemoUrl: "https://alyra-lock.vercel.app/",
         githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
@@ -173,7 +173,7 @@ async function main() {
       },
       {
         profileId: ayushi.id,
-        title: "Astra Vision - AI Sandbox & Code Parsing Platform",
+        title: "Astra Vision — AI Sandbox & Code Parsing Platform",
         techStack: "FastAPI, Python, Monaco, Tree-Sitter, ChromaDB",
         liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
         githubUrl: "https://github.com/Silenttears-cloud/Astra_vision",
@@ -193,7 +193,7 @@ async function main() {
       {
         profileId: ayushi.id,
         company: "Commonwealth Bank (CommBank)",
-        roleTitle: "Software Engineering Virtual Simulation",
+        roleTitle: "Software Development Virtual Simulation",
         period: "June 2026",
         problemScope: "Diagnosed and resolved silent data overwrite bugs across high-traffic C#/.NET Core financial API controllers handling MongoDB document updates.",
         actionTaken: "Extended C# Web API controllers with $set atomic operators for partial payload updates and modernized an interactive React/Redux Goal Manager UI component.",
@@ -202,16 +202,16 @@ async function main() {
       {
         profileId: ayushi.id,
         company: "Y Combinator (YC Startup - Shiptivity)",
-        roleTitle: "Software Engineering Virtual Simulation",
+        roleTitle: "Software Development Virtual Simulation",
         period: "June 2026",
         problemScope: "Fixed key constraint collisions and slow re-rendering performance on a real-time drag-and-drop Kanban workflow board.",
-        actionTaken: "Architected dynamic SQLite priority reordering logic using atomic transactions to update priority ranks sequentially.",
+        actionTaken: "Architected SQLite priority reordering logic using atomic transactions to update priority ranks sequentially.",
         outcome: "Reduced UI component re-render cycles by 30% and patched OpenSSL compilation bottlenecks in legacy Node.js Webpack configurations.",
       },
       {
         profileId: ayushi.id,
         company: "Walmart USA",
-        roleTitle: "Advanced Software Engineering Virtual Simulation",
+        roleTitle: "Advanced Software Development Virtual Simulation",
         period: "May 2026",
         problemScope: "Solved indexing overhead and performance bottlenecks in high-volume retail inventory processing queues.",
         actionTaken: "Implemented a generic K-ary Max Heap structure in Java using fast bitwise shift operators (<<, >>>) and built 3NF database schemas.",

@@ -1325,13 +1325,23 @@ export default function ResumeMakerPage() {
                   <h1 className="tracking-tight text-slate-900 font-extrabold">
                     {resumeData.header.fullName || "YOUR FULL NAME"}
                   </h1>
-                  <div className="mt-1 text-[8.4pt] font-bold text-slate-800">
+                  <div className="mt-0.5 text-[9.5pt] font-bold text-slate-800 leading-snug">
                     {resumeData.header.targetHeadline}
                   </div>
-                  <div className="mt-1 text-[7.6pt] text-slate-700 flex flex-wrap items-center justify-center gap-x-1.5 leading-tight font-medium">
+                  <div className="mt-0.5 text-[8.3pt] text-slate-700 flex flex-wrap items-center justify-center gap-x-1.5 leading-snug font-medium">
                     {resumeData.header.location && <span>{resumeData.header.location}</span>}
                     {resumeData.header.phone && <span>| {resumeData.header.phone}</span>}
-                    {resumeData.header.email && <span>| {resumeData.header.email}</span>}
+                    {resumeData.header.email && (
+                      <span>
+                        |{" "}
+                        <a
+                          href={`mailto:${resumeData.header.email}`}
+                          className="font-semibold text-slate-900 no-underline hover:text-slate-900"
+                        >
+                          {resumeData.header.email}
+                        </a>
+                      </span>
+                    )}
                     {resumeData.header.portfolioUrl && (
                       <span>
                         |{" "}
@@ -1339,7 +1349,7 @@ export default function ResumeMakerPage() {
                           href={resumeData.header.portfolioUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-700 no-underline hover:text-blue-800"
+                          className="font-semibold text-slate-900 no-underline hover:text-slate-900"
                         >
                           {resumeData.header.portfolioUrl.replace(/^https?:\/\//, "")}
                         </a>
@@ -1352,7 +1362,7 @@ export default function ResumeMakerPage() {
                           href={resumeData.header.githubUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-700 no-underline hover:text-blue-800"
+                          className="font-semibold text-slate-900 no-underline hover:text-slate-900"
                         >
                           {resumeData.header.githubUrl.replace(/^https?:\/\//, "")}
                         </a>
@@ -1365,7 +1375,7 @@ export default function ResumeMakerPage() {
                           href={resumeData.header.linkedinUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-700 no-underline hover:text-blue-800"
+                          className="font-semibold text-slate-900 no-underline hover:text-slate-900"
                         >
                           {resumeData.header.linkedinUrl.replace(/^https?:\/\//, "")}
                         </a>
@@ -1379,7 +1389,7 @@ export default function ResumeMakerPage() {
                 {/* 2. Professional Summary */}
                 <div>
                   <h2>PROFESSIONAL SUMMARY</h2>
-                  <p className="mt-1 text-[7.9pt] text-slate-800 text-justify leading-snug">
+                  <p className="text-[8.5pt] text-slate-800 text-left leading-[1.29]">
                     {resumeData.summary}
                   </p>
                 </div>
@@ -1389,7 +1399,7 @@ export default function ResumeMakerPage() {
                 {/* 3. Technical Skills */}
                 <div>
                   <h2>TECHNICAL SKILLS</h2>
-                  <div className="mt-1 space-y-0.5 text-[7.8pt] text-slate-800 leading-tight">
+                  <div className="text-[8.5pt] text-slate-800">
                     {resumeData.skills.map((s, idx) => (
                       <div key={idx} className="ats-skill-row flex items-start">
                         <span className="w-3 shrink-0 font-bold select-none">•</span>
@@ -1406,45 +1416,58 @@ export default function ResumeMakerPage() {
                 {/* 4. Technical Projects */}
                 <div>
                   <h2>TECHNICAL PROJECTS</h2>
-                  <div className="mt-1 space-y-2">
+                  <div>
                     {resumeData.projects.map((proj, pIdx) => (
-                      <div key={pIdx}>
-                        <div className="flex items-start justify-between text-[8.1pt] gap-2">
+                      <div key={pIdx} style={{ marginTop: pIdx === 0 ? "1.0pt" : "3.6pt" }}>
+                        <div className="flex items-start justify-between text-[9.0pt] gap-2 leading-tight">
                           <div className="flex-1 min-w-0">
                             <strong className="text-slate-900">{proj.title}</strong>
-                            {proj.techStack && (
-                              <span className="text-slate-700 font-medium"> ({proj.techStack})</span>
+                            {proj.techStack && !proj.title.includes(proj.techStack) && (
+                              <span className="text-slate-700 font-semibold"> ({proj.techStack})</span>
                             )}
                           </div>
-                          <div className="text-[7.4pt] text-blue-700 space-x-1.5 shrink-0 whitespace-nowrap mt-0.5">
+                          <div className="text-[8.2pt] text-slate-900 space-x-1.5 shrink-0 whitespace-nowrap">
                             {proj.liveDemoUrl && (
                               <a
                                 href={proj.liveDemoUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="no-underline hover:text-blue-800"
+                                className="font-semibold text-slate-900 no-underline hover:text-slate-900"
                               >
                                 Live Demo
                               </a>
                             )}
+                            {proj.liveDemoUrl && proj.githubUrl && <span className="text-slate-400">|</span>}
                             {proj.githubUrl && (
                               <a
                                 href={proj.githubUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="no-underline hover:text-blue-800"
+                                className="font-semibold text-slate-900 no-underline hover:text-slate-900"
                               >
                                 GitHub
                               </a>
                             )}
                           </div>
                         </div>
-                        <ul className="list-disc pl-4 text-[7.65pt] text-slate-800 space-y-0.5 mt-0.5">
-                          {proj.bullets.map((b, bIdx) => (
-                            <li key={bIdx} className="leading-tight">
-                              {b}
-                            </li>
-                          ))}
+                        <ul className="list-disc pl-[11.5pt] text-[8.5pt] text-slate-800">
+                          {proj.bullets.map((b, bIdx) => {
+                            const parts = b.split(":");
+                            const prefix = parts.length > 1 ? parts[0] + ":" : "";
+                            const rest = parts.length > 1 ? parts.slice(1).join(":") : b;
+                            return (
+                              <li key={bIdx} className="leading-[1.29]">
+                                {prefix ? (
+                                  <>
+                                    <b>{prefix}</b>
+                                    {rest}
+                                  </>
+                                ) : (
+                                  b
+                                )}
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     ))}
@@ -1456,25 +1479,25 @@ export default function ResumeMakerPage() {
                 {/* 5. Simulations & Experience */}
                 <div>
                   <h2>TECHNICAL SIMULATIONS & VIRTUAL EXPERIENCES</h2>
-                  <div className="mt-1 space-y-2">
+                  <div>
                     {resumeData.simulations.map((sim, sIdx) => (
-                      <div key={sIdx}>
-                        <div className="flex items-baseline justify-between text-[8.0pt]">
+                      <div key={sIdx} style={{ marginTop: sIdx === 0 ? "1.0pt" : "3.6pt" }}>
+                        <div className="flex items-baseline justify-between text-[9.0pt] leading-tight">
                           <strong className="text-slate-900">
-                            {sim.company} - {sim.roleTitle}
+                            {sim.company} — {sim.roleTitle}
                           </strong>
-                          <span className="text-[7.4pt] text-slate-600 font-medium">
+                          <span className="text-[8.2pt] text-slate-600 font-semibold">
                             {sim.period}
                           </span>
                         </div>
-                        <ul className="list-disc pl-4 text-[7.65pt] text-slate-800 space-y-0.5 mt-0.5">
-                          <li className="leading-tight">
+                        <ul className="list-disc pl-[11.5pt] text-[8.5pt] text-slate-800">
+                          <li className="leading-[1.29]">
                             <b>Problem & Scope:</b> {sim.problemScope}
                           </li>
-                          <li className="leading-tight">
+                          <li className="leading-[1.29]">
                             <b>Action Taken:</b> {sim.actionTaken}
                           </li>
-                          <li className="leading-tight">
+                          <li className="leading-[1.29]">
                             <b>Engineering Outcome:</b> {sim.engineeringOutcome}
                           </li>
                         </ul>
@@ -1488,24 +1511,23 @@ export default function ResumeMakerPage() {
                 {/* 6. Education */}
                 <div>
                   <h2>EDUCATION</h2>
-                  <div className="mt-1">
-                    <div className="flex items-baseline justify-between text-[8.0pt]">
+                  <div className="mt-0.5">
+                    <div className="flex items-baseline justify-between text-[9.0pt] leading-tight">
                       <div>
-                        <strong className="text-slate-900">{resumeData.education.degree}</strong> -{" "}
-                        <span className="text-slate-800">{resumeData.education.university}</span>
+                        <strong className="text-slate-900">{resumeData.education.degree}</strong> —{" "}
+                        <span className="text-slate-800 font-medium">{resumeData.education.university}</span>
                       </div>
-                      <span className="text-[7.4pt] text-slate-600 font-medium">
+                      <span className="text-[8.2pt] text-slate-600 font-semibold">
                         {resumeData.education.period}
                       </span>
                     </div>
                     {resumeData.education.coursework && (
-                      <div className="text-[7.6pt] text-slate-800 mt-0.5 leading-tight">
+                      <div className="text-[8.5pt] text-slate-800 mt-1 leading-[1.32]">
                         <b>• Relevant Coursework:</b> {resumeData.education.coursework}
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
+                </div></div>
             </div>
           </div>
         </div>

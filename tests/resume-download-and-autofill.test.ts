@@ -39,32 +39,14 @@ describe("Resume Download Route & Profile Autofill Integrity", () => {
     expect(ayushiStat.size).toBeGreaterThan(50000);
   });
 
-  it("verifies specialized resume variant selection logic", () => {
-    function pickResumeFile(slug: string, jobTitle: string): string {
-      const normalizedSlug = (slug || "roushan").toLowerCase();
-      const defaultFileName = normalizedSlug === "ayushi" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
-      let targetFileName = defaultFileName;
-      const lowerTitle = jobTitle.toLowerCase();
+  it("verifies canonical master resume selection logic", async () => {
+    const { selectRecommendedResumeVariant, getAllResumeVariants } = await import("../src/lib/resumeVariantSelector");
 
-      if (normalizedSlug === "roushan") {
-        if (lowerTitle.includes("full stack") || lowerTitle.includes("frontend") || lowerTitle.includes("web")) {
-          targetFileName = "Roushan_Kumar_Full_Stack_Engineer_Resume.pdf";
-        } else if (lowerTitle.includes("backend") || lowerTitle.includes("distributed") || lowerTitle.includes("system") || lowerTitle.includes("cloud")) {
-          targetFileName = "Roushan_Kumar_Backend_Engineer_Resume.pdf";
-        } else if (lowerTitle.includes("ai") || lowerTitle.includes("machine learning") || lowerTitle.includes("llm")) {
-          targetFileName = "Roushan_Kumar_AI_Engineer_Resume.pdf";
-        } else if (lowerTitle.includes("python")) {
-          targetFileName = "Roushan_Kumar_Python_Developer_Resume.pdf";
-        }
-      }
-      return targetFileName;
-    }
-
-    expect(pickResumeFile("roushan", "Senior Full Stack Developer")).toBe("Roushan_Kumar_Full_Stack_Engineer_Resume.pdf");
-    expect(pickResumeFile("roushan", "Distributed Backend Developer")).toBe("Roushan_Kumar_Backend_Engineer_Resume.pdf");
-    expect(pickResumeFile("roushan", "Lead AI Specialist")).toBe("Roushan_Kumar_AI_Engineer_Resume.pdf");
-    expect(pickResumeFile("roushan", "Python Developer")).toBe("Roushan_Kumar_Python_Developer_Resume.pdf");
-    expect(pickResumeFile("roushan", "Operations Manager")).toBe("Roushan_Kumar_Resume.pdf");
+    expect(selectRecommendedResumeVariant("roushan", "Senior Full Stack Developer", "").fileName).toBe("Roushan_Kumar_Resume.pdf");
+    expect(selectRecommendedResumeVariant("roushan", "Distributed Backend Developer", "").fileName).toBe("Roushan_Kumar_Resume.pdf");
+    expect(selectRecommendedResumeVariant("ayushi", "Lead AI Specialist", "").fileName).toBe("Ayushi_Raj_Resume.pdf");
+    expect(getAllResumeVariants("roushan")).toHaveLength(1);
+    expect(getAllResumeVariants("ayushi")).toHaveLength(1);
   });
 
   it("verifies postal code formatting for Indian PIN code and 5-digit US portals", () => {

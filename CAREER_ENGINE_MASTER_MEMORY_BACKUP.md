@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** October 26, 2026 (Phase 67: Dual-Founder Activation Code Calibration — Roushan & Ayushi Distinct Recognition Protocols)
+> **LAST COGNITIVE SYNC:** November 3, 2026 (Phase 72: Style B Role Identity Calibration, Natural Human-Voice Summaries, 0% Bullet Overlap & 2028 Student Bias Neutralization)
 
 ---
 
@@ -1330,6 +1330,26 @@ Located in `extension/`:
     - `tests/ats_drivers.test.ts`: Expanded test suite covering all 10 ATS engines (20/20 tests passed).
     - Full Vitest suite: 53 test files, 541/541 tests passed (100% green).
     - TypeScript compiler (`npx tsc --noEmit`): 0 errors clean.
+
+- [x] **Phase 70: Resume Link Readability — Blue Underline Removal (Nov 2, 2026)**
+  - Replaced all `#1d4ed8` blue links and underlines with semi-bold dark ink (`#0f172a` / `inherit`) across `globals.css`, `resume-maker/page.tsx`, and the PDF template.
+
+- [x] **Phase 71: Global Resume Maker Readability Overhaul, 4-Tier Vertical Rhythm & Purge of 31 Static Variants (Nov 3, 2026)**
+  - Raised body font from `~7.4pt` to `8.5pt` across the PDF generator and live builder pages.
+  - Implemented 4-Tier Cognitive Vertical Rhythm (leading 1.29, bullet gap 1.5pt, project gap 3.6pt, dividers 3.2pt).
+  - De-hoarded Technical Skills so all 6 categories fit on 1 single line each (`maxSkillLines === 1`).
+  - Purged all 31 redundant static variant PDFs and `usecase.md` files, keeping strictly the 2 canonical Master PDFs.
+  - Added real Chromium DOM geometry assertions (`overflow === false`, `bottomGapMm` 13.68mm, `maxH3Lines === 1`).
+
+- [x] **Phase 72: Style B Role Identity Calibration, Natural Human-Voice Summaries & The 3 Tactical Fixes (Nov 3, 2026)**
+  - Resolved headline identity overlap with clean, real-world Style B titles:
+    - Roushan: `Software Developer — Backend & Cloud` (`Patna, Bihar, India (Open to Remote)`).
+    - Ayushi: `Software Developer — Full-Stack & AI` (`Bihar, India (Open to Remote)`).
+  - Replaced formulaic AI summaries with natural, grounded human developer prose describing real production operations on AstreWork.
+  - Achieved 100% differentiated project ownership across `AstreWork`, `Astra Vision`, and `Alyra Lock` with 0 shared bullets between candidates.
+  - Neutralized the `Expected July 2028` student filter bias by updating the education line to `2025 – 2028 (Full-Time Remote Available)`.
+  - Added `sanitizeBcaHeadline()` in `resumeOptimizer.ts` and cleaned `outreachGenerator.ts` to permanently prevent `"Engineer"` title leaks.
+  - Verified 36/36 Vitest tests passing and 0 TypeScript compile errors.
 
 ---
 
@@ -3062,3 +3082,61 @@ graph TD
 
 
 
+
+## Phase 70: Resume Link Readability — Blue Underline Removal (Nov 2, 2026)
+- **Challenge:** Resume PDFs and on-screen sheets showed blue underlined links (contact bar, `Live Demo | GitHub`, blue headline). Founder feedback: hurts HR/recruiter readability.
+- **Root Cause:** Link/headline colors were hardcoded in three independent places: the PDF HTML template in `scripts/generate-all-candidate-resumes.mjs` (`#1d4ed8` + `text-decoration: underline`), the shared `.ats-a4-sheet a` rule in `src/app/globals.css` (`#1d5fd1`), and Tailwind `text-blue-700` classes in the `/resume-maker` sheet.
+- **Fix:** PDF template: all `#1d4ed8` → ink `#0f172a`, underline → none. `globals.css`: `.ats-a4-sheet a { color: inherit; text-decoration: none !important; }` (covers `/resume-builder` too). `resume-maker/page.tsx`: sheet links/link wrapper → `text-slate-900 no-underline`. Generator now honours `CHROME_PATH` / `PUPPETEER_EXECUTABLE_PATH` for Playwright launch. All 33 candidate PDFs regenerated (all single-page, AstreWork present, 0 "Engineer").
+- **Rule:** Resume link/accent colors must stay ink-dark with no underline on the sheet. Change the PDF template and the shared sheet CSS together; never style resume links with blue/underline in only one renderer.
+- **Status:** `tsc --noEmit` clean; `candidate_resumes_audit` 35/35. Not committed (`.git` access denied from this sandbox). Live visual check of `/resume-maker` and `/resume-builder` still pending founder confirmation.
+
+
+### 🔴 Case 47: Global Resume Maker Readability Overhaul, 4-Tier Vertical Rhythm & Purge of 31 Static Variants (Nov 3, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. Body text across the PDF generator (`7.4pt`) and live Resume Maker (`7.65pt`) was shrunk far below comfortable human reading thresholds, while leaving ~18% (`45–50mm`) of the A4 page empty at the bottom.
+  2. The summary used `text-align: justify`, creating uneven word rivers, and all 6 Technical Skills rows wrapped to 2 lines each (12 lines of dense comma lists) due to hoarding conceptual/unproven buzzwords.
+  3. In `/resume-maker`, project titles rendered duplicate tech stack parentheses (`Title (Stack) (Stack)`) because `resumeBaseline.ts` embedded parentheses inside `proj.title` while the JSX also appended `({proj.techStack})`.
+  4. Links stripped of blue/underline in Phase 70 had `font-weight: 400`, making `Live Demo | GitHub` and contact links look like inert plain text.
+  5. Maintaining 31 static role-variant PDFs (`*_Engineer_Resume.pdf`, `*_Backend_Developer_Resume.pdf`, etc.) alongside the dynamic `/resume-maker` created massive maintenance drift and BCA title compliance hazards.
+  6. The PDF generator's page-count check was blind to vertical clipping because `.sheet { height: 297mm; overflow: hidden; }` forced `pdf-parse` to always report `1 page` even if `EDUCATION` overflowed.
+- **Deep Root Cause Diagnosis:**
+  - Previous space-saving passes over-compressed font sizes (`7.4pt`) and vertical margins (`1.2pt` `hr`) instead of trimming redundant skill tokens and measuring actual DOM `scrollHeight` vs. `clientHeight` in headless Chromium.
+- **The Concrete Surgical Fix:**
+  1. **Purged 31 Redundant Variant PDFs & `usecase.md` Files:** Deleted all 31 static variant PDFs from `public/candidates/2_Ayushi_Raj/`, `public/candidates/3_Roushan_Kumar/`, and `.next/standalone/public/candidates/`. Retained strictly the 2 canonical Master PDFs (`Roushan_Kumar_Resume.pdf` and `Ayushi_Raj_Resume.pdf`). Simplified `src/lib/resumeVariantSelector.ts` so `selectRecommendedResumeVariant()` and `getAllResumeVariants()` always return the canonical Master Resume.
+  2. **Raised Body Font to `8.5pt` & Implemented 4-Tier Vertical Rhythm:** Updated `src/app/globals.css`, `src/app/(workspace)/resume-maker/page.tsx`, `src/app/(workspace)/resume-builder/page.tsx`, and `scripts/generate-all-candidate-resumes.mjs` with `8.5pt` body text (`17.0pt` Name, `9.5pt` Headline, `8.3pt` Contact, `9.6pt` `h2`, `9.0pt` `h3`), left-aligned 3-sentence summaries, Tier-1 leading (`1.29–1.32`), Tier-2 bullet separation (`1.5pt`), Tier-3 project separation (`3.6pt`), and Tier-4 section dividers (`3.2pt 0 2.2pt`).
+  3. **De-Hoarded 1-Line Technical Skills & 1-Line Project Headers:** Curated both Roushan's and Ayushi's 6 skill categories in `src/lib/resumeBaseline.ts`, `prisma/seed.ts`, `scripts/sync-master-profiles.cjs`, and `scripts/generate-all-candidate-resumes.mjs` so every skill category and every project header fits on **1 single line** (`maxSkillLines === 1`, `maxH3Lines === 1`), separated `title` from `techStack` to eliminate double parentheses, and removed `dynamic` / `utilizing` slop words.
+  4. **Semi-Bold Dark Ink Link Affordance:** Styled `.ats-a4-sheet a` with `color: inherit; text-decoration: none !important; font-weight: 600;` so links are scannable without blue or underlines.
+  5. **Real Chromium DOM Geometry Gate:** Added `page.evaluate()` assertions in `scripts/generate-all-candidate-resumes.mjs` verifying `overflow === false`, `bottomGapMm` between `6mm` and `22mm` (achieved exact `13.68mm` on both Master PDFs), `maxSkillLines === 1`, `maxH3Lines === 1`, `maxBulletLines <= 2`, `0` occurrences of `"engineer"`, and `0` banned slop words.
+- **Hard-Won Engineering Experience & Rules:**
+  - Never rely on `pdf-parse` page count when CSS uses `height: 297mm; overflow: hidden;`—always assert `sheet.scrollHeight <= sheet.clientHeight + 1` and `bottomGapMm` inside Chromium before calling `page.pdf()`.
+  - Keep `proj.title` free of parenthetical tech stacks in `resumeBaseline.ts`; let the renderer append `({proj.techStack})` once.
+- **Status:** Both Master PDFs regenerated (`13.68mm` bottom margin, `1` page, `maxSkillLines: 1`, `maxH3Lines: 1`, `0` "Engineer", `0` slop words) and visually verified via rendered PNG screenshots. `npx vitest run` 35/35 passed across 5 test files; `npx tsc --noEmit` exited with 0 errors. Live browser check of `/resume-maker` and `/resume-builder` awaits founder confirmation.
+
+
+### 🔴 Case 48: Style B Role Identity Calibration, Natural Human-Voice Summaries & The 3 Tactical Fixes (Nov 3, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. Both master resumes previously opened with `Full-Stack Developer | ...` followed by long pipe taglines (10 words), which recruiters perceive as keyword stuffing rather than real job titles.
+  2. The executive summaries used robotic AI cadence (`"specializing in..."`, multiple adjective-noun pairs, and formulaic `"Focused on [X], [Y], and [Z]"` closers).
+  3. Shared projects (`Astra Vision` and `Alyra Lock`) had identical bullet text on both resumes, creating doubt about individual technical contribution.
+  4. `Expected July 2028` in the education section triggered automated student/intern filters at hiring portals.
+  5. The title `"Engineer"` leaked into fallback headlines in `resumeOptimizer.ts` and outreach templates in `outreachGenerator.ts`.
+- **Deep Root Cause Diagnosis:**
+  - Previous copy relied on generative corporate phrasing instead of direct, grounded developer prose, and shared repo projects were described globally rather than scoped to the respective frontend or backend architectural domain.
+- **The Concrete Surgical Fix:**
+  1. **Locked In Style B Real-World Role Headlines:**
+     - Roushan: `Software Developer — Backend & Cloud` (`Patna, Bihar, India (Open to Remote)`).
+     - Ayushi: `Software Developer — Full-Stack & AI` (`Bihar, India (Open to Remote)`).
+  2. **Replaced AI-Cadence Summaries with Natural Human Developer Voice:**
+     - Roushan: Describes running AstreWork on Oracle Cloud with Dockerized Playwright/Puppeteer workers, Turso SQLite, and Redis caching.
+     - Ayushi: Describes co-building AstreWork, shipping the live resume-scoring studio, and building the AstrePilot Chrome MV3 extension with clean UI and fast page loads.
+  3. **100% Differentiated Project Ownership (0 Shared Bullets):**
+     - `AstreWork`: Roushan emphasizes backend scrapers, OCI ARM64, and Redis; Ayushi emphasizes client-side ATS scoring, AstrePilot MV3 extension, and print layout.
+     - `Astra Vision`: Roushan emphasizes FastAPI backend, Python subprocess sandbox syscall isolation, and AST vector indexing; Ayushi emphasizes in-browser Monaco IDE, streaming AST diagnostics, and semantic code search UI.
+     - `Alyra Lock`: Roushan emphasizes zero-knowledge Express/MongoDB API, AES-GCM crypto core, and JWT sync hardening; Ayushi emphasizes client-side React vault UI, memory-safe ephemeral state, and fast encrypted search.
+     - Added automated uniqueness assertion in `main()` verifying 0 shared project bullets between candidates.
+  4. **Neutralized `"July 2028"` Student Bias:** Updated education period to `2025 – 2028 (Full-Time Remote Available)` across both resumes.
+  5. **BCA Compliance Sanitization:** Added `sanitizeBcaHeadline()` in `resumeOptimizer.ts` to ensure candidate headlines never output `"Engineer"`, and replaced all hardcoded `"Engineer"` strings in `outreachGenerator.ts` with `"Software Developer"`.
+- **Hard-Won Engineering Experience & Rules:**
+  - Keep role headlines to 4–5 words maximum using recognized industry formats (`Role — Specialization`); never glue two roles together with an ampersand (`"Backend & Full-Stack"`).
+  - Co-founders sharing repository projects must scope their bullets strictly to their individual architectural domain (backend runtime vs. interactive UI/extension) to prevent hiring manager doubt.
+- **Status:** Both Master PDFs regenerated with 100% geometry & compliance gates (`13.68mm` bottom gap, `maxSkillLines === 1`, `maxH3Lines === 1`, `0` shared bullets, `0` "Engineer", `0` slop words). All 36 Vitest tests passing across 5 test files; `npx tsc --noEmit` clean with 0 errors.

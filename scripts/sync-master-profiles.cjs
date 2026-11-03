@@ -59,9 +59,9 @@ async function run() {
               noticePeriod = ?, willingnessToRelocate = ?
           WHERE slug = ?`,
     args: [
-      'Full-Stack Developer | Distributed Systems & Cloud Infrastructure',
+      'Software Developer — Backend & Cloud',
       'ROUSHAN KUMAR',
-      'Patna, Bihar, India',
+      'Patna, Bihar, India (Open to Remote)',
       'Indrapuri, North Patel Nagar, Patna, Bihar',
       '',
       '800024',
@@ -90,9 +90,9 @@ async function run() {
     });
 
     const roushanAstreWorkBullets = JSON.stringify([
-      "Creator & Lead Backend Developer: Engineered distributed scrapers on Oracle Cloud (OCI ARM64) aggregating 14,000+ remote opportunities daily across 7 platforms with 0% duplication.",
-      "Cloud Infrastructure & Microservices: Deployed on Oracle Cloud (OCI Ampere ARM64) within multi-stage Docker containers managed by Watchtower CI/CD and Caddy HTTP/3 reverse proxy with automated SSL, maintaining 99.9% uptime and sub-50ms global API latency.",
-      "Distributed Caching & Concurrency: Architected data persistence across Turso Cloud LibSQL (distributed SQLite WAL) and Redis 7 LRU caching, cutting duplicate job ingestion to 0% and reducing repeated query latency by 85%."
+      "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that collect and deduplicate 14,000+ remote jobs daily across 7 platforms.",
+      "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
+      "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%."
     ]);
 
     await client.execute({
@@ -101,8 +101,8 @@ async function run() {
       args: [
         randomUUID(),
         roushanId,
-        "AstreWork — Autonomous Career Intelligence Engine & Distributed Harvester (OCI, Docker, Redis)",
-        "Next.js 16, TypeScript, Python, Playwright, Puppeteer, Selenium, Turso LibSQL, Redis 7, Oracle Cloud (OCI), Docker, Caddy",
+        "AstreWork — Autonomous Career Engine & Distributed Harvester",
+        "Next.js 16, Python, OCI, Docker, Redis",
         "https://astrework.app",
         "https://github.com/Hey-Astreon/Career_Engine",
         "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
@@ -121,9 +121,9 @@ async function run() {
               noticePeriod = ?, willingnessToRelocate = ?, requiresVisa = ?
           WHERE slug = ?`,
     args: [
-      'Full-Stack Developer | AI Systems & Interactive Web Applications',
+      'Software Developer — Full-Stack & AI',
       'AYUSHI RAJ',
-      'Nawada, Bihar, India',
+      'Bihar, India (Open to Remote)',
       'Mirzapur, Nawada, Bihar',
       '',
       '805110',
@@ -153,9 +153,9 @@ async function run() {
     });
 
     const ayushiAstreWorkBullets = JSON.stringify([
-      "Co-Developer & Lead Frontend Architect: Engineered client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, achieving sub-second evaluation across live postings.",
-      "AstrePilot Chrome Extension (Manifest V3): Built a cross-browser extension with an isolated glassmorphic Shadow-DOM HUD and HMAC-SHA256 token authorization, executing 1-click ATS application autofill across Greenhouse, Lever, and Ashby in ~15 seconds per application.",
-      "High-Density Reactive UI Architecture: Engineered a responsive, accessible workspace in Next.js 16 App Router and React 19 with Zustand state management, real-time ATS audit checklists, and print-perfect A4 CSS layout rendering with zero layout shift."
+      "Co-Developer & Lead Frontend Architect: Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
+      "AstrePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
+      "Workspace & Print Engine: Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift."
     ]);
 
     await client.execute({
@@ -164,8 +164,8 @@ async function run() {
       args: [
         randomUUID(),
         ayushiId,
-        "AstreWork — Autonomous Career Platform & AstrePilot Extension (Next.js 16, Chrome MV3, Gemini API)",
-        "Next.js 16, React 19, TypeScript, Google Gemini API, Chrome Extension (Manifest V3), Turso LibSQL, Redis 7, TailwindCSS",
+        "AstreWork — AI Career Platform & AstrePilot Extension",
+        "Next.js 16, React 19, Chrome MV3, Gemini API",
         "https://astrework.app",
         "https://github.com/Silenttears-cloud/Career_Engine",
         "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",

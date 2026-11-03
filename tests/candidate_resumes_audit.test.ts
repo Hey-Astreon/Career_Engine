@@ -2,64 +2,85 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
+import { getMasterResumeBaseline } from "../src/lib/resumeBaseline";
 
 const require = createRequire(import.meta.url);
-const { PDFParse } = require("pdf-parse");
+const pdfParse = require("pdf-parse");
 
-describe("Candidate Resumes Production Audit (Section 5 BCA Compliance & AstreWork Flagship)", () => {
-  const candidates = [
-    {
-      name: "Roushan Kumar",
-      dir: path.join(process.cwd(), "public", "candidates", "3_Roushan_Kumar"),
-    },
-    {
-      name: "Ayushi Raj",
-      dir: path.join(process.cwd(), "public", "candidates", "2_Ayushi_Raj"),
-    },
-  ];
-
-  for (const candidate of candidates) {
-    describe(`Auditing PDFs for ${candidate.name}`, () => {
-      const pdfFiles = fs
-        .readdirSync(candidate.dir)
-        .filter((f) => f.toLowerCase().endsWith(".pdf"));
-
-      it(`should have at least 8 PDF variants in ${candidate.name}`, () => {
-        expect(pdfFiles.length).toBeGreaterThanOrEqual(8);
-      });
-
-      for (const fileName of pdfFiles) {
-        it(`[${fileName}] must be single-page A4, contain AstreWork, and have zero Engineer titles`, async () => {
-          const filePath = path.join(candidate.dir, fileName);
-          const buf = fs.readFileSync(filePath);
-          expect(buf.length).toBeGreaterThan(40000);
-
-          const parser = new PDFParse(new Uint8Array(buf));
-          const result = await parser.getText();
-          const text = result.text || "";
-          const pageCount = result.pages?.length || 1;
-
-          // Assertion 1: Must be exactly 1 page
-          expect(pageCount).toBe(1);
-
-          // Assertion 2: Must contain flagship project AstreWork
-          expect(text).toContain("AstreWork");
-
-          // Assertion 3: Must NOT contain old IDBI FinSync project
-          expect(text).not.toContain("IDBI FinSync");
-
-          // Assertion 4: Must have ZERO occurrences of the forbidden title "engineer" or "engineers"
-          const engineerMatches = text.match(/\bengineer\b|\bengineers\b/gi) || [];
-          expect(
-            engineerMatches.length,
-            `Forbidden word 'engineer' found in ${fileName}: ${engineerMatches.join(", ")}`
-          ).toBe(0);
-
-          // Assertion 5: Must contain Developer or Specialist title
-          const hasDeveloperTitle = text.includes("Developer") || text.includes("Specialist");
-          expect(hasDeveloperTitle).toBe(true);
-        });
-      }
-    });
+async function extractPdfInfo(buffer: Buffer): Promise<{ numpages: number; text: string }> {
+  if (typeof pdfParse === "function") {
+    return await pdfParse(buffer);
   }
+  if (pdfParse.PDFParse) {
+    const parser = new pdfParse.PDFParse({ data: buffer });
+    const info = await parser.getText();
+    await parser.destroy();
+    return { numpages: info.total, text: info.text };
+  }
+  throw new Error("Unsupported pdf-parse API");
+}
+
+describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Compliance Audit", () => {
+  const roushanDir = path.resolve(process.cwd(), "public", "candidates", "3_Roushan_Kumar");
+  const ayushiDir = path.resolve(process.cwd(), "public", "candidates", "2_Ayushi_Raj");
+
+  it("ensures all redundant static variant PDFs and usecase.md files are removed, leaving strictly 1 Master PDF per candidate", () => {
+    const roushanFiles = fs.readdirSync(roushanDir);
+    const ayushiFiles = fs.readdirSync(ayushiDir);
+
+    const roushanPdfs = roushanFiles.filter((f) => f.endsWith(".pdf"));
+    const ayushiPdfs = ayushiFiles.filter((f) => f.endsWith(".pdf"));
+
+    expect(roushanPdfs).toEqual(["Roushan_Kumar_Resume.pdf"]);
+    expect(ayushiPdfs).toEqual(["Ayushi_Raj_Resume.pdf"]);
+    expect(roushanFiles.includes("usecase.md")).toBe(false);
+    expect(ayushiFiles.includes("usecase.md")).toBe(false);
+  });
+
+  it("verifies 100% project bullet uniqueness between Roushan and Ayushi (zero shared bullets)", () => {
+    const roushan = getMasterResumeBaseline("roushan");
+    const ayushi = getMasterResumeBaseline("ayushi");
+
+    const roushanBullets = roushan.projects.flatMap((p) => p.bullets);
+    const ayushiBullets = ayushi.projects.flatMap((p) => p.bullets);
+
+    const shared = roushanBullets.filter((b) => ayushiBullets.includes(b));
+    expect(shared).toEqual([]);
+  });
+
+  it("verifies Roushan_Kumar_Resume.pdf has Style B headline, full-time availability, AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
+    const pdfPath = path.join(roushanDir, "Roushan_Kumar_Resume.pdf");
+    const buf = fs.readFileSync(pdfPath);
+    const parsed = await extractPdfInfo(buf);
+
+    expect(parsed.numpages).toBe(1);
+    expect(parsed.text).toContain("ROUSHAN KUMAR");
+    expect(parsed.text).toContain("Software Developer — Backend & Cloud");
+    expect(parsed.text).toContain("2025 – 2028 (Full-Time Remote Available)");
+    expect(parsed.text).toContain("AstreWork");
+    expect(parsed.text).toContain("Astra Vision");
+    expect(parsed.text).toContain("Alyra Lock");
+    expect(parsed.text).not.toContain("IDBI");
+    expect(parsed.text).not.toContain("FinSync");
+    expect(parsed.text).not.toMatch(/\bengineer(s)?\b/i);
+    expect(parsed.text).not.toMatch(/\b(dynamic|utiliz\w*|passionate|spearhead\w*|leverag\w*)\b/i);
+  });
+
+  it("verifies Ayushi_Raj_Resume.pdf has Style B headline, full-time availability, AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
+    const pdfPath = path.join(ayushiDir, "Ayushi_Raj_Resume.pdf");
+    const buf = fs.readFileSync(pdfPath);
+    const parsed = await extractPdfInfo(buf);
+
+    expect(parsed.numpages).toBe(1);
+    expect(parsed.text).toContain("AYUSHI RAJ");
+    expect(parsed.text).toContain("Software Developer — Full-Stack & AI");
+    expect(parsed.text).toContain("2025 – 2028 (Full-Time Remote Available)");
+    expect(parsed.text).toContain("AstreWork");
+    expect(parsed.text).toContain("Alyra Lock");
+    expect(parsed.text).toContain("Astra Vision");
+    expect(parsed.text).not.toContain("IDBI");
+    expect(parsed.text).not.toContain("FinSync");
+    expect(parsed.text).not.toMatch(/\bengineer(s)?\b/i);
+    expect(parsed.text).not.toMatch(/\b(dynamic|utiliz\w*|passionate|spearhead\w*|leverag\w*)\b/i);
+  });
 });

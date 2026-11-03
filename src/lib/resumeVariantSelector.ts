@@ -1,10 +1,9 @@
-import fs from "fs";
 import path from "path";
 
 /**
- * Resume Variant Recommendation Engine
- * Adheres strictly to the official decision matrix codified in usecase.md
- * for Roushan Kumar and Ayushi Raj.
+ * Canonical Master Resume Resolver
+ * Static pre-baked variants have been retired in favor of AstreWork's live /resume-maker
+ * and the single canonical Master Resume PDF for each founder.
  */
 
 export interface RecommendedResumeVariant {
@@ -15,161 +14,6 @@ export interface RecommendedResumeVariant {
   keyStrengths: string[];
 }
 
-function resolveResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar", fileName: string): string {
-  const publicPath = path.join(process.cwd(), "public", "candidates", candidateFolder, fileName);
-  if (fs.existsSync(/*turbopackIgnore: true*/ publicPath)) {
-    return publicPath.replace(/\\/g, "/");
-  }
-
-  // Fallback to master resume in public/candidates if a specific variant is missing
-  const defaultFileName = candidateFolder === "2_Ayushi_Raj" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
-  const defaultPath = path.join(process.cwd(), "public", "candidates", candidateFolder, defaultFileName);
-  return defaultPath.replace(/\\/g, "/");
-}
-
-
-
-export function selectRecommendedResumeVariant(
-  profileSlug: string,
-  jobTitle: string,
-  jobDescription: string = "",
-  company: string = "",
-  platform: string = ""
-): RecommendedResumeVariant {
-  const normalizedSlug = (profileSlug || "roushan").toLowerCase();
-  const text = `${jobTitle} ${jobDescription} ${company} ${platform}`.toLowerCase();
-  const titleLower = jobTitle.toLowerCase();
-  const isYcOrStartup = /y\s*combinator|\byc\b|startup|seed|series a|early[- ]stage/i.test(text);
-
-  if (normalizedSlug === "ayushi") {
-    // -------------------------------------------------------------------------
-    // AYUSHI RAJ DECISION MATRIX (usecase.md)
-    // Resume A: AI Product Developer | Resume B: Software Engineer
-    // -------------------------------------------------------------------------
-    const isAiTarget =
-      /\b(ai|llm|llms|genai|generative ai|copilot|ai agent|prompt engineering|gemini|openai|anthropic|langchain|ai platform|fintech)\b/i.test(
-        titleLower
-      ) ||
-      /\b(ai software engineer|ai engineer|ai product|ai application|llm engineer|ai automation|ai tooling)\b/i.test(
-        titleLower
-      ) ||
-      (isYcOrStartup && /\b(ai|llm|model|agent)\b/i.test(text));
-
-    if (isAiTarget || (isYcOrStartup && !/\b(java|spring|enterprise|backend only)\b/i.test(text))) {
-      return {
-        variantName: "Resume A — AI Product Developer",
-        fileName: "Ayushi_Raj_AI_Product_Developer_Resume.pdf",
-        pdfPath: resolveResumePdf("2_Ayushi_Raj", "Ayushi_Raj_AI_Product_Developer_Resume.pdf"),
-        reasoning: "Selected for AI, GenAI, and high-growth startup opportunities. Highlights AstreWork Gemini scoring studio, AstrePilot Chrome Extension, and full-stack product velocity.",
-        keyStrengths: ["AstreWork (Gemini API & Chrome MV3)", "Astra Vision AST Parser", "React & Fastify", "Product Velocity"],
-      };
-    }
-
-    return {
-      variantName: "Resume B — Software Developer (Backend & Systems)",
-      fileName: "Ayushi_Raj_Software_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("2_Ayushi_Raj", "Ayushi_Raj_Software_Developer_Resume.pdf"),
-      reasoning: "Selected for general SWE, backend APIs, Java/Spring Boot, and enterprise development environments. Highlights Alyra Lock zero-knowledge cryptography, Astra Vision sandboxing, and database optimization.",
-      keyStrengths: ["Alyra Lock (AES-GCM/PBKDF2)", "Astra Vision Isolation", "Spring Boot & REST APIs", "Database 3NF"],
-    };
-  }
-
-  // ---------------------------------------------------------------------------
-  // ROUSHAN KUMAR 8-VARIANT MATRIX (usecase.md)
-  // ---------------------------------------------------------------------------
-  // 1. AI Training / Evaluation / Benchmark / RLHF
-  if (
-    /\b(ai training|code eval|rlhf|annotation|benchmark engineer|eval specialist|scale ai|alignerr|mercor|turing)\b/i.test(
-      text
-    )
-  ) {
-    return {
-      variantName: "AI Training & Evaluation Developer",
-      fileName: "Roushan_Kumar_AI_Training_Specialist_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_AI_Training_Specialist_Resume.pdf"),
-      reasoning: "Targeted for code evaluation, RLHF annotation, and AI benchmark platforms (Scale AI, Alignerr, Mercor). Highlights Astra Vision code parsing, AST syntax trees, and 100% test verification.",
-      keyStrengths: ["Code Quality Benchmarks", "AST Syntax Analysis", "Synthetic Data Validation", "Automated xUnit/JUnit Tests"],
-    };
-  }
-
-  // 2. AI / GenAI / LLM / Vector Search / AI Platform
-  if (/\b(ai engineer|genai|generative ai|llm engineer|ai platform|ai developer|prompt)\b/i.test(titleLower)) {
-    return {
-      variantName: "AI Developer",
-      fileName: "Roushan_Kumar_AI_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_AI_Developer_Resume.pdf"),
-      reasoning: "Targeted for GenAI, LLM application, and AI platform development. Highlights Astra Vision ChromaDB vector search & Tree-Sitter AST, AstreWork distributed scrapers, and low-latency execution.",
-      keyStrengths: ["Astra Vision (ChromaDB + Tree-Sitter)", "AstreWork (Scrapers & OCI)", "FastAPI Microservices", "Subprocess Sandboxes"],
-    };
-  }
-
-  // 3. Python Developer / Automation / ETL
-  if (/\b(python developer|python engineer|etl developer|automation engineer|data pipeline)\b/i.test(titleLower)) {
-    return {
-      variantName: "Python Developer",
-      fileName: "Roushan_Kumar_Python_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Python_Developer_Resume.pdf"),
-      reasoning: "Targeted for Python development, data processing, and automation. Highlights FastAPI microservices, PyTest, Tree-Sitter AST parsers, and Walmart Python ETL pipelines.",
-      keyStrengths: ["FastAPI Microservices", "Tree-Sitter AST Parsers", "PyTest Test Suites", "Python SQLite ETL"],
-    };
-  }
-
-  // 4. Backend / Systems / API / .NET / C# / Spring Boot
-  if (
-    /\b(backend|systems engineer|api engineer|c#|\.net|spring boot|server engineer|distributed)\b/i.test(titleLower)
-  ) {
-    return {
-      variantName: "Backend Developer",
-      fileName: "Roushan_Kumar_Backend_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Backend_Developer_Resume.pdf"),
-      reasoning: "Targeted for backend services, systems architecture, and API design. Highlights AstreWork distributed architecture on OCI, Turso LibSQL WAL, Redis 7 caching, and CommBank C#/.NET Core controllers.",
-      keyStrengths: ["AstreWork OCI & LibSQL", "Redis 7 LRU Caching", "CommBank C#/.NET Web API", "xUnit & JUnit Test Suites"],
-    };
-  }
-
-  // 5. Full Stack Developer / Web Developer
-  if (/\b(full stack|fullstack|full-stack|web developer|react developer)\b/i.test(titleLower)) {
-    return {
-      variantName: "Full Stack Developer",
-      fileName: "Roushan_Kumar_Full_Stack_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Full_Stack_Developer_Resume.pdf"),
-      reasoning: "Targeted for full stack roles across React, Next.js, Node.js, and backend APIs. Highlights AstreWork Next.js 16/Turso architecture, Alyra Lock React/Express vault, and CommBank Goal Manager.",
-      keyStrengths: ["AstreWork Next.js 16 Platform", "Alyra Lock React & Express", "CommBank React/Redux Goal Manager", "Turso LibSQL & Redis"],
-    };
-  }
-
-  // 6. Product Developer / SaaS / User-Facing
-  if (/\b(product engineer|saas engineer|product developer|ui engineer|frontend)\b/i.test(titleLower)) {
-    return {
-      variantName: "Product Developer",
-      fileName: "Roushan_Kumar_Product_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Product_Developer_Resume.pdf"),
-      reasoning: "Targeted for product engineering and user-facing SaaS. Highlights AstreWork candidate intelligence features, Shiptivity Kanban board, and zero-knowledge privacy UX.",
-      keyStrengths: ["AstreWork Product Platform", "Shiptivity Kanban Workflow", "Alyra Lock Client Privacy", "Next.js & Redux"],
-    };
-  }
-
-  // 7. Startup Software Developer (YC / Seed / Series A)
-  if (isYcOrStartup) {
-    return {
-      variantName: "Startup Software Developer",
-      fileName: "Roushan_Kumar_Startup_Developer_Resume.pdf",
-      pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Startup_Developer_Resume.pdf"),
-      reasoning: "Targeted for fast-paced early-stage startups and YC product teams. Highlights autonomous rapid prototyping, sub-200ms latency, zero-to-one feature shipping, and full-stack ownership.",
-      keyStrengths: ["Zero-to-One Shipping", "Full-Stack Autonomy", "Sub-200ms Latency", "Automated Test Coverage"],
-    };
-  }
-
-  // 8. Default: Software Developer Master
-  return {
-    variantName: "Software Developer",
-    fileName: "Roushan_Kumar_Software_Developer_Resume.pdf",
-    pdfPath: resolveResumePdf("3_Roushan_Kumar", "Roushan_Kumar_Software_Developer_Resume.pdf"),
-    reasoning: "Balanced general software development resume. Covers AstreWork distributed platform, CommBank .NET simulation, Alyra Lock zero-knowledge security, and Astra Vision developer platform.",
-    keyStrengths: ["AstreWork OCI Harvester", "CommBank C#/.NET Simulation", "Alyra Lock Cryptographic Vault", "Astra Vision AST Sandbox"],
-  };
-}
-
 export interface OfficialResumeVariant {
   variantName: string;
   fileName: string;
@@ -178,148 +22,87 @@ export interface OfficialResumeVariant {
   keyStrengths: string[];
 }
 
+function resolveMasterResumePdf(candidateFolder: "2_Ayushi_Raj" | "3_Roushan_Kumar"): string {
+  const defaultFileName =
+    candidateFolder === "2_Ayushi_Raj" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
+  const defaultPath = path.join(process.cwd(), "public", "candidates", candidateFolder, defaultFileName);
+  return defaultPath.replace(/\\/g, "/");
+}
+
+export function selectRecommendedResumeVariant(
+  profileSlug: string,
+  _jobTitle: string = "",
+  _jobDescription: string = "",
+  _company: string = "",
+  _platform: string = ""
+): RecommendedResumeVariant {
+  const normalizedSlug = (profileSlug || "roushan").toLowerCase();
+
+  if (normalizedSlug === "ayushi") {
+    return {
+      variantName: "Master Resume (Canonical)",
+      fileName: "Ayushi_Raj_Resume.pdf",
+      pdfPath: resolveMasterResumePdf("2_Ayushi_Raj"),
+      reasoning:
+        "Canonical single-page A4 Master Resume covering AstreWork (Next.js 16 & Gemini scoring studio), AstrePilot Chrome Extension (MV3), Alyra Lock zero-knowledge cryptography, and Astra Vision AST sandbox. Use /resume-maker for role-specific tailoring.",
+      keyStrengths: [
+        "AstreWork & AstrePilot (Chrome MV3)",
+        "React 19 & Next.js 16",
+        "Alyra Lock (AES-GCM/PBKDF2)",
+        "Astra Vision AST Sandbox",
+      ],
+    };
+  }
+
+  return {
+    variantName: "Master Resume (Canonical)",
+    fileName: "Roushan_Kumar_Resume.pdf",
+    pdfPath: resolveMasterResumePdf("3_Roushan_Kumar"),
+    reasoning:
+      "Canonical single-page A4 Master Resume covering AstreWork distributed scrapers on Oracle Cloud (OCI ARM64), Turso LibSQL WAL, Redis 7 caching, Astra Vision AST parser, and Alyra Lock zero-knowledge vault. Use /resume-maker for role-specific tailoring.",
+    keyStrengths: [
+      "AstreWork (OCI ARM64 & Distributed Scrapers)",
+      "Turso LibSQL & Redis 7",
+      "Astra Vision (FastAPI & Tree-Sitter)",
+      "Alyra Lock (Web Crypto AES-GCM)",
+    ],
+  };
+}
+
 export function getAllResumeVariants(profileSlug: string): OfficialResumeVariant[] {
   const normalized = (profileSlug || "roushan").toLowerCase();
 
   if (normalized === "ayushi") {
     return [
       {
-        variantName: "Resume A — AI Product Developer",
-        fileName: "Ayushi_Raj_AI_Product_Developer_Resume.pdf",
-        category: "AI & GenAI",
-        description: "Primary AI & startup variant highlighting AstreWork Gemini scoring studio, AstrePilot extension, and Astra Vision AST parser.",
-        keyStrengths: ["AstreWork (Gemini API & Chrome MV3)", "Astra Vision AST Parser", "React & Fastify", "Product Velocity"],
-      },
-      {
-        variantName: "Resume B — Software Developer (Backend & Systems)",
-        fileName: "Ayushi_Raj_Software_Developer_Resume.pdf",
-        category: "Backend & Systems",
-        description: "Core SWE & systems variant highlighting Alyra Lock AES-GCM cryptography and Spring Boot APIs.",
-        keyStrengths: ["Alyra Lock (AES-GCM)", "Astra Vision Isolation", "Spring Boot & REST APIs", "Database Design"],
-      },
-      {
-        variantName: "AI Developer",
-        fileName: "Ayushi_Raj_AI_Developer_Resume.pdf",
-        category: "AI / ML",
-        description: "Specialized for LLM applications, intelligent workflows, and vector architectures.",
-        keyStrengths: ["Gemini Multi-Modal API", "Vector Embeddings", "Fastify Microservices", "Full-Stack AI"],
-      },
-      {
-        variantName: "AI Training & Evaluation Specialist",
-        fileName: "Ayushi_Raj_AI_Training_Specialist_Resume.pdf",
-        category: "AI Training & RLHF",
-        description: "Specialized for code eval, benchmark engineering, and synthetic data verification.",
-        keyStrengths: ["AST Code Syntax Evaluation", "Automated Test Suites", "Benchmark Analysis", "Data Verification"],
-      },
-      {
-        variantName: "Backend Developer",
-        fileName: "Ayushi_Raj_Backend_Developer_Resume.pdf",
-        category: "Backend & APIs",
-        description: "Specialized for backend API design, database schemas, and enterprise systems.",
-        keyStrengths: ["Spring Boot & Java", "RESTful Architecture", "Relational Database Design", "Security Cryptography"],
-      },
-      {
-        variantName: "Full Stack Developer",
-        fileName: "Ayushi_Raj_Full_Stack_Developer_Resume.pdf",
-        category: "Full Stack",
-        description: "Specialized for end-to-end web apps combining React frontends with resilient backends.",
-        keyStrengths: ["React & TypeScript", "Fastify & Node.js", "State Management", "API Integrations"],
-      },
-      {
-        variantName: "Product Developer",
-        fileName: "Ayushi_Raj_Product_Developer_Resume.pdf",
-        category: "Product / UX",
-        description: "Specialized for product-focused software development, design systems, and UX flows.",
-        keyStrengths: ["User Flow Architecture", "FinTech Product UX", "Component Systems", "Full-Stack Velocity"],
-      },
-      {
-        variantName: "Python Developer",
-        fileName: "Ayushi_Raj_Python_Developer_Resume.pdf",
-        category: "Python & Data",
-        description: "Specialized for Python backend services, automation scripts, and data handling.",
-        keyStrengths: ["Python Microservices", "PyTest Validation", "ETL & Scripting", "Data Parsing"],
-      },
-      {
-        variantName: "Startup Software Developer",
-        fileName: "Ayushi_Raj_Startup_Developer_Resume.pdf",
-        category: "YC & Startups",
-        description: "Tailored for early-stage startups and high-velocity shipping across the entire stack.",
-        keyStrengths: ["Zero-to-One Shipping", "Full-Stack Autonomy", "Sub-200ms Latency", "Rapid Prototyping"],
-      },
-      {
         variantName: "Master Resume (Canonical)",
         fileName: "Ayushi_Raj_Resume.pdf",
         category: "Master",
-        description: "Comprehensive baseline resume covering all projects, competencies, and engineering outcomes.",
-        keyStrengths: ["Full Project Breadth", "AstreWork Platform", "Alyra Lock", "Astra Vision Platform"],
+        description:
+          "Canonical single-page A4 Master Resume covering AstreWork, AstrePilot Chrome Extension, Alyra Lock, and Astra Vision.",
+        keyStrengths: [
+          "AstreWork & AstrePilot (Chrome MV3)",
+          "React 19 & Next.js 16",
+          "Alyra Lock (AES-GCM/PBKDF2)",
+          "Astra Vision AST Sandbox",
+        ],
       },
     ];
   }
 
-  // Roushan Kumar Variants
   return [
-    {
-      variantName: "Software Developer",
-      fileName: "Roushan_Kumar_Software_Developer_Resume.pdf",
-      category: "Software Development",
-      description: "Balanced general software development resume. AstreWork OCI platform, CommBank C#/.NET, Alyra Lock vault, and Astra Vision.",
-      keyStrengths: ["AstreWork OCI Harvester", "CommBank C#/.NET Simulation", "Alyra Lock Cryptographic Vault", "Astra Vision AST Sandbox"],
-    },
-    {
-      variantName: "AI Developer",
-      fileName: "Roushan_Kumar_AI_Developer_Resume.pdf",
-      category: "AI & GenAI",
-      description: "Targeted for GenAI, LLM application, and AI platform development with ChromaDB and Tree-Sitter.",
-      keyStrengths: ["Astra Vision (ChromaDB + Tree-Sitter)", "AstreWork (Scrapers & OCI)", "FastAPI Microservices", "Subprocess Sandboxes"],
-    },
-    {
-      variantName: "AI Training & Code Evaluation Specialist",
-      fileName: "Roushan_Kumar_AI_Training_Specialist_Resume.pdf",
-      category: "AI Training & RLHF",
-      description: "Targeted for code evaluation, RLHF annotation, and AI benchmark platforms (Scale AI, Alignerr, Mercor).",
-      keyStrengths: ["Code Quality Benchmarks", "AST Syntax Analysis", "Synthetic Data Validation", "Automated xUnit/JUnit Tests"],
-    },
-    {
-      variantName: "Backend Developer",
-      fileName: "Roushan_Kumar_Backend_Developer_Resume.pdf",
-      category: "Backend & Systems",
-      description: "Targeted for backend services, systems architecture, and API design with C#/.NET and MongoDB.",
-      keyStrengths: ["AstreWork OCI & LibSQL", "Redis 7 LRU Caching", "CommBank C#/.NET Web API", "xUnit & JUnit Test Suites"],
-    },
-    {
-      variantName: "Full Stack Developer",
-      fileName: "Roushan_Kumar_Full_Stack_Developer_Resume.pdf",
-      category: "Full Stack",
-      description: "Targeted for full stack roles across React, Next.js, Node.js, and backend APIs.",
-      keyStrengths: ["AstreWork Next.js 16 Platform", "Alyra Lock React & Express", "CommBank React/Redux Goal Manager", "PostgreSQL & Prisma"],
-    },
-    {
-      variantName: "Python Developer",
-      fileName: "Roushan_Kumar_Python_Developer_Resume.pdf",
-      category: "Python & Automation",
-      description: "Targeted for Python development, data processing, and automation with FastAPI and PyTest.",
-      keyStrengths: ["FastAPI Microservices", "Tree-Sitter AST Parsers", "PyTest Test Suites", "Python SQLite ETL"],
-    },
-    {
-      variantName: "Product Developer",
-      fileName: "Roushan_Kumar_Product_Developer_Resume.pdf",
-      category: "Product / UX",
-      description: "Targeted for product development and user-facing SaaS, emphasizing high-conversion UX.",
-      keyStrengths: ["AstreWork Product Platform", "Shiptivity Kanban Workflow", "Alyra Lock Client Privacy", "Next.js & Redux"],
-    },
-    {
-      variantName: "Startup Software Developer",
-      fileName: "Roushan_Kumar_Startup_Developer_Resume.pdf",
-      category: "YC & Startups",
-      description: "Targeted for fast-paced early-stage startups and YC product teams with sub-200ms latency.",
-      keyStrengths: ["Zero-to-One Shipping", "Full-Stack Autonomy", "Sub-200ms Latency", "Automated Test Coverage"],
-    },
     {
       variantName: "Master Resume (Canonical)",
       fileName: "Roushan_Kumar_Resume.pdf",
       category: "Master",
-      description: "Comprehensive canonical resume encompassing all systems, banking simulations, and AI architectures.",
-      keyStrengths: ["AstreWork OCI Harvester", "CommBank .NET", "Alyra Lock Zero-Knowledge", "Astra Vision AST"],
+      description:
+        "Canonical single-page A4 Master Resume covering AstreWork OCI distributed platform, Astra Vision AST sandbox, Alyra Lock, and virtual simulations.",
+      keyStrengths: [
+        "AstreWork OCI Harvester",
+        "Turso LibSQL & Redis 7",
+        "Astra Vision AST Sandbox",
+        "Alyra Lock Zero-Knowledge",
+      ],
     },
   ];
 }

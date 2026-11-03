@@ -9,6 +9,18 @@ import {
 
 export const BANNED_AI_SLOP_REGEX = /\b(spearheaded|orchestrated|revolutionized|synergized|thrilled|passionate|cutting-edge|testament|rich tapestry|multifaceted|seamlessly|driving excellence|results-oriented|deep expertise in)\b/gi;
 
+
+export function sanitizeBcaHeadline(headline: string, profileSlugOrName?: string): string {
+  const norm = (profileSlugOrName || "").toLowerCase().trim();
+  const isBca = norm.includes("roushan") || norm.includes("ayushi");
+  if (isBca) {
+    return headline
+      .replace(/\bEngineers?\b/gi, "Developer")
+      .replace(/\bEngineering\b/gi, "Development");
+  }
+  return headline;
+}
+
 export function sanitizeAiSlop(text: string): string {
   return text
     .replace(/\b(?:spearheaded|orchestrated)\b/gi, "Engineered")
@@ -115,7 +127,7 @@ TASKS:
     if (aiRes.text) {
       const parsed = JSON.parse(aiRes.text);
 
-      const tailoredHeadline = parsed.targetHeadline || baseline.header.targetHeadline;
+      const tailoredHeadline = sanitizeBcaHeadline(parsed.targetHeadline || baseline.header.targetHeadline, profileSlug);
       const tailoredSummary = sanitizeAiSlop(parsed.summary || baseline.summary);
       const rawSkills = Array.isArray(parsed.skills) && parsed.skills.length === 6 ? parsed.skills : baseline.skills;
       const tailoredSkills = rawSkills.map((s: { categoryName: string; skillsText: string }) => ({
@@ -237,7 +249,7 @@ function generateDynamicOptimizedFallback(
     ...baseline,
     header: {
       ...baseline.header,
-      targetHeadline: `${jobTitle} | Backend, Systems & Full-Stack Specialist`,
+      targetHeadline: sanitizeBcaHeadline(`${jobTitle} | Backend, Systems & Full-Stack Specialist`, baseline.header.fullName),
     },
     summary: tailoredSummary,
     skills: tailoredSkills,

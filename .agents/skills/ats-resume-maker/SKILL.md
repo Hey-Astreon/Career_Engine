@@ -58,23 +58,32 @@ This skill governs the visual formatting, typographical hierarchy, A4 page fitti
 A single-page technical resume must fit within a rigid **210mm x 297mm** bounding box with **zero vertical overflow** and **zero clipping** of the bottom `EDUCATION` section.
 
 ```css
-/* src/app/globals.css */
+/* src/app/globals.css — 8.5pt Readability Floor + 4-Tier Vertical Rhythm */
 .ats-a4-sheet {
   width: 210mm;
   height: 297mm;
   min-height: 297mm;
   max-height: 297mm;
-  padding: 6.0mm 8.5mm 5.0mm; /* Reduced top/bottom padding reclaims ~28pt */
+  padding: 7.5mm 9.0mm 6.5mm;
   background: #ffffff;
   color: #111827;
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
-  font-size: 8.8pt;
-  line-height: 1.25;
+  font-size: 8.5pt;
+  line-height: 1.29;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   box-sizing: border-box;
 }
 ```
+
+### The 4-Tier Human Cognitive Line-Spacing & Vertical Rhythm Law
+1. **Body Font Floor:** Never render resume body text below `8.5pt` (`h1` `17.0pt`, Headline `9.5pt`, Contact `8.3pt`, `h2` `9.6pt`, Project/Simulation `h3` `9.0pt`).
+2. **Tier 1 (Intra-line Leading):** `line-height: 1.29` on bullets, `1.32` on left-aligned summary (never `text-align: justify`), `1.28` on skill rows.
+3. **Tier 2 (Inter-bullet Separation):** `margin-bottom: 1.5pt` on `li`, `1.6pt` on `.ats-skill-row` (>2x intra-line gap so wrapped 2-line bullets chunk cleanly).
+4. **Tier 3 (Inter-entity Separation):** `margin-top: 3.6pt` between projects/simulations so each project is visually distinct.
+5. **Tier 4 (Macro Section Dividers):** `hr { margin: 3.2pt 0 2.2pt; }`, `h2 { margin-bottom: 1.6pt; }`.
+6. **De-Hoarded 1-Line Technical Skills Law:** All 6 skill categories must fit on **1 single line each** (`maxSkillLines === 1`) and all project/simulation headers on **1 single line each** (`maxH3Lines === 1`).
+7. **Semi-Bold Dark Ink Link Affordance:** Links inside `.ats-a4-sheet a` use `color: inherit` (`#0f172a`), `text-decoration: none !important`, and `font-weight: 600` so they remain visibly interactive without blue ink or underlines.
 
 ### The 60-Point Space Budget Breakdown
 When content threatens to push Education into the bottom margin, apply these arithmetic space savers:
@@ -140,15 +149,14 @@ When content threatens to push Education into the bottom margin, apply these ari
 ### The Correct Link Styling Specification
 ```css
 /* src/app/globals.css */
+/* Founder directive (Nov 2, 2026): NO blue and NO underline on resume links. */
 .ats-a4-sheet a {
-  color: #1d5fd1;
-  text-decoration: none; /* Inviolable: Zero underline */
-  font-weight: 500;
+  color: inherit; /* dark ink, same as surrounding text */
+  text-decoration: none !important; /* Inviolable: Zero underline */
 }
 
 .ats-a4-sheet a:hover {
-  text-decoration: none; /* Keep clean even on interactive hover */
-  color: #1447a1;
+  text-decoration: none;
 }
 ```
 
@@ -334,7 +342,7 @@ Before releasing or exporting any resume from AstreWork:
 
 ### B. Typography & Aesthetics
 - [ ] **Zero underlines on links:** GitHub, Portfolio, LinkedIn, and Live Demo links have `text-decoration: none`.
-- [ ] Links use consistent brand color (`#1d5fd1` or `text-blue-700`) without visual clutter.
+- [ ] Links use dark ink (`inherit` / `#0f172a`), never blue and never underlined (founder directive, Nov 2, 2026). Also applies to the PDF template in `scripts/generate-all-candidate-resumes.mjs`.
 - [ ] Technical Skills bullet dots form an isolated hanging indent (Column 1 = dot, Column 2 = text).
 - [ ] Project titles keep tech stacks under 90 characters to prevent link wrap.
 
