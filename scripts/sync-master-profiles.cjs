@@ -83,33 +83,68 @@ async function run() {
 
   if (roushanRow.rows.length > 0) {
     const roushanId = roushanRow.rows[0].id;
-    // Remove old IDBI FinSync or AstreWork if exists to avoid duplicates
+    // Clean and sync all 3 flagship projects for Roushan
     await client.execute({
-      sql: `DELETE FROM projects WHERE profileId = ? AND (title LIKE '%IDBI%' OR title LIKE '%AstreWork%')`,
+      sql: `DELETE FROM projects WHERE profileId = ?`,
       args: [roushanId]
     });
 
-    const roushanAstreWorkBullets = JSON.stringify([
-      "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that collect and deduplicate 14,000+ remote jobs daily across 7 platforms.",
-      "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
-      "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%."
-    ]);
+    const roushanProjects = [
+      {
+        title: "AstreWork — Autonomous Career Engine & Distributed Harvester",
+        techStack: "Next.js 16, Python, OCI, Docker, Redis",
+        liveDemoUrl: "https://astrework.app",
+        githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
+        architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
+        bullets: [
+          "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that collect and deduplicate 14,000+ remote jobs daily across 7 platforms.",
+          "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
+          "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%."
+        ]
+      },
+      {
+        title: "Astra Vision — AI Code Sandbox & AST Dependency Engine",
+        techStack: "FastAPI, Python, Tree-Sitter, ChromaDB",
+        liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
+        githubUrl: "https://github.com/Hey-Astreon/Astra-Vision",
+        architecture: "FastAPI microservice backend parsing full-stack dependency graphs via Tree-Sitter AST compilers.",
+        bullets: [
+          "Backend Service: Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.",
+          "Sandbox Isolation: Wrote a self-healing Python subprocess runner with syscall and socket guards to block unauthorized file and network access at runtime.",
+          "AST & Vector Indexing: Wired Tree-Sitter AST parsers into ChromaDB vector search to resolve cross-file symbol references in under 200ms."
+        ]
+      },
+      {
+        title: "Alyra Lock — Zero-Knowledge Encrypted Password Vault",
+        techStack: "TypeScript, Express, MongoDB, Web Crypto",
+        liveDemoUrl: "https://alyra-lock.vercel.app/",
+        githubUrl: "https://github.com/Hey-Astreon/Zero-Knowledge-Password-Manager",
+        architecture: "Client-side zero-knowledge architecture using AES-GCM 256-bit payload encryption.",
+        bullets: [
+          "Zero-Knowledge API: Built an Express.js and MongoDB sync backend that stores only ciphertext blobs and IVs so plaintext secrets never leave the client.",
+          "Cryptographic Core: Implemented AES-GCM (256-bit) encryption and 100,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.",
+          "Auth & Sync Hardening: Added JWT session rotation, strict CORS rules, and atomic vault replication that finishes encrypted syncs in under 200ms."
+        ]
+      }
+    ];
 
-    await client.execute({
-      sql: `INSERT INTO projects (id, profileId, title, techStack, liveDemoUrl, githubUrl, architecture, bulletPoints, createdAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-      args: [
-        randomUUID(),
-        roushanId,
-        "AstreWork — Autonomous Career Engine & Distributed Harvester",
-        "Next.js 16, Python, OCI, Docker, Redis",
-        "https://astrework.app",
-        "https://github.com/Hey-Astreon/Career_Engine",
-        "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
-        roushanAstreWorkBullets
-      ]
-    });
-    console.log('✅ Roushan Kumar profile and AstreWork project synced in Turso Cloud.');
+    for (const proj of roushanProjects) {
+      await client.execute({
+        sql: `INSERT INTO projects (id, profileId, title, techStack, liveDemoUrl, githubUrl, architecture, bulletPoints, createdAt)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        args: [
+          randomUUID(),
+          roushanId,
+          proj.title,
+          proj.techStack,
+          proj.liveDemoUrl,
+          proj.githubUrl,
+          proj.architecture,
+          JSON.stringify(proj.bullets)
+        ]
+      });
+    }
+    console.log('✅ Roushan Kumar profile and 3 differentiated projects synced in Turso Cloud.');
   }
 
   // 2. Update Ayushi Profile
@@ -146,38 +181,73 @@ async function run() {
 
   if (ayushiRow.rows.length > 0) {
     const ayushiId = ayushiRow.rows[0].id;
-    // Remove old IDBI FinSync or AstreWork if exists
+    // Clean and sync all 3 flagship projects for Ayushi
     await client.execute({
-      sql: `DELETE FROM projects WHERE profileId = ? AND (title LIKE '%IDBI%' OR title LIKE '%AstreWork%')`,
+      sql: `DELETE FROM projects WHERE profileId = ?`,
       args: [ayushiId]
     });
 
-    const ayushiAstreWorkBullets = JSON.stringify([
-      "Co-Developer & Lead Frontend Architect: Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
-      "AstrePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
-      "Workspace & Print Engine: Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift."
-    ]);
+    const ayushiProjects = [
+      {
+        title: "AstreWork — AI Career Platform & AstrePilot Extension",
+        techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
+        liveDemoUrl: "https://astrework.app",
+        githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
+        architecture: "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
+        bullets: [
+          "Co-Developer & Lead Frontend Architect: Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
+          "AstrePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
+          "Workspace & Print Engine: Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift."
+        ]
+      },
+      {
+        title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
+        techStack: "React, Monaco, FastAPI, ChromaDB",
+        liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
+        githubUrl: "https://github.com/Silenttears-cloud/Astra_vision",
+        architecture: "Browser-based code analysis studio pairing Monaco Editor with interactive dependency-graph canvas.",
+        bullets: [
+          "In-Browser IDE: Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.",
+          "Live AST Inspection: Connected streaming FastAPI and Tree-Sitter endpoints to highlight syntax nodes, call paths, and sandbox output in under 200ms.",
+          "Semantic Code Search: Created a natural-language repository search UI backed by ChromaDB vector embeddings and isolated execution previews."
+        ]
+      },
+      {
+        title: "Alyra Lock — Client-Side Zero-Knowledge Password Vault",
+        techStack: "React, TypeScript, Web Crypto, Express",
+        liveDemoUrl: "https://alyra-lock.vercel.app/",
+        githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
+        architecture: "Zero-knowledge security vault with AES-GCM 256-bit payload encryption and client-side isolation.",
+        bullets: [
+          "Client-Side Vault UI: Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.",
+          "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",
+          "Fast Encrypted Sync: Shipped instant client-side vault search, password strength checks, and JWT-authenticated Express sync completing in under 200ms."
+        ]
+      }
+    ];
 
-    await client.execute({
-      sql: `INSERT INTO projects (id, profileId, title, techStack, liveDemoUrl, githubUrl, architecture, bulletPoints, createdAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-      args: [
-        randomUUID(),
-        ayushiId,
-        "AstreWork — AI Career Platform & AstrePilot Extension",
-        "Next.js 16, React 19, Chrome MV3, Gemini API",
-        "https://astrework.app",
-        "https://github.com/Silenttears-cloud/Career_Engine",
-        "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
-        ayushiAstreWorkBullets
-      ]
-    });
-    console.log('✅ Ayushi Raj profile and AstreWork project synced in Turso Cloud.');
+    for (const proj of ayushiProjects) {
+      await client.execute({
+        sql: `INSERT INTO projects (id, profileId, title, techStack, liveDemoUrl, githubUrl, architecture, bulletPoints, createdAt)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        args: [
+          randomUUID(),
+          ayushiId,
+          proj.title,
+          proj.techStack,
+          proj.liveDemoUrl,
+          proj.githubUrl,
+          proj.architecture,
+          JSON.stringify(proj.bullets)
+        ]
+      });
+    }
+    console.log('✅ Ayushi Raj profile and 3 differentiated projects synced in Turso Cloud.');
   }
 
   // Verification count
-  const pCount = await client.execute(`SELECT count(*) as count FROM projects WHERE title LIKE '%AstreWork%'`);
-  console.log(`🎉 Master Profile Sync Verified! Total AstreWork project rows in DB: ${pCount.rows[0].count}`);
+  const pCount = await client.execute(`SELECT count(*) as count FROM projects`);
+  console.log(`🎉 Master Profile Sync Verified! Total project rows in DB: ${pCount.rows[0].count}`);
 }
 
 run().catch((err) => {

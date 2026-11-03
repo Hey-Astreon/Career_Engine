@@ -87,8 +87,8 @@ export function getMasterResumeBaseline(
     return {
       header: {
         fullName: "AYUSHI RAJ",
-        targetHeadline: "Full-Stack Developer | AI Systems & Interactive Web Applications",
-        location: "Nawada, Bihar, India",
+        targetHeadline: "Software Developer — Full-Stack & AI",
+        location: "Bihar, India (Open to Remote)",
         phone: "+91-8709852305",
         email: "ayushi29507@gmail.com",
         portfolioUrl: "https://ayushiraj.me",
@@ -96,7 +96,7 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://www.linkedin.com/in/alrya404/",
       },
       summary:
-        "Full-Stack Software Developer and Co-Developer of AstreWork, specializing in AI-integrated web applications, autonomous browser extensions, and modern user interfaces. Architected AstreWork's client-side ATS optimization engine, Gemini-powered scoring studio, and the AstrePilot Chrome Extension. Focused on fast frontend performance, accessible design systems, and secure backend APIs.",
+        "Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built AstreWork (astrework.app), shipping its live resume-scoring studio and the AstrePilot Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security.",
       skills: [
         {
           categoryName: "Languages",
@@ -130,31 +130,31 @@ export function getMasterResumeBaseline(
           liveDemoUrl: "https://astrework.app",
           githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
           bullets: [
-            "Co-Developer & Lead Frontend Architect: Engineered the client-side ATS match engine and Gemini-powered scoring studio on Next.js 16, evaluating live postings in under a second.",
-            "AstrePilot Chrome Extension (MV3): Built an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby applications in ~15 seconds.",
-            "Reactive UI Architecture: Engineered a responsive React 19 and Next.js 16 workspace with Zustand state management, live ATS audit checklists, and print-perfect A4 rendering.",
+            "Co-Developer & Lead Frontend Architect: Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
+            "AstrePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
+            "Workspace & Print Engine: Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift.",
           ],
         },
         {
-          title: "Alyra Lock — Zero-Knowledge Password Vault",
-          techStack: "React, TypeScript, Express, MongoDB, Web Crypto API",
-          liveDemoUrl: "https://alyra-lock.vercel.app/",
-          githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
-          bullets: [
-            "Product Architecture: Engineered a client-side zero-knowledge password vault where master keys remain isolated in browser memory, eliminating cloud-leak risks.",
-            "Cryptography: Implemented AES-GCM (256-bit) payload encryption and PBKDF2 key derivation over 100,000 iterations using the Web Crypto API.",
-            "Performance & Security: Built Express.js REST sync endpoints with JWT authentication and strict CORS headers, keeping vault sync latency under 200ms.",
-          ],
-        },
-        {
-          title: "Astra Vision — AI Sandbox & Code Parsing Platform",
-          techStack: "FastAPI, Python, Monaco, Tree-Sitter, ChromaDB",
+          title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
+          techStack: "React, Monaco, FastAPI, ChromaDB",
           liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
           githubUrl: "https://github.com/Silenttears-cloud/Astra_vision",
           bullets: [
-            "Product Architecture: Architected a code-parsing platform and browser sandbox that safely executes untrusted code while visualizing repository dependency graphs.",
-            "Sandbox Runtime: Built a self-healing Python execution engine with subprocess isolation to intercept unauthorized file-system and network-socket calls in real time.",
-            "Indexing Performance: Integrated Tree-Sitter AST compilers and ChromaDB vector search to parse repository syntax nodes in under 200ms.",
+            "In-Browser IDE: Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.",
+            "Live AST Inspection: Connected streaming FastAPI and Tree-Sitter endpoints to highlight syntax nodes, call paths, and sandbox output in under 200ms.",
+            "Semantic Code Search: Created a natural-language repository search UI backed by ChromaDB vector embeddings and isolated execution previews.",
+          ],
+        },
+        {
+          title: "Alyra Lock — Client-Side Zero-Knowledge Password Vault",
+          techStack: "React, TypeScript, Web Crypto, Express",
+          liveDemoUrl: "https://alyra-lock.vercel.app/",
+          githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
+          bullets: [
+            "Client-Side Vault UI: Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.",
+            "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",
+            "Fast Encrypted Sync: Shipped instant client-side vault search, password strength checks, and JWT-authenticated Express sync completing in under 200ms.",
           ],
         },
       ],
@@ -204,8 +204,8 @@ export function getMasterResumeBaseline(
     return {
       header: {
         fullName: "ROUSHAN KUMAR",
-        targetHeadline: "Full-Stack Developer | Distributed Systems & Cloud Infrastructure",
-        location: "Patna, Bihar, India",
+        targetHeadline: "Software Developer — Backend & Cloud",
+        location: "Patna, Bihar, India (Open to Remote)",
         phone: "+91-9431483512",
         email: "roushanraut404@gmail.com",
         portfolioUrl: "https://astreon.me",
@@ -213,7 +213,7 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://linkedin.com/in/astreon4547",
       },
       summary:
-        "Full-Stack Software Developer and Creator of AstreWork, specializing in distributed web scrapers, cloud infrastructure, and developer automation tools. Operates a live production platform on Oracle Cloud running containerized headless browser pipelines that process 14,000+ job postings daily. Focused on high-throughput backend reliability, data pipeline concurrency, and clean systems architecture.",
+        "Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs AstreWork (astrework.app) on Oracle Cloud, where Dockerized Playwright and Puppeteer workers collect and deduplicate 14,000+ remote job postings daily using Turso SQLite and Redis. Enjoys solving hard concurrency, caching, and infrastructure problems.",
       skills: [
         {
           categoryName: "Languages",
