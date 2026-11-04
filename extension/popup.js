@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function setStatus(text, isOk = true) {
     if (footerStatusText) footerStatusText.textContent = text;
     if (footerStatusDot) {
-      footerStatusDot.style.background = isOk ? 'var(--zp-green)' : 'var(--zp-amber)';
+      footerStatusDot.style.background = isOk ? 'var(--aw-green)' : '#f59e0b';
     }
   }
 
@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           loginErrorMsg.classList.remove('hidden');
         }
       } finally {
-        if (btnLoginText) btnLoginText.textContent = 'Login';
+        if (btnLoginText) btnLoginText.textContent = 'Sign In to AstreWork';
         btnLogin.disabled = false;
       }
     });
