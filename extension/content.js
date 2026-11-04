@@ -690,23 +690,18 @@
     return e;
   }
 
-  const DEFAULT_FOUNDER_TOKENS = {
-    roushan: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
-  };
-
   async function getStoredConfig() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (res) => {
         const safeRes = res || {};
         chrome.storage.local.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (localRes) => {
-          const merged = { ...safeRes, ...(localRes || {}) };
-          let origin = (merged.astrepilot_origin || 'https://astrework.app').trim();
-          if (!origin || origin.includes('vercel.app')) {
-            origin = 'https://astrework.app';
+          const merged = { ...(localRes || {}), ...safeRes };
+          const origin = 'https://astrework.app';
+          if (merged.astrepilot_origin !== origin) {
             chrome.storage.sync.set({ astrepilot_origin: origin });
           }
-          const activeCtx = merged.astrepilot_active_context || 'roushan';
-          const token = merged.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : null);
+          const activeCtx = merged.astrepilot_active_context || null;
+          const token = merged.astrepilot_token || null;
           resolve({
             token,
             origin,

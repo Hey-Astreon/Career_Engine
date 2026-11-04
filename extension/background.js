@@ -135,45 +135,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.type === 'OPEN_OPTIONS') {
-    chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      const safeRes = res || {};
-      let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
-      if (origin.includes('vercel.app')) {
-        origin = 'https://astrework.app';
-        chrome.storage.sync.set({ astrepilot_origin: origin });
-      }
-      chrome.tabs.create({ url: origin + '/settings' });
-    });
-    return false; // no response is sent, so do not keep the channel open
-  }
-
-  if (request.type === 'OPEN_CUSTOM_JD') {
-    chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-      const safeRes = res || {};
-      let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
-      if (origin.includes('vercel.app')) {
-        origin = 'https://astrework.app';
-        chrome.storage.sync.set({ astrepilot_origin: origin });
-      }
-      chrome.tabs.create({ url: origin + '/resume-builder?mode=custom&loadSession=true' });
-    });
+    chrome.tabs.create({ url: 'https://astrework.app/settings' });
     return false;
   }
 
-const DEFAULT_FOUNDER_TOKENS = {
-  roushan: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
-};
+  if (request.type === 'OPEN_CUSTOM_JD') {
+    chrome.tabs.create({ url: 'https://astrework.app/resume-builder?mode=custom&loadSession=true' });
+    return false;
+  }
 
   if (request.type === 'DOWNLOAD_RESUME') {
-    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token', 'astrepilot_active_context'], (res) => {
+    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], (res) => {
       const safeRes = res || {};
-      let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
-      if (origin.includes('vercel.app')) {
-        origin = 'https://astrework.app';
-        chrome.storage.sync.set({ astrepilot_origin: origin });
-      }
-      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
-      const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : '');
+      const origin = 'https://astrework.app';
+      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || '';
+      const token = safeRes.astrepilot_token || '';
       const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
 
       if (typeof chrome.downloads !== 'undefined' && chrome.downloads.download) {
@@ -194,16 +170,12 @@ const DEFAULT_FOUNDER_TOKENS = {
   }
 
   if (request.type === 'GET_RESUME_BINARY') {
-    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token', 'astrepilot_active_context'], async (res) => {
+    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], async (res) => {
       try {
         const safeRes = res || {};
-        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
-        if (origin.includes('vercel.app')) {
-          origin = 'https://astrework.app';
-          chrome.storage.sync.set({ astrepilot_origin: origin });
-        }
-        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
-        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : '');
+        const origin = 'https://astrework.app';
+        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || '';
+        const token = safeRes.astrepilot_token || '';
         const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
         const headers = {};
         if (token) {
@@ -242,16 +214,12 @@ const DEFAULT_FOUNDER_TOKENS = {
   }
 
   if (request.type === 'GET_COVER_LETTER_BINARY') {
-    chrome.storage.sync.get(['astrepilot_origin', 'astrepilot_token', 'astrepilot_active_context'], async (res) => {
+    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], async (res) => {
       try {
         const safeRes = res || {};
-        let origin = (safeRes.astrepilot_origin || 'https://astrework.app').replace(/\/$/, '');
-        if (origin.includes('vercel.app')) {
-          origin = 'https://astrework.app';
-          chrome.storage.sync.set({ astrepilot_origin: origin });
-        }
-        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
-        const token = safeRes.astrepilot_token || DEFAULT_FOUNDER_TOKENS[activeCtx] || (activeCtx === 'roushan' ? DEFAULT_FOUNDER_TOKENS.roushan : '');
+        const origin = 'https://astrework.app';
+        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || '';
+        const token = safeRes.astrepilot_token || '';
         const url = origin + '/api/autopilot/cover-letter';
         const headers = { 'Content-Type': 'application/json' };
         if (token) {
@@ -533,14 +501,10 @@ const DEFAULT_FOUNDER_TOKENS = {
 
 // 4. Initialize default settings on install
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.get(['astrepilot_origin'], (res) => {
-    const safeRes = res || {};
-    if (!safeRes.astrepilot_origin || safeRes.astrepilot_origin.includes('vercel.app')) {
-      chrome.storage.sync.set({
-        astrepilot_origin: 'https://astrework.app'
-      });
-    }
-  });
+  chrome.storage.sync.set({ astrepilot_origin: 'https://astrework.app' });
+  if (chrome.storage.local) {
+    chrome.storage.local.set({ astrepilot_origin: 'https://astrework.app' });
+  }
   console.log('[AstrePilot] Extension installed successfully.');
 });
 

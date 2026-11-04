@@ -184,7 +184,7 @@ window.AstrePilotHUD = (function () {
               if (res.ap_auto_advance !== undefined) this.settings.autoAdvance = Boolean(res.ap_auto_advance);
               if (res.ap_strict_verify !== undefined) this.settings.strictVerify = Boolean(res.ap_strict_verify);
               if (res.ap_auto_tailor !== undefined) this.settings.autoTailor = Boolean(res.ap_auto_tailor);
-              if (res.astrepilot_origin) this.settings.origin = res.astrepilot_origin;
+              this.settings.origin = 'https://astrework.app';
             }
           });
         }
@@ -1225,8 +1225,8 @@ window.AstrePilotHUD = (function () {
               ` : `
                 <div class="settings-login-box" style="padding: 10px; background: var(--ap-surface); border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-line);">
                   <div style="font-size: 11px; color: var(--ap-ink-2); margin-bottom: 8px;">Sign in with your AstreWork account:</div>
-                  <input type="email" id="ap-hud-email" placeholder="Email (e.g. playboxstation460@gmail.com)" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
-                  <input type="password" id="ap-hud-password" placeholder="Password or Founder Code (9926)" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
+                  <input type="email" id="ap-hud-email" placeholder="Email Address" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
+                  <input type="password" id="ap-hud-password" placeholder="Password" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
                   <button type="button" class="btn-primary action-inline-login" style="width: 100%; justify-content: center; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: 4px; cursor: pointer;">
                     Sign In to AstreWork
                   </button>
@@ -1316,25 +1316,10 @@ window.AstrePilotHUD = (function () {
             </div>
           </div>
 
-          <!-- Section 4: Target Host Environment -->
-          <div class="settings-section">
-            <div class="settings-section-header">
-              <span class="section-tag">API Target Environment</span>
-            </div>
-            <div class="settings-env-selector">
-              <button type="button" class="btn-env-switch ${settings.origin.includes('astrework.app') ? 'is-active' : ''}" data-origin="https://astrework.app">
-                ☁️ Production (astrework.app)
-              </button>
-              <button type="button" class="btn-env-switch ${settings.origin.includes('localhost') ? 'is-active' : ''}" data-origin="http://localhost:3000">
-                💻 Localhost (:3000)
-              </button>
-            </div>
-          </div>
-
-          <!-- Section 5: Telemetry & Shortcuts -->
+          <!-- Section 4: Telemetry & Shortcuts -->
           <div class="settings-footer-info">
             <div>Shortcut: <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></div>
-            <div>AstrePilot Cognitive Engine v1.2.0 · AstreWork</div>
+            <div>AstrePilot Cognitive Engine v2.0 · AstreWork</div>
           </div>
         </div>
       `;

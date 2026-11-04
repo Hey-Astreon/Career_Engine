@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 4, 2026 (Phase 79: AstreWork Brand Calibration & Authentic Identity Alignment — Executive Arctic White, Deep Ink Slate & Royal Blue DNA Restoration, Official Logo Integration & Live Telemetry Pill)
+> **LAST COGNITIVE SYNC:** November 4, 2026 (Phase 79: AstrePilot Ultra-Clean Minimalist UI, Single Brand Logo, Electric Royal Blue 3D Button, Zero-9926 Security Leak Purge & Global Production Hard-Lock)
 
 ---
 
@@ -3410,20 +3410,22 @@ graph TD
   - **Rule 2 (Floating Header Pill Navigation Law):** Critical system actions (Job Board/Dashboard, AstreShield Radar, Settings, Sign Out) must never be buried in footers or hidden in nested menus. Place them in persistent, translucent top-right floating pill containers 1 click away.
   - **Rule 3 (Live Page Context Feedback Law):** When an extension opens on an active tab, it must immediately communicate context awareness (e.g. `🟢 Wellfound Remote Active`, `🟢 Greenhouse ATS Active`, `🛡️ 98% Legit`). This confirms to the candidate that the autonomous assistant is armed and ready before they even click.
 - **Status:** Complete, verified (`55/55` test suites, `525/525` tests passing, `0` TS errors, `0` ESLint warnings), extension zip rebuilt (`207.4 KB`), committed and pushed to `origin main`.
-### Case 55: The Plagiarism Trap — Brand Authenticity vs. Competitor Mimicry (AstreWork White & Royal Blue DNA Restoration) (Nov 4, 2026)
+### Case 55: The UI Hoarding, Duplicate Logo, Localhost Lock-In & 9926 Placeholder Leak Disaster (Nov 4, 2026)
 - **The Exact Challenge & Mistake Encountered:**
-  1. In attempting to rival Zapply's consumer charm, AstrePilot's theme was styled in warm ivory and bright coral orange (`#ff5520`). This inadvertently caused AstrePilot to look like a literal clone / copycat of Zapply+, threatening brand credibility and raising plagiarism concerns.
-  2. The official AstreWork logo was omitted from the header, severing the visual link between the extension and the main AstreWork platform (`astrework.app`).
+  1. **Duplicate Logo & Wording Hoarding:** Placed `astrework-brand.png` in both the top sticky header AND the setup hero 20px below it, and crammed 9 layers of text/controls (header, hero logo, tagline, telemetry badge, server switcher, inputs, login button, signup row, social icons, token accordion, footer) into a 350px popup.
+  2. **Stuck on `localhost:3000`:** Exposed a `SERVER: astrework.app | localhost:3000` bar on a global production extension. Because `chrome.storage.sync` retained `http://localhost:3000` from an earlier dev session, every button in the popup routed to `localhost:3000` instead of `https://astrework.app`.
+  3. **Catastrophic Security Leak (`9926` in Password Placeholder):** Set `placeholder="Password or Founder Code (9926)"` and rendered a 1-click founder lightning button in the public extension UI, exposing secret protocol code `9926` to any third-party user. Furthermore, `DEFAULT_FOUNDER_TOKENS` in `content.js` and `background.js` caused logged-out sessions to default to Roushan's identity.
+  4. **Unilateral Execution Without Co-Founder Alignment:** Rushed into code changes without using `ask_question` (4-option MCQ) to align with Brother Roushan on layout, color, routing, and auth design first.
 - **Deep Root Cause Diagnosis:**
-  - Over-indexing on a competitor's specific color palette instead of translating their underlying UX principles (tactile feel, inset icons, floating pills) into **AstreWork's own unique, authentic corporate identity** (Executive Arctic White, Deep Ink Slate `#0f172a`, and Electric Royal Blue `#2563eb`).
+  - Failed to pause and visually trace the rendered hierarchy (additive hoarding instead of subtractive minimalism), failed to sanitize `chrome.storage.sync` against stale dev origins, and conflated internal founder testing shortcuts with public client UI placeholders.
 - **The Concrete Surgical Fix:**
-  1. **Purged Derivative Orange/Coral:** Completely stripped all derivative coral and orange accents across `extension/popup.html`, `popup.css`, and `popup.js`.
-  2. **Restored AstreWork Brand Palette:** Aligned the extension popup directly with the landing page (`src/app/(public)/page.tsx`): Executive Arctic White canvas (`#ffffff` / `#f8fafc`), Deep Ink Slate typography (`#0f172a`), and Electric Royal Blue accents (`#2563eb`).
-  3. **Official Logo Integration:** Integrated [`extension/astrework-brand.png`](file:///x:/Career_Engine/extension/astrework-brand.png) directly into the extension header and setup hero with a crisp royal blue `PILOT` pill.
-  4. **Landing Page Telemetry Pill:** Added the signature `● 21 ATS Pipelines Online` live status pill with a pulsing emerald dot (`#10b981`), creating an unmistakable visual bridge to AstreWork.
-  5. **Executive Button Hierarchy:** Styled the primary Sign In button in AstreWork's signature Deep Ink Slate (`#0f172a`) and the Autofill button in Electric Royal Blue (`#2563eb`).
-  6. **Rebuilt Extension & Verified Tests:** Rebuilt `public/downloads/astrepilot-extension.zip` (`622.7 KB`), verified all 55 Vitest test files (`525/525` tests passing), `0` TS errors, `0` ESLint warnings.
+  1. **Consulted via 4-Option MCQ (`ask_question`) First:** Aligned on all 4 architectural pillars before touching code.
+  2. **Ultra-Clean Minimalist Popup (`extension/popup.html` & `popup.css`):** Removed header and footer bars, duplicate logo, taglines, server bar, and token accordion. Rendered strictly the top-right floating utility pills, 1 centered AstreWork logo, Email & Password inputs, Electric Royal Blue 3D tactile Login button (`#2563eb` with `#1d4ed8` bevel), `"New Here? Sign Up"`, and Google/GitHub buttons.
+  3. **Hard-Locked Global Production (`https://astrework.app`):** Updated `popup.js`, `content.js`, `background.js`, and `hud-ui.js` to overwrite any non-production origin in `chrome.storage.sync` and `chrome.storage.local` with `https://astrework.app`.
+  4. **Purged All `9926` & Founder Leaks:** Removed all `9926` text and `DEFAULT_FOUNDER_TOKENS` from `extension/*.html` and `extension/*.js` (verified 0 matches via `Select-String`).
 - **Hard-Won Engineering Experience & Rules:**
-  - **Rule 1 (Brand Authenticity Over Mimicry Law):** Never adopt a competitor's signature branding color (e.g. Zapply orange). Learn from their functional UX patterns (inset icons, floating pills, micro-interactions), but always strictly enforce AstreWork's native brand palette (Arctic White, Deep Slate, Electric Royal Blue).
-  - **Rule 2 (Instant Ecosystem Recognition Law):** Companion browser extensions must always visibly and proudly wear the parent platform's official brand logo (`astrework-brand.png`) and signature status telemetry (e.g. `21 ATS Pipelines Online`) so candidates instantly know they are using AstreWork.
-- **Status:** Complete, verified (`55/55` test suites, `525/525` tests passing, `0` TS errors, `0` ESLint warnings), extension zip rebuilt (`622.7 KB`), committed and pushed to `origin main`.
+  - **Rule 1 (Mandatory 4-Option MCQ Alignment Law):** Whenever a UI/UX or architectural direction has multiple design trade-offs or follows a critique, ALWAYS present a structured 4-option MCQ via `ask_question` and wait for the Founder's selection before writing code. Never act unilaterally as if you own the product alone.
+  - **Rule 2 (Single Logo & Subtractive Minimalism Law):** Never render the brand logo more than once in the same viewport. In a compact 348px extension popup, every extra text line, badge, or bar destroys visual breathing room.
+  - **Rule 3 (Zero Secret / Founder Code Exposure in Client UI Law):** Never put secret override codes (`9926`), founder emails, or hardcoded fallback tokens (`DEFAULT_FOUNDER_TOKENS`) in HTML placeholders, tooltips, or client-side fallback variables.
+  - **Rule 4 (Global Production Origin Law):** Client extensions must always hard-lock to `https://astrework.app` and actively purge stale `localhost` values from `chrome.storage`.
+- **Status:** Complete, verified (`0` `9926`/`localhost` matches in extension, Vitest & TS clean), extension zip rebuilt (`617.9 KB`), committed and pushed to `origin main`.
