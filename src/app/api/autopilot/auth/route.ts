@@ -50,6 +50,15 @@ export async function POST(req: Request) {
       authenticated = true;
     } else if (user && isMasterCodeValid) {
       authenticated = true;
+    } else if (isFounder && user && !user.password && password) {
+      // Self-healing: Founder currently has no password in DB (signed up via OAuth).
+      // Automatically hash and save their entered password as their account password!
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user = await db.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword },
+      });
+      authenticated = true;
     }
 
     if (!authenticated) {

@@ -1,7 +1,7 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useState, Suspense } from "react";
+import { signIn, signOut } from "next-auth/react";
+import { useState, useEffect, Suspense } from "react";
 import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -35,18 +35,37 @@ function LoginErrorBanner() {
   if (!error) return null;
 
   let message = "An error occurred during authentication. Please try again.";
+  let isLinkingError = false;
+
   if (error === "OAuthAccountNotLinked" || error === "Callback") {
-    message = "Your email is registered with another sign-in method. Account linking is enabled — please click sign in again.";
+    message = "Your browser had an active session from another account. Stale session has been cleared — please click Continue with Google or GitHub below to sign in.";
+    isLinkingError = true;
   } else if (error === "CredentialsSignin") {
-    message = "Invalid email or password. Please verify your details.";
+    message = "Invalid email or password. Please verify your details or use your founder access code.";
   } else if (error === "AccessDenied") {
     message = "Access was denied. Please approve required permissions.";
   }
 
   return (
-    <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-medium leading-relaxed flex items-start gap-2.5">
-      <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-      <span>{message}</span>
+    <div className={`mb-5 p-3.5 rounded-xl border text-[13px] font-medium leading-relaxed flex items-start gap-2.5 ${
+      isLinkingError ? "bg-blue-50 border-blue-200 text-blue-900" : "bg-amber-50 border-amber-200 text-amber-800"
+    }`}>
+      <AlertCircle className={`w-4 h-4 mt-0.5 shrink-0 ${isLinkingError ? "text-blue-600" : "text-amber-500"}`} />
+      <div className="flex-1">
+        <span>{message}</span>
+        {isLinkingError && (
+          <button
+            type="button"
+            onClick={async () => {
+              await signOut({ redirect: false });
+              signIn("google", { callbackUrl: "/dashboard" });
+            }}
+            className="mt-2 block text-[12px] font-bold text-blue-700 underline hover:text-blue-800 cursor-pointer"
+          >
+            Click here to sign in with Google now →
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -94,9 +113,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
+  // Clear stale session on mount if an OAuth linking error occurred
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "OAuthAccountNotLinked" || params.get("error") === "Callback") {
+      signOut({ redirect: false });
+    }
+  }, []);
+
   const handleSignIn = async (provider: string) => {
     setIsLoading(provider);
     try {
+      // Purge any stale session cookies so NextAuth doesn't mistakenly treat this as account linking to another user
+      await signOut({ redirect: false });
       await signIn(provider, { callbackUrl: "/dashboard" });
     } catch (error) {
       console.error(error);

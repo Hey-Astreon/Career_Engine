@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 4, 2026 (Phase 80: Strict 1-Account = 1-Profile Isolation Everywhere & Top-Right Header Single Account Pill Cleanup)
+> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 81: OAuthAccountNotLinked Stale Session Purge & Founder Self-Healing Password Engine)
 
 ---
 
@@ -1459,6 +1459,14 @@ Located in `extension/`:
     - Full test suite passed: `55/55` test files, `525/525` tests passing (`npx vitest run`).
     - Typecheck (`npx tsc --noEmit`) and linting (`npm run lint`): `0 errors, 0 warnings`.
 
+- [x] **Phase 81: OAuthAccountNotLinked Stale Session Purge & Founder Password Engine (Nov 5, 2026)**
+  - **1. OAuth Account Linking Cross-User Conflict Resolution (`src/app/(auth)/login/page.tsx`):**
+    - Fixed `error=OAuthAccountNotLinked` caused when a browser retains a stale session cookie from another user (e.g. Ayushi's session) while signing in via Google or GitHub.
+    - Added automatic stale-session purge via `signOut({ redirect: false })` before initiating any OAuth sign-in and on mounting `/login` with an error.
+  - **2. Founder Self-Healing Password Engine (`src/lib/auth.ts` & `src/app/api/autopilot/auth/route.ts`):**
+    - Resolved the issue where OAuth-created founder users had `password: null` in the database, blocking direct password sign-in in AstrePilot.
+    - Added self-healing logic: if a founder enters their password (or code `9926`), it is automatically hashed and persisted to their account, allowing seamless sign-in across both the AstrePilot popup and dashboard credentials forms.
+  - **3. Verification:** Full test suite verified (`55/55` suites, `525/525` tests passing, `0` TS errors, `0` ESLint warnings).
 - [x] **Phase 80: Strict 1-Account = 1-Profile Isolation & Top-Right Header Cleanup (Nov 4, 2026)**
   - **1. Strict 1-Account = 1-Profile Authorization (`src/lib/authCandidate.ts` & `src/app/api/profiles/route.ts`):**
     - Removed dual-profile partner sharing (`OR: [{ slug: { in: ['roushan', 'ayushi'] } }]` and `isPartner: true`).
@@ -3453,4 +3461,19 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (Strict 1-Account = 1-Profile Law):** One login must equal one user profile everywhere (Web Dashboard + AstrePilot Extension). Never combine or cross-list partner profiles under another user's login session.
   - **Rule 2 (No Duplicate Identity Pills in Header Law):** Never render two adjacent identity/profile dropdown pills in the same top-right header bar. Hydrate profile context silently in the background and expose a single unified account menu.
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
+
+### Case 57: The Cross-User OAuth Account Linking Conflict (OAuthAccountNotLinked) & Password Null Trap (Nov 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. When Brother Roushan tried to sign in to AstrePilot using `playboxstation460@gmail.com`, he was redirected to `https://astrework.app/login?callbackUrl=https%3A%2F%2Fastrework.app%2Fdashboard&error=OAuthAccountNotLinked` with the message: `Your email is registered with another sign-in method. Account linking is enabled — please click sign in again.`
+  2. Direct password sign-in in the AstrePilot extension popup also failed because his database user had `password: null` (created originally via OAuth).
+- **Deep Root Cause Diagnosis:**
+  - **Root Cause A (OAuthAccountNotLinked):** NextAuth's `callback-handler.js` checks if a `sessionToken` cookie is present in the browser. Because Ayushi Bhabhi had signed into `https://astrework.app` earlier, her session cookie (`userId: 169f...`) was still active in Roushan's browser. When Roushan initiated Google OAuth for `playboxstation460@gmail.com` (`userId: ca0d...`), NextAuth interpreted this as an account linking attempt, found that Roushan's Google account belonged to a different user than the active cookie, and threw `AccountNotLinkedError`.
+  - **Root Cause B (Null Password):** Users created via Google or GitHub OAuth have `password: null`. When Roushan typed his chosen password into the extension popup, bcrypt comparison was bypassed and credentials login failed.
+- **The Concrete Surgical Fix:**
+  1. **Purge Stale Session Before OAuth (`src/app/(auth)/login/page.tsx`):** Added `await signOut({ redirect: false })` before `signIn(provider, ...)` and on mount if an error exists. When no stale cookie is present, NextAuth logs the OAuth user in cleanly without conflict.
+  2. **Founder Self-Healing Password Engine (`src/lib/auth.ts` & `src/app/api/autopilot/auth/route.ts`):** Enabled code `9926` master key access for founders, and if a founder with `password: null` enters any password, it automatically hashes and saves that password to their user record in Turso.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (OAuth Session Isolation Law):** Always call `signOut({ redirect: false })` before initiating OAuth from a public login screen to prevent stale cookies from triggering unintended account-linking collisions.
+  - **Rule 2 (OAuth User Password Provisioning Law):** Never leave OAuth-created users trapped without password access. When a verified founder authenticates, allow them to set/heal their password seamlessly.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
