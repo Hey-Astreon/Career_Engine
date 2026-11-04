@@ -3,64 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AstrePilot</title>
+  <title>AstrePilot — Autonomous Career Cockpit</title>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="popup-container">
-    <!-- Header -->
+    <!-- Top Floating Utility Header -->
     <header class="header">
       <div class="brand">
-        <div class="logo">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        <div class="logo-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
           </svg>
         </div>
-        <div class="brand-text">
-          <h1 class="title">AstrePilot</h1>
-          <span class="subtitle">Autonomous Job Assistant</span>
+        <div class="brand-title-wrap">
+          <span class="brand-title">astrepilot<span class="brand-plus">+</span></span>
         </div>
       </div>
-      <div id="conn-badge" class="badge badge-disconnected">
-        <span class="dot" aria-hidden="true"></span>
-        <span id="conn-text">Disconnected</span>
-      </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="main">
-      <!-- Loading State -->
-      <div id="view-loading" class="view">
-        <div class="spinner" aria-hidden="true"></div>
-        <p class="loading-text">Connecting to AstreWork…</p>
-      </div>
+      <!-- Top Right Floating Pill Groups (Zapply-Style) -->
+      <div class="top-utility-bar">
+        <div class="utility-pill-group">
+          <button id="btn-top-dashboard" class="pill-icon-btn" type="button" title="Open AstreWork Job Board & Dashboard" aria-label="Dashboard">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+          <button id="btn-top-shield" class="pill-icon-btn" type="button" title="AstreShield Anti-Fraud & Ghost Job Radar" aria-label="AstreShield">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+          </button>
+          <button id="btn-top-settings" class="pill-icon-btn" type="button" title="Settings & Server Target" aria-label="Settings">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        </div>
 
-      <!-- Connected View -->
-      <div id="view-connected" class="view hidden">
-        <div class="profile-card">
-          <div class="avatar" id="user-avatar" aria-label="Candidate Initials">RK</div>
-          <div class="profile-info">
-            <h2 id="user-name" class="user-name" title="Candidate Name">Candidate Name</h2>
-            <p id="user-title" class="user-title" title="Target Role / Headline">Target Role / Headline</p>
-          </div>
-          <button id="btn-logout" class="btn-icon-danger" type="button" title="Sign Out of AstreWork" aria-label="Sign Out">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="utility-pill-group">
+          <button id="btn-top-logout" class="pill-icon-btn pill-btn-danger" type="button" title="Sign Out of AstreWork" aria-label="Sign Out">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
           </button>
+          <button id="btn-top-close" class="pill-icon-btn" type="button" title="Dismiss Popup" aria-label="Close">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
+      </div>
+    </header>
 
-        <div class="env-selector-row">
-          <span class="env-label">Server</span>
-          <div class="env-toggle-group" role="tablist" aria-label="Server Target">
-            <button id="btn-env-prod" class="btn-env-pill" type="button" title="Connect to Live Production (astrework.app)">astrework.app</button>
-            <button id="btn-env-local" class="btn-env-pill" type="button" title="Connect to Localhost Dev Server (localhost:3000)">localhost:3000</button>
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Loading View -->
+      <div id="view-loading" class="view">
+        <div class="spinner-pulse" aria-hidden="true"></div>
+        <p class="loading-text">Engaging AstrePilot Cockpit…</p>
+      </div>
+
+      <!-- Connected View (Autonomous Career Cockpit) -->
+      <div id="view-connected" class="view hidden">
+        <!-- Candidate Profile Header Card -->
+        <div class="profile-card">
+          <div class="avatar-wrap">
+            <div class="avatar" id="user-avatar" aria-label="Candidate Initials">RK</div>
+            <span class="avatar-online-dot" aria-hidden="true"></span>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name-row">
+              <h2 id="user-name" class="user-name" title="Candidate Name">Candidate Name</h2>
+              <span id="role-pill-badge" class="role-pill-badge">PRO</span>
+            </div>
+            <p id="user-title" class="user-title" title="Target Role / Headline">Software Developer</p>
           </div>
         </div>
 
+        <!-- Live ATS Detection & AstreShield Radar Card -->
+        <div class="ats-radar-card" id="ats-radar-card">
+          <div class="ats-radar-header">
+            <div class="ats-indicator-wrap">
+              <span class="ats-radar-pulse" aria-hidden="true"></span>
+              <span id="ats-engine-label" class="ats-engine-label">Scanning Active Page…</span>
+            </div>
+            <div class="astreshield-badge" id="astreshield-badge" title="AstreShield Anti-Fraud Status">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+              <span>98% Legit</span>
+            </div>
+          </div>
+          <div class="ats-radar-sub" id="ats-radar-sub">Auto-mapping form fields with Universal Combobox Engine</div>
+        </div>
+
+        <!-- Primed Kit Card (If Synced from AstreWork) -->
         <div id="primed-box" class="primed-box hidden">
           <div class="primed-header">
             <span class="primed-label">PRIMED APPLICATION KIT</span>
@@ -69,21 +117,47 @@
           <div id="primed-target" class="primed-target" title="Target Job Session">Acme Corp</div>
         </div>
 
+        <!-- Primary 3D Tactile CTA Action Area -->
         <div class="action-section">
-          <button id="btn-launch-hud" class="btn btn-primary" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
-            </svg>
-            <span>Launch AstrePilot HUD</span>
-          </button>
-          <button id="btn-autofill-direct" class="btn btn-secondary" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <button id="btn-autofill-direct" class="btn-tactile-primary" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
-            <span>Autofill Instantly</span>
+            <span>Autofill Application</span>
+          </button>
+
+          <button id="btn-launch-hud" class="btn-tactile-secondary" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+            </svg>
+            <span>Launch In-Page Cockpit HUD</span>
           </button>
         </div>
 
+        <!-- Tailored Application Kit Quick Bar -->
+        <div class="kit-quick-bar">
+          <button id="btn-copy-cover" class="kit-pill-btn" type="button" title="Copy JD-Tailored Cover Letter">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <span id="btn-copy-cover-text">Tailored Cover Letter</span>
+          </button>
+
+          <button id="btn-open-resume" class="kit-pill-btn" type="button" title="Open A4 Single-Page Resume Studio">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <span>Resume Studio</span>
+          </button>
+        </div>
+
+        <!-- Metrics Row -->
         <div class="stats-row">
           <div class="stat-item">
             <span class="stat-val" id="stat-fills">0</span>
@@ -101,80 +175,136 @@
           </div>
         </div>
 
-        <p class="shortcut-hint">Shortcut: <kbd>Alt+Shift+A</kbd> on any job form</p>
+        <!-- Hotkey footer -->
+        <p class="shortcut-hint">Shortcut: <kbd>Alt+Shift+A</kbd> on any job application</p>
       </div>
 
-      <!-- Setup / Connect View -->
+      <!-- Setup / Sign-In View (Zapply-Style Warm Ivory / Arctic Luxury) -->
       <div id="view-setup" class="view hidden">
         <div class="setup-hero">
-          <div class="setup-icon-wrap" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+          <div class="hero-brand-mark">
+            <span class="hero-brand-text">astrepilot<span class="brand-plus">+</span></span>
           </div>
-          <h3>Sign In to AstreWork</h3>
-          <p>Sign in to sync your profile, resume, tailored cover letters, and application kit.</p>
+          <p class="hero-tagline">Autonomous AI career cockpit & instant autofill engine</p>
         </div>
 
-        <div class="form-group">
-          <label for="input-origin">AstreWork Server</label>
-          <select id="input-origin" class="select-input">
-            <option value="https://astrework.app">Production (astrework.app)</option>
-            <option value="http://localhost:3000">Localhost (http://localhost:3000)</option>
-          </select>
+        <!-- Server Selector Row -->
+        <div class="env-selector-row">
+          <span class="env-label">Server</span>
+          <div class="env-toggle-group" role="tablist" aria-label="Server Target">
+            <button id="btn-env-prod" class="btn-env-pill" type="button">astrework.app</button>
+            <button id="btn-env-local" class="btn-env-pill" type="button">localhost:3000</button>
+          </div>
         </div>
+        <input type="hidden" id="input-origin" value="https://astrework.app">
 
-        <div class="form-group">
-          <label for="input-email">Email Address</label>
-          <input type="email" id="input-email" placeholder="you@example.com" class="text-input" autocomplete="email" spellcheck="false">
-        </div>
-
-        <div class="form-group">
-          <label for="input-password">Password / Access Code</label>
-          <input type="password" id="input-password" placeholder="Password or Founder Code (9926)" class="text-input" autocomplete="current-password" spellcheck="false">
-        </div>
-
-        <div id="login-error-msg" class="auth-error-msg hidden"></div>
-
-        <button id="btn-login" class="btn btn-primary" type="button">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-            <polyline points="10 17 15 12 10 7"></polyline>
-            <line x1="15" y1="12" x2="3" y2="12"></line>
-          </svg>
-          <span id="btn-login-text">Sign In</span>
-        </button>
-
-        <!-- Advanced Token Collapsible -->
-        <details class="advanced-token-details">
-          <summary class="advanced-token-summary">Advanced: Token Sign In</summary>
-          <div class="form-group" style="margin-top: 8px;">
-            <div class="token-input-row">
-              <input type="password" id="input-token" placeholder="Paste token from AstreWork Settings" class="text-input" autocomplete="off" spellcheck="false">
-              <button id="btn-auto-token" class="btn-mini" type="button" title="Auto-fetch from open AstreWork tab">Auto</button>
+        <!-- Form with Inset Feather SVG Icons (Zapply-Grade) -->
+        <div class="form-container">
+          <!-- Email Input with Inset Mail Icon -->
+          <div class="form-group">
+            <div class="input-icon-wrap">
+              <svg class="input-icon-left" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+              <input type="email" id="input-email" placeholder="Email Address" class="text-input" autocomplete="email" spellcheck="false">
             </div>
-            <button id="btn-connect" class="btn btn-secondary" type="button" style="margin-top: 6px;">Connect with Token</button>
           </div>
-        </details>
+
+          <!-- Password Input with Inset Padlock + Show/Hide Eye Toggle -->
+          <div class="form-group">
+            <div class="input-icon-wrap">
+              <svg class="input-icon-left" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input type="password" id="input-password" placeholder="Password or Founder Code (9926)" class="text-input" autocomplete="current-password" spellcheck="false">
+              <button type="button" id="btn-toggle-password" class="input-icon-right" title="Show / Hide Password" aria-label="Toggle password visibility">
+                <svg id="icon-eye-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg id="icon-eye-hide" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                  <line x1="2" x2="22" y1="2" y2="22"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Error Alert Container -->
+          <div id="login-error-msg" class="auth-error-msg hidden"></div>
+
+          <!-- Tactile 3D Action Button (The Zapply Factor) -->
+          <button id="btn-login" class="btn-tactile-primary" type="button">
+            <span id="btn-login-text">Login</span>
+          </button>
+
+          <!-- "New Here? Sign Up" Navigation Row -->
+          <div class="signup-row">
+            <span>New Here?</span>
+            <a href="#" id="link-signup" class="accent-link">Sign Up</a>
+          </div>
+
+          <!-- Circular Social Auth Badges (Google, GitHub, Fast Founder Key) -->
+          <div class="social-auth-section">
+            <div class="social-badges-row">
+              <!-- Google Auth Pill -->
+              <button id="btn-social-google" class="social-pill-btn" type="button" title="Sign in with Google">
+                <svg width="17" height="17" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.99 0 12s.45 3.83 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+              </button>
+
+              <!-- GitHub Auth Pill -->
+              <button id="btn-social-github" class="social-pill-btn" type="button" title="Sign in with GitHub">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                </svg>
+              </button>
+
+              <!-- Founder Quick Access Pill (Code 9926) -->
+              <button id="btn-quick-founder" class="social-pill-btn founder-pill" type="button" title="1-Click Founder Access (Code 9926)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Advanced Token Collapsible -->
+          <details class="advanced-token-details">
+            <summary class="advanced-token-summary">Advanced: Token Sign In</summary>
+            <div class="token-collapsible-content">
+              <div class="token-input-row">
+                <input type="password" id="input-token" placeholder="Paste 90-day HMAC token" class="text-input" autocomplete="off" spellcheck="false">
+                <button id="btn-auto-token" class="btn-mini" type="button" title="Auto-fetch from open AstreWork tab">Auto</button>
+              </div>
+              <button id="btn-connect" class="btn-tactile-secondary" type="button" style="margin-top: 8px;">Connect with Token</button>
+            </div>
+          </details>
+        </div>
       </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer Area -->
     <footer class="footer">
+      <div class="footer-status-pill">
+        <span class="status-indicator-dot" id="footer-status-dot"></span>
+        <span id="footer-status-text">Ready</span>
+      </div>
       <a id="link-dashboard" href="#" class="footer-link">
-        <span>Open Dashboard</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <span>AstreWork Web</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
       </a>
-      <button id="btn-settings-toggle" class="btn-icon-link" type="button" title="Settings / Disconnect" aria-label="Settings">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </button>
     </footer>
   </div>
 

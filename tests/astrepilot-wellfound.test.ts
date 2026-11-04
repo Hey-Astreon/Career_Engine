@@ -52,3 +52,4 @@ describe("AstrePilot Wellfound (AngelList Talent) Driver Specifications", () => 
     expect(wellfoundDriver.fieldMap['TEXTAREA[name="userNote"]']).toBe("COVER_LETTER");
   });
 });
+
