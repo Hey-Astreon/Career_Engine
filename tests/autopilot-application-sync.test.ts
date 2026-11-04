@@ -60,13 +60,13 @@ describe("AstrePilot Application Sync & Deduplication Logic", () => {
     const ayushiProfile = { id: "prof-ayushi-id", userId: "user-ayushi-id", slug: "ayushi" };
     const thirdPartyProfile = { id: "prof-thirdparty-id", userId: "user-thirdparty-id", slug: "stranger" };
 
-    it("allows Roushan to access both Roushan and Ayushi profiles", () => {
+    it("allows Roushan to access ONLY Roushan's profile and blocks Ayushi's profile (Strict 1-Account = 1-Profile)", () => {
       expect(canAccessProfile(roushanUser, roushanProfile)).toBe(true);
-      expect(canAccessProfile(roushanUser, ayushiProfile)).toBe(true);
+      expect(canAccessProfile(roushanUser, ayushiProfile)).toBe(false);
     });
 
-    it("allows Ayushi to access both Roushan and Ayushi profiles", () => {
-      expect(canAccessProfile(ayushiUser, roushanProfile)).toBe(true);
+    it("allows Ayushi to access ONLY Ayushi's profile and blocks Roushan's profile (Strict 1-Account = 1-Profile)", () => {
+      expect(canAccessProfile(ayushiUser, roushanProfile)).toBe(false);
       expect(canAccessProfile(ayushiUser, ayushiProfile)).toBe(true);
     });
 

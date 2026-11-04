@@ -99,10 +99,10 @@ Both Roushan Kumar and Ayushi Raj are pursuing a **Bachelor of Computer Applicat
 
 ---
 
-## 🔒 SECTION 6: INVIOLABLE LAW — DEVELOPER CO-OWNERSHIP PRIVACY & CANDIDATE CONTEXT ISOLATION
+## 🔒 SECTION 6: INVIOLABLE LAW — STRICT 1-ACCOUNT = 1-PROFILE CANDIDATE CONTEXT ISOLATION
 
 AstreWork was created, architected, and built exclusively by **Roushan Kumar** (`playboxstation460@gmail.com`) and **Ayushi Raj** (`ayushi29507@gmail.com`) as co-developers.
-1. **Dual Founder Privileges:** Only `playboxstation460@gmail.com` and `ayushi29507@gmail.com` can view and switch between both candidate contexts (`roushan` and `ayushi`).
+1. **Strict 1-Account = 1-Profile Everywhere:** Every authenticated account is strictly isolated to its own single candidate profile across both the AstreWork Web Dashboard and the AstrePilot Chrome Extension. Roushan (`playboxstation460@gmail.com`) ONLY loads and accesses `roushan` (`Roushan Kumar`), and Ayushi (`ayushi29507@gmail.com`) ONLY loads and accesses `ayushi` (`Ayushi Raj`). Never combine, cross-list, or display partner profiles in any account dropdown, header pill, or extension settings.
 2. **Third-Party Isolation:** Any third-party user registering or logging in with any other email address MUST NEVER see, query, or access Roushan's or Ayushi's candidate profiles, resumes, phone numbers, or application pipelines. All candidate-scoped API routes enforce `403 Forbidden` for unauthorized third parties. Third-party users only ever see their own profile (`profile.userId === session.user.id`).
 
 ---

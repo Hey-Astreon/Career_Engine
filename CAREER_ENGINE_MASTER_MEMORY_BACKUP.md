@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 4, 2026 (Phase 79: AstrePilot Ultra-Clean Minimalist UI, Single Brand Logo, Electric Royal Blue 3D Button, Zero-9926 Security Leak Purge & Global Production Hard-Lock)
+> **LAST COGNITIVE SYNC:** November 4, 2026 (Phase 80: Strict 1-Account = 1-Profile Isolation Everywhere & Top-Right Header Single Account Pill Cleanup)
 
 ---
 
@@ -1458,6 +1458,17 @@ Located in `extension/`:
     - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`207.4 KB`).
     - Full test suite passed: `55/55` test files, `525/525` tests passing (`npx vitest run`).
     - Typecheck (`npx tsc --noEmit`) and linting (`npm run lint`): `0 errors, 0 warnings`.
+
+- [x] **Phase 80: Strict 1-Account = 1-Profile Isolation & Top-Right Header Cleanup (Nov 4, 2026)**
+  - **1. Strict 1-Account = 1-Profile Authorization (`src/lib/authCandidate.ts` & `src/app/api/profiles/route.ts`):**
+    - Removed dual-profile partner sharing (`OR: [{ slug: { in: ['roushan', 'ayushi'] } }]` and `isPartner: true`).
+    - Updated `canAccessProfile` and `GET /api/profiles` so `playboxstation460@gmail.com` ONLY resolves `roushan` (`Roushan Kumar`) and `ayushi29507@gmail.com` ONLY resolves `ayushi` (`Ayushi Raj`).
+    - Updated `GET /api/autopilot/profile` so AstrePilot extension tokens strictly resolve only the logged-in user's single profile.
+  - **2. Top-Right Workspace Header Cleanup (`src/components/Header.tsx` & `src/components/UserAccountMenu.tsx`):**
+    - Removed the duplicate left `<ProfileSwitcher />` pill and its `DEVELOPER CANDIDATE CONTEXT — 2 PROFILES` dropdown from `Header.tsx`.
+    - Moved automatic `/api/profiles` store hydration directly into `UserAccountMenu.tsx` so `useProfileStore` loads the logged-in user's single profile seamlessly on mount while displaying only 1 clean account pill in the top-right header.
+  - **3. Automated Test Suite Verification:**
+    - Updated `tests/candidate_context_privacy.test.ts` and `tests/autopilot-application-sync.test.ts` to enforce strict 1-user = 1-profile boundaries (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings).
 
 - [x] **Phase 79: AstreWork Brand Calibration & Authentic Identity Alignment (Nov 4, 2026)**
   - **1. Zero-Plagiarism Brand Identity Restoration:**
@@ -3429,3 +3440,17 @@ graph TD
   - **Rule 3 (Zero Secret / Founder Code Exposure in Client UI Law):** Never put secret override codes (`9926`), founder emails, or hardcoded fallback tokens (`DEFAULT_FOUNDER_TOKENS`) in HTML placeholders, tooltips, or client-side fallback variables.
   - **Rule 4 (Global Production Origin Law):** Client extensions must always hard-lock to `https://astrework.app` and actively purge stale `localhost` values from `chrome.storage`.
 - **Status:** Complete, verified (`0` `9926`/`localhost` matches in extension, Vitest & TS clean), extension zip rebuilt (`617.9 KB`), committed and pushed to `origin main`.
+
+### Case 56: The Partner Profile Leakage & Duplicate Header Account Pill Defect (Nov 4, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  1. When Ayushi Bhabhi (`ayushi29507@gmail.com`) logged into her account on `https://astrework.app/dashboard`, the top-right header showed **two** side-by-side pills with her name (`AYUSHI RAJ — YOU (DEVELOPER)` from `ProfileSwitcher` and `AYUSHI RAJ — ayushi29507@gmail.com` from `UserAccountMenu`), and clicking the left pill opened `DEVELOPER CANDIDATE CONTEXT — 2 PROFILES` displaying `ROUSHAN KUMAR (PARTNER)`.
+- **Deep Root Cause Diagnosis:**
+  - `src/app/api/profiles/route.ts` queried `slug: { in: ['roushan', 'ayushi'] }` whenever `isDeveloperEmail(userEmail)` was true, returning both profiles for both founders. Meanwhile, `src/components/Header.tsx` rendered both `<ProfileSwitcher />` and `<UserAccountMenu />` side-by-side.
+- **The Concrete Surgical Fix:**
+  1. **Strict 1-Account = 1-Profile Isolation (`src/lib/authCandidate.ts`, `src/app/api/profiles/route.ts`, `src/app/api/autopilot/profile/route.ts`):** Updated `canAccessProfile` and `GET /api/profiles` so each developer email only accesses and receives their own single profile slug (`getDeveloperDefaultSlug(userEmail)`: `ayushi` for Ayushi, `roushan` for Roushan), with `isPartner: false`.
+  2. **Single Top-Right Account Pill (`src/components/Header.tsx` & `src/components/UserAccountMenu.tsx`):** Removed `<ProfileSwitcher />` from `Header.tsx` and moved automatic `/api/profiles` store hydration into `UserAccountMenu.tsx`, leaving only one clean account pill in the top-right header.
+  3. **Updated Unit Tests:** Updated `tests/candidate_context_privacy.test.ts` and `tests/autopilot-application-sync.test.ts` to assert `canAccessProfile(ayushiSession, roushanProfile) === false` and `canAccessProfile(roushanSession, ayushiProfile) === false`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Strict 1-Account = 1-Profile Law):** One login must equal one user profile everywhere (Web Dashboard + AstrePilot Extension). Never combine or cross-list partner profiles under another user's login session.
+  - **Rule 2 (No Duplicate Identity Pills in Header Law):** Never render two adjacent identity/profile dropdown pills in the same top-right header bar. Hydrate profile context silently in the background and expose a single unified account menu.
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.

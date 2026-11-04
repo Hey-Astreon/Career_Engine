@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
-import { isDeveloperEmail, isDeveloperProfileSlug } from "@/lib/authCandidate";
+import { isDeveloperEmail, getDeveloperDefaultSlug } from "@/lib/authCandidate";
 import { getMasterResumeBaseline } from "@/lib/resumeBaseline";
 
 const CORS = {
@@ -31,20 +31,15 @@ export async function GET(req: Request) {
       select: { id: true, email: true },
     });
 
-    const { searchParams } = new URL(req.url);
-    const requestedSlug = searchParams.get("slug")?.trim().toLowerCase();
+    let profile = await db.profile.findFirst({
+      where: { userId },
+      include: { projects: true, virtualExps: true },
+    });
 
-    let profile = null;
-    if (requestedSlug && isDeveloperEmail(user?.email) && isDeveloperProfileSlug(requestedSlug)) {
+    if (!profile && isDeveloperEmail(user?.email)) {
+      const ownSlug = getDeveloperDefaultSlug(user?.email);
       profile = await db.profile.findFirst({
-        where: { slug: requestedSlug },
-        include: { projects: true, virtualExps: true },
-      });
-    }
-
-    if (!profile) {
-      profile = await db.profile.findFirst({
-        where: { userId },
+        where: { slug: ownSlug },
         include: { projects: true, virtualExps: true },
       });
     }

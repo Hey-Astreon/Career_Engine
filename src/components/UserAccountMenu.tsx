@@ -16,10 +16,42 @@ import {
 
 export function UserAccountMenu() {
   const { data: session, status } = useSession();
-  const { activeProfile } = useProfileStore();
+  const { activeProfile, setAllProfiles, setActiveProfileSlug, setIsLoading } =
+    useProfileStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Automatically hydrate the logged-in user's single profile into the workspace store
+  useEffect(() => {
+    if (status === "loading") return;
+
+    async function loadUserProfile() {
+      try {
+        setIsLoading(true);
+        const res = await fetch("/api/profiles");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.profiles)) {
+          setAllProfiles(
+            data.profiles,
+            data.userProfileSlug,
+            Boolean(data.isDeveloper)
+          );
+          if (data.userProfileSlug) {
+            setActiveProfileSlug(data.userProfileSlug);
+          } else if (data.profiles.length > 0) {
+            setActiveProfileSlug(data.profiles[0].slug);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load user profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadUserProfile();
+  }, [status, session?.user?.email, setAllProfiles, setActiveProfileSlug, setIsLoading]);
 
   // Close dropdown on outside click
   useEffect(() => {

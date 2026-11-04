@@ -1,6 +1,5 @@
 "use client";
 
-import { ProfileSwitcher } from "./ProfileSwitcher";
 import { UserAccountMenu } from "./UserAccountMenu";
 import { Command, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -32,8 +31,6 @@ export function Header() {
         </kbd>
       </div>
       <div className="ml-auto flex items-center gap-2.5">
-        <ProfileSwitcher />
-        <div className="h-5 w-px bg-[var(--line)] hidden sm:block" />
         <UserAccountMenu />
       </div>
     </header>

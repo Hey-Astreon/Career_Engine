@@ -89,14 +89,14 @@ describe("Candidate Context Privacy & Authorization Suite", () => {
       email: "ayushi29507@gmail.com",
     };
 
-    it("allows Roushan to access both Roushan and Ayushi profiles (Dual Co-Ownership)", () => {
+    it("allows Roushan to access ONLY Roushan's profile and blocks Ayushi's profile (Strict 1-Account = 1-Profile)", () => {
       expect(canAccessProfile(roushanSession, roushanProfile)).toBe(true);
-      expect(canAccessProfile(roushanSession, ayushiProfile)).toBe(true);
+      expect(canAccessProfile(roushanSession, ayushiProfile)).toBe(false);
     });
 
-    it("allows Ayushi to access both Ayushi and Roushan profiles (Dual Co-Ownership)", () => {
+    it("allows Ayushi to access ONLY Ayushi's profile and blocks Roushan's profile (Strict 1-Account = 1-Profile)", () => {
       expect(canAccessProfile(ayushiSession, ayushiProfile)).toBe(true);
-      expect(canAccessProfile(ayushiSession, roushanProfile)).toBe(true);
+      expect(canAccessProfile(ayushiSession, roushanProfile)).toBe(false);
     });
 
     it("STRICTLY BLOCKS third-party users from accessing Roushan's profile", () => {

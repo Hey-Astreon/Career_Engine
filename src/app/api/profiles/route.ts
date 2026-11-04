@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   isDeveloperEmail,
-  isDeveloperProfileSlug,
   getDeveloperDefaultSlug,
 } from "@/lib/authCandidate";
 
@@ -29,11 +28,12 @@ export async function GET() {
 
     let rawProfiles;
     if (isDev) {
-      // Co-developers (Roushan & Ayushi) are authorized to see both developer profiles
+      // Strict 1-Account = 1-Profile: each developer only loads their own profile
+      const ownSlug = getDeveloperDefaultSlug(userEmail);
       rawProfiles = await db.profile.findMany({
         where: {
           OR: [
-            { slug: { in: ["roushan", "ayushi"] } },
+            { slug: ownSlug },
             { userId: currentUserId },
           ],
         },
@@ -70,12 +70,14 @@ export async function GET() {
     }
 
     const profiles = rawProfiles.map((p) => {
-      const isOwner = Boolean(currentUserId && p.userId === currentUserId);
-      const isPartner = Boolean(isDev && isDeveloperProfileSlug(p.slug) && !isOwner);
+      const isOwner = Boolean(
+        (currentUserId && p.userId === currentUserId) ||
+          (isDev && p.slug === userProfileSlug)
+      );
       return {
         ...p,
         isOwner,
-        isPartner,
+        isPartner: false,
         isTemplate: !p.userId,
       };
     });
@@ -130,9 +132,16 @@ export async function PATCH(req: Request) {
       primarySkills,
     } = body;
 
-    const existing = await db.profile.findFirst({
+    let existing = await db.profile.findFirst({
       where: { userId: session.user.id },
     });
+
+    if (!existing && isDeveloperEmail(session.user.email)) {
+      const ownSlug = getDeveloperDefaultSlug(session.user.email);
+      existing = await db.profile.findFirst({
+        where: { slug: ownSlug },
+      });
+    }
 
     if (!existing) {
       return NextResponse.json(

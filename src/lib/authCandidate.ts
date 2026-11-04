@@ -1,9 +1,9 @@
 /**
  * Candidate Context Authorization & Security Module
  * 
- * Strict access control rules:
- * 1. Co-Developers: Roushan (playboxstation460@gmail.com) and Ayushi (ayushi29507@gmail.com).
- *    - Authorized to view, switch between, and manage BOTH 'roushan' and 'ayushi' candidate contexts.
+ * Strict 1-Account = 1-Profile access control rules:
+ * 1. Co-Developers: Roushan (playboxstation460@gmail.com -> 'roushan') and Ayushi (ayushi29507@gmail.com -> 'ayushi').
+ *    - Strictly isolated to their own individual candidate context ('roushan' for Roushan, 'ayushi' for Ayushi).
  * 2. Third-Party Users:
  *    - Strictly isolated to their own profile (profile.userId === session.user.id).
  *    - Never allowed to view, query, score against, or download Roushan's or Ayushi's candidate profiles.
@@ -69,12 +69,12 @@ export function canAccessProfile(
   const isDev = isDeveloperEmail(sessionUser.email);
 
   if (isDev) {
-    // Developers have dual access to both developer profiles
-    if (isDeveloperProfileSlug(profile.slug)) {
+    // Strict 1-Account = 1-Profile isolation: each developer only accesses their own default slug or owned profile
+    const ownSlug = getDeveloperDefaultSlug(sessionUser.email);
+    if (profile.slug.trim().toLowerCase() === ownSlug) {
       return true;
     }
-    // Developers can also access any profile they own
-    return profile.userId === sessionUser.id;
+    return Boolean(profile.userId && profile.userId === sessionUser.id);
   }
 
   // Non-developer users MUST NEVER access developer profiles they do not own
