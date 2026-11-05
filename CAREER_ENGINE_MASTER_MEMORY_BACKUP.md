@@ -1467,12 +1467,15 @@ Located in `extension/`:
   - **2. Instant Re-Scan Visual Feedback & Shadow Toast Engine (`extension/hud-ui.js`, `extension/content.js`):**
     - Added 360-degree CSS rotation animation on clicking `.action-rescan`.
     - Implemented `showToast(msg)` inside the closed Shadow DOM (`#astrepilot-root`), displaying an immediate confirmation pill (`✓ 24 fields verified`).
-  - **3. Active Filling Indicator in HUD Footer (`extension/hud-ui.js`):**
-    - Calibrated `_renderFooter()` so that when `this.state === 'filling'`, the action button disables, displays an inline CSS spinner, and reads `Filling 24 fields...` with zero ambiguity.
+  - **3. Dual Autofill Button Placement & Above-the-Fold Visibility (`extension/hud-ui.js`, `extension/hud.shadow.css`):**
+    - Eliminated fold-hidden CTA bug: on long forms (such as 24-field Greenhouse apps), the Autofill CTA was previously pushed below the viewport fold at the bottom of the card.
+    - Repositioned the primary `⚡ Autofill X fields` button directly beneath the `● Ready to fill` status bar above the fold (`.summary-action-block`), rendering unconditionally whenever `this.state !== 'done'`.
+    - Maintained a secondary autofill action in `.hud-footer` so users who scroll down to review lower fields can trigger autofill without scrolling back up.
+    - Widened `.hud-card` from `328px` to `356px` with pinned header actions (`margin-left: auto; flex-shrink: 0;`), preventing the `✕` close button from clipping outside the right boundary.
   - **4. Packaging & Verification:**
-    - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`618.5 KB`).
+    - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`618.6 KB`).
     - Vitest test suite verified: all `55/55` test suites passing (`525/525` tests).
-    - TypeScript compilation clean: `npx tsc --noEmit` exited with 0 errors.
+    - TypeScript compilation clean: `npx.cmd tsc --noEmit` exited with 0 errors.
 
 - [x] **Phase 82: Single 1-Click Master Action & Elimination of Dual-Button Dilemma (Nov 5, 2026)**
   - **1. Zero-Hesitation Popup Action Hierarchy (`extension/popup.html`, `extension/popup.js`, `extension/popup.css`):**
