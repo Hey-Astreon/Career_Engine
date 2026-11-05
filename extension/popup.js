@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statFields = document.getElementById('stat-fields');
   const statHours = document.getElementById('stat-hours');
 
-  const btnLaunchHud = document.getElementById('btn-launch-hud');
   const btnAutofillDirect = document.getElementById('btn-autofill-direct');
   const btnCopyCover = document.getElementById('btn-copy-cover');
   const btnCopyCoverText = document.getElementById('btn-copy-cover-text');
@@ -367,16 +366,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab && tab.id) {
         await sendToTab(tab.id, 'AUTOFILL');
-        window.close();
-      }
-    });
-  }
-
-  if (btnLaunchHud) {
-    btnLaunchHud.addEventListener('click', async () => {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab && tab.id) {
-        await sendToTab(tab.id, 'TOGGLE_HUD');
         window.close();
       }
     });

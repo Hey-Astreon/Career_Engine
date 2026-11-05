@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 81: OAuthAccountNotLinked Stale Session Purge & Founder Self-Healing Password Engine)
+> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 82: Elimination of Dual-Button Dilemma & Single 1-Click Master Autofill Action)
 
 ---
 
@@ -1459,6 +1459,12 @@ Located in `extension/`:
     - Full test suite passed: `55/55` test files, `525/525` tests passing (`npx vitest run`).
     - Typecheck (`npx tsc --noEmit`) and linting (`npm run lint`): `0 errors, 0 warnings`.
 
+- [x] **Phase 82: Single 1-Click Master Action & Elimination of Dual-Button Dilemma (Nov 5, 2026)**
+  - **1. Zero-Hesitation Popup Action Hierarchy (`extension/popup.html`, `extension/popup.js`, `extension/popup.css`):**
+    - Removed the secondary `Open In-Page HUD` button from the popup to eliminate candidate cognitive hesitation ('Which one do I click?').
+    - Established `⚡ Autofill Application` as the single, dominant 1-click primary CTA.
+    - When clicked, it automatically triggers autonomous form filling, synthetic resume attachment, and in-page confirmation feedback without requiring a secondary click.
+  - **2. Automated Verification & Packaging:** Rebuilt `public/downloads/astrepilot-extension.zip` (617.8 KB), verified all `55/55` Vitest test suites (`525/525` tests passing), `0` TypeScript errors, `0` ESLint warnings.
 - [x] **Phase 81: OAuthAccountNotLinked Stale Session Purge & Founder Password Engine (Nov 5, 2026)**
   - **1. OAuth Account Linking Cross-User Conflict Resolution (`src/app/(auth)/login/page.tsx`):**
     - Fixed `error=OAuthAccountNotLinked` caused when a browser retains a stale session cookie from another user (e.g. Ayushi's session) while signing in via Google or GitHub.
@@ -3476,4 +3482,17 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (OAuth Session Isolation Law):** Always call `signOut({ redirect: false })` before initiating OAuth from a public login screen to prevent stale cookies from triggering unintended account-linking collisions.
   - **Rule 2 (OAuth User Password Provisioning Law):** Never leave OAuth-created users trapped without password access. When a verified founder authenticates, allow them to set/heal their password seamlessly.
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
+
+### Case 58: The Dual-Button Action Dilemma in Extension Popup (Nov 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - When Brother Roushan opened AstrePilot on a live Greenhouse job application (Astranis Flight Software Intern), the popup presented two competing full-width action buttons: `⚡ Autofill Application` and `Open In-Page HUD`.
+  - This created cognitive friction: the candidate had to pause and wonder which button to click, and clicking `Open In-Page HUD` added an unnecessary extra step because the user still had to click 'Fill' inside the HUD anyway.
+- **Deep Root Cause Diagnosis:**
+  - Violated Hick's Law and single-action clarity. High-velocity career tools should offer a single obvious path forward rather than splitting primary intent across two adjacent buttons.
+- **The Concrete Surgical Fix:**
+  - Removed `Open In-Page HUD` from `extension/popup.html` and `extension/popup.js`.
+  - Kept `⚡ Autofill Application` as the single dominant master action. In-page HUD remains accessible via the hotkey (`Alt+Shift+A`) and automatically provides completion status and review options after autofilling.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Single Primary Action Law):** Never give users two competing primary action buttons for the same destination. Make the 1-click action do the full job autonomously.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
