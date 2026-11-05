@@ -142,7 +142,7 @@ svg {
    HUD EXPANDED CARD
    ══════════════════════════════════════════════════════════════════════ */
 .hud-card {
-  width: 328px;
+  width: 356px;
   background: var(--ap-bg);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
@@ -164,17 +164,18 @@ svg {
 
 /* Header */
 .hud-header {
-  padding: 9px 12px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-2);
+  gap: 4px;
   border-bottom: 1px solid var(--ap-line);
   background: var(--ap-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   cursor: grab;
   user-select: none;
+  min-width: 0;
 }
 
 .hud-header:active {
@@ -184,19 +185,19 @@ svg {
 .hud-title {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: 5px;
   font-weight: 700;
-  font-size: var(--fs-base);
+  font-size: 12px;
   color: var(--ap-ink);
   letter-spacing: -0.015em;
   white-space: nowrap !important;
-  flex-shrink: 0;
+  flex-shrink: 1;
   min-width: 0;
 }
 
 .logo-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--ap-radius-sm);
   background: linear-gradient(135deg, #1e293b, #0f172a);
   display: flex;
@@ -215,12 +216,12 @@ svg {
 
 .step-pill-badge {
   font-family: var(--ap-mono) !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
   color: var(--ap-ai) !important;
   background: var(--ap-ai-soft) !important;
   border: 1px solid rgba(37, 99, 235, 0.25) !important;
-  padding: 2px 7px !important;
+  padding: 1px 5px !important;
   border-radius: var(--ap-radius-pill) !important;
   margin-left: 2px !important;
   white-space: nowrap !important;
@@ -236,16 +237,17 @@ svg {
 .hud-actions {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .icon-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -254,11 +256,12 @@ svg {
   transition: all 0.15s var(--ap-ease);
   flex-shrink: 0;
   outline: none;
+  padding: 0;
 }
 
 .icon-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .icon-btn:hover {
@@ -267,9 +270,14 @@ svg {
   transform: scale(1.05);
 }
 
+.icon-btn.action-close {
+  color: var(--ap-ink-2);
+  margin-left: 1px;
+}
+
 .icon-btn.action-close:hover {
-  color: var(--ap-danger);
-  background: var(--ap-danger-soft);
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .icon-btn:active {
