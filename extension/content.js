@@ -171,16 +171,23 @@
 
   async function acquireFillLock(force = false) {
     return new Promise((resolve) => {
-      chrome.runtime.sendMessage({
-        type: 'ACQUIRE_FILL_LOCK',
-        url: window.location.href,
-        company: activeSession ? activeSession.company : document.title.replace(/ \|.*/, '').trim().slice(0, 80),
-        jobTitle: activeSession ? activeSession.jobTitle : '',
-        ttlMs: 45000,
-        force: force
-      }, (res) => {
-        resolve(res || { success: true });
-      });
+      const timer = setTimeout(() => resolve({ success: true }), 400);
+      try {
+        chrome.runtime.sendMessage({
+          type: 'ACQUIRE_FILL_LOCK',
+          url: window.location.href,
+          company: activeSession ? activeSession.company : document.title.replace(/ \|.*/, '').trim().slice(0, 80),
+          jobTitle: activeSession ? activeSession.jobTitle : '',
+          ttlMs: 45000,
+          force: force
+        }, (res) => {
+          clearTimeout(timer);
+          resolve(res || { success: true });
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        resolve({ success: true });
+      }
     });
   }
 
@@ -257,11 +264,20 @@
       const fields = scanFields();
       sendResponse({ count: fields.length, fields: fields.map(f => ({ type: f.type, id: f.id })) });
     } else if (request.action === 'AUTOFILL') {
-      // Wait for the HUD to finish loading profile + scan instead of guessing a delay
+      // Ensure HUD is open, wait for scan/profile loading to finish, then immediately run autofill
       (async () => {
-        if (!activeHud) await toggleAstrePilotHUD();
-        else if (mountPromise) await mountPromise;
-        await runAutofill();
+        try {
+          if (!activeHud) {
+            await toggleAstrePilotHUD();
+          }
+          if (mountPromise) {
+            await mountPromise;
+          }
+          await new Promise(r => setTimeout(r, 120));
+          await runAutofill();
+        } catch (err) {
+          console.error('[AstrePilot] AUTOFILL handler error:', err);
+        }
       })();
       sendResponse({ status: 'autofilling' });
     } else if (request.action === 'DOWNLOAD_RESUME') {
@@ -4694,6 +4710,9 @@
     if (!activeHud || isFilling) return;
     const fields = scanFields();
     applyDetectedFields(fields);
+    if (activeHud && typeof activeHud.showToast === 'function') {
+      activeHud.showToast(`✓ ${fields.length} fields verified`);
+    }
   }
 
   async function runAutofill() {
@@ -4721,8 +4740,8 @@
       return;
     }
 
-    // Cross-Origin Subframe Delegation: if fields reside in an embedded child iframe, delegate execution
-    if (childFrameSource && (!detectedFields || detectedFields.length === 0 || detectedFields.some(f => !f.element || !f.element.isConnected))) {
+    // Cross-Origin Subframe Delegation: ONLY if top window has NO detectable fields of its own AND an active child frame was detected
+    if (childFrameSource && (!detectedFields || detectedFields.length === 0)) {
       hud.setState('filling');
       childFrameSource.postMessage({
         type: 'ASTREPILOT_CHILD_TRIGGER_AUTOFILL',

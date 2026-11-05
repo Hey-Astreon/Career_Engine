@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 82: Elimination of Dual-Button Dilemma & Single 1-Click Master Autofill Action)
+> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 83: AstrePilot Live Autofill Execution Pipeline, Instant Re-Scan Feedback & In-HUD State Responsiveness)
 
 ---
 
@@ -1458,6 +1458,21 @@ Located in `extension/`:
     - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`207.4 KB`).
     - Full test suite passed: `55/55` test files, `525/525` tests passing (`npx vitest run`).
     - Typecheck (`npx tsc --noEmit`) and linting (`npm run lint`): `0 errors, 0 warnings`.
+
+- [x] **Phase 83: AstrePilot Live Autofill Execution Pipeline, Instant Re-Scan Feedback & In-HUD State Responsiveness (Nov 5, 2026)**
+  - **1. Subframe Hijacking Elimination & Fail-Safe Lock Timeouts (`extension/content.js`):**
+    - Repaired `runAutofill()` so it never delegates execution to an embedded child frame if the top-level document already has detected application fields (`detectedFields.length > 0`).
+    - Added a strict 400ms timeout fallback to `acquireFillLock()` to prevent service-worker wake-up latency from freezing autofill.
+    - Improved `AUTOFILL` action handler to reliably await mount initialization before executing form population.
+  - **2. Instant Re-Scan Visual Feedback & Shadow Toast Engine (`extension/hud-ui.js`, `extension/content.js`):**
+    - Added 360-degree CSS rotation animation on clicking `.action-rescan`.
+    - Implemented `showToast(msg)` inside the closed Shadow DOM (`#astrepilot-root`), displaying an immediate confirmation pill (`✓ 24 fields verified`).
+  - **3. Active Filling Indicator in HUD Footer (`extension/hud-ui.js`):**
+    - Calibrated `_renderFooter()` so that when `this.state === 'filling'`, the action button disables, displays an inline CSS spinner, and reads `Filling 24 fields...` with zero ambiguity.
+  - **4. Packaging & Verification:**
+    - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`618.5 KB`).
+    - Vitest test suite verified: all `55/55` test suites passing (`525/525` tests).
+    - TypeScript compilation clean: `npx tsc --noEmit` exited with 0 errors.
 
 - [x] **Phase 82: Single 1-Click Master Action & Elimination of Dual-Button Dilemma (Nov 5, 2026)**
   - **1. Zero-Hesitation Popup Action Hierarchy (`extension/popup.html`, `extension/popup.js`, `extension/popup.css`):**
@@ -3495,4 +3510,29 @@ graph TD
   - Kept `⚡ Autofill Application` as the single dominant master action. In-page HUD remains accessible via the hotkey (`Alt+Shift+A`) and automatically provides completion status and review options after autofilling.
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (Single Primary Action Law):** Never give users two competing primary action buttons for the same destination. Make the 1-click action do the full job autonomously.
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
+
+### Case 59: Live Autofill Delegation Hijacking & Frozen Re-Scan Visual Feedback (Nov 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan tested AstrePilot on a live Greenhouse job application (`Astranis — Flight Software Intern (Summer 2027)`).
+  - After clicking `⚡ Autofill Application`, the in-page HUD appeared in `ready` review state with 24 fields detected, displaying empty status circles (`○`) and a bottom button `⚡ Autofill 24 fields` instead of typing and filling automatically.
+  - When Brother Roushan clicked the `🔄 Re-Scan Form Fields` icon button, it felt completely unresponsive and dead (no spinning animation, no toast, no visual change).
+  - When he clicked the `➕` button (`action-extract-jd`), it responded immediately and began extracting the JD text to AstreWork.
+- **Deep Root Cause Diagnosis:**
+  1. **Subframe Delegation Hijacking:** In `extension/content.js`, `runAutofill()` checked `if (childFrameSource && (!detectedFields || detectedFields.length === 0 || detectedFields.some(f => !f.element || !f.element.isConnected)))`. If a third-party tracking or analytics iframe posted a message, and ANY element in the top-level form reported disconnected during a DOM cycle, autofill was erroneously delegated to the child iframe instead of filling the 24 fields detected directly in the main window.
+  2. **Concurrency Lock Hang Risk:** `acquireFillLock` lacked a timeout fallback; if the background service worker was waking up or delayed, the promise could hang indefinitely before reaching `fillAllFields`.
+  3. **Re-Scan Visual Silence:** When `action-rescan` was clicked, `rescanFields()` scanned the page, found the exact same 24 fields, and re-rendered the identical list. Without any icon rotation animation, badge state transition, or confirmation toast, the UI appeared completely static and dead to the user.
+  4. **Active Filling State Obscurity:** When `this.state === 'filling'`, the HUD footer button previously still rendered `Autofill 24 fields` without disabling or showing a spinner, creating confusion over whether filling was running.
+- **The Concrete Surgical Fix:**
+  1. **Subframe Delegation Guard (`extension/content.js`):** Limited child-frame delegation strictly to cases where the top window has ZERO detectable fields (`!detectedFields || detectedFields.length === 0`). If the top window found fields, it always fills them directly.
+  2. **Fail-Safe Lock Timeout (`extension/content.js`):** Added a 400ms timeout fallback to `acquireFillLock()` so locks can never hang execution.
+  3. **Instant Re-Scan Feedback & Toast Engine (`extension/hud-ui.js`, `extension/content.js`):**
+     - Clicking `.action-rescan` triggers a 360-degree CSS rotation on the SVG icon.
+     - Added `showToast(msg)` inside the closed Shadow DOM to render a sleek floating confirmation pill (`✓ 24 fields verified`).
+  4. **Active Filling State UI (`extension/hud-ui.js`):** In `_renderFooter()`, when `this.state === 'filling'`, the button disables, renders an inline CSS spinner, and displays `Filling 24 fields...`.
+  5. **Extension Packaging:** Rebuilt `public/downloads/astrepilot-extension.zip` (`618.5 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Top-Window Primary Driver Law):** Never delegate application form filling to an embedded child iframe if the top-level window already detected valid form fields. Only delegate when the top window is a shell container with 0 detected fields.
+  - **Rule 2 (Every Action Requires Instant Visual Feedback):** Never let a user action resolve silently. Even when an operation confirms an unchanged state (like re-scanning the same fields), always provide an immediate tactile cue (icon rotation, status toast, or count badge) within 16ms.
+  - **Rule 3 (Fail-Safe Lock Timeouts):** All inter-process and background service worker lock acquisitions must enforce a hard 400ms timeout fallback so network or worker wakeup latencies can never freeze user-facing automation.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.

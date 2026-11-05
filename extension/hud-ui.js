@@ -430,6 +430,17 @@ window.AstrePilotHUD = (function () {
           }
         }
         else if (btn.classList.contains('action-rescan')) {
+          const iconSvg = btn.querySelector('svg');
+          if (iconSvg) {
+            iconSvg.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            iconSvg.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+              if (iconSvg) {
+                iconSvg.style.transition = 'none';
+                iconSvg.style.transform = 'rotate(0deg)';
+              }
+            }, 650);
+          }
           if (this.options.onRescan) this.options.onRescan();
         }
         else if (btn.classList.contains('action-login-advance')) {
@@ -637,6 +648,27 @@ window.AstrePilotHUD = (function () {
     setCoverLetter(text) {
       this.coverLetter = text;
       this._renderBody();
+    }
+
+    showToast(msg) {
+      if (!this.shadow) return;
+      let toast = this.shadow.getElementById('ap-hud-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'ap-hud-toast';
+        toast.style.cssText = 'position: absolute; top: 48px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #f8fafc; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease;';
+        if (this.card) this.card.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(this._toastTimer);
+      this._toastTimer = setTimeout(() => {
+        if (toast) {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(-50%) translateY(-4px)';
+        }
+      }, 1800);
     }
 
     showCoverLetterModal() {
@@ -1104,10 +1136,13 @@ window.AstrePilotHUD = (function () {
             `;
           }
         } else {
-          const btnText = this.state === 'scanning' ? 'Scanning...' : `Autofill ${this.fields.length} fields`;
+          const isBusy = this.state === 'scanning' || this.state === 'filling';
+          const btnText = this.state === 'scanning'
+            ? 'Scanning...'
+            : (this.state === 'filling' ? `Filling ${this.fields.length} fields...` : `Autofill ${this.fields.length} fields`);
           html += `
-            <button class="btn-primary action-fill" ${this.state==='scanning'?'disabled':''}>
-              ${ICONS.fillAction} ${btnText}
+            <button class="btn-primary action-fill" ${isBusy ? 'disabled style="opacity: 0.85; cursor: wait;"' : ''}>
+              ${this.state === 'filling' ? '<span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:ap-spin 0.6s linear infinite;margin-right:6px;vertical-align:middle;"></span>' : ICONS.fillAction} ${btnText}
             </button>
             ${(this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) ? `
               <button type="button" class="btn-secondary action-view-cover-letter" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; margin-top: 6px;">
