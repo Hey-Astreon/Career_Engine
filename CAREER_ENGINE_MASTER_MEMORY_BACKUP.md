@@ -3524,6 +3524,7 @@ graph TD
   3. **Re-Scan Visual Silence:** When `action-rescan` was clicked, `rescanFields()` scanned the page, found the exact same 24 fields, and re-rendered the identical list. Without any icon rotation animation, badge state transition, or confirmation toast, the UI appeared completely static and dead to the user.
   4. **Active Filling State Obscurity:** When `this.state === 'filling'`, the HUD footer button previously still rendered `Autofill 24 fields` without disabling or showing a spinner, creating confusion over whether filling was running.
   5. **Close Button (✕) Header Overflow Clipping:** Brother Roushan noticed there was no visible close button on the HUD. The button `<button class="icon-btn action-close">` existed in the HTML, but because `.hud-card` width was set to only `328px` with `overflow: hidden`, the 167px title/badge plus the 171px action bar exceeded 346px, pushing the 6th button (`action-close`) 42px beyond the right edge of the card and clipping it out of existence.
+  6. **Autofill CTA Buried Below Long Form Lists:** On forms with extensive field sets (e.g. 24 fields on Greenhouse), the primary `⚡ Autofill 24 fields` button was positioned in `.hud-footer` at the very bottom, forcing candidates to scroll all the way past the 24th field just to trigger autofill.
 - **The Concrete Surgical Fix:**
   1. **Subframe Delegation Guard (`extension/content.js`):** Limited child-frame delegation strictly to cases where the top window has ZERO detectable fields (`!detectedFields || detectedFields.length === 0`). If the top window found fields, it always fills them directly.
   2. **Fail-Safe Lock Timeout (`extension/content.js`):** Added a 400ms timeout fallback to `acquireFillLock()` so locks can never hang execution.
@@ -3535,10 +3536,15 @@ graph TD
      - Calibrated `.hud-card` width from `328px` to `356px`, providing comfortable horizontal breathing room.
      - Added `margin-left: auto; flex-shrink: 0;` to `.hud-actions` so action icons are permanently anchored against the right edge and can never be pushed off by the title or badge.
      - Compacted `.icon-btn` to 24px x 24px with 2px gap, and gave `.icon-btn.action-close` distinct crimson hover feedback (`#ef4444` on `rgba(239, 68, 68, 0.15)`).
-  6. **Extension Packaging:** Rebuilt `public/downloads/astrepilot-extension.zip` (`618.5 KB`).
+  6. **Above-The-Fold Master Autofill CTA (`extension/hud-ui.js`, `extension/hud.shadow.css`):**
+     - Relocated the primary `⚡ Autofill X fields` button directly below the `Ready to fill` summary bar (`.summary-action-block`).
+     - Candidates now see the identity pill, status, and large action button immediately upon opening without scrolling.
+     - The footer is kept focused on post-fill actions (`🎉 Mark as Submitted`, `View Cover Letter`, `Alt⇧A`).
+  7. **Extension Packaging:** Rebuilt `public/downloads/astrepilot-extension.zip` (`618.6 KB`).
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (Top-Window Primary Driver Law):** Never delegate application form filling to an embedded child iframe if the top-level window already detected valid form fields. Only delegate when the top window is a shell container with 0 detected fields.
   - **Rule 2 (Every Action Requires Instant Visual Feedback):** Never let a user action resolve silently. Even when an operation confirms an unchanged state (like re-scanning the same fields), always provide an immediate tactile cue (icon rotation, status toast, or count badge) within 16ms.
   - **Rule 3 (Fail-Safe Lock Timeouts):** All inter-process and background service worker lock acquisitions must enforce a hard 400ms timeout fallback so network or worker wakeup latencies can never freeze user-facing automation.
   - **Rule 4 (Never Clip the Emergency Exit / Close Affordance):** An overlay's close button (`✕`) is the candidate's primary psychological escape hatch (Nielsen Norman Group Heuristic #3: User Control and Freedom). The header action bar must always have `margin-left: auto; flex-shrink: 0;` and sufficient card width so the Close button can NEVER be pushed out or clipped by flex overflow.
+  - **Rule 5 (Primary CTA Above-The-Fold Law):** The primary execution trigger for any automated workflow must never be hidden below a scrollable collection of items. Place the primary action button directly beneath the status summary so it is immediately visible and actionable upon opening, regardless of list length.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.

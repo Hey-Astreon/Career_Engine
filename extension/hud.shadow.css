@@ -423,6 +423,12 @@ svg {
   box-shadow: 0 0 6px var(--ap-success);
 }
 
+.summary-action-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* Progress Bar */
 .progress-track {
   height: 5px;
