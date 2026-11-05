@@ -537,8 +537,16 @@
 
   function isNextStepButton(btn) {
     if (!btn) return false;
+    // Strict isolation: Never match buttons inside AstrePilot HUD
+    if (btn.closest && (btn.closest('#astrepilot-root') || btn.closest('.astrepilot-ui'))) return false;
+
     const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
+    // Exclude page-level autofill buttons (e.g. Greenhouse "Autofill my application" or external scrapers)
+    if (/autofill\s+my/i.test(txt) || /autofill\s+with/i.test(txt) || /^autofill/i.test(txt)) return false;
+
     const ariaLabel = (btn.getAttribute ? btn.getAttribute('aria-label') : '') || '';
+    if (/autofill/i.test(ariaLabel)) return false;
+
     const automationId = (btn.getAttribute ? btn.getAttribute('data-automation-id') : '') || '';
     const isGate = isGatekeeperStep(detectedFields, window.location.href);
     if (!isGate && SUBMIT_APPLICATION_REGEX.test(txt)) return false;
@@ -556,6 +564,8 @@
       'button[data-automation-id="bottom-navigation-next-button"]',
       'input[type="submit"][value*="Next" i]',
       'input[type="button"][value*="Next" i]',
+      'input[type="submit"][value*="Continue" i]',
+      'input[type="button"][value*="Continue" i]',
       'input[type="submit"][value*="Log In" i]',
       'input[type="submit"][value*="Login" i]',
       'input[type="submit"][value*="Sign In" i]',
@@ -563,9 +573,8 @@
       'input#cp_form_submit_1',
       'input[value*="Submit Profile" i]',
       'input[value*="Update Profile" i]',
-      'input[type="submit"]:not([disabled])',
-      'button:not([disabled])',
-      'a[role="button"]:not([disabled])'
+      'button[type="submit"]',
+      'input[type="submit"]'
     ].join(', ');
     const elements = targetDoc.querySelectorAll(selectors);
     for (let i = 0; i < elements.length; i++) {
@@ -1952,6 +1961,62 @@
         });
       }
     });
+
+    // Dynamic Discovery: Scan all custom questions on Greenhouse (e.g. question_862292xxxx on Astranis)
+    try {
+      const dynamicQuestions = targetDoc.querySelectorAll('[id^="question_"], [name*="question_"], [name*="answers_attributes"]');
+      dynamicQuestions.forEach(el => {
+        if (!el || seenElements.has(el)) return;
+        if (el.tagName === 'LABEL' || (el.tagName === 'INPUT' && el.type === 'hidden')) return;
+
+        let interactive = el;
+        if (el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') {
+          const inner = el.querySelector('input, select, textarea, [role="combobox"]');
+          if (inner) interactive = inner;
+        }
+        if (seenElements.has(interactive)) return;
+
+        seenElements.add(interactive);
+        seenElements.add(el);
+
+        const aria = (interactive.getAttribute('aria-label') || el.getAttribute('aria-label') || '').toLowerCase();
+        const container = interactive.closest('div[class*="field"], div[class*="select"], label, fieldset') || interactive.parentElement;
+        const labelText = ((container && container.textContent) || aria || '').toLowerCase();
+
+        let fieldType = 'SCREENING';
+        if (interactive.classList.contains('select__input') || interactive.tagName === 'SELECT' || isComboboxOrSelect(interactive)) {
+          fieldType = 'SCREENING_SELECT';
+        } else if (labelText.includes('linkedin')) {
+          fieldType = 'LINKEDIN';
+        } else if (labelText.includes('github')) {
+          fieldType = 'GITHUB';
+        } else if (labelText.includes('website') || labelText.includes('portfolio')) {
+          fieldType = 'PORTFOLIO';
+        } else if (labelText.includes('hear about') || labelText.includes('referral')) {
+          fieldType = 'HEAR_ABOUT';
+        } else if (labelText.includes('sponsor') || labelText.includes('visa')) {
+          fieldType = 'VISA';
+        } else if (labelText.includes('authorized') || labelText.includes('work auth')) {
+          fieldType = 'WORK_AUTH';
+        }
+
+        const origVal = (interactive.tagName === 'INPUT' && (interactive.type === 'radio' || interactive.type === 'checkbox'))
+          ? interactive.checked
+          : (interactive.value !== undefined ? interactive.value : (interactive.innerText || interactive.textContent || ''));
+        const elId = interactive.id || interactive.name || el.id || el.name || '';
+        const safeId = elId ? elId.replace(/[^a-zA-Z0-9_-]/g, '_') : ('gh_q_' + fields.length);
+
+        fields.push({
+          element: interactive,
+          type: fieldType,
+          id: fieldType.toLowerCase() + '_' + safeId,
+          originalValue: origVal,
+          atsDriver: 'Greenhouse'
+        });
+      });
+    } catch (dynErr) {
+      console.warn('[AstrePilot] Dynamic Greenhouse questions scan error:', dynErr);
+    }
 
     return { fields, seenElements };
   }
@@ -3793,6 +3858,26 @@
   function resolveScreeningSelect(element) {
     const q = getLabelText(element).toLowerCase();
 
+    // Export regulations / Space tech compliance (e.g. Astranis, SpaceX, Rocket Lab)
+    if (q.includes('export regulation') || q.includes('space technology') || q.includes('state which of the following applies to you')) {
+      return (userProfile && userProfile.requiresVisa) ? 'None of the above.' : 'I am a U.S. Citizen.';
+    }
+
+    // Internship season confirmation
+    if (q.includes('confirm the season') || q.includes('season you are applying for') || q.includes('applying for season')) {
+      return 'Summer 2027';
+    }
+
+    // Onsite / In-person commitment
+    if (q.includes('onsite') || q.includes('san francisco hq') || q.includes('5 days a week')) {
+      return 'Yes';
+    }
+
+    // SMS / Text communication consent
+    if (q.includes('sms') || q.includes('text message') || q.includes('recruiting sms')) {
+      return 'Yes';
+    }
+
     // 0. SPECIALIZED CASE QUESTIONS (Non-Yes/No Options)
     // Preferred Office / Workplace / Remote Decision Logic
     if (
@@ -4258,6 +4343,20 @@
           /if\s*["']?yes["']?,?\s*please/i.test(qLower)
         ) {
           return 'N/A';
+        }
+
+        // Domain screening motivation for Astranis / Space roles
+        if (qLower.includes('when are you able to join') || qLower.includes('able to join as an intern')) {
+          return 'May 2027';
+        }
+        if (qLower.includes('ending your internship') || qLower.includes('plan on ending')) {
+          return 'August 2027';
+        }
+        if (qLower.includes('most impressive thing you have ever accomplished') || (qLower.includes('impressive') && qLower.includes('accomplished'))) {
+          return 'Architected AstreWork (an autonomous career search engine) handling 14,000+ daily scraped jobs across 13 providers with sub-second vector search on OCI ARM64 cloud infrastructure.';
+        }
+        if (qLower.includes('complex project') || qLower.includes('impressive and complex project')) {
+          return 'Engineered AstrePilot, an automated browser copiloting extension using a closed Shadow DOM HUD, multi-model LLM failovers, and synthetic resume file injection with cross-origin subframe coordination.';
         }
 
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
@@ -4730,6 +4829,7 @@
     if (!detectedFields || !detectedFields.length) {
       const fields = scanFields();
       applyDetectedFields(fields);
+      if (!detectedFields || !detectedFields.length) return;
     }
 
     // CAPTCHA Sentinel: if a bot verification challenge is active, pause gracefully
@@ -4773,6 +4873,11 @@
         } catch (e) {}
       }
       await fillAllFields(hud);
+    } catch (fillErr) {
+      console.error('[AstrePilot] Autofill fatal execution error:', fillErr);
+      if (hud && typeof hud.setState === 'function') {
+        hud.setState('error', { msg: 'Autofill error: ' + (fillErr.message || 'Execution interrupted') });
+      }
     } finally {
       isFilling = false;
       releaseFillLock();
@@ -5108,88 +5213,93 @@
     for (let i = 0; i < detectedFields.length; i++) {
       if (activeHud !== hud) return; // HUD was closed/replaced mid-run
       const f = detectedFields[i];
-      hud.markRow(f.id, 'active');
+      try {
+        hud.markRow(f.id, 'active');
 
-      if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') hadAI = true;
+        if (f.type === 'COVER_LETTER' || f.type === 'SCREENING') hadAI = true;
 
-      // Allow dependent dropdowns (e.g. State depending on Country) time to populate options
-      if (f.type === 'STATE') {
-        let waited = 0;
-        while (waited < 1200) {
-          const isReady = f.element.tagName === 'SELECT'
-            ? f.element.options.length > 1 && !f.element.disabled
-            : !f.element.disabled && f.element.getAttribute('aria-disabled') !== 'true';
-          if (isReady) break;
-          await new Promise(r => setTimeout(r, 100));
-          waited += 100;
+        // Allow dependent dropdowns (e.g. State depending on Country) time to populate options
+        if (f.type === 'STATE') {
+          let waited = 0;
+          while (waited < 1200) {
+            const isReady = f.element.tagName === 'SELECT'
+              ? f.element.options.length > 1 && !f.element.disabled
+              : !f.element.disabled && f.element.getAttribute('aria-disabled') !== 'true';
+            if (isReady) break;
+            await new Promise(r => setTimeout(r, 100));
+            waited += 100;
+          }
         }
-      }
 
-      const val = await resolveValue(f, userProfile, activeSession);
-      const skipped = !val || String(val).trim() === '';
+        const val = await resolveValue(f, userProfile, activeSession);
+        const skipped = !val || String(val).trim() === '';
 
-      if (!skipped) {
-        let writeSuccess = false;
-        if (f.type === 'RESUME') {
-          AstrePilotHUD.highlight(f.element);
-          const uploadRes = await injectResumeFile(f.element);
-          if (uploadRes && uploadRes.success) {
-            filled++;
-            hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
-          } else {
-            chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
-            hud.markRow(f.id, 'skipped', 'Downloaded to disk');
-          }
-        } else if (f.type === 'COVER_LETTER' && f.element.tagName === 'INPUT' && f.element.type === 'file') {
-          AstrePilotHUD.highlight(f.element);
-          const uploadRes = await injectCoverLetterFile(f.element);
-          if (uploadRes && uploadRes.success) {
-            filled++;
-            hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
-          } else {
-            hud.markRow(f.id, 'skipped', 'Upload failed');
-          }
-        } else if (isComboboxOrSelect(f.element)) {
-          AstrePilotHUD.highlight(f.element);
-          const cbSuccess = await fillUniversalCombobox(f.element, val, f.type);
-          writeSuccess = cbSuccess || await verifyFieldWritten(f, val);
-          if (writeSuccess) {
-            filled++;
-            hud.markRow(f.id, 'done', String(val).slice(0, 30));
-          } else {
-            hud.markRow(f.id, 'retry', '⚠ Retry Verification');
-          }
-        } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
-          setNativeValue(f.element, val, true);
-          writeSuccess = await verifyFieldWritten(f, val);
-          if (!writeSuccess) {
+        if (!skipped) {
+          let writeSuccess = false;
+          if (f.type === 'RESUME') {
+            AstrePilotHUD.highlight(f.element);
+            const uploadRes = await injectResumeFile(f.element);
+            if (uploadRes && uploadRes.success) {
+              filled++;
+              hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
+            } else {
+              chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
+              hud.markRow(f.id, 'skipped', 'Downloaded to disk');
+            }
+          } else if (f.type === 'COVER_LETTER' && f.element.tagName === 'INPUT' && f.element.type === 'file') {
+            AstrePilotHUD.highlight(f.element);
+            const uploadRes = await injectCoverLetterFile(f.element);
+            if (uploadRes && uploadRes.success) {
+              filled++;
+              hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
+            } else {
+              hud.markRow(f.id, 'skipped', 'Upload failed');
+            }
+          } else if (isComboboxOrSelect(f.element)) {
+            AstrePilotHUD.highlight(f.element);
+            const cbSuccess = await fillUniversalCombobox(f.element, val, f.type);
+            writeSuccess = cbSuccess || await verifyFieldWritten(f, val);
+            if (writeSuccess) {
+              filled++;
+              hud.markRow(f.id, 'done', String(val).slice(0, 30));
+            } else {
+              hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+            }
+          } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
             setNativeValue(f.element, val, true);
             writeSuccess = await verifyFieldWritten(f, val);
-          }
-          if (writeSuccess) {
-            filled++;
-            hud.markRow(f.id, 'done', String(val).slice(0, 30));
+            if (!writeSuccess) {
+              setNativeValue(f.element, val, true);
+              writeSuccess = await verifyFieldWritten(f, val);
+            }
+            if (writeSuccess) {
+              filled++;
+              hud.markRow(f.id, 'done', String(val).slice(0, 30));
+            } else {
+              hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+            }
           } else {
-            hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+            AstrePilotHUD.highlight(f.element);
+            await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
+            writeSuccess = await verifyFieldWritten(f, val);
+            if (!writeSuccess) {
+              setNativeValue(f.element, val, true);
+              writeSuccess = await verifyFieldWritten(f, val);
+            }
+            if (writeSuccess) {
+              filled++;
+              const displayVal = (f.type === 'PASSWORD' || f.type === 'CONFIRM_PASSWORD') ? '••••••••' : String(val).slice(0, 30);
+              hud.markRow(f.id, 'done', displayVal);
+            } else {
+              hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+            }
           }
         } else {
-          AstrePilotHUD.highlight(f.element);
-          await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
-          writeSuccess = await verifyFieldWritten(f, val);
-          if (!writeSuccess) {
-            setNativeValue(f.element, val, true);
-            writeSuccess = await verifyFieldWritten(f, val);
-          }
-          if (writeSuccess) {
-            filled++;
-            const displayVal = (f.type === 'PASSWORD' || f.type === 'CONFIRM_PASSWORD') ? '••••••••' : String(val).slice(0, 30);
-            hud.markRow(f.id, 'done', displayVal);
-          } else {
-            hud.markRow(f.id, 'retry', '⚠ Retry Verification');
-          }
+          hud.markRow(f.id, 'skipped', '-');
         }
-      } else {
-        hud.markRow(f.id, 'skipped', '-');
+      } catch (fieldErr) {
+        console.warn('[AstrePilot] Field fill error on', f ? f.id : 'unknown', fieldErr);
+        if (f && f.id) hud.markRow(f.id, 'retry', '⚠ Error');
       }
       hud.setProgress(filled, detectedFields.length);
       await new Promise(r => setTimeout(r, 80));

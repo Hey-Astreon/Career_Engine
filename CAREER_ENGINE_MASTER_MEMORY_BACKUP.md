@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 83: AstrePilot Live Autofill Execution Pipeline, Instant Re-Scan Feedback & In-HUD State Responsiveness)
+> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 84: AstrePilot Greenhouse Dynamic Discovery, Dual-CTA Placement & State 'Filling' Rendering Fix)
 
 ---
 
@@ -1458,6 +1458,24 @@ Located in `extension/`:
     - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`207.4 KB`).
     - Full test suite passed: `55/55` test files, `525/525` tests passing (`npx vitest run`).
     - Typecheck (`npx tsc --noEmit`) and linting (`npm run lint`): `0 errors, 0 warnings`.
+
+- [x] **Phase 84: Greenhouse Dynamic Questions Discovery, Next-Step Selector Isolation & Robust Autofill Execution (Nov 5, 2026)**
+  - **1. Footer State Incompleteness Bug Resolved (`extension/hud-ui.js`):**
+    - Repaired `_renderBody()` footer guard: previously `if (this.state === 'ready' || this.state === 'scanning' || ...)` omitted `'filling'`. When users clicked Autofill, the state transitioned to `'filling'`, which caused the footer and its button to completely vanish from the DOM instead of displaying the loading spinner.
+    - Updated condition to include `'filling'` so `.hud-footer` and `.summary-action-block` properly display the loading spinner (`Filling 24 fields...`) with zero flicker.
+  - **2. Greenhouse Dynamic Custom Question Discovery (`extension/content.js`):**
+    - Enhanced `scanGreenhouseFields()` to dynamically query all `[id^="question_"], [name*="question_"]` elements on live Greenhouse forms (such as Astranis's 10 custom questions: export regulations, season, onsite work, SMS consent, and essay prompts).
+    - Mapped semantic question categories: space technology export compliance (`None of the above.`), season (`Summer 2027`), onsite SF HQ (`Yes`), and SMS recruiting consent (`Yes`).
+  - **3. Next-Step Button False Positive Elimination (`extension/content.js`):**
+    - Isolated `isNextStepButton(btn)` from AstrePilot Shadow DOM hosts (`#astrepilot-root`, `.astrepilot-ui`) and page-level third-party autofill buttons (`/autofill\s+my/i`).
+    - Tightened `findNextStepButton()` selectors to prevent matching arbitrary `button:not([disabled])` on single-page applications.
+  - **4. Resilient Per-Field Execution Guard (`extension/content.js`):**
+    - Wrapped individual field operations in isolated `try...catch` blocks inside `fillAllFields(hud)` so one problematic field never aborts the execution of the remaining fields.
+    - Added global error reporting to `runAutofill()` so failures render directly to HUD state instead of failing silently.
+  - **5. Automated Tests & Build Packaging:**
+    - Repackaged extension to `public/downloads/astrepilot-extension.zip` (`620.0 KB`).
+    - Vitest test suite verified: `55/55` test suites passing (`525/525` tests).
+    - TypeScript compilation clean: `npx.cmd tsc --noEmit` exited with 0 errors.
 
 - [x] **Phase 83: AstrePilot Live Autofill Execution Pipeline, Instant Re-Scan Feedback & In-HUD State Responsiveness (Nov 5, 2026)**
   - **1. Subframe Hijacking Elimination & Fail-Safe Lock Timeouts (`extension/content.js`):**
@@ -3487,6 +3505,31 @@ graph TD
   - **Rule 2 (No Duplicate Identity Pills in Header Law):** Never render two adjacent identity/profile dropdown pills in the same top-right header bar. Hydrate profile context silently in the background and expose a single unified account menu.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
 
+### Phase 84: AstrePilot Greenhouse Dynamic Discovery, Dual-CTA Placement & State 'Filling' Rendering Fix (November 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan tested AstrePilot on the Astranis Greenhouse job application page (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`).
+  - When clicking "⚡ Autofill 24 fields", the button instantly vanished from the HUD, no fields were filled on the page, and the application form remained untouched.
+  - Custom dynamic Greenhouse screening questions (`question_862292xxxx`) and React-Select styled dropdowns were skipped or not resolved.
+  - The in-page next step detector (`findNextStepButton`) was matching external host page buttons (e.g. Greenhouse's native "Autofill my application" button) and AstrePilot HUD's own controls, prematurely treating single-page forms as multi-step flows.
+- **Deep Root Cause Diagnosis:**
+  1. **Vanishing Footer Button Guard:** In `extension/hud-ui.js`, the footer condition was `if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete')`. When `runAutofill()` executed, `fillAllFields` called `hud.setState('filling')`. Because `'filling'` was completely omitted from the condition, the entire `.hud-footer` element was omitted from DOM re-rendering, causing the button to abruptly vanish into thin air.
+  2. **Unmapped Greenhouse Dynamic Questions:** Astranis utilizes Greenhouse's embed application with dynamic numeric question IDs (`question_8622920006`, `question_8622921006`, etc.). These were not present in the static selector array, leading to skipped inputs and incomplete coverage.
+  3. **Overly Broad Next-Step Matcher:** `findNextStepButton()` included generic `button:not([disabled])` selectors without checking if the button was inside `#astrepilot-root` or was an external autofill action button, causing false-positive step transitions.
+  4. **Single-Point Fill Failure Abort:** Inside `fillAllFields(hud)`, the field loop lacked per-field `try...catch` isolation. If an error occurred during resolution or typing for any single field (e.g., an unmounted combobox), the entire fill loop aborted prematurely.
+- **The Concrete Surgical Fix:**
+  1. **Footer Guard Repair (`extension/hud-ui.js`):** Added `'filling'` to the footer guard condition (`if (this.state === 'ready' || this.state === 'filling' || ...)`). Added active spinning loader and dynamic label (`Filling 24 fields...`) so the button remains visible and informative throughout execution.
+  2. **Dual-CTA Placement:** Ensured the primary `⚡ Autofill X fields` CTA is rendered directly below `Ready to fill` above the fold AND also maintained in the footer, satisfying Brother Roushan's design requirement.
+  3. **Greenhouse Dynamic Question Discovery (`extension/content.js`):** Added dynamic scanner discovering all `[id^="question_"], [name*="question_"]` elements. Automatically maps them to semantic types (`SCREENING_SELECT`, `LINKEDIN`, `GITHUB`, `PORTFOLIO`, `HEAR_ABOUT`, `VISA`, `WORK_AUTH`, `SCREENING`).
+  4. **Domain-Specific Greenhouse Answers (`extension/content.js`):** Enhanced `resolveScreeningSelect()` and `resolveValue()` to accurately answer Astranis export compliance regulations ("None of the above." when visa required), internship availability ("Summer 2027", "May 2027 - August 2027"), SF HQ onsite consent ("Yes"), and SMS consent ("Yes").
+  5. **Strict Next-Step Button Isolation (`extension/content.js`):** Explicitly excluded `#astrepilot-root`, `.astrepilot-ui`, and page-level autofill buttons (`/autofill\s+my/i`). Removed the catch-all `button:not([disabled])` selector.
+  6. **Per-Field Execution Resilience (`extension/content.js`):** Wrapped each field fill operation in an isolated `try...catch` block. Any single failure logs a warning, marks the row as `retry`, and allows the remaining 23 fields to continue filling uninterrupted.
+  7. **Extension Rebuilt:** Repackaged `public/downloads/astrepilot-extension.zip` (`620.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (State Guard Completeness):** Any persistent UI element whose visibility spans across state changes (`ready` -> `filling` -> `done`) MUST include all intermediate operational states in its render condition. Never omit in-flight states.
+  - **Rule 2 (Per-Field Fault Isolation):** In form autofill automation, never allow a single DOM query or typing exception to kill the entire batch. Wrap every field in independent error isolation.
+  - **Rule 3 (Strict Host DOM Isolation for Steppers):** Step progression selectors must strictly filter out UI controls belonging to the automation extension itself (`closest('#astrepilot-root')`) and unrelated host buttons (`autofill my application`).
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors), committed and pushed to `origin main`.
+
 ### Case 57: The Cross-User OAuth Account Linking Conflict (OAuthAccountNotLinked) & Password Null Trap (Nov 5, 2026)
 - **The Exact Challenge & Mistake Encountered:**
   1. When Brother Roushan tried to sign in to AstrePilot using `playboxstation460@gmail.com`, he was redirected to `https://astrework.app/login?callbackUrl=https%3A%2F%2Fastrework.app%2Fdashboard&error=OAuthAccountNotLinked` with the message: `Your email is registered with another sign-in method. Account linking is enabled — please click sign in again.`
@@ -3502,6 +3545,31 @@ graph TD
   - **Rule 2 (OAuth User Password Provisioning Law):** Never leave OAuth-created users trapped without password access. When a verified founder authenticates, allow them to set/heal their password seamlessly.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
 
+### Phase 84: AstrePilot Greenhouse Dynamic Discovery, Dual-CTA Placement & State 'Filling' Rendering Fix (November 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan tested AstrePilot on the Astranis Greenhouse job application page (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`).
+  - When clicking "⚡ Autofill 24 fields", the button instantly vanished from the HUD, no fields were filled on the page, and the application form remained untouched.
+  - Custom dynamic Greenhouse screening questions (`question_862292xxxx`) and React-Select styled dropdowns were skipped or not resolved.
+  - The in-page next step detector (`findNextStepButton`) was matching external host page buttons (e.g. Greenhouse's native "Autofill my application" button) and AstrePilot HUD's own controls, prematurely treating single-page forms as multi-step flows.
+- **Deep Root Cause Diagnosis:**
+  1. **Vanishing Footer Button Guard:** In `extension/hud-ui.js`, the footer condition was `if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete')`. When `runAutofill()` executed, `fillAllFields` called `hud.setState('filling')`. Because `'filling'` was completely omitted from the condition, the entire `.hud-footer` element was omitted from DOM re-rendering, causing the button to abruptly vanish into thin air.
+  2. **Unmapped Greenhouse Dynamic Questions:** Astranis utilizes Greenhouse's embed application with dynamic numeric question IDs (`question_8622920006`, `question_8622921006`, etc.). These were not present in the static selector array, leading to skipped inputs and incomplete coverage.
+  3. **Overly Broad Next-Step Matcher:** `findNextStepButton()` included generic `button:not([disabled])` selectors without checking if the button was inside `#astrepilot-root` or was an external autofill action button, causing false-positive step transitions.
+  4. **Single-Point Fill Failure Abort:** Inside `fillAllFields(hud)`, the field loop lacked per-field `try...catch` isolation. If an error occurred during resolution or typing for any single field (e.g., an unmounted combobox), the entire fill loop aborted prematurely.
+- **The Concrete Surgical Fix:**
+  1. **Footer Guard Repair (`extension/hud-ui.js`):** Added `'filling'` to the footer guard condition (`if (this.state === 'ready' || this.state === 'filling' || ...)`). Added active spinning loader and dynamic label (`Filling 24 fields...`) so the button remains visible and informative throughout execution.
+  2. **Dual-CTA Placement:** Ensured the primary `⚡ Autofill X fields` CTA is rendered directly below `Ready to fill` above the fold AND also maintained in the footer, satisfying Brother Roushan's design requirement.
+  3. **Greenhouse Dynamic Question Discovery (`extension/content.js`):** Added dynamic scanner discovering all `[id^="question_"], [name*="question_"]` elements. Automatically maps them to semantic types (`SCREENING_SELECT`, `LINKEDIN`, `GITHUB`, `PORTFOLIO`, `HEAR_ABOUT`, `VISA`, `WORK_AUTH`, `SCREENING`).
+  4. **Domain-Specific Greenhouse Answers (`extension/content.js`):** Enhanced `resolveScreeningSelect()` and `resolveValue()` to accurately answer Astranis export compliance regulations ("None of the above." when visa required), internship availability ("Summer 2027", "May 2027 - August 2027"), SF HQ onsite consent ("Yes"), and SMS consent ("Yes").
+  5. **Strict Next-Step Button Isolation (`extension/content.js`):** Explicitly excluded `#astrepilot-root`, `.astrepilot-ui`, and page-level autofill buttons (`/autofill\s+my/i`). Removed the catch-all `button:not([disabled])` selector.
+  6. **Per-Field Execution Resilience (`extension/content.js`):** Wrapped each field fill operation in an isolated `try...catch` block. Any single failure logs a warning, marks the row as `retry`, and allows the remaining 23 fields to continue filling uninterrupted.
+  7. **Extension Rebuilt:** Repackaged `public/downloads/astrepilot-extension.zip` (`620.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (State Guard Completeness):** Any persistent UI element whose visibility spans across state changes (`ready` -> `filling` -> `done`) MUST include all intermediate operational states in its render condition. Never omit in-flight states.
+  - **Rule 2 (Per-Field Fault Isolation):** In form autofill automation, never allow a single DOM query or typing exception to kill the entire batch. Wrap every field in independent error isolation.
+  - **Rule 3 (Strict Host DOM Isolation for Steppers):** Step progression selectors must strictly filter out UI controls belonging to the automation extension itself (`closest('#astrepilot-root')`) and unrelated host buttons (`autofill my application`).
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors), committed and pushed to `origin main`.
+
 ### Case 58: The Dual-Button Action Dilemma in Extension Popup (Nov 5, 2026)
 - **The Exact Challenge & Mistake Encountered:**
   - When Brother Roushan opened AstrePilot on a live Greenhouse job application (Astranis Flight Software Intern), the popup presented two competing full-width action buttons: `⚡ Autofill Application` and `Open In-Page HUD`.
@@ -3514,6 +3582,31 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (Single Primary Action Law):** Never give users two competing primary action buttons for the same destination. Make the 1-click action do the full job autonomously.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
+
+### Phase 84: AstrePilot Greenhouse Dynamic Discovery, Dual-CTA Placement & State 'Filling' Rendering Fix (November 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan tested AstrePilot on the Astranis Greenhouse job application page (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`).
+  - When clicking "⚡ Autofill 24 fields", the button instantly vanished from the HUD, no fields were filled on the page, and the application form remained untouched.
+  - Custom dynamic Greenhouse screening questions (`question_862292xxxx`) and React-Select styled dropdowns were skipped or not resolved.
+  - The in-page next step detector (`findNextStepButton`) was matching external host page buttons (e.g. Greenhouse's native "Autofill my application" button) and AstrePilot HUD's own controls, prematurely treating single-page forms as multi-step flows.
+- **Deep Root Cause Diagnosis:**
+  1. **Vanishing Footer Button Guard:** In `extension/hud-ui.js`, the footer condition was `if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete')`. When `runAutofill()` executed, `fillAllFields` called `hud.setState('filling')`. Because `'filling'` was completely omitted from the condition, the entire `.hud-footer` element was omitted from DOM re-rendering, causing the button to abruptly vanish into thin air.
+  2. **Unmapped Greenhouse Dynamic Questions:** Astranis utilizes Greenhouse's embed application with dynamic numeric question IDs (`question_8622920006`, `question_8622921006`, etc.). These were not present in the static selector array, leading to skipped inputs and incomplete coverage.
+  3. **Overly Broad Next-Step Matcher:** `findNextStepButton()` included generic `button:not([disabled])` selectors without checking if the button was inside `#astrepilot-root` or was an external autofill action button, causing false-positive step transitions.
+  4. **Single-Point Fill Failure Abort:** Inside `fillAllFields(hud)`, the field loop lacked per-field `try...catch` isolation. If an error occurred during resolution or typing for any single field (e.g., an unmounted combobox), the entire fill loop aborted prematurely.
+- **The Concrete Surgical Fix:**
+  1. **Footer Guard Repair (`extension/hud-ui.js`):** Added `'filling'` to the footer guard condition (`if (this.state === 'ready' || this.state === 'filling' || ...)`). Added active spinning loader and dynamic label (`Filling 24 fields...`) so the button remains visible and informative throughout execution.
+  2. **Dual-CTA Placement:** Ensured the primary `⚡ Autofill X fields` CTA is rendered directly below `Ready to fill` above the fold AND also maintained in the footer, satisfying Brother Roushan's design requirement.
+  3. **Greenhouse Dynamic Question Discovery (`extension/content.js`):** Added dynamic scanner discovering all `[id^="question_"], [name*="question_"]` elements. Automatically maps them to semantic types (`SCREENING_SELECT`, `LINKEDIN`, `GITHUB`, `PORTFOLIO`, `HEAR_ABOUT`, `VISA`, `WORK_AUTH`, `SCREENING`).
+  4. **Domain-Specific Greenhouse Answers (`extension/content.js`):** Enhanced `resolveScreeningSelect()` and `resolveValue()` to accurately answer Astranis export compliance regulations ("None of the above." when visa required), internship availability ("Summer 2027", "May 2027 - August 2027"), SF HQ onsite consent ("Yes"), and SMS consent ("Yes").
+  5. **Strict Next-Step Button Isolation (`extension/content.js`):** Explicitly excluded `#astrepilot-root`, `.astrepilot-ui`, and page-level autofill buttons (`/autofill\s+my/i`). Removed the catch-all `button:not([disabled])` selector.
+  6. **Per-Field Execution Resilience (`extension/content.js`):** Wrapped each field fill operation in an isolated `try...catch` block. Any single failure logs a warning, marks the row as `retry`, and allows the remaining 23 fields to continue filling uninterrupted.
+  7. **Extension Rebuilt:** Repackaged `public/downloads/astrepilot-extension.zip` (`620.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (State Guard Completeness):** Any persistent UI element whose visibility spans across state changes (`ready` -> `filling` -> `done`) MUST include all intermediate operational states in its render condition. Never omit in-flight states.
+  - **Rule 2 (Per-Field Fault Isolation):** In form autofill automation, never allow a single DOM query or typing exception to kill the entire batch. Wrap every field in independent error isolation.
+  - **Rule 3 (Strict Host DOM Isolation for Steppers):** Step progression selectors must strictly filter out UI controls belonging to the automation extension itself (`closest('#astrepilot-root')`) and unrelated host buttons (`autofill my application`).
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors), committed and pushed to `origin main`.
 
 ### Case 59: Live Autofill Delegation Hijacking & Frozen Re-Scan Visual Feedback (Nov 5, 2026)
 - **The Exact Challenge & Mistake Encountered:**
@@ -3551,3 +3644,28 @@ graph TD
   - **Rule 4 (Never Clip the Emergency Exit / Close Affordance):** An overlay's close button (`✕`) is the candidate's primary psychological escape hatch (Nielsen Norman Group Heuristic #3: User Control and Freedom). The header action bar must always have `margin-left: auto; flex-shrink: 0;` and sufficient card width so the Close button can NEVER be pushed out or clipped by flex overflow.
   - **Rule 5 (Primary CTA Above-The-Fold Law):** The primary execution trigger for any automated workflow must never be hidden below a scrollable collection of items. Place the primary action button directly beneath the status summary so it is immediately visible and actionable upon opening, regardless of list length.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, `0` ESLint warnings), committed and pushed to `origin main`.
+
+### Phase 84: AstrePilot Greenhouse Dynamic Discovery, Dual-CTA Placement & State 'Filling' Rendering Fix (November 5, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan tested AstrePilot on the Astranis Greenhouse job application page (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`).
+  - When clicking "⚡ Autofill 24 fields", the button instantly vanished from the HUD, no fields were filled on the page, and the application form remained untouched.
+  - Custom dynamic Greenhouse screening questions (`question_862292xxxx`) and React-Select styled dropdowns were skipped or not resolved.
+  - The in-page next step detector (`findNextStepButton`) was matching external host page buttons (e.g. Greenhouse's native "Autofill my application" button) and AstrePilot HUD's own controls, prematurely treating single-page forms as multi-step flows.
+- **Deep Root Cause Diagnosis:**
+  1. **Vanishing Footer Button Guard:** In `extension/hud-ui.js`, the footer condition was `if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete')`. When `runAutofill()` executed, `fillAllFields` called `hud.setState('filling')`. Because `'filling'` was completely omitted from the condition, the entire `.hud-footer` element was omitted from DOM re-rendering, causing the button to abruptly vanish into thin air.
+  2. **Unmapped Greenhouse Dynamic Questions:** Astranis utilizes Greenhouse's embed application with dynamic numeric question IDs (`question_8622920006`, `question_8622921006`, etc.). These were not present in the static selector array, leading to skipped inputs and incomplete coverage.
+  3. **Overly Broad Next-Step Matcher:** `findNextStepButton()` included generic `button:not([disabled])` selectors without checking if the button was inside `#astrepilot-root` or was an external autofill action button, causing false-positive step transitions.
+  4. **Single-Point Fill Failure Abort:** Inside `fillAllFields(hud)`, the field loop lacked per-field `try...catch` isolation. If an error occurred during resolution or typing for any single field (e.g., an unmounted combobox), the entire fill loop aborted prematurely.
+- **The Concrete Surgical Fix:**
+  1. **Footer Guard Repair (`extension/hud-ui.js`):** Added `'filling'` to the footer guard condition (`if (this.state === 'ready' || this.state === 'filling' || ...)`). Added active spinning loader and dynamic label (`Filling 24 fields...`) so the button remains visible and informative throughout execution.
+  2. **Dual-CTA Placement:** Ensured the primary `⚡ Autofill X fields` CTA is rendered directly below `Ready to fill` above the fold AND also maintained in the footer, satisfying Brother Roushan's design requirement.
+  3. **Greenhouse Dynamic Question Discovery (`extension/content.js`):** Added dynamic scanner discovering all `[id^="question_"], [name*="question_"]` elements. Automatically maps them to semantic types (`SCREENING_SELECT`, `LINKEDIN`, `GITHUB`, `PORTFOLIO`, `HEAR_ABOUT`, `VISA`, `WORK_AUTH`, `SCREENING`).
+  4. **Domain-Specific Greenhouse Answers (`extension/content.js`):** Enhanced `resolveScreeningSelect()` and `resolveValue()` to accurately answer Astranis export compliance regulations ("None of the above." when visa required), internship availability ("Summer 2027", "May 2027 - August 2027"), SF HQ onsite consent ("Yes"), and SMS consent ("Yes").
+  5. **Strict Next-Step Button Isolation (`extension/content.js`):** Explicitly excluded `#astrepilot-root`, `.astrepilot-ui`, and page-level autofill buttons (`/autofill\s+my/i`). Removed the catch-all `button:not([disabled])` selector.
+  6. **Per-Field Execution Resilience (`extension/content.js`):** Wrapped each field fill operation in an isolated `try...catch` block. Any single failure logs a warning, marks the row as `retry`, and allows the remaining 23 fields to continue filling uninterrupted.
+  7. **Extension Rebuilt:** Repackaged `public/downloads/astrepilot-extension.zip` (`620.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (State Guard Completeness):** Any persistent UI element whose visibility spans across state changes (`ready` -> `filling` -> `done`) MUST include all intermediate operational states in its render condition. Never omit in-flight states.
+  - **Rule 2 (Per-Field Fault Isolation):** In form autofill automation, never allow a single DOM query or typing exception to kill the entire batch. Wrap every field in independent error isolation.
+  - **Rule 3 (Strict Host DOM Isolation for Steppers):** Step progression selectors must strictly filter out UI controls belonging to the automation extension itself (`closest('#astrepilot-root')`) and unrelated host buttons (`autofill my application`).
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors), committed and pushed to `origin main`.

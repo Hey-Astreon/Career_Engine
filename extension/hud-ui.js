@@ -1054,7 +1054,7 @@ window.AstrePilotHUD = (function () {
       }
 
       // Footer
-      if (this.state === 'ready' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete') {
+      if (this.state === 'ready' || this.state === 'filling' || this.state === 'scanning' || this.state === 'done' || this.state === 'catalog' || this.state === 'step-complete') {
         html += `<div class="hud-footer">`;
         if (this.state === 'step-complete') {
           const meta = this.meta || {};
