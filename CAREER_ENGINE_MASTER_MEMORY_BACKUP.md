@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 92: AstrePilot True Intelligence & Quality Upgrade — Dynamic Dependent Fields, Demographic Context Deduction & Humanized Answers)
+> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 93: AstrePilot Extension Universal Authentication & Zero-Click Session Handshake)
 
 ---
 
@@ -3920,3 +3920,34 @@ graph TD
   - **Rule 3 (Zero Scraping Vanity Metrics in Candidate Answers):** Never mention scraping volumes ("14,000+ scraped jobs") in candidate answers. Employers evaluate software craftsmanship, distributed resilience, queueing theory, and system reliability—not web scraping volume.
   - **Rule 4 (Earliest Start Bias):** Never hardcode future calendar dates into general availability questions. Candidates universally benefit from expressing eager, flexible, and immediate availability.
 - **Status:** Complete, verified (`62/62` test suites passing, `580/580` tests passing, `0` TS errors), committed and pushed to `origin main`.
+
+
+### Phase 93: AstrePilot Extension Universal Authentication & Zero-Click Session Handshake (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Founder Roushan was logged in on the web app at `https://astrework.app/dashboard` via Google OAuth (`playboxstation460@gmail.com`).
+  - However, opening the AstrePilot extension popup showed an unauthenticated login form. Clicking "Continue with Google" or "Continue with GitHub" simply opened a browser tab to `https://astrework.app/login`, which redirected to `/dashboard`, leaving the extension stuck on the login form without acquiring a token. Direct email/password was also unavailable because OAuth accounts do not have passwords.
+- **Deep Root Cause Diagnosis:**
+  1. **Strict User-Profile Disconnect in `/api/autopilot/token`:** In `src/app/api/autopilot/token/route.ts`, the endpoint performed `db.profile.findFirst({ where: { userId: session.user.id } })`. Because the developer signed up via OAuth, NextAuth generated a new user ID that was not yet linked to the seeded profile (`slug: 'roushan'`), returning HTTP 404.
+  2. **Missing `"tabs"` Permission in `manifest.json`:** In Chrome Manifest V3, calling `chrome.tabs.query({})` without the `"tabs"` permission causes `tab.url` to be `undefined` across all non-active tabs, preventing `tryAutoSyncFromOpenTab()` from locating the open `astrework.app` tab.
+  3. **No Web-to-Extension Sync in `content.js`:** `content.js` ran on `<all_urls>` but treated `astrework.app` like a job application form instead of acting as a session synchronization bridge.
+  4. **No-Op Social Auth Buttons:** In `extension/popup.js`, `btnSocialGoogle` and `btnSocialGithub` merely called `chrome.tabs.create({ url: PROD_ORIGIN + '/login' })` with no token retrieval mechanism.
+- **The Concrete Surgical Fix:**
+  1. **Resilient Token Generation & Profile Linking (`src/app/api/autopilot/token/route.ts`):**
+     - Updated `/api/autopilot/token` to inspect `session.user.email`. If `isDeveloperEmail(session.user.email)`, it links the profile by developer slug (`roushan` / `ayushi`) and guarantees a valid token. For third parties, it links by email.
+  2. **Added `"tabs"` Permission (`extension/manifest.json`):**
+     - Granted `"tabs"` permission so `tryAutoSyncFromOpenTab()` accurately identifies `astrework.app` tabs.
+  3. **Zero-Click Web-to-Extension Handshake (`extension/content.js` & `src/components/AstrePilotCard.tsx`):**
+     - When `content.js` executes on `astrework.app`, it automatically calls `/api/autopilot/token` with the active session cookie and persists the token and slug into `chrome.storage.sync` and `chrome.storage.local`.
+     - `AstrePilotCard.tsx` dispatches `window.postMessage({ type: 'ASTREPILOT_TOKEN_SYNC', token }, '*')` for instantaneous handshake.
+  4. **Tactile Sync & Direct Social Auth (`extension/popup.html` & `extension/popup.js`):**
+     - Added a prominent `[ 🔄 Sync with AstreWork Web Session ]` button in the popup login view.
+     - Upgraded Google/GitHub buttons to trigger `tryAutoSyncFromOpenTab()` first, and navigate directly to provider auth routes (`/api/auth/signin/google` and `/api/auth/signin/github`) if no session is open.
+     - Added `chrome.storage.onChanged` reactive listener to automatically flip the popup to the candidate cockpit the moment a token is synced.
+  5. **Automated Verification:**
+     - Created `tests/api-autopilot-token.test.ts` verifying 401 unauthorized handling and resilient token generation for developer sessions.
+     - Ran full test suite: **63 passed (63 test files)**, **583 passed (583 tests)** with 0 failures.
+     - Re-packaged extension to `public/downloads/astrepilot-extension.zip` (`631.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Web-Extension Bi-Directional Handshake Law):** An extension companion must always leverage content scripts on its home domain (`astrework.app`) to auto-sync session credentials without requiring re-authentication.
+  - **Rule 2 (OAuth Companion Auto-Discovery):** OAuth providers in web apps cannot redirect directly into Chrome extension popups. Extensions must synchronize session tokens from the web app's active session cookie via content script bridge or direct API handshake.
+- **Status:** Complete, verified (`63/63` test suites passing, `583/583` tests passing, `0` TS errors), committed and pushed to `origin main`.

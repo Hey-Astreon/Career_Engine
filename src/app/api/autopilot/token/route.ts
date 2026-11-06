@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { generateAutopilotToken } from "@/lib/autopilot/tokenUtils";
+import { isDeveloperEmail, getDeveloperDefaultSlug } from "@/lib/authCandidate";
 import { db } from "@/lib/db";
 
 const CORS = {
@@ -26,10 +27,47 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS });
     }
 
-    const profile = await db.profile.findFirst({
+    const userEmail = session.user.email?.toLowerCase();
+    const isFounder = isDeveloperEmail(userEmail);
+
+    let profile = await db.profile.findFirst({
       where: { userId: session.user.id },
-      select: { id: true },
+      select: { id: true, userId: true },
     });
+
+    // If profile not linked by userId yet, link by developer slug or email
+    if (!profile && userEmail) {
+      if (isFounder) {
+        const ownSlug = getDeveloperDefaultSlug(userEmail);
+        profile = await db.profile.findFirst({
+          where: { slug: ownSlug },
+          select: { id: true, userId: true },
+        });
+        if (profile) {
+          await db.profile.update({
+            where: { id: profile.id },
+            data: { userId: session.user.id },
+          }).catch(() => {});
+        }
+      } else {
+        profile = await db.profile.findFirst({
+          where: { email: userEmail },
+          select: { id: true, userId: true },
+        });
+        if (profile) {
+          await db.profile.update({
+            where: { id: profile.id },
+            data: { userId: session.user.id },
+          }).catch(() => {});
+        }
+      }
+    }
+
+    // Founders always get a valid token even if DB profile seed is pending
+    if (!profile && isFounder) {
+      const token = generateAutopilotToken(session.user.id);
+      return NextResponse.json({ token }, { headers: CORS });
+    }
 
     if (!profile) {
       return NextResponse.json(

@@ -6565,6 +6565,72 @@
     }
   }
 
+  // Zero-Click Token Sync when user is on AstreWork web app
+  const currentHost = (window.location.hostname || '').toLowerCase();
+  const isAstreWorkApp = currentHost === 'astrework.app' || currentHost.endsWith('.astrework.app') || currentHost === 'localhost' || currentHost === '127.0.0.1';
+
+  if (isAstreWorkApp) {
+    (async function autoSyncAstreWorkSession() {
+      try {
+        const res = await fetch('/api/autopilot/token', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.token) {
+            const token = data.token;
+            let candidateSlug = 'roushan';
+            try {
+              const pRes = await fetch('/api/autopilot/profile', {
+                headers: { 'Authorization': 'Bearer ' + token },
+                credentials: 'include'
+              });
+              if (pRes.ok) {
+                const pData = await pRes.json();
+                candidateSlug = pData.slug || (pData.email && pData.email.includes('ayushi') ? 'ayushi' : 'roushan');
+              }
+            } catch (e) {}
+
+            const payload = {
+              astrepilot_token: token,
+              astrepilot_origin: window.location.origin,
+              astrepilot_active_context: candidateSlug,
+              astrepilot_candidate_slug: candidateSlug
+            };
+
+            await new Promise((resolve) => chrome.storage.sync.set(payload, resolve));
+            if (chrome.storage.local) {
+              await new Promise((resolve) => chrome.storage.local.set(payload, resolve));
+            }
+            console.log('[AstrePilot] Zero-Click Token auto-synchronized from active AstreWork web session for ' + candidateSlug);
+          }
+        }
+      } catch (err) {
+        console.debug('[AstrePilot] Auto-sync session notice:', err);
+      }
+    })();
+
+    // Listen for direct sync messages from AstrePilotCard
+    window.addEventListener('message', async (event) => {
+      if (event.data && event.data.type === 'ASTREPILOT_TOKEN_SYNC' && event.data.token) {
+        const token = event.data.token;
+        const candidateSlug = event.data.slug || 'roushan';
+        const payload = {
+          astrepilot_token: token,
+          astrepilot_origin: window.location.origin,
+          astrepilot_active_context: candidateSlug,
+          astrepilot_candidate_slug: candidateSlug
+        };
+        await new Promise((resolve) => chrome.storage.sync.set(payload, resolve));
+        if (chrome.storage.local) {
+          await new Promise((resolve) => chrome.storage.local.set(payload, resolve));
+        }
+        console.log('[AstrePilot] Token received via web dashboard postMessage and persisted.');
+      }
+    });
+
+    // On AstreWork domain, do not auto-mount the job application HUD
+    return;
+  }
+
   // Initialize continuous SPA navigation and dynamic DOM observer
   initSpaNavigationWatcher();
 

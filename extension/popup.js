@@ -47,6 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const btnSocialGoogle = document.getElementById('btn-social-google');
   const btnSocialGithub = document.getElementById('btn-social-github');
+  const btnQuickSync = document.getElementById('btn-quick-sync');
+  const btnQuickSyncText = document.getElementById('btn-quick-sync-text');
 
   function showView(view) {
     [viewLoading, viewConnected, viewSetup].forEach(v => v?.classList.add('hidden'));
@@ -82,14 +84,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function tryAutoSyncFromOpenTab() {
     try {
       const tabs = await chrome.tabs.query({});
-      const astreTab = tabs.find(t => t.url && t.url.startsWith(PROD_ORIGIN));
+      const astreTab = tabs.find(t => t.url && (t.url.startsWith(PROD_ORIGIN) || t.url.includes('astrework.app') || t.url.startsWith('http://localhost:3000')));
       if (!astreTab || !astreTab.id) return null;
+
+      const origin = astreTab.url.startsWith('http://localhost:3000') ? 'http://localhost:3000' : PROD_ORIGIN;
 
       const results = await chrome.scripting.executeScript({
         target: { tabId: astreTab.id },
         func: async () => {
           try {
-            const res = await fetch('/api/autopilot/token');
+            const res = await fetch('/api/autopilot/token', { credentials: 'include' });
             if (res.ok) {
               const data = await res.json();
               return data.token || null;
@@ -101,13 +105,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const token = results && results[0] && results[0].result;
       if (token) {
-        await new Promise((r) => chrome.storage.sync.set({ astrepilot_token: token, astrepilot_origin: PROD_ORIGIN }, r));
+        let candidateSlug = 'roushan';
+        try {
+          const pRes = await fetch(origin + '/api/autopilot/profile', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (pRes.ok) {
+            const pData = await pRes.json();
+            candidateSlug = pData.slug || (pData.email && pData.email.includes('ayushi') ? 'ayushi' : 'roushan');
+          }
+        } catch (e) {}
+
+        const payload = {
+          astrepilot_token: token,
+          astrepilot_origin: origin,
+          astrepilot_active_context: candidateSlug,
+          astrepilot_candidate_slug: candidateSlug
+        };
+
+        await new Promise((r) => chrome.storage.sync.set(payload, r));
         if (chrome.storage.local) {
-          await new Promise((r) => chrome.storage.local.set({ astrepilot_token: token, astrepilot_origin: PROD_ORIGIN }, r));
+          await new Promise((r) => chrome.storage.local.set(payload, r));
         }
         return token;
       }
-    } catch {}
+    } catch (e) {
+      console.warn('[AstrePilot Popup] Auto-sync attempt error:', e);
+    }
     return null;
   }
 
@@ -347,16 +371,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Social Auth Pills (Route to https://astrework.app/login)
+  // Quick Sync with AstreWork Web Session
+  if (btnQuickSync) {
+    btnQuickSync.addEventListener('click', async () => {
+      if (btnQuickSyncText) btnQuickSyncText.textContent = 'Syncing…';
+      const token = await tryAutoSyncFromOpenTab();
+      if (token) {
+        await initialize();
+      } else {
+        if (loginErrorMsg) {
+          loginErrorMsg.textContent = 'No active AstreWork web session found. Please make sure you are signed in at astrework.app';
+          loginErrorMsg.classList.remove('hidden');
+        }
+        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with AstreWork Web Session';
+      }
+    });
+  }
+
+  // Social Auth Pills (Direct Provider Route with Instant Auto-Sync)
   if (btnSocialGoogle) {
-    btnSocialGoogle.addEventListener('click', () => {
-      chrome.tabs.create({ url: PROD_ORIGIN + '/login' });
+    btnSocialGoogle.addEventListener('click', async () => {
+      const synced = await tryAutoSyncFromOpenTab();
+      if (synced) {
+        await initialize();
+        return;
+      }
+      chrome.tabs.create({ url: PROD_ORIGIN + '/api/auth/signin/google?callbackUrl=/dashboard' });
     });
   }
 
   if (btnSocialGithub) {
-    btnSocialGithub.addEventListener('click', () => {
-      chrome.tabs.create({ url: PROD_ORIGIN + '/login' });
+    btnSocialGithub.addEventListener('click', async () => {
+      const synced = await tryAutoSyncFromOpenTab();
+      if (synced) {
+        await initialize();
+        return;
+      }
+      chrome.tabs.create({ url: PROD_ORIGIN + '/api/auth/signin/github?callbackUrl=/dashboard' });
+    });
+  }
+
+  // Reactive Storage Listener: Automatically flips from login view to connected cockpit
+  if (chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (changes.astrepilot_token && changes.astrepilot_token.newValue) {
+        initialize();
+      }
     });
   }
 

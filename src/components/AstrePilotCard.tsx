@@ -43,7 +43,12 @@ export default function AstrePilotCard() {
         const res = await fetch("/api/autopilot/token");
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
-        if (active) setToken(data.token);
+        if (active) {
+          setToken(data.token);
+          if (data.token && typeof window !== "undefined") {
+            window.postMessage({ type: "ASTREPILOT_TOKEN_SYNC", token: data.token }, "*");
+          }
+        }
       } catch {
         if (active) setToken(null);
       } finally {
