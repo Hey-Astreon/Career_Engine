@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 87: AstrePilot V3 Self-Learning Form Schema Cache, FormSchema Model & Cross-User Network Effect)
+> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 88: AstrePilot V3 Real-Time JD-Aware Context Engine, Confidence-Stratified Fill & Anti-Slop Sanitizer)
 
 ---
 
@@ -3735,3 +3735,33 @@ graph TD
   - **Rule 1 (Privacy-Safe Cross-User Telemetry):** Shared schema caches must enforce schema-only sanitization at the model boundary. Strip all values, names, emails, and answers before storage.
   - **Rule 2 (Autonomous Schema Verification Threshold):** Never mark crowdsourced or auto-discovered form schemas as `verified` on first observation. Require a quorum of consecutive successful fills ($\ge 3$ successes, 0 failures) before locking in permanent verification.
 - **Status:** Complete, verified (`58/58` test suites passing, `0` TS errors), committed and pushed to `origin main`.
+
+
+### Phase 88: AstrePilot V3 Real-Time JD-Aware Context Engine, Confidence-Stratified Fill & Anti-Slop Sanitizer (November 6, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Generic profile screening answers often lacked direct alignment with the specific hiring company and job description context when candidates applied directly from an ATS URL (where no prior AstreWork session was pre-primed).
+  - Candidates had no visual indication of field confidence tiers in the AstrePilot HUD, unable to distinguish between deterministic, 100% verified fields and AI-generated or ambiguous fields requiring visual review.
+  - AI responses occasionally contained forbidden corporate slop buzzwords ("spearheaded", "leveraged", "cutting-edge", "utilized") or violated the BCA Candidate Title Law (referring to BCA developers as "Engineers").
+  - The HUD "Save to Vault" CTA button failed to appear on screening fields due to case-sensitivity mismatches between canonical type definitions and lowercase UI field tags.
+- **Deep Root Cause Diagnosis:**
+  1. **Absence of Autonomous Live DOM JD Grounding:** In raw external ATS applications, `session.jdText` was undefined. The extension lacked an automatic fallback to scrape and cache live DOM job description text prior to querying `/oracle` or `/answer`.
+  2. **Unstratified Fill Experience:** All fields were rendered uniformly without confidence pills or review badges, missing the opportunity to give users instant confidence and transparency.
+  3. **Case Sensitivity in Type Normalization:** `f.type` in the HUD was stored as lowercase (`'screening'`, `'coverletter'`), causing strict checks like `f.type === 'SCREENING'` to evaluate to `false` and disabling the 1-click Save to Vault CTA.
+- **The Concrete Surgical Fix:**
+  1. **RAG Project Relevance Ranking (`src/lib/ai/screeningHelper.ts` & `src/app/api/autopilot/oracle/route.ts`):** Implemented `rankProjectsForContext()`, computing token overlap between target screening questions, JD requirements, and candidate project tech stacks/architectures. Ranks and injects top-3 relevant projects into the AI prompt context.
+  2. **Anti-AI Slop & BCA Compliance Sanitizer (`src/lib/ai/screeningHelper.ts`):** Implemented `sanitizeScreeningText()` with regex replacements that purge corporate fluff ("spearheaded" -> "built", "cutting-edge" -> "high-performance", "leveraged" -> "integrated", "utilized" -> "used", "seamlessly" -> "directly") and strictly enforce Indian academic/corporate BCA title law (Developer instead of Engineer).
+  3. **Real-Time Live JD Ingestion (`extension/content.js`):** Added `getCachedLiveJD()` which automatically extracts and caches up to 15,000 characters of live job posting text on page load via `extractPageContent()`. Injects this live JD into `/oracle` and `/answer` requests even without an existing pre-primed dashboard session.
+  4. **Confidence-Stratified Fill & Visual Pills (`extension/hud-ui.js`, `extension/hud.shadow.css`):**
+     - Updated summary line: `X fields (Y verified · Z review · W AI)`.
+     - Injected confidence badge pills into every row in `_generateFieldRowHTML()`:
+       - 🟢 `✓ Verified` ($\ge 85\%$ confidence, deterministic rules or schema cache hits)
+       - 🟡 `Review X%` ($< 85\%$ confidence, highlighted with amber review tint)
+       - 🤖 `AI · X%` (screening & cover letter fields)
+       - 🛡️ `Vault X%` (semantic QA vault hits)
+     - Activated the `[💾 Save to Vault]` 1-click CTA on all AI and screening rows, allowing candidates to permanently save answers with 1 click.
+  5. **Vitest Verification:** Created `tests/jd-aware-context-engine.test.ts` (9 tests passing covering RAG keyword ranking, slop purging, BCA compliance, procedural guardrails, and prompt formatting). All 59 test suites passing (549 tests total).
+  6. **TypeScript & Extension Re-Package:** Verified 0 TS errors (`npx.cmd tsc --noEmit`) and regenerated `public/downloads/astrepilot-extension.zip` (`626.3 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Autonomous Live JD Grounding):** Never assume a job application is launched from the dashboard with an active database session. Always fall back to extracting and caching live DOM text directly from the current document so RAG answers are perpetually grounded.
+  - **Rule 2 (Case-Insensitive Type Normalization):** When rendering UI badges or triggering action buttons based on enum types, always normalize types using `String(f.type || '').toUpperCase().replace(/_/g, '')` to prevent casing mismatches between server, content script, and shadow DOM.
+- **Status:** Complete, verified (`59/59` test suites passing, `0` TS errors), committed and pushed to `origin main`.

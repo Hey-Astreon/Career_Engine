@@ -999,8 +999,19 @@ window.AstrePilotHUD = (function () {
 
       // Summary & Master Autofill Action
       if (this.fields.length > 0) {
-        const aiCount = this.fields.filter(f => f.source === 'ai').length;
-        const instantCount = this.fields.length - aiCount;
+        const isFieldAI = (f) => {
+          const t = String(f.type || '').toUpperCase().replace(/_/g, '');
+          return f.source === 'ai' || t === 'SCREENING' || t === 'COVERLETTER';
+        };
+        const aiCount = this.fields.filter(f => isFieldAI(f)).length;
+        const highConfCount = this.fields.filter(f => (f.confidence || 0.90) >= 0.85 && !isFieldAI(f)).length;
+        const reviewCount = Math.max(0, this.fields.length - aiCount - highConfCount);
+
+        let breakdownText = `${this.fields.length} fields (${highConfCount} verified`;
+        if (reviewCount > 0) breakdownText += ` · ${reviewCount} review`;
+        if (aiCount > 0) breakdownText += ` · ${aiCount} AI`;
+        breakdownText += ')';
+
         const isBusy = this.state === 'scanning' || this.state === 'filling';
         const btnText = this.state === 'scanning'
           ? 'Scanning...'
@@ -1014,7 +1025,7 @@ window.AstrePilotHUD = (function () {
                   this.state === 'done' ? `<span style="color:var(--ap-success)">✓ Done</span>` :
                   `<div class="pulse"></div> Ready to fill`}
               </div>
-              <div>${this.fields.length} fields (${instantCount} instant · ${aiCount} AI)</div>
+              <div>${breakdownText}</div>
             </div>
 
             ${this.state !== 'done' ? `
@@ -1104,7 +1115,7 @@ window.AstrePilotHUD = (function () {
               <button class="btn-primary action-confirm-submit" style="background: var(--ap-success, #059669); border-color: var(--ap-success, #059669); color: white; margin-bottom: 6px;">
                 🎉 Mark as Submitted
               </button>
-              ${(this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) ? `
+              ${(this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => String(f.type || '').toUpperCase().replace(/_/g, '') === 'COVERLETTER')) ? `
                 <button type="button" class="btn-secondary action-view-cover-letter" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; margin-bottom: 6px;">
                   ✍️ View / Copy Cover Letter
                 </button>
@@ -1152,7 +1163,7 @@ window.AstrePilotHUD = (function () {
         } else {
           // Master Autofill button is rendered directly below 'Ready to fill' in summary-action-block
           // Footer only renders optional cover letter viewer and keyboard shortcut footnote
-          if (this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) {
+          if (this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => String(f.type || '').toUpperCase().replace(/_/g, '') === 'COVERLETTER')) {
             html += `
               <button type="button" class="btn-secondary action-view-cover-letter" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; margin-bottom: 6px;">
                 ✍️ View / Copy Cover Letter
@@ -1193,13 +1204,22 @@ window.AstrePilotHUD = (function () {
       else if (isVault) statusIcon = '🛡️';
       else if (isAI) statusIcon = ICONS.sparkle;
 
-      const sourceBadge = isVault
-        ? `<span class="vault-chip" style="display:inline-flex;margin:0 0 0 6px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700">Vault ${f.confidence ? f.confidence + '%' : ''}</span>`
-        : isAI
-        ? `<span class="primed-chip" style="display:inline-flex;margin:0 0 0 6px">AI</span>`
-        : '';
+      const normType = String(f.type || '').toUpperCase().replace(/_/g, '');
+      const isScreeningOrCL = isAI || normType === 'SCREENING' || normType === 'COVERLETTER';
+      const conf = f.confidence != null ? f.confidence : 0.95;
+      const pct = Math.round(conf <= 1 ? conf * 100 : conf);
+      let badgeHtml = '';
+      if (isVault) {
+        badgeHtml = `<span class="badge-confidence badge-vault" style="display:inline-flex;margin:0 0 0 6px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">Vault ${pct}%</span>`;
+      } else if (isScreeningOrCL) {
+        badgeHtml = `<span class="badge-confidence badge-ai" style="display:inline-flex;margin:0 0 0 6px;background:var(--ap-ai-soft, rgba(37,99,235,0.1));color:var(--ap-ai, #2563eb);border:1px solid rgba(37,99,235,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">AI · ${pct}%</span>`;
+      } else if (conf < 0.85) {
+        badgeHtml = `<span class="badge-confidence badge-review" style="display:inline-flex;margin:0 0 0 6px;background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.3);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">Review ${pct}%</span>`;
+      } else {
+        badgeHtml = `<span class="badge-confidence badge-verified" style="display:inline-flex;margin:0 0 0 6px;background:rgba(16,185,129,0.1);color:#059669;border:1px solid rgba(16,185,129,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">✓ Verified</span>`;
+      }
 
-      const canSaveVault = (f.type === 'screening' || f.type === 'coverletter') && val && val !== '...';
+      const canSaveVault = isScreeningOrCL && val && val !== '...';
       const saveVaultBtn = canSaveVault
         ? `<button type="button" class="action-save-vault" data-field-id="${f.id}" title="Save answer to your permanent Vault" style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.2);cursor:pointer;font-size:10px;font-weight:600;color:var(--ap-ai, #0071e3);padding:2px 6px;border-radius:4px;margin-left:auto;display:inline-flex;align-items:center;gap:3px">💾 Save to Vault</button>`
         : '';
@@ -1209,7 +1229,7 @@ window.AstrePilotHUD = (function () {
           <div class="field-icon">${icon}</div>
           <div class="field-content">
             <div class="field-header" style="display:flex;align-items:center;width:100%">
-              <div class="field-label">${label} ${sourceBadge}</div>
+              <div class="field-label">${label} ${badgeHtml}</div>
               ${saveVaultBtn}
             </div>
             <div class="field-value">${val}</div>
@@ -1420,12 +1440,14 @@ window.AstrePilotHUD = (function () {
       });
     },
 
-    // Apply the host-page highlight ring
-    highlight: function(inputEl) {
-      inputEl.classList.remove('ap-field-done');
-      inputEl.classList.add('ap-field-active');
+    // Apply the host-page highlight ring (with confidence tier mode: active vs review)
+    highlight: function(inputEl, mode = 'active') {
+      if (!inputEl || !inputEl.classList) return;
+      const activeClass = mode === 'review' ? 'ap-field-review' : 'ap-field-active';
+      inputEl.classList.remove('ap-field-done', 'ap-field-active', 'ap-field-review');
+      inputEl.classList.add(activeClass);
       setTimeout(() => {
-        inputEl.classList.remove('ap-field-active');
+        inputEl.classList.remove(activeClass);
         inputEl.classList.add('ap-field-done');
         // Fade out done ring after a delay
         setTimeout(() => {

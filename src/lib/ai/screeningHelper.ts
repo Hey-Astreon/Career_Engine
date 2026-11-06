@@ -101,3 +101,80 @@ CRITICAL INSTRUCTIONS:
 - If the question asks a simple yes/no or procedural question, reply directly with 1 phrase or word (e.g. "N/A" or "Yes").
 - Return ONLY the exact answer text with no surrounding quotes or meta-chatter.`;
 }
+
+export interface CandidateProjectContext {
+  title: string;
+  description: string;
+  techStack?: string | null;
+}
+
+/**
+ * Computes semantic relevance between projects and target question / JD,
+ * ranking the top 3 most relevant projects for prompt context grounding.
+ */
+export function rankProjectsForContext(
+  projects: CandidateProjectContext[],
+  question: string,
+  jobDescription: string = ""
+): CandidateProjectContext[] {
+  if (!projects || projects.length <= 3) return projects || [];
+
+  const targetTokens = (question + " " + jobDescription.slice(0, 5000))
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+
+  const tokenSet = new Set(targetTokens);
+
+  const scored = projects.map((p) => {
+    const pTokens = (p.title + " " + p.description + " " + (p.techStack || ""))
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/);
+
+    let matchCount = 0;
+    for (const t of pTokens) {
+      if (tokenSet.has(t)) matchCount++;
+    }
+
+    return { project: p, score: matchCount };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 3).map((s) => s.project);
+}
+
+/**
+ * Sanitizes screening question responses by stripping AI slop buzzwords
+ * and enforcing BCA Title compliance (Developer instead of Engineer).
+ */
+export function sanitizeScreeningText(text: string, isBca: boolean = true): string {
+  if (!text) return "";
+
+  let cleaned = text
+    .replace(/\b(?:spearheaded|orchestrated)\b/gi, "built")
+    .replace(/\b(?:revolutionized)\b/gi, "restructured")
+    .replace(/\b(?:synergized|leveraged)\b/gi, "integrated")
+    .replace(/\b(?:utilizing)\b/gi, "using")
+    .replace(/\b(?:utilized)\b/gi, "used")
+    .replace(/\b(?:utilize)\b/gi, "use")
+    .replace(/\b(?:cutting-edge)\b/gi, "high-performance")
+    .replace(/\b(?:rich tapestry|testament|multifaceted)\b/gi, "core architecture")
+    .replace(/\b(?:seamlessly)\b/gi, "directly")
+    .replace(/\b(?:passionate|thrilled)\b/gi, "focused")
+    .replace(/\b(?:driving excellence|results-oriented)\b/gi, "reliability-focused");
+
+  if (isBca) {
+    cleaned = cleaned
+      .replace(/\bSoftware Engineers?\b/gi, "Software Developer")
+      .replace(/\bBackend Engineers?\b/gi, "Backend Developer")
+      .replace(/\bFull-?Stack Engineers?\b/gi, "Full-Stack Developer")
+      .replace(/\bSystems Engineers?\b/gi, "Systems Architect")
+      .replace(/\bAI Engineers?\b/gi, "AI Developer")
+      .replace(/\bas an engineer\b/gi, "as a developer")
+      .replace(/\bEngineering\b/gi, "Development");
+  }
+
+  return cleaned.trim();
+}

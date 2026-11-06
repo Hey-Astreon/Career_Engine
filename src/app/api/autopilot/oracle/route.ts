@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
-import { detectProceduralAnswer, buildScreeningSystemPrompt } from "@/lib/ai/screeningHelper";
+import {
+  detectProceduralAnswer,
+  buildScreeningSystemPrompt,
+  rankProjectsForContext,
+  sanitizeScreeningText,
+} from "@/lib/ai/screeningHelper";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -64,21 +69,28 @@ export async function POST(req: Request) {
       }
     }
 
+    const rawProjects = profile?.projects?.map((p) => ({
+      title: p.title,
+      description: p.architecture || p.bulletPoints || "",
+      techStack: p.techStack,
+    })) || [];
+
+    // AstrePilot V3: RAG Project Relevance Ranking based on target question & JD
+    const rankedProjects = rankProjectsForContext(rawProjects, question, jobDescription || "");
+
     const profileContext = profile ? {
       fullName: profile.fullName,
       title: profile.title,
       skills: skillsList,
-      projects: profile.projects.map((p) => ({
-        title: p.title,
-        description: p.architecture || p.bulletPoints,
-        techStack: p.techStack,
-      })),
+      projects: rankedProjects,
       experiences: profile.virtualExps.map((e) => ({
         company: e.company,
         role: e.roleTitle,
         outcome: e.outcome,
       })),
     } : null;
+
+    const isBca = Boolean(profile && /roushan|ayushi/i.test(profile.fullName));
 
     // 2. Attempt to query Antigravity Python Agent Gateway
     try {
@@ -99,8 +111,9 @@ export async function POST(req: Request) {
 
       if (agentRes.ok) {
         const agentData = await agentRes.json();
+        const cleanAnswer = sanitizeScreeningText(agentData.answer || "", isBca);
         return NextResponse.json({
-          answer: agentData.answer,
+          answer: cleanAnswer,
           source: "antigravity-agent",
           thoughts: agentData.thoughts || [],
         }, { headers: CORS });
@@ -133,8 +146,10 @@ ${profileContext ? `Relevant Projects & Experience Context:\n${JSON.stringify(pr
       answer = answer.replace(/^(?:after reviewing|based on)[^.]*\.\s*/i, "").trim();
     }
 
+    const cleanFallbackAnswer = sanitizeScreeningText(answer, isBca);
+
     return NextResponse.json({
-      answer: answer || "N/A",
+      answer: cleanFallbackAnswer || "N/A",
       source: "internal-fallback-llm",
       thoughts: [],
     }, { headers: CORS });

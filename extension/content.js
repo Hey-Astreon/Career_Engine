@@ -22,6 +22,21 @@
   let isFilling = false;  // re-entrancy guard for runAutofill
   let fillHeartbeatTimer = null; // heartbeat timer for active fill locks
   let lastFormFingerprint = null; // AstrePilot V3 Form Fingerprint Cache Key
+  let cachedLiveJd = null;
+
+  function getCachedLiveJD() {
+    if (cachedLiveJd) return cachedLiveJd;
+    try {
+      if (typeof extractPageContent === 'function') {
+        const data = extractPageContent();
+        if (data && data.pageText && data.pageText.length > 80) {
+          cachedLiveJd = data.pageText.slice(0, 15000);
+          return cachedLiveJd;
+        }
+      }
+    } catch (e) {}
+    return '';
+  }
 
   function generateBrowserFormFingerprint(inputs) {
     if (!inputs || inputs.length === 0) return null;
@@ -5025,15 +5040,16 @@
           /* proceed to oracle/answer */
         }
 
+        const liveJdText = (session && session.jdText) || getCachedLiveJD() || '';
         try {
-          // Attempt high-reasoning Antigravity AI Oracle next
+          // Attempt high-reasoning Antigravity AI Oracle next with live JD context
           let res = await apFetch('/oracle', {
             method: 'POST',
             body: JSON.stringify({
               question,
               company,
               jobTitle,
-              jobDescription: session ? session.jdText : undefined,
+              jobDescription: liveJdText || undefined,
             }),
           });
           // Fallback to standard answer endpoint if oracle is unavailable
@@ -5042,7 +5058,7 @@
               method: 'POST',
               body: JSON.stringify({
                 question, company, jobTitle,
-                context: session ? 'JOB DESCRIPTION:\n' + (session.jdText || '') + '\n\nTAILORED PROFILE:\n' + (session.tailoredSummary || '') : profile._context,
+                context: liveJdText ? 'JOB DESCRIPTION:\n' + liveJdText + '\n\nTAILORED PROFILE:\n' + ((session && session.tailoredSummary) || profile.professionalSummary || '') : (profile._context || ''),
               }),
             });
           }
@@ -5871,8 +5887,9 @@
 
         if (!skipped) {
           let writeSuccess = false;
+          const confTier = (f.confidence != null && f.confidence < 0.85) ? 'review' : 'active';
           if (f.type === 'RESUME') {
-            AstrePilotHUD.highlight(f.element);
+            AstrePilotHUD.highlight(f.element, confTier);
             const uploadRes = await injectResumeFile(f.element);
             if (uploadRes && uploadRes.success) {
               filled++;
@@ -5882,7 +5899,7 @@
               hud.markRow(f.id, 'skipped', 'Downloaded to disk');
             }
           } else if (f.type === 'COVER_LETTER' && f.element.tagName === 'INPUT' && f.element.type === 'file') {
-            AstrePilotHUD.highlight(f.element);
+            AstrePilotHUD.highlight(f.element, confTier);
             const uploadRes = await injectCoverLetterFile(f.element);
             if (uploadRes && uploadRes.success) {
               filled++;
@@ -5891,7 +5908,7 @@
               hud.markRow(f.id, 'skipped', 'Upload failed');
             }
           } else if (isComboboxOrSelect(f.element)) {
-            AstrePilotHUD.highlight(f.element);
+            AstrePilotHUD.highlight(f.element, confTier);
             const cbSuccess = await fillUniversalCombobox(f.element, val, f.type);
             writeSuccess = cbSuccess || await verifyFieldWritten(f, val);
             if (writeSuccess) {
@@ -5914,7 +5931,7 @@
               hud.markRow(f.id, 'retry', '⚠ Retry Verification');
             }
           } else {
-            AstrePilotHUD.highlight(f.element);
+            AstrePilotHUD.highlight(f.element, confTier);
             await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
             writeSuccess = await verifyFieldWritten(f, val);
             if (!writeSuccess) {

@@ -394,6 +394,41 @@ svg {
   box-shadow: var(--ap-inner-light);
 }
 
+/* AstrePilot V3 Confidence Badges */
+.badge-confidence {
+  font-family: var(--ap-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 1px 6px;
+  border-radius: var(--ap-radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+.badge-verified {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+.badge-review {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.badge-ai {
+  background: var(--ap-ai-soft, rgba(37, 99, 235, 0.1));
+  color: var(--ap-ai, #2563eb);
+  border: 1px solid rgba(37, 99, 235, 0.28);
+}
+.badge-vault {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
 /* Status / Summary line */
 .summary-line {
   display: flex;
