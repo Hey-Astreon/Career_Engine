@@ -5856,6 +5856,147 @@
     return currentVal.length > 0;
   }
 
+  /* -- ASTREPILOT V3 SELF-HEALING UNIVERSAL WRITE ACTUATOR -- */
+  async function universalWriteActuator(el, value, field = null) {
+    if (!el || value === undefined || value === null) return { success: false, strategyUsed: 0 };
+    const valStr = String(value);
+    const fieldType = (field && field.type) || '';
+
+    // Handle Radio & Checkbox
+    if (el.tagName === 'INPUT' && (el.type === 'radio' || el.type === 'checkbox')) {
+      setNativeValue(el, value, true, fieldType);
+      const verified = await verifyFieldWritten(field || { element: el, type: fieldType }, value);
+      return { success: verified, strategyUsed: 1 };
+    }
+
+    // Tier 1: Native Property Setter & React ValueTracker Reset (0ms)
+    setNativeValue(el, valStr, true, fieldType);
+    if (await verifyFieldWritten(field || { element: el, type: fieldType }, valStr)) {
+      return { success: true, strategyUsed: 1 };
+    }
+
+    // Settle delay before Tier 2
+    await new Promise(r => setTimeout(r, 40));
+
+    // Tier 2: Focus + Selection + document.execCommand('insertText')
+    try {
+      if (typeof el.focus === 'function') el.focus();
+      if (typeof el.select === 'function') {
+        try { el.select(); } catch (e) {}
+      } else if (typeof el.setSelectionRange === 'function') {
+        try { el.setSelectionRange(0, el.value ? el.value.length : 0); } catch (e) {}
+      }
+
+      const doc = el.ownerDocument || document;
+      let inserted = false;
+      if (typeof doc.execCommand === 'function') {
+        inserted = doc.execCommand('insertText', false, valStr);
+      }
+
+      if (inserted) {
+        try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+        try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+        if (await verifyFieldWritten(field || { element: el, type: fieldType }, valStr)) {
+          return { success: true, strategyUsed: 2 };
+        }
+      }
+    } catch (s2Err) {}
+
+    // Settle delay before Tier 3
+    await new Promise(r => setTimeout(r, 40));
+
+    // Tier 3: Synthetic ClipboardEvent('paste')
+    try {
+      if (typeof el.focus === 'function') el.focus();
+      if (typeof el.select === 'function') {
+        try { el.select(); } catch (e) {}
+      }
+
+      let pasteDispatched = false;
+      try {
+        if (typeof ClipboardEvent !== 'undefined' && typeof DataTransfer !== 'undefined') {
+          const dt = new DataTransfer();
+          dt.setData('text/plain', valStr);
+          const pasteEvent = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: dt,
+          });
+          el.dispatchEvent(pasteEvent);
+          pasteDispatched = true;
+        }
+      } catch (e) {}
+
+      if (!pasteDispatched && typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(valStr);
+          const doc = el.ownerDocument || document;
+          if (doc && typeof doc.execCommand === 'function') {
+            doc.execCommand('paste');
+          }
+        } catch (clipErr) {}
+      }
+
+      try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+      try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+      if (await verifyFieldWritten(field || { element: el, type: fieldType }, valStr)) {
+        return { success: true, strategyUsed: 3 };
+      }
+    } catch (s3Err) {}
+
+    // Settle delay before Tier 4
+    await new Promise(r => setTimeout(r, 40));
+
+    // Tier 4: Granular Char-by-Char Synthetic KeyboardEvent Cascade
+    try {
+      if (typeof el.focus === 'function') el.focus();
+      if (typeof el.select === 'function') {
+        try { el.select(); } catch (e) {}
+      }
+
+      let accum = '';
+      for (let i = 0; i < valStr.length; i++) {
+        const char = valStr[i];
+        accum += char;
+        const keyCode = char.charCodeAt(0);
+
+        try {
+          el.dispatchEvent(new KeyboardEvent('keydown', { key: char, code: 'Key' + char.toUpperCase(), keyCode, which: keyCode, bubbles: true }));
+          el.dispatchEvent(new KeyboardEvent('keypress', { key: char, code: 'Key' + char.toUpperCase(), keyCode, which: keyCode, bubbles: true }));
+        } catch (e) {}
+
+        try {
+          el.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, inputType: 'insertText', data: char }));
+        } catch (e) {}
+
+        try {
+          const proto = Object.getPrototypeOf(el);
+          const setter = Object.getOwnPropertyDescriptor(proto, 'value');
+          if (setter && setter.set) {
+            setter.set.call(el, accum);
+          } else {
+            el.value = accum;
+          }
+        } catch (e) {
+          el.value = accum;
+        }
+
+        try {
+          el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: char }));
+          el.dispatchEvent(new KeyboardEvent('keyup', { key: char, code: 'Key' + char.toUpperCase(), keyCode, which: keyCode, bubbles: true }));
+        } catch (e) {}
+      }
+
+      try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+      try { el.dispatchEvent(new Event('blur', { bubbles: true })); } catch (e) {}
+
+      const verified = await verifyFieldWritten(field || { element: el, type: fieldType }, valStr);
+      return { success: verified, strategyUsed: 4 };
+    } catch (s4Err) {
+      return { success: false, strategyUsed: 4 };
+    }
+  }
+
   async function fillAllFields(hud) {
     hud.setState('filling');
     let filled = 0;
@@ -5911,6 +6052,10 @@
             AstrePilotHUD.highlight(f.element, confTier);
             const cbSuccess = await fillUniversalCombobox(f.element, val, f.type);
             writeSuccess = cbSuccess || await verifyFieldWritten(f, val);
+            if (!writeSuccess && f.element.tagName === 'INPUT') {
+              const uRes = await universalWriteActuator(f.element, val, f);
+              writeSuccess = uRes.success;
+            }
             if (writeSuccess) {
               filled++;
               hud.markRow(f.id, 'done', String(val).slice(0, 30));
@@ -5918,12 +6063,8 @@
               hud.markRow(f.id, 'retry', '⚠ Retry Verification');
             }
           } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
-            setNativeValue(f.element, val, true);
-            writeSuccess = await verifyFieldWritten(f, val);
-            if (!writeSuccess) {
-              setNativeValue(f.element, val, true);
-              writeSuccess = await verifyFieldWritten(f, val);
-            }
+            const uRes = await universalWriteActuator(f.element, val, f);
+            writeSuccess = uRes.success;
             if (writeSuccess) {
               filled++;
               hud.markRow(f.id, 'done', String(val).slice(0, 30));
@@ -5933,17 +6074,26 @@
           } else {
             AstrePilotHUD.highlight(f.element, confTier);
             await AstrePilotHUD.fillAnimated(f.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
-            writeSuccess = await verifyFieldWritten(f, val);
-            if (!writeSuccess) {
-              setNativeValue(f.element, val, true);
-              writeSuccess = await verifyFieldWritten(f, val);
-            }
+            // 4-Strategy Self-Healing Actuator
+            const uRes = await universalWriteActuator(f.element, val, f);
+            writeSuccess = uRes.success;
             if (writeSuccess) {
               filled++;
               const displayVal = (f.type === 'PASSWORD' || f.type === 'CONFIRM_PASSWORD') ? '••••••••' : String(val).slice(0, 30);
               hud.markRow(f.id, 'done', displayVal);
             } else {
               hud.markRow(f.id, 'retry', '⚠ Retry Verification');
+              if (lastFormFingerprint) {
+                try {
+                  apFetch('/schema-cache', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      fingerprint: lastFormFingerprint,
+                      feedback: { success: false, failedField: f.id, fieldType: f.type }
+                    })
+                  }).catch(() => {});
+                } catch (e) {}
+              }
             }
           }
         } else {
