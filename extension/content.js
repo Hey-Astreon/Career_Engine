@@ -47,7 +47,7 @@
       portfolioUrl: 'https://astreon.me',
       school: 'Amity University',
       degree: 'Bachelor of Computer Applications (BCA)',
-      discipline: 'Computer Science / Applications',
+      discipline: 'Computer Science',
       highestEducation: 'Bachelor of Computer Applications (BCA)',
       startMonth: 'July',
       startYear: '2025',
@@ -101,7 +101,7 @@
       slug: 'ayushi',
       school: 'Amity University',
       degree: 'Bachelor of Computer Applications (BCA)',
-      discipline: 'Computer Science / Applications',
+      discipline: 'Computer Science',
       highestEducation: 'Bachelor of Computer Applications (BCA)',
       startMonth: 'July',
       startYear: '2025',
@@ -210,7 +210,7 @@
     chrome.runtime.sendMessage({
       type: 'RELEASE_FILL_LOCK',
       url: window.location.href
-    });
+    }, () => {});
     if (syncChannel) {
       try {
         syncChannel.postMessage({
@@ -2369,17 +2369,39 @@
     return { fields, seenElements };
   }
 
-  /* -- CAPTCHA SENTINEL (PILLAR 5) -- */
+  /* -- CAPTCHA SENTINEL (PILLAR 5: ACTIVE CHALLENGE ONLY) -- */
   function detectCaptchaChallenge(targetDocs = [document]) {
     try {
       for (const doc of targetDocs) {
         if (!doc) continue;
-        const captchaEl = doc.querySelector(
-          'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="challenges.cloudflare.com"], .cf-turnstile, .g-recaptcha, [data-sitekey]'
+
+        // 1. Google reCAPTCHA: Detect active visual challenge modal (bframe / challenge iframe)
+        // Strictly ignore passive invisible background tokens (e.g. anchor?size=invisible or .grecaptcha-badge)
+        const recaptchaChallenge = doc.querySelector(
+          'iframe[src*="recaptcha/enterprise/bframe"], iframe[src*="recaptcha/api2/bframe"], iframe[title*="recaptcha challenge" i]'
         );
-        if (captchaEl) {
-          const rect = captchaEl.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) return true;
+        if (recaptchaChallenge) {
+          const rect = recaptchaChallenge.getBoundingClientRect();
+          if (rect.width > 100 && rect.height > 100) return true;
+        }
+
+        // 2. hCaptcha: Detect active interactive challenge frame
+        const hcaptchaChallenge = doc.querySelector(
+          'iframe[src*="hcaptcha.com/challenge"], iframe[title*="hcaptcha challenge" i], iframe[title*="checkbox for hcaptcha" i]'
+        );
+        if (hcaptchaChallenge) {
+          const rect = hcaptchaChallenge.getBoundingClientRect();
+          if (rect.width > 50 && rect.height > 50) return true;
+        }
+
+        // 3. Cloudflare Turnstile: Detect interactive manual verification widget
+        const turnstileFrame = doc.querySelector(
+          'iframe[src*="challenges.cloudflare.com/cdn-cgi/challenge-platform"]'
+        );
+        if (turnstileFrame) {
+          const rect = turnstileFrame.getBoundingClientRect();
+          // Turnstile interactive prompt is typically ~300x65px
+          if (rect.width > 120 && rect.height > 40) return true;
         }
       }
     } catch (e) {}
@@ -2639,6 +2661,7 @@
     'asian': ['asian (not hispanic or latino)', 'asian / pacific islander', 'south asian', 'asian - non hispanic', 'asian (all)'],
     'amity university': ['amity university noida', 'amity university, noida', 'amity university uttar pradesh', 'amity'],
     'computer science / applications': ['computer science', 'computer applications', 'information technology', 'software engineering', 'computing'],
+    'computer science': ['computer science', 'computer applications', 'computer science / applications', 'information technology', 'software engineering', 'computing', 'computer engineering', 'other'],
     'i accept / i agree': ['i accept / i agree', 'i accept', 'i agree', 'agree', 'yes', 'confirm', 'true', '1'],
     'league of legends': ['league of legends', 'lol', 'league', 'teamfight tactics', 'valorant', 'technology / platform / infrastructure'],
     'english': ['english', 'en', 'english (fluent)'],
@@ -2812,12 +2835,42 @@
       if (naMatch) return naMatch;
     }
 
+    if (targetLower.includes('none of the above') || targetLower === 'none') {
+      const noneOpt = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        return t === 'none of the above.' || t === 'none of the above' || t.startsWith('none of the above') || t === 'none';
+      });
+      if (noneOpt) return noneOpt;
+    }
+
     if (fieldType === 'DEGREE' || fieldType === 'EDUCATION' || targetLower.includes('bca') || targetLower.includes('computer applications')) {
       const bcaSyns = SYNONYM_DICTIONARY['bachelor of computer applications (bca)'] || [];
       for (const syn of bcaSyns) {
         const match = pool.find(o => {
           const t = (o.textContent || o.text || '').trim().toLowerCase();
           return t === syn || t.includes(syn);
+        });
+        if (match) return match;
+      }
+    }
+
+    if (fieldType === 'DISCIPLINE' || targetLower.includes('computer') || targetLower.includes('software') || targetLower.includes('applications')) {
+      const disciplinePriorities = [
+        'computer science',
+        'software engineering',
+        'computer engineering',
+        'computer applications',
+        'information technology',
+        'information systems',
+        'computing',
+        'computer and information',
+        'applied computer',
+        'other'
+      ];
+      for (const prio of disciplinePriorities) {
+        const match = pool.find(o => {
+          const t = (o.textContent || o.text || '').trim().toLowerCase();
+          return t === prio || t.includes(prio);
         });
         if (match) return match;
       }
@@ -2931,6 +2984,11 @@
         return OTHER_FALLBACK_REGEX.test(t);
       });
       return otherFallback || null;
+    }
+
+    // Strict compliance guard: if target explicitly requested "None of the above" or negative option, NEVER fallback to pool[0]
+    if (targetLower.includes('none') || targetLower === 'no' || targetLower === 'false') {
+      return null;
     }
 
     const firstValid = pool.find(o => {
@@ -3119,7 +3177,7 @@
     const doc = container.ownerDocument || document;
     const win = doc.defaultView || window;
 
-    // Helper: query currently visible options from local container OR document
+    // Helper: query currently visible options from local container OR matching portal
     const getVisibleOptions = () => {
       // 1. Check local container menu first
       const localMenu = container.querySelector('.select__menu, [class*="menu"]');
@@ -3132,19 +3190,30 @@
         if (filtered.length > 0) return filtered;
       }
 
-      // 2. Check full document (including portals and body, strictly excluding telephone iti dropdown options)
-      const selectors = [
-        '.select__menu .select__option',
-        '#react-portal-mount-point .select__option',
-        '#react-portal-mount-point div[id*="-option-"]',
-        '.select__option:not(.iti__country)',
-        'div[id*="-option-"]:not(.iti__country)'
-      ];
-      const raw = Array.from(doc.querySelectorAll(selectors.join(', ')));
-      return raw.filter(o => {
-        const txt = (o.textContent || o.text || '').trim();
-        return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
-      });
+      // 2. Check portal options strictly matching this input's id to avoid stale menu collision
+      const inputId = inputEl.id || '';
+      if (inputId) {
+        const portalOpts = Array.from(doc.querySelectorAll(`div[id*="${inputId}-option-"]`)).filter(o => {
+          const txt = (o.textContent || o.text || '').trim();
+          return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+        });
+        if (portalOpts.length > 0) return portalOpts;
+      }
+
+      // 3. Document fallback only if aria-controls on input matches menu
+      const ariaControls = inputEl.getAttribute ? inputEl.getAttribute('aria-controls') : null;
+      if (ariaControls) {
+        const ariaMenu = doc.getElementById(ariaControls);
+        if (ariaMenu) {
+          const ariaOpts = Array.from(ariaMenu.querySelectorAll('.select__option, div[id*="-option-"]')).filter(o => {
+            const txt = (o.textContent || o.text || '').trim();
+            return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+          });
+          if (ariaOpts.length > 0) return ariaOpts;
+        }
+      }
+
+      return [];
     };
 
     // Helper: check if a valid selection has already been rendered in this container
@@ -3163,14 +3232,21 @@
       if (!inputEl || inputEl.tagName !== 'INPUT' || inputEl.readOnly) return;
       try {
         inputEl.focus();
-        if (inputEl.select) inputEl.select();
+        const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+        if (setter) {
+          setter.call(inputEl, '');
+        } else {
+          inputEl.value = '';
+        }
+        if (inputEl._valueTracker) inputEl._valueTracker.setValue('__clear__');
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+
         let typed = false;
         try {
           typed = doc.execCommand && doc.execCommand('insertText', false, searchStr);
         } catch (e) {}
         if (!typed) {
-          const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
-          const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
           if (setter) {
             setter.call(inputEl, searchStr);
           } else {
@@ -3186,6 +3262,7 @@
 
     // Helper: open the dropdown menu cleanly without toggle collisions
     const openMenu = async () => {
+      cleanupLingeringPopovers();
       let opts = getVisibleOptions();
       if (opts.length > 0) return opts;
 
@@ -3196,25 +3273,44 @@
         control.click();
       } catch (e) {}
 
-      // Wait up to 500ms for options to mount
+      // Wait up to 600ms for options to mount and stabilize
       const start = Date.now();
-      while (Date.now() - start < 500) {
+      let lastCount = 0;
+      while (Date.now() - start < 600) {
         opts = getVisibleOptions();
-        if (opts.length > 0) return opts;
-        await new Promise(r => setTimeout(r, 50));
+        if (opts.length > 0) {
+          if (opts.length === lastCount) break;
+          lastCount = opts.length;
+        }
+        await new Promise(r => setTimeout(r, 60));
       }
 
       // If still not open, try direct focus on input and ArrowDown
-      try {
-        if (doc.activeElement !== inputEl) inputEl.focus();
-        inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
-      } catch (e) {}
+      if (opts.length === 0) {
+        try {
+          if (doc.activeElement !== inputEl) inputEl.focus();
+          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
+        } catch (e) {}
 
-      const start2 = Date.now();
-      while (Date.now() - start2 < 500) {
-        opts = getVisibleOptions();
-        if (opts.length > 0) return opts;
-        await new Promise(r => setTimeout(r, 50));
+        const start2 = Date.now();
+        while (Date.now() - start2 < 600) {
+          opts = getVisibleOptions();
+          if (opts.length > 0) {
+            if (opts.length === lastCount) break;
+            lastCount = opts.length;
+          }
+          await new Promise(r => setTimeout(r, 60));
+        }
+      }
+
+      // If menu list is scrollable, ensure bottom options (e.g. "None of the above.") are populated
+      const menuList = container.querySelector('.select__menu-list');
+      if (menuList && menuList.scrollHeight > menuList.clientHeight) {
+        try {
+          menuList.scrollTop = menuList.scrollHeight;
+          const scrolledOpts = getVisibleOptions();
+          if (scrolledOpts.length > opts.length) opts = scrolledOpts;
+        } catch (e) {}
       }
 
       return opts;
@@ -3321,6 +3417,12 @@
           const t = (o.textContent || o.text || '').toLowerCase();
           return t.includes('league of legends') || t.includes('valorant') || t.includes('technology');
         });
+      }
+
+      // Space technology / Export regulations fallback ("None of the above.")
+      if (!matchedOption && singleVal.toLowerCase().includes('none of the above')) {
+        matchedOption = options.find(o => (o.textContent || o.text || '').toLowerCase().includes('none of the above')) ||
+                        container.querySelector('div[id*="-option-4"], div[id*="none" i]');
       }
 
       // Preferred Office / Workplace / Remote fallback
@@ -3855,12 +3957,14 @@
   };
 
   /* -- RESOLVE SCREENING SELECT (DETERMINISTIC ASYMMETRIC SAFETY FIREWALL) -- */
-  function resolveScreeningSelect(element) {
+  function resolveScreeningSelect(element, profile = null) {
+    const prof = profile || userProfile || STANDALONE_PROFILES.roushan;
     const q = getLabelText(element).toLowerCase();
 
     // Export regulations / Space tech compliance (e.g. Astranis, SpaceX, Rocket Lab)
     if (q.includes('export regulation') || q.includes('space technology') || q.includes('state which of the following applies to you')) {
-      return (userProfile && userProfile.requiresVisa) ? 'None of the above.' : 'I am a U.S. Citizen.';
+      const isUSCitizen = prof && !prof.requiresVisa && (prof.country === 'United States' || prof.country === 'USA');
+      return isUSCitizen ? 'I am a U.S. Citizen.' : 'None of the above.';
     }
 
     // Internship season confirmation
@@ -4082,10 +4186,10 @@
       case 'CURRENT_ROLE': return profile.currentRole !== false ? 'Yes' : 'No';
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
-      case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
+      case 'DISCIPLINE':   return profile.discipline || 'Computer Science';
       case 'GRADUATION_YEAR': return profile.graduationYear || '2028';
       case 'LANGUAGES':    return profile.languages || 'English, Hindi';
-      case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
+      case 'SCREENING_SELECT': return resolveScreeningSelect(field.element, profile);
       case 'COVER_LETTER': return null;
       case 'SCREENING': {
         const labelText = getLabelText(field.element).toLowerCase();
@@ -4266,10 +4370,10 @@
       case 'CURRENT_ROLE': return profile.currentRole !== false ? 'Yes' : 'No';
       case 'SCHOOL':       return profile.school || 'Amity University';
       case 'DEGREE':       return profile.degree || profile.highestEducation || 'Bachelor of Computer Applications (BCA)';
-      case 'DISCIPLINE':   return profile.discipline || 'Computer Science / Applications';
+      case 'DISCIPLINE':   return profile.discipline || 'Computer Science';
       case 'GRADUATION_YEAR': return profile.graduationYear || '2028';
       case 'LANGUAGES':    return profile.languages || 'English, Hindi';
-      case 'SCREENING_SELECT': return resolveScreeningSelect(field.element);
+      case 'SCREENING_SELECT': return resolveScreeningSelect(field.element, profile);
       case 'COVER_LETTER': {
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
         const jobTitle = session && session.jobTitle ? session.jobTitle : '';

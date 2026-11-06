@@ -1150,21 +1150,16 @@ window.AstrePilotHUD = (function () {
             `;
           }
         } else {
-          const isBusy = this.state === 'scanning' || this.state === 'filling';
-          const btnText = this.state === 'scanning'
-            ? 'Scanning...'
-            : (this.state === 'filling' ? `Filling ${this.fields.length} fields...` : `Autofill ${this.fields.length} fields`);
-          html += `
-            <button type="button" class="btn-primary action-fill" ${isBusy ? 'disabled' : ''} style="width: 100%; height: 38px; font-size: 13px; font-weight: 700; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(37,99,235,0.28); display: flex; align-items: center; justify-content: center; gap: 8px; ${isBusy ? 'opacity: 0.85; cursor: wait;' : 'cursor: pointer;'}">
-              ${this.state === 'filling'
-                ? `<span style="display:inline-block;width:13px;height:13px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:ap-spin 0.6s linear infinite;vertical-align:middle;"></span> ${btnText}`
-                : `${ICONS.fillAction} ${btnText}`}
-            </button>
-            ${(this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) ? `
+          // Master Autofill button is rendered directly below 'Ready to fill' in summary-action-block
+          // Footer only renders optional cover letter viewer and keyboard shortcut footnote
+          if (this.coverLetter || (this.meta && this.meta.coverLetter) || this.fields.some(f => f.type === 'COVER_LETTER')) {
+            html += `
               <button type="button" class="btn-secondary action-view-cover-letter" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; margin-bottom: 6px;">
                 ✍️ View / Copy Cover Letter
               </button>
-            ` : ''}
+            `;
+          }
+          html += `
             <div class="footnote" style="text-align: center; margin-top: 2px;">Review before you submit · Alt⇧A</div>
           `;
         }

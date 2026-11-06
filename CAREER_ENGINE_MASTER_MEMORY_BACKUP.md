@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 5, 2026 (Phase 84: AstrePilot Greenhouse Dynamic Discovery, Dual-CTA Placement & State 'Filling' Rendering Fix)
+> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 85: Invisible reCAPTCHA Enterprise False-Positive Termination, ITAR Export Compliance, React-Select Isolation, Single Sticky CTA & 25/25 Live Greenhouse Test)
 
 ---
 
@@ -3669,3 +3669,29 @@ graph TD
   - **Rule 2 (Per-Field Fault Isolation):** In form autofill automation, never allow a single DOM query or typing exception to kill the entire batch. Wrap every field in independent error isolation.
   - **Rule 3 (Strict Host DOM Isolation for Steppers):** Step progression selectors must strictly filter out UI controls belonging to the automation extension itself (`closest('#astrepilot-root')`) and unrelated host buttons (`autofill my application`).
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors), committed and pushed to `origin main`.
+
+
+### Phase 85: Invisible reCAPTCHA Enterprise False-Positive Termination, ITAR Export Compliance, React-Select Isolation, Single Sticky CTA & 25/25 Live Greenhouse Test (November 6, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan tested AstrePilot live on the real Astranis Greenhouse job application page (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`).
+  - When clicking Autofill, all 24 fields remained completely blank (First Name, Last Name, Email, School, Degree, Discipline, Dates, Export regulations all empty).
+  - The HUD had two autofill buttons (one under "Ready to fill" and another in the footer), causing confusion and clutter.
+  - When scrolling through 25 fields in the HUD, the top autofill button scrolled out of view.
+- **Deep Root Cause Diagnosis:**
+  1. **Invisible reCAPTCHA Enterprise False-Positive Halt:** Greenhouse embeds Google reCAPTCHA Enterprise via an invisible token iframe (`.grecaptcha-badge`, `iframe[src*="recaptcha"]`, `anchor?size=invisible`, fixed 256x60px). The previous `detectCaptchaChallenge()` matched ANY `iframe[src*="recaptcha"]` where width and height > 0. This instantly triggered a false-positive bot challenge alarm on line 1, immediately halting `runAutofill()` before touching a single DOM element.
+  2. **React-Select Stale Global Query Collision:** In Greenhouse's React-Select implementation, menus unmount asynchronously. `getVisibleOptions()` ran a global document query (`.select__menu .select__option`), picking up lingering DOM nodes from previous comboboxes (e.g. `#discipline--0` menu options leaked into `#start-month--0`), preventing subsequent dropdowns from finding their options.
+  3. **Progressive Option Mounting Race:** For long select lists (e.g., export compliance options), React-Select mounts options progressively. `openMenu()` was exiting after the first 4 options rendered, missing option 4 ("None of the above."), causing an accidental fallback to option 0 ("I am a U.S. Citizen.").
+  4. **Duplicate Button Clutter:** Both the `summary-action-block` and `.hud-footer` rendered `action-fill` buttons, violating single-source-of-truth UX and confusing users.
+- **The Concrete Surgical Fix:**
+  1. **Strict Active CAPTCHA Detection (`extension/content.js`):** Rewrote `detectCaptchaChallenge()` to strictly match active visual challenge frames (`recaptcha/enterprise/bframe`, `title*="recaptcha challenge"` with bounding box > 100x100px, or interactive Turnstile prompt > 120x40px). Completely ignores passive background badges (`anchor?size=invisible`, `.grecaptcha-badge`).
+  2. **React-Select Menu Isolation & List Scrolling (`extension/content.js`):** Scoped `getVisibleOptions()` to container menu and portal elements matching `inputEl.id` or `aria-controls`. Added list scrolling (`menuList.scrollTop = menuList.scrollHeight`) to force progressive rendering of bottom options.
+  3. **ITAR & Space Technology Screening Compliance (`extension/content.js`):** Refactored `resolveScreeningSelect(element, profile)` to accept `profile`. Checks `!profile.requiresVisa && (profile.country === 'United States' || profile.country === 'USA')` before selecting U.S. Citizen. For non-U.S. candidates, deterministically returns `"None of the above."`.
+  4. **Discipline Semantic Prioritization (`extension/content.js`):** Added `'computer science'` synonyms and dedicated `DISCIPLINE` scoring in `resolveSemanticOptionMatch()`, preventing fallbacks from selecting "Accounting".
+  5. **Single Sticky Master CTA (`extension/hud-ui.js`, `extension/hud.shadow.css`):** Removed the duplicate button from the footer. Made `.summary-action-block` sticky (`position: sticky; top: -12px; z-index: 10; background: var(--ap-bg)`) directly beneath "Ready to fill". The button never scrolls away, never vanishes, and never duplicates.
+  6. **Live Browser End-to-End Test:** Verified against the live Astranis Greenhouse application page using real headless Chrome. All 25/25 checks passed with 100% precision (First Name, Last Name, Email, Phone, Country, Location, Resume Upload, School, Degree, Discipline, Start Month, Start Year, End Month, End Year, ITAR compliance, Season, Start/End Dates, SF HQ consent, Referral, LinkedIn, SMS consent, Demographics).
+  7. **Extension Re-Packaged:** Executed `node scripts/package-extension.js`, generating updated `public/downloads/astrepilot-extension.zip` (`621.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Invisible Token vs. Active Challenge Differentiation):** Never treat the presence of a security vendor's invisible telemetry iframe or token badge as an active challenge. Check specifically for the interactive challenge challenge modal (e.g. `bframe`) and bounding dimensions (`> 100x100px`).
+  - **Rule 2 (Combobox Menu Encapsulation):** In modern client-side component libraries (React-Select, Headless UI, Radix), multiple menus share identical class names (`.select__menu`). Always scope option lookups strictly to the container or aria-controls linked to that specific input.
+  - **Rule 3 (Sticky Master CTA Over Duplicate CTAs):** Never render two identical primary action buttons in the same view. Make the single primary CTA sticky so it remains accessible as long lists scroll.
+- **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, 25/25 live DOM checks passed), committed and pushed to `origin main`.

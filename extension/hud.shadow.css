@@ -427,6 +427,13 @@ svg {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  position: sticky;
+  top: -12px;
+  z-index: 10;
+  background: var(--ap-bg);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  padding: 4px 0 6px 0;
 }
 
 /* Progress Bar */
