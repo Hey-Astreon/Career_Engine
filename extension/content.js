@@ -2531,6 +2531,7 @@
       { type: 'GENDER', selectors: ['#question_69351130', '[id*="question_"][aria-label*="gender" i]'] },
       { type: 'GENDER', selectors: ['#gender', 'input#gender', 'select#gender', '[name="gender"]', '[id="gender"]'] },
       { type: 'HISPANIC_LATINO', selectors: ['#hispanic_ethnicity', 'input#hispanic_ethnicity', 'select#hispanic_ethnicity', '[name*="hispanic"]'] },
+      { type: 'RACE_ETHNICITY', selectors: ['#race', 'input#race', 'select#race', '[name*="race" i]', '[id*="race" i]', '[id*="ethnicity" i]', '[aria-label*="race" i]'] },
       { type: 'VETERAN', selectors: ['#veteran_status', 'input#veteran_status', 'select#veteran_status', '[name*="veteran"]'] },
       { type: 'DISABILITY', selectors: ['#disability_status', 'input#disability_status', 'select#disability_status', '[name*="disability"]'] },
       { type: 'SCREENING_SELECT', selectors: ['#question_69351112'] },
@@ -3402,9 +3403,12 @@
     }
 
     if (targetLower === 'asian' || targetLower === 'indian' || fieldType === 'RACE_ETHNICITY') {
+      // Inviolable US EEOC Law: Candidates from the Indian subcontinent (India, Patna, Bihar, etc.)
+      // are categorized as ASIAN, NEVER "American Indian or Alaskan Native" (indigenous Americans)!
       const asianMatch = pool.find(o => {
         const t = (o.textContent || o.text || '').trim().toLowerCase();
-        return (t === 'asian' || t.startsWith('asian')) && !t.includes('american indian') && !t.includes('alaska native');
+        if (t.includes('american indian') || t.includes('alaska native') || t.includes('native american')) return false;
+        return t === 'asian' || t.startsWith('asian') || t.includes('asian') || t.includes('south asian');
       });
       if (asianMatch) return asianMatch;
     }
@@ -3540,7 +3544,7 @@
         const t = (opt.textContent || opt.text || '').trim().toLowerCase();
         const v = (opt.value || (opt.getAttribute && opt.getAttribute('data-value')) || '').trim().toLowerCase();
         if (t === syn || v === syn || t.includes(syn) || v.includes(syn)) {
-          if (targetLower === 'asian' && t.includes('american indian')) continue;
+          if ((targetLower === 'asian' || fieldType === 'RACE_ETHNICITY') && (t.includes('american indian') || t.includes('alaska native') || t.includes('native american'))) continue;
           return opt;
         }
       }
@@ -3552,7 +3556,7 @@
       const v = (opt.value || (opt.getAttribute && opt.getAttribute('data-value')) || '').trim().toLowerCase();
       if (PLACEHOLDER_REGEX.test(t)) continue;
       if (t.includes(targetLower) || targetLower.includes(t) || v.includes(targetLower)) {
-        if (targetLower === 'asian' && t.includes('american indian')) continue;
+        if ((targetLower === 'asian' || fieldType === 'RACE_ETHNICITY') && (t.includes('american indian') || t.includes('alaska native') || t.includes('native american'))) continue;
         return opt;
       }
     }
@@ -3804,10 +3808,11 @@
         if (filtered.length > 0) return filtered;
       }
 
-      // 2. Check portal options strictly matching this input's id to avoid stale menu collision
+      // 2. Check portal options strictly matching this input's id (strip '-input' suffix for React-Select v5)
       const inputId = inputEl.id || '';
-      if (inputId) {
-        const portalOpts = Array.from(doc.querySelectorAll(`div[id*="${inputId}-option-"]`)).filter(o => {
+      const baseInputId = inputId.replace(/-input$/, '');
+      if (baseInputId) {
+        const portalOpts = Array.from(doc.querySelectorAll(`div[id*="${baseInputId}-option-"]`)).filter(o => {
           const txt = (o.textContent || o.text || '').trim();
           return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
         });
@@ -3826,6 +3831,13 @@
           if (ariaOpts.length > 0) return ariaOpts;
         }
       }
+
+      // 4. Universal Document Portal fallback for active React-Select menu
+      const globalMenuOpts = Array.from(doc.querySelectorAll('.select__menu .select__option, .select__menu-list .select__option, div[class*="select__option"], div[id*="-option-"], [role="listbox"] [role="option"]')).filter(o => {
+        const txt = (o.textContent || o.text || '').trim();
+        return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+      });
+      if (globalMenuOpts.length > 0) return globalMenuOpts;
 
       return [];
     };
@@ -4226,6 +4238,22 @@
     if (!triggerEl) return false;
     try {
       if (document.activeElement !== triggerEl) triggerEl.focus();
+
+      if (fieldType === 'RACE_ETHNICITY') {
+        // Strict guard: Never send blind ArrowDown on race field to avoid selecting American Indian
+        if (targetVal) {
+          const chars = String(targetVal);
+          for (const char of chars) {
+            triggerEl.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
+          }
+          await new Promise(r => setTimeout(r, 100));
+        }
+        triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+        await new Promise(r => setTimeout(r, 60));
+        cleanupLingeringPopovers();
+        return await verifyFieldWritten({ element: triggerEl, type: fieldType }, targetVal);
+      }
+
       triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
       triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true }));
       await new Promise(r => setTimeout(r, 120));
@@ -5123,11 +5151,17 @@
           return 'Flexible based on program requirements (typically 12-16 weeks)';
         }
 
+        const isAyushi = (profile && profile.fullName && profile.fullName.toLowerCase().includes('ayushi')) || (profile && profile.email && profile.email.toLowerCase().includes('ayushi'));
+
         if (qLower.includes('most impressive thing you have ever accomplished') || (qLower.includes('impressive') && qLower.includes('accomplished'))) {
-          return 'Architected and built AstreWork, an autonomous career operating system featuring a distributed high-concurrency background engine, real-time semantic scoring algorithms, and a multi-provider LLM orchestration cascade with sub-second response times deployed on cloud infrastructure. I focused on zero-downtime reliability, database isolation, and state machine design to coordinate complex asynchronous workflows.';
+          return isAyushi
+            ? 'Co-developing AstreWork and leading its frontend architecture. I built a responsive, accessible career dashboard using React 19 and Tailwind CSS, focusing on clean information density, smooth micro-interactions, and sub-100ms client state transitions. Creating an interface that makes complex job tracking effortless for users has been my most rewarding engineering accomplishment.'
+            : 'Building AstreWork and running it live in production on an Oracle Cloud ARM64 server. I designed the platform from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea all the way to a functioning platform that people actually rely on has been my proudest technical milestone.';
         }
         if (qLower.includes('complex project') || qLower.includes('impressive and complex project')) {
-          return 'Architected AstrePilot and AstreWork, an autonomous career operating system and MV3 browser extension built with React 19, TypeScript, and LibSQL. As Lead Systems Architect and Full-Stack Developer, I designed the closed Shadow DOM HUD, multi-LLM failover cascade across Gemini and Groq, and a 4-tier self-healing write actuator that overcomes virtual DOM reconciliation barriers. The core technical complexity involved cross-origin subframe coordination and zero-click synthetic File injection.';
+          return isAyushi
+            ? 'I built the frontend autofill HUD for the AstrePilot extension using closed Shadow DOM encapsulation, TypeScript, and React 19. The core challenge was rendering a persistent floating cockpit inside arbitrary third-party web pages without having host website CSS styles bleed in or break the layout. I solved this by isolating all styling within a closed Shadow Root and building a lightweight custom event bridge for host page coordination.'
+            : 'I developed AstrePilot, a browser extension built with Manifest V3, React 19, and TypeScript that automates complex job application workflows across dynamic single-page applications. As the lead developer, the hardest technical challenge was reliably writing values into virtual-DOM-managed forms (like React 19 and Greenhouse comboboxes) where standard DOM value assignments are immediately overwritten by internal state trackers. To solve this, I designed a multi-tier write actuator combining synthetic input events, native property descriptors, and keyboard event simulation, ensuring high-fidelity input persistence across custom dropdowns and dynamic forms.';
         }
 
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);

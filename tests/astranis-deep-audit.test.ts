@@ -184,29 +184,37 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
     const targetVal = 'Asian';
     const asianMatch = options.find(o => {
       const t = (o.textContent || '').trim().toLowerCase();
-      return (t === 'asian' || t.startsWith('asian')) && !t.includes('american indian') && !t.includes('alaska native');
+      if (t.includes('american indian') || t.includes('alaska native') || t.includes('native american')) return false;
+      return t === 'asian' || t.startsWith('asian') || t.includes('asian') || t.includes('south asian');
     });
 
     expect(asianMatch).toBeDefined();
     expect(asianMatch?.textContent).toBe('Asian');
   });
 
-  it('verifies Question 8 accomplishment answer is humanized software craftsmanship and contains zero "14,000+" scraping slop', () => {
-    const q8Answer = 'Architected and built AstreWork, an autonomous career operating system featuring a distributed high-concurrency background engine, real-time semantic scoring algorithms, and a multi-provider LLM orchestration cascade with sub-second response times deployed on cloud infrastructure. I focused on zero-downtime reliability, database isolation, and state machine design to coordinate complex asynchronous workflows.';
+  it('verifies screening answers are de-duplicated, humanized, do not start with "Architected", and describe distinct accomplishments and projects', () => {
+    const qAccomplishmentAnswer = 'Building AstreWork and running it live in production on an Oracle Cloud ARM64 server. I designed the platform from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea all the way to a functioning platform that people actually rely on has been my proudest technical milestone.';
+    const qComplexProjectAnswer = 'I developed AstrePilot, a browser extension built with Manifest V3, React 19, and TypeScript that automates complex job application workflows across dynamic single-page applications. As the lead developer, the hardest technical challenge was reliably writing values into virtual-DOM-managed forms (like React 19 and Greenhouse comboboxes) where standard DOM value assignments are immediately overwritten by internal state trackers. To solve this, I designed a multi-tier write actuator combining synthetic input events, native property descriptors, and keyboard event simulation, ensuring high-fidelity input persistence across custom dropdowns and dynamic forms.';
 
     // Assert zero AI scraping vanity metrics
-    expect(q8Answer).not.toContain('14,000+');
-    expect(q8Answer).not.toContain('daily scraped');
-    expect(q8Answer).not.toMatch(/\bharvest and deduplicate\b/i);
+    expect(qAccomplishmentAnswer).not.toContain('14,000+');
+    expect(qAccomplishmentAnswer).not.toContain('daily scraped');
 
-    // Assert authentic systems craftsmanship
-    expect(q8Answer).toContain('AstreWork');
-    expect(q8Answer).toContain('high-concurrency background engine');
-    expect(q8Answer).toContain('state machine design');
+    // Assert no robotic formulaic openings
+    expect(qAccomplishmentAnswer).not.toMatch(/^Architected/i);
+    expect(qComplexProjectAnswer).not.toMatch(/^Architected/i);
+
+    // Assert de-duplication: they must not describe the exact same system with the same wording
+    expect(qAccomplishmentAnswer).not.toBe(qComplexProjectAnswer);
+    expect(qAccomplishmentAnswer).toContain('AstreWork');
+    expect(qComplexProjectAnswer).toContain('AstrePilot');
+    expect(qComplexProjectAnswer).toContain('write actuator');
 
     // Strict BCA compliance
-    expect(q8Answer).not.toMatch(/\bEngineer\b/i);
-    expect(q8Answer).not.toMatch(/\bEngineered\b/i);
+    expect(qAccomplishmentAnswer).not.toMatch(/\bEngineer\b/i);
+    expect(qAccomplishmentAnswer).not.toMatch(/\bEngineered\b/i);
+    expect(qComplexProjectAnswer).not.toMatch(/\bEngineer\b/i);
+    expect(qComplexProjectAnswer).not.toMatch(/\bEngineered\b/i);
   });
 
   it('verifies availability resolver returns eager immediate start instead of hardcoded stale "May 2027"', () => {

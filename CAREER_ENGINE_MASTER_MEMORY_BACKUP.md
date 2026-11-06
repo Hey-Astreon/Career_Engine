@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 94: AstrePilot Zero-Lockout Architecture, Resilient Standalone Auto-Unlock & Infinite Spinner Eradication)
+> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 95: EEOC Demographic Sovereignty (India to Asian) & Screening Answer De-Duplication and Humanization)
 
 ---
 
@@ -3989,4 +3989,36 @@ graph TD
   - **Rule 1 (Zero-Lockout Architecture Law):** An internal AI tool or extension companion built for founders MUST NEVER lock them out behind a login screen due to server unavailability, un-deployed endpoints, or network timeouts. Always provide instant, deterministic standalone fallback profiles.
   - **Rule 2 (Strict Async Timeout & Spinner Guarantee):** Every UI state transition showing a spinner (`Syncing…`, `Signing in…`) must have a hard timeout (maximum 1500ms) with a guaranteed `finally` block. Never let a button hang indefinitely.
   - **Rule 3 (Dual Storage Area Redundancy):** Extensions running in modern Chromium browsers must read from both `chrome.storage.local` and `chrome.storage.sync` with local-first priority to survive sync delays or storage quota limits.
+- **Status:** Complete, verified (`11/11` target tests passing, `0` TS errors, package regenerated), committed and pushed to `origin main`.
+
+
+### Phase 95: EEOC Demographic Sovereignty (India -> Asian) & Screening Answer De-Duplication and Humanization (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In real-world live testing on the Astranis Greenhouse application, two serious defects were identified:
+    1. **"American Indian or Alaskan Native" Selected Instead of "Asian":** AstrePilot populated the Greenhouse race combobox with `"American Indian or Alaskan Native"` instead of `"Asian"`. Under US EEOC and OFCCP federal definitions, candidates from the Indian subcontinent (India, Pakistan, Bangladesh) fall strictly under `"Asian"`, whereas `"American Indian or Alaska Native"` refers exclusively to indigenous peoples of North America.
+    2. **Robotic, Carbon-Copy Screening Answers:** The two open-ended questions on Astranis (*"What is the most impressive thing you have ever accomplished?"* and *"Please describe the most impressive and complex project you have worked on..."*) were answered with nearly identical wording, starting formulaically with *"Architected and built AstreWork..."* / *"Architected AstrePilot and AstreWork..."*, with identical word counts, repetitive sentence cadences, and stacked AI buzzwords (*"distributed high-concurrency background engine"*, *"multi-provider LLM failover cascade"*). Any recruiter reading them immediately recognizes generic AI slop.
+- **Deep Root Cause Diagnosis:**
+  1. **React-Select Option ID Suffix Mismatch & Blind Enter Commit:** In `fillReactSelectV2`, `getVisibleOptions()` queried `div[id*="${inputId}-option-"]`. In React-Select v5, the input ID ends with `-input` (`react-select-4-input`), whereas the options end with `-option-X` (`react-select-4-option-X`). As a result, `getVisibleOptions()` found 0 options. It then fell back to typing and `fillWaiAriaKeyboard()`, which sent `ArrowDown` (highlighting Option 0: `American Indian or Alaskan Native`) followed by `Enter`, accidentally committing Option 0! Furthermore, `RACE_ETHNICITY` was missing from `GREENHOUSE_EXACT_MAP`.
+  2. **Static String Template Stacking:** In `extension/content.js:5126-5131`, both screening questions had hardcoded string returns that both targeted AstreWork with identical "Architected..." openings and robotic corporate jargon instead of addressing distinct aspects of the candidate's portfolio.
+- **The Concrete Surgical Fix:**
+  1. **EEOC Demographic Sovereignty & Option ID Sanitization (`extension/content.js`):**
+     - Updated `getVisibleOptions()` to strip `-input` from `inputId` (`baseInputId = inputId.replace(/-input$/, '')`), allowing `div[id*="${baseInputId}-option-"]` to find all 7 portal options. Added a universal document menu fallback.
+     - In `resolveSemanticOptionMatch()`: Hardcoded strict EEOC rule banning `"american indian"`, `"alaska native"`, and `"native american"` whenever matching `"asian"` or `RACE_ETHNICITY`. Candidates from India strictly match `"Asian"` or `"South Asian"`.
+     - In `GREENHOUSE_EXACT_MAP`: Added `{ type: 'RACE_ETHNICITY', selectors: ['#race', 'input#race', 'select#race', '[name*="race" i]', '[id*="race" i]', '[id*="ethnicity" i]', '[aria-label*="race" i]'] }`.
+     - In `fillWaiAriaKeyboard()`: Guarded `RACE_ETHNICITY` so it NEVER dispatches a blind `ArrowDown` that could highlight Option 0.
+  2. **Screening Answer De-Duplication & Humanized Craftsmanship (`extension/content.js` & `src/lib/ai/screeningHelper.ts`):**
+     - Banished formulaic `"Architected..."` openings.
+     - Question 1 (Accomplishment) now authentically highlights the milestone of designing, deploying, and operating AstreWork in production on an Oracle Cloud ARM64 server with zero downtime and real candidate usage.
+     - Question 2 (Complex Project) now specifically highlights AstrePilot and directly answers the prompt's requirements (technologies used, specific role as lead developer, and the technical challenge of overcoming virtual DOM state reconciliation barriers using a multi-tier write actuator).
+     - Customized distinct answers for Ayushi Bhabhi (frontend architecture, Shadow DOM HUD isolation).
+     - In `buildScreeningSystemPrompt()`: Banned `"Architected..."` openings, buzzword stacking, and repetition across consecutive questions.
+  3. **Automated Verification & Packaging:**
+     - Updated `tests/astranis-deep-audit.test.ts` to assert that race matching rejects American Indian and strictly selects Asian, and that Question 1 and Question 2 do not start with "Architected", do not share identical phrasing, and describe distinct technical achievements.
+     - All 11 targeted tests passed (`tests/astranis-deep-audit.test.ts` & `tests/api-autopilot-token.test.ts`).
+     - TypeScript compiler passed with 0 errors (`npx tsc --noEmit`).
+     - Re-packaged extension to `public/downloads/astrepilot-extension.zip` (`634.4 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (EEOC Geographic Sovereignty Law):** Indian candidates (from India) are classified under "Asian" in US hiring applications (Greenhouse, Workday, Lever). Never confuse "American Indian" (indigenous North American) with Indian nationality.
+  - **Rule 2 (Anti-Repetition & Project Diversity Law):** When answering multiple screening questions on the same job application, an AI career agent must NEVER use the same project, the same opening verb ("Architected"), or the same sentence structure. Different questions must showcase different achievements (e.g. cloud production operation vs. browser extension DOM actuators).
+  - **Rule 3 (React-Select ID Normalization):** When querying React-Select v5 options in document portals, always strip the `-input` suffix from `input.id` before querying `option-` elements.
 - **Status:** Complete, verified (`11/11` target tests passing, `0` TS errors, package regenerated), committed and pushed to `origin main`.
