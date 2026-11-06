@@ -716,8 +716,7 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
   if (bestMatch.confidence < 0.70) {
     if (isSelect) {
       if (
-        cleanLabel.includes("?") ||
-        cleanLabel.includes("*") ||
+        rawLabel.includes("?") ||
         cleanLabel.includes("select") ||
         cleanAttr.includes("question") ||
         cleanAttr.includes("custom")
@@ -731,11 +730,20 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
       }
     } else if (isTextarea) {
       if (
+        rawLabel.includes("?") ||
         cleanLabel.includes("why") ||
         cleanLabel.includes("describe") ||
         cleanLabel.includes("explain") ||
         cleanLabel.includes("tell us") ||
-        cleanLabel.includes("?")
+        cleanLabel.includes("share") ||
+        cleanLabel.includes("accomplish") ||
+        cleanLabel.includes("achievement") ||
+        cleanLabel.includes("proud") ||
+        cleanLabel.includes("what is") ||
+        cleanLabel.includes("what are") ||
+        cleanLabel.includes("how do") ||
+        cleanLabel.includes("how did") ||
+        cleanAttr.includes("question")
       ) {
         return {
           fieldType: "SCREENING",
@@ -750,7 +758,7 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
         reasoning: "Multi-line text input identified as candidate note/pitch",
         signalsMatched: ["role:textarea"],
       };
-    } else if (cleanAttr.includes("question") || cleanLabel.includes("?")) {
+    } else if (cleanAttr.includes("question") || rawLabel.includes("?")) {
       return {
         fieldType: "SCREENING",
         confidence: 0.82,

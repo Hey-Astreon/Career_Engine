@@ -117,7 +117,8 @@ export function rankProjectsForContext(
   question: string,
   jobDescription: string = ""
 ): CandidateProjectContext[] {
-  if (!projects || projects.length <= 3) return projects || [];
+  if (!projects || projects.length === 0) return [];
+  if (projects.length === 1) return projects;
 
   const targetTokens = (question + " " + jobDescription.slice(0, 5000))
     .toLowerCase()

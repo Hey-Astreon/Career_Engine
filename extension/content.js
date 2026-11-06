@@ -22,7 +22,23 @@
   let isFilling = false;  // re-entrancy guard for runAutofill
   let fillHeartbeatTimer = null; // heartbeat timer for active fill locks
   let lastFormFingerprint = null; // AstrePilot V3 Form Fingerprint Cache Key
+  let cachedSchemaMappings = null; // AstrePilot V3 Schema Cache Mappings
   let cachedLiveJd = null;
+
+  async function checkFormSchemaCache(fingerprint) {
+    if (!fingerprint) return null;
+    try {
+      const res = await apFetch('/schema-cache?fingerprint=' + encodeURIComponent(fingerprint));
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.cached && data.schema && Array.isArray(data.schema.mappings)) {
+          cachedSchemaMappings = data.schema.mappings;
+          return cachedSchemaMappings;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
 
   function getCachedLiveJD() {
     if (cachedLiveJd) return cachedLiveJd;
@@ -1814,15 +1830,30 @@
 
     if (best.confidence < 0.70) {
       if (isSelect) {
-        if (cleanLabel.includes('?') || cleanLabel.includes('*') || cleanAttr.includes('question') || cleanAttr.includes('custom')) {
+        if (rawLabel.includes('?') || cleanLabel.includes('select') || cleanAttr.includes('question') || cleanAttr.includes('custom')) {
           return { fieldType: 'SCREENING_SELECT', confidence: 0.85, reasoning: 'SFD V3 (Screening Select Dropdown)' };
         }
       } else if (isTextarea) {
-        if (cleanLabel.includes('why') || cleanLabel.includes('describe') || cleanLabel.includes('explain') || cleanLabel.includes('tell us') || cleanLabel.includes('?')) {
+        if (
+          rawLabel.includes('?') ||
+          cleanLabel.includes('why') ||
+          cleanLabel.includes('describe') ||
+          cleanLabel.includes('explain') ||
+          cleanLabel.includes('tell us') ||
+          cleanLabel.includes('share') ||
+          cleanLabel.includes('accomplish') ||
+          cleanLabel.includes('achievement') ||
+          cleanLabel.includes('proud') ||
+          cleanLabel.includes('what is') ||
+          cleanLabel.includes('what are') ||
+          cleanLabel.includes('how do') ||
+          cleanLabel.includes('how did') ||
+          cleanAttr.includes('question')
+        ) {
           return { fieldType: 'SCREENING', confidence: 0.88, reasoning: 'SFD V3 (Behavioral/Technical Textarea)' };
         }
         return { fieldType: 'NOTE', confidence: 0.75, reasoning: 'SFD V3 (Multi-line Note)' };
-      } else if (cleanAttr.includes('question') || cleanLabel.includes('?')) {
+      } else if (cleanAttr.includes('question') || rawLabel.includes('?')) {
         return { fieldType: 'SCREENING', confidence: 0.82, reasoning: 'SFD V3 (Custom Screening Input)' };
       }
     }
@@ -1831,6 +1862,19 @@
   }
 
   function classifyField(input) {
+    // 0. AstrePilot V3 Form Schema Cache Hit (Network Effect Moat - 0ms)
+    if (cachedSchemaMappings && (input.id || input.name)) {
+      const key = input.id || input.name;
+      const hit = cachedSchemaMappings.find(m => m.elementId === key);
+      if (hit && hit.fieldType && hit.fieldType !== 'UNKNOWN') {
+        try {
+          input.__sfdConfidence = 1.0;
+          input.__sfdReasoning = 'Form Schema Cache Hit (Verified)';
+        } catch (e) {}
+        return hit.fieldType;
+      }
+    }
+
     // 1. AstrePilot V3: Universal Semantic Field Discovery (SFD) Engine
     const sfdResult = computeSemanticScoreForDOM(input);
     if (sfdResult && sfdResult.confidence >= 0.75 && sfdResult.fieldType !== 'UNKNOWN') {
@@ -3094,6 +3138,9 @@
       // Deep Shadow DOM query: finds all standard & Web Component inputs across open shadow roots
       const inputs = deepQuerySelectorAll(targetDoc, COMBOBOX_QUERY);
       lastFormFingerprint = generateBrowserFormFingerprint(inputs);
+      if (lastFormFingerprint && !cachedSchemaMappings) {
+        checkFormSchemaCache(lastFormFingerprint).catch(() => {});
+      }
 
       inputs.forEach(inp => {
         // Canonicalize container vs inner interactive element to prevent duplicate registrations
