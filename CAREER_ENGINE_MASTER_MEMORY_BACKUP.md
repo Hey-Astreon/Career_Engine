@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 86: AstrePilot V3 Universal Semantic Field Discovery (SFD) Engine, AI Form Oracle & 45-Field Taxonomy)
+> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 87: AstrePilot V3 Self-Learning Form Schema Cache, FormSchema Model & Cross-User Network Effect)
 
 ---
 
@@ -3715,3 +3715,23 @@ graph TD
   - **Rule 1 (Multi-Signal Scoring Over Static Selectors):** Never depend exclusively on `id` or `name` attributes for form automation. A robust universal autofill engine must cross-reference autocomplete standards, associated labels, structural context, and input roles concurrently with normalized weights.
   - **Rule 2 (Normalization Dual-Track):** Always evaluate keywords against both space-delimited normalized text (`clean`) and alphanumeric-only compacted text (`compact`) so that `first_name`, `first-name`, `firstName`, and `First Name*` match identically without fragile regex permutations.
 - **Status:** Complete, verified (`57/57` test suites passing, `0` TS errors), committed and pushed to `origin main`.
+
+
+### Phase 87: AstrePilot V3 Self-Learning Form Schema Cache, FormSchema Model & Cross-User Network Effect (November 6, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Even with semantic discovery, performing repetitive DOM scanning or invoking the AI Form Oracle on identical portals for every session created redundant computational overhead and unnecessary latency.
+  - Furthermore, competitor extensions (Simplify, Teal) lack cross-user learning: if a user solves a tricky form, that intelligence dies with their local session instead of compounding into a competitive moat for all users.
+- **Deep Root Cause Diagnosis:**
+  1. **Absence of Shared Schema Memory:** Forms have static structural signatures, but without a centralized and client-cached schema registry, every new session treated known forms as fresh problems.
+  2. **Zero Network Effect:** Without automated feedback telemetry, the engine couldn't automatically verify high-accuracy field configurations over time.
+- **The Concrete Surgical Fix:**
+  1. **Prisma `FormSchema` Model (`prisma/schema.prisma`):** Added the persistent `FormSchema` database model with fields `domainPattern`, `fingerprint` (unique structural SHA-256 hash), `mappings` (sanitized JSON), `successCount`, `failureCount`, and `verified` boolean flag. Pushed to database via `npx prisma db push --url file:./prisma/dev.db` and regenerated client.
+  2. **Schema Cache Engine (`src/lib/autopilot/formSchemaCache.ts`):** Implemented `getCachedFormSchema`, `saveFormSchema`, and `recordSchemaFeedback`. Built strict PII sanitization (`sanitizeMappingsForStorage`) ensuring zero personal candidate data ever enters the cross-user schema cache. Added auto-verification logic (verifying schemas after 3 successful autofills with 0 failures).
+  3. **Schema Cache API Route (`src/app/api/autopilot/schema-cache/route.ts`):** Created GET (0ms retrieval of cached mappings by fingerprint) and POST (anonymized schema contribution and success/failure telemetry feedback) endpoints with CORS headers.
+  4. **Extension Client Integration (`extension/content.js`):** Added fast FNV-1a browser fingerprinting (`generateBrowserFormFingerprint`) to `scanFields()`. Connected `fillAllFields()` to automatically stream background success telemetry to `/schema-cache` upon form completion.
+  5. **Vitest Verification:** Created `tests/form-schema-cache.test.ts` (7 tests verifying sanitization, root domain extraction, persistence, feedback auto-verification, and API endpoints). All 58 test suites passing (540 tests total).
+  6. **TypeScript & Extension Re-Package:** Verified 0 TS errors (`npx.cmd tsc --noEmit`) and regenerated `public/downloads/astrepilot-extension.zip` (`625.5 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Privacy-Safe Cross-User Telemetry):** Shared schema caches must enforce schema-only sanitization at the model boundary. Strip all values, names, emails, and answers before storage.
+  - **Rule 2 (Autonomous Schema Verification Threshold):** Never mark crowdsourced or auto-discovered form schemas as `verified` on first observation. Require a quorum of consecutive successful fills ($\ge 3$ successes, 0 failures) before locking in permanent verification.
+- **Status:** Complete, verified (`58/58` test suites passing, `0` TS errors), committed and pushed to `origin main`.

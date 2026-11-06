@@ -558,3 +558,19 @@ model ScreeningQuestionVault {
   @@index([category])
   @@map("screening_question_vault")
 }
+
+model FormSchema {
+  id            String   @id @default(uuid())
+  domainPattern String
+  fingerprint   String   @unique
+  mappings      String   // JSON string of FieldMapping[]
+  successCount  Int      @default(0)
+  failureCount  Int      @default(0)
+  verified      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([domainPattern])
+  @@index([fingerprint])
+  @@map("form_schemas")
+}

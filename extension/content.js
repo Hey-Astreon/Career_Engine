@@ -21,6 +21,26 @@
   let mountPromise = null; // set while the HUD is initialising (prevents double mounts)
   let isFilling = false;  // re-entrancy guard for runAutofill
   let fillHeartbeatTimer = null; // heartbeat timer for active fill locks
+  let lastFormFingerprint = null; // AstrePilot V3 Form Fingerprint Cache Key
+
+  function generateBrowserFormFingerprint(inputs) {
+    if (!inputs || inputs.length === 0) return null;
+    let str = '';
+    for (let i = 0; i < inputs.length; i++) {
+      const inp = inputs[i];
+      const tag = inp.tagName || 'INPUT';
+      const type = inp.type || '';
+      const name = (inp.name || '').replace(/[0-9]+/g, '#');
+      const id = (inp.id || '').replace(/[0-9]+/g, '#');
+      str += tag + '|' + type + '|' + name + '|' + id + ';';
+    }
+    let hash = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      hash ^= str.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return 'fp_' + (hash >>> 0).toString(16);
+  }
 
   // Autonomous Standalone / Offline Profiles (BCA Candidate Title Compliant)
   const STANDALONE_PROFILES = {
@@ -3058,6 +3078,7 @@
 
       // Deep Shadow DOM query: finds all standard & Web Component inputs across open shadow roots
       const inputs = deepQuerySelectorAll(targetDoc, COMBOBOX_QUERY);
+      lastFormFingerprint = generateBrowserFormFingerprint(inputs);
 
       inputs.forEach(inp => {
         // Canonicalize container vs inner interactive element to prevent duplicate registrations
@@ -6017,6 +6038,25 @@
         curSession.activeFillId = logRes.fillId || logRes.id || null;
         curSession.activeApplicationId = logRes.applicationId || null;
         saveNavSession(curSession);
+
+        // AstrePilot V3: Self-Learning Schema Cache Telemetry
+        if (detectedFields && detectedFields.length > 0 && lastFormFingerprint) {
+          try {
+            apFetch('/schema-cache', {
+              method: 'POST',
+              body: JSON.stringify({
+                fingerprint: lastFormFingerprint,
+                domain: window.location.hostname,
+                mappings: detectedFields.map(f => ({
+                  id: f.element ? (f.element.id || f.element.name || f.id) : f.id,
+                  fieldType: f.type,
+                  confidence: f.confidence || 0.90
+                })),
+                feedback: { success: filled > 0 }
+              })
+            }).catch(() => {});
+          } catch (e) {}
+        }
         if (syncChannel) {
           try {
             syncChannel.postMessage({
