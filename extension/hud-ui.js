@@ -1028,13 +1028,22 @@ window.AstrePilotHUD = (function () {
               <div>${breakdownText}</div>
             </div>
 
-            ${this.state !== 'done' ? `
+            ${this.state === 'done' ? `
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button type="button" class="btn-secondary action-fill" style="flex: 1; height: 38px; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                  🔄 Re-fill All
+                </button>
+                <button type="button" class="btn-primary action-confirm-submit" style="flex: 1; height: 38px; font-size: 12px; font-weight: 700; background: var(--ap-success, #059669); border-color: var(--ap-success, #059669); color: white; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5,150,105,0.3);">
+                  ${ICONS.check} Review & Submit
+                </button>
+              </div>
+            ` : `
               <button type="button" class="btn-primary action-fill" ${isBusy ? 'disabled' : ''} style="margin-top: 8px; width: 100%; height: 40px; font-size: 13px; font-weight: 700; box-shadow: 0 4px 14px rgba(37,99,235,0.35); display: flex; align-items: center; justify-content: center; gap: 8px; ${isBusy ? 'opacity: 0.85; cursor: wait;' : 'cursor: pointer;'}">
                 ${this.state === 'filling'
                   ? `<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:ap-spin 0.6s linear infinite;vertical-align:middle;"></span> ${btnText}`
                   : `${ICONS.fillAction} ${btnText}`}
               </button>
-            ` : ''}
+            `}
 
             <div class="progress-track" style="margin-top:8px">
               <div class="progress-fill"></div>

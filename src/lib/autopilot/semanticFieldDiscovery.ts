@@ -280,6 +280,7 @@ const TAXONOMY_PATTERNS: TaxonomyPattern[] = [
     attributeKeywords: ["state", "province", "region", "state_province"],
     labelKeywords: ["state", "province", "state / province", "region"],
     exactAutocompletes: ["address-level1"],
+    forbiddenAttributes: ["state which", "please state", "state whether", "state your", "regulations", "export"],
     baseConfidence: 0.92,
   },
   {
@@ -630,6 +631,24 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
     let score = 0.0;
     const matchedTokens: string[] = [];
 
+    // Tag geometry constraints: Textarea can only match multi-line text fields
+    if (isTextarea && ![
+      "COVER_LETTER",
+      "SCREENING",
+      "NOTE",
+      "WHY_US",
+      "WORK_DESCRIPTION",
+      "SUMMARY",
+      "REASON_FOR_LEAVING",
+    ].includes(pattern.type)) {
+      continue;
+    }
+
+    // Phone numbers are scalar text/tel inputs, never comboboxes/dropdowns
+    if (isSelect && pattern.type === "PHONE") {
+      continue;
+    }
+
     // Check forbidden attributes
     if (
       pattern.forbiddenAttributes &&
@@ -648,7 +667,7 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
       }
     }
 
-    // 2. Label Text Match (Dominant signal in web forms: weight: ~0.55)
+    // 2. Label Text Match (Dominant signal in web forms)
     if (cleanLabel) {
       for (const kw of pattern.labelKeywords) {
         const cleanKw = clean(kw);
@@ -658,7 +677,8 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
           cleanLabel.includes(cleanKw) ||
           compactLabel.includes(compactKw)
         ) {
-          score += 0.55;
+          const isHighPrecisionLabel = cleanKw.split(" ").length >= 2 || cleanKw.length >= 6;
+          score += isHighPrecisionLabel ? 0.85 : 0.65;
           matchedTokens.push(`label:${kw}`);
           break;
         }
@@ -713,7 +733,7 @@ export function computeSemanticScore(signals: ElementSignals): SemanticDiscovery
   }
 
   // Fallback Heuristics for Unclassified Questions / Comboboxes / Textareas
-  if (bestMatch.confidence < 0.70) {
+  if (bestMatch.confidence < 0.50 || bestMatch.fieldType === "UNKNOWN") {
     if (isSelect) {
       if (
         rawLabel.includes("?") ||

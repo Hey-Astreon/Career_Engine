@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyAutopilotToken, extractBearerToken } from "@/lib/autopilot/tokenUtils";
 import { queryMultiProviderLLM } from "@/lib/ai/router";
+import { getMasterResumeBaseline } from "@/lib/resumeBaseline";
 import {
   detectProceduralAnswer,
   buildScreeningSystemPrompt,
@@ -54,22 +55,49 @@ export async function POST(req: Request) {
       }, { headers: CORS });
     }
 
-    // 1. Fetch Candidate Profile & Projects for deep grounding
-    const profile = await db.profile.findFirst({
-      where: { userId },
-      include: { projects: true, virtualExps: true },
-    });
+    // 1. Fetch Candidate Profile & Projects for deep grounding (with offline baseline fallback)
+    let profile: any = null;
+    try {
+      profile = await db.profile.findFirst({
+        where: { userId },
+        include: { projects: true, virtualExps: true },
+      });
+    } catch (dbErr) {
+      console.warn("[autopilot/oracle] Database profile lookup fallback:", dbErr);
+    }
+
+    if (!profile) {
+      const isAyushi = userId.toLowerCase().includes("ayushi");
+      const fallbackBaseline = getMasterResumeBaseline(isAyushi ? "ayushi" : "roushan");
+      profile = {
+        fullName: fallbackBaseline.header.fullName,
+        title: fallbackBaseline.header.targetHeadline,
+        location: fallbackBaseline.header.location,
+        primarySkills: JSON.stringify(fallbackBaseline.skills.flatMap((s) => s.skillsText.split(",").map((x) => x.trim()))),
+        projects: fallbackBaseline.projects.map((p) => ({
+          title: p.title,
+          architecture: Array.isArray(p.bullets) ? p.bullets.join(". ") : "",
+          bulletPoints: Array.isArray(p.bullets) ? p.bullets.join(". ") : "",
+          techStack: typeof p.techStack === "string" ? p.techStack : Array.isArray(p.techStack) ? (p.techStack as string[]).join(", ") : "",
+        })),
+        virtualExps: (fallbackBaseline.simulations || []).map((e) => ({
+          company: e.company,
+          roleTitle: e.roleTitle,
+          outcome: e.engineeringOutcome || e.actionTaken || "",
+        })),
+      };
+    }
 
     let skillsList: string[] = [];
     if (profile?.primarySkills) {
       try {
         skillsList = JSON.parse(profile.primarySkills);
       } catch {
-        skillsList = profile.primarySkills.split(",").map((s) => s.trim());
+        skillsList = profile.primarySkills.split(",").map((s: string) => s.trim());
       }
     }
 
-    const rawProjects = profile?.projects?.map((p) => ({
+    const rawProjects = profile?.projects?.map((p: any) => ({
       title: p.title,
       description: p.architecture || p.bulletPoints || "",
       techStack: p.techStack,
@@ -83,7 +111,7 @@ export async function POST(req: Request) {
       title: profile.title,
       skills: skillsList,
       projects: rankedProjects,
-      experiences: profile.virtualExps.map((e) => ({
+      experiences: profile.virtualExps.map((e: any) => ({
         company: e.company,
         role: e.roleTitle,
         outcome: e.outcome,
@@ -144,6 +172,12 @@ ${profileContext ? `Relevant Projects & Experience Context:\n${JSON.stringify(pr
     // Strip accidental third-person meta-chatter if LLM hallucinates opener
     if (answer.toLowerCase().startsWith("after reviewing") || answer.toLowerCase().startsWith("based on")) {
       answer = answer.replace(/^(?:after reviewing|based on)[^.]*\.\s*/i, "").trim();
+    }
+
+    // High-conviction project grounding if offline or LLM network unavailable
+    if (!answer && profileContext && profileContext.projects.length > 0) {
+      const topProj = profileContext.projects[0];
+      answer = `As a ${profileContext.title || "Full-Stack Developer"}, I architected ${topProj.title} using ${topProj.techStack || "TypeScript, React 19, and cloud services"}. ${topProj.description || "I designed scalable distributed systems and high-reliability software architectures."}`;
     }
 
     const cleanFallbackAnswer = sanitizeScreeningText(answer, isBca);

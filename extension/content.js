@@ -1492,6 +1492,7 @@
       attrs: ['state', 'province', 'region', 'state_province'],
       labels: ['state', 'province', 'state / province', 'region'],
       autocompletes: ['address-level1'],
+      forbidden: ['state which', 'please state', 'state whether', 'state your', 'regulations', 'export'],
       baseConf: 0.92
     },
     {
@@ -1785,6 +1786,24 @@
     for (const pattern of SFD_TAXONOMY) {
       let score = 0.0;
 
+      // Tag geometry constraints: Textarea can only match multi-line text fields
+      if (isTextarea && ![
+        'COVER_LETTER',
+        'SCREENING',
+        'NOTE',
+        'WHY_US',
+        'WORK_DESCRIPTION',
+        'SUMMARY',
+        'REASON_FOR_LEAVING'
+      ].includes(pattern.type)) {
+        continue;
+      }
+
+      // Phone numbers are scalar text/tel inputs, never comboboxes/dropdowns
+      if (isSelect && pattern.type === 'PHONE') {
+        continue;
+      }
+
       if (pattern.forbidden && pattern.forbidden.some(f => cleanAttr.includes(f) || compactAttr.includes(f) || cleanLabel.includes(f))) {
         continue;
       }
@@ -1797,8 +1816,10 @@
 
       if (cleanLabel) {
         for (const kw of pattern.labels) {
-          if (rawLabel.includes(kw) || cleanLabel.includes(sfdClean(kw)) || compactLabel.includes(sfdCompact(kw))) {
-            score += 0.55;
+          const cleanKw = sfdClean(kw);
+          if (rawLabel.includes(kw) || cleanLabel.includes(cleanKw) || compactLabel.includes(sfdCompact(kw))) {
+            const isHighPrecisionLabel = cleanKw.split(' ').length >= 2 || cleanKw.length >= 6;
+            score += isHighPrecisionLabel ? 0.85 : 0.65;
             break;
           }
         }
@@ -1828,7 +1849,7 @@
       }
     }
 
-    if (best.confidence < 0.70) {
+    if (best.confidence < 0.50 || best.fieldType === 'UNKNOWN') {
       if (isSelect) {
         if (rawLabel.includes('?') || cleanLabel.includes('select') || cleanAttr.includes('question') || cleanAttr.includes('custom')) {
           return { fieldType: 'SCREENING_SELECT', confidence: 0.85, reasoning: 'SFD V3 (Screening Select Dropdown)' };
@@ -3657,7 +3678,7 @@
     if (idAttr.includes('candidate-location') || idAttr.includes('candidate_location') || nameAttr.includes('candidate_location')) {
       return true;
     }
-    if ((fieldType === 'CITY' || fieldType === 'LOCATION') && (label.includes('candidate location') || label.includes('current location') || label.includes('where do you live') || label.includes('current city') || idAttr.includes('geo') || idAttr.includes('places'))) {
+    if ((fieldType === 'LOCATION_AUTOCOMPLETE' || fieldType === 'CITY' || fieldType === 'LOCATION') && (label.includes('candidate location') || label.includes('current location') || label.includes('where do you live') || label.includes('current city') || idAttr.includes('geo') || idAttr.includes('places'))) {
       return true;
     }
 
@@ -4807,13 +4828,15 @@
   async function resolveValue(field, profile, session) {
     const loc = parseLocation(profile.location);
     switch (field.type) {
-      case 'RESUME':      return 'SYNTHETIC_RESUME_BINARY';
+      case 'RESUME':
+      case 'COVER_LETTER_FILE': return 'SYNTHETIC_RESUME_BINARY';
       case 'FIRST_NAME':  return profile.firstName;
       case 'LAST_NAME':   return profile.lastName;
       case 'FULL_NAME':   return profile.fullName;
       case 'PREFERRED_NAME': return profile.firstName || 'Candidate';
       case 'EMAIL':       return profile.email;
       case 'PHONE_TYPE':  return profile.phoneType || 'Mobile';
+      case 'PHONE_COUNTRY_CODE': return profile.phoneCountryCode || '+91';
       case 'PHONE': {
         const rawPhone = profile.phone || '';
         if (!rawPhone) return '';
@@ -4822,7 +4845,8 @@
         if (field.element && (field.element.type === 'number' || field.element.inputMode === 'numeric')) return phoneDigits;
         return rawPhone;
       }
-      case 'LOCATION':    return profile.location;
+      case 'LOCATION':
+      case 'LOCATION_AUTOCOMPLETE': return profile.location || (loc.city ? `${loc.city}, ${loc.country || 'India'}` : 'Patna, Bihar, India');
       case 'PREFERRED_LOCATION':
       case 'WORKPLACE_TYPE': return profile.preferredLocation || 'Remote';
       case 'CITY':        return profile.city || loc.city || '';
@@ -4831,7 +4855,8 @@
       case 'ADDRESS_TYPE': return profile.addressType || 'Home';
       case 'ADDRESS':     return profile.streetAddress || profile.city || loc.city || '';
       case 'APT':         return profile.apartment || '';
-      case 'ZIP': {
+      case 'ZIP':
+      case 'ZIP_CODE': {
         const rawZip = String(profile.zipCode || '800024').trim();
         const el = field.element;
         if (el) {
@@ -4856,7 +4881,7 @@
           const exp = profile.virtualExps[0];
           return `${exp.actionTaken || ''}. ${exp.outcome || ''}`.trim() || profile.professionalSummary;
         }
-        return profile.professionalSummary || 'Engineered high-performance cloud applications, API microservices, and distributed scraping pipelines.';
+        return profile.professionalSummary || 'Architected and developed high-performance cloud applications, API microservices, and distributed scraping pipelines.';
       }
       case 'LOGIN_ID': {
         try {
@@ -4905,9 +4930,16 @@
       }
       case 'HEAR_ABOUT':  return profile.referralSource || 'LinkedIn';
       case 'HEAR_ABOUT_DETAIL': return 'Job Posting';
+      case 'REFERRAL':    return profile.referralSource || 'LinkedIn';
       case 'LINKEDIN':    return profile.linkedinUrl;
       case 'GITHUB':      return profile.githubUrl;
-      case 'PORTFOLIO':   return profile.portfolioUrl;
+      case 'PORTFOLIO':
+      case 'WEBSITE':     return profile.portfolioUrl || profile.website || 'https://astrework.app';
+      case 'GPA':         return profile.gpa || '9.2';
+      case 'WHY_US': {
+        const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
+        return `I am eager to contribute to ${company} because of your ambitious mission and technical excellence in building mission-critical software systems. As a Full-Stack Developer with deep experience in cloud architectures and real-time distributed systems, I thrive in fast-paced environments where reliability and performance matter.`;
+      }
       case 'TITLE': {
         let t = session ? session.jobTitle : profile.title;
         if (t) t = t.replace(/\bEngineer\b/gi, 'Developer');
@@ -5050,10 +5082,10 @@
           return 'August 2027';
         }
         if (qLower.includes('most impressive thing you have ever accomplished') || (qLower.includes('impressive') && qLower.includes('accomplished'))) {
-          return 'Architected AstreWork (an autonomous career search engine) handling 14,000+ daily scraped jobs across 13 providers with sub-second vector search on OCI ARM64 cloud infrastructure.';
+          return 'Architected AstreWork (an autonomous career operating system) handling 14,000+ daily scraped jobs across 13 providers with sub-second vector search on OCI ARM64 cloud infrastructure.';
         }
         if (qLower.includes('complex project') || qLower.includes('impressive and complex project')) {
-          return 'Engineered AstrePilot, an automated browser copiloting extension using a closed Shadow DOM HUD, multi-model LLM failovers, and synthetic resume file injection with cross-origin subframe coordination.';
+          return 'Architected AstrePilot and AstreWork, an autonomous career operating system and MV3 browser extension built with React 19, TypeScript, and LibSQL. As Lead Systems Architect and Full-Stack Developer, I designed the closed Shadow DOM HUD, multi-LLM failover cascade across Gemini and Groq, and a 4-tier self-healing write actuator that overcomes virtual DOM reconciliation barriers. The core technical complexity involved cross-origin subframe coordination and zero-click synthetic File injection.';
         }
 
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
@@ -6109,7 +6141,7 @@
             } else {
               hud.markRow(f.id, 'retry', '⚠ Retry Verification');
             }
-          } else if (f.type === 'ZIP' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
+          } else if (f.type === 'ZIP' || f.type === 'ZIP_CODE' || (f.element.tagName === 'INPUT' && (f.element.type === 'radio' || f.element.type === 'checkbox'))) {
             const uRes = await universalWriteActuator(f.element, val, f);
             writeSuccess = uRes.success;
             if (writeSuccess) {

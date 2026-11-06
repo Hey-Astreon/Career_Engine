@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 90: AstrePilot V3 End-to-End Verification Matrix, Competitor Benchmark & Launch)
+> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 91: Astranis Greenhouse Deep Audit, Universal Tag Geometry, AI Oracle Fallback & Persistent HUD State)
 
 ---
 
@@ -3830,3 +3830,52 @@ graph TD
   - **Rule 1 (Punctuation Interrogative Separation):** When checking for interrogative signals (`?`), always inspect the raw/unstripped label text, as string sanitizers and cleaners strip punctuation.
   - **Rule 2 (Universal V3 Synergy):** Form Schema Cache (Tier 0) + SFD 5-Signal Intent Engine (Tier 1) + JD-Aware RAG (Tier 2) + Universal Write Actuator (Tier 3) forms an unbreakable 4-tier autofill shield that makes AstrePilot universally functional on any website without static hardcoding.
 - **Status:** Complete, verified (`61/61` test suites passing, `572/572` tests passing, `0` TS errors), committed and pushed to `origin main`.
+
+
+### Phase 91: Astranis Greenhouse Deep Audit, Universal Tag Geometry, AI Oracle Fallback & Persistent HUD State (November 6, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Live testing against the Astranis Greenhouse flight software intern job application (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`) revealed 6 subtle bugs, vulnerabilities, and bad sectors:
+    1. **`candidate-location` Left Blank / Skipped:** Greenhouse's location input uses `react-select` with `id="candidate-location"`. SFD classified it as `LOCATION_AUTOCOMPLETE` (0.91 conf), but `resolveValue()` in `extension/content.js` lacked a `LOCATION_AUTOCOMPLETE` case, returning `""` and skipping the field. Furthermore, `isTrueGeoAutocomplete()` did not recognize `LOCATION_AUTOCOMPLETE`, preventing Google Places / react-select dropdown triggering.
+    2. **BCA Candidate Title Law Violations:** Detected forbidden title inflection `"Engineered"` in `extension/content.js` (lines 4859 and 5056) in screening fallbacks ("Engineered scalable applications..." and "Engineered AstrePilot...").
+    3. **Truncated 27-Word Project Stub:** Astranis Question 9 ("Briefly describe a technical project you have worked on...") was returning a shallow 27-word generic summary instead of the comprehensive, grounded technical experience required to win interviews.
+    4. **AI Oracle Unhandled HTTP 500 Crash:** In `src/app/api/autopilot/oracle/route.ts`, if Turso/database had an empty/unseeded profile or network timeout, `db.profile.findFirst` threw an uncaught error resulting in HTTP 500. Additionally, when all external LLMs failed due to network sandbox, the oracle crashed instead of falling back to high-conviction grounded profile data.
+    5. **SFD False Positives on Question 9, ITAR, and SMS Consent:**
+       - Question 9 ("school projects") was matching single-line scalar type `SCHOOL` because `TEXTAREA` elements had no tag-type restriction.
+       - ITAR Export Compliance question ("therefore will you state which...") false-matched geographic `STATE` due to the verb "state".
+       - SMS Consent combobox matched `PHONE` due to label text containing "receive SMS/phone notifications".
+    6. **HUD Vanishing Action Buttons:** Upon entering `state === 'done'`, `extension/hud-ui.js` rendered an empty string for controls, removing all buttons and leaving the user trapped with no way to re-fill or proceed to review/submit.
+- **Deep Root Cause Diagnosis:**
+  1. **Canonical Type Disconnect in Value Resolver:** SFD added canonical types (such as `LOCATION_AUTOCOMPLETE`, `WEBSITE`, `ZIP_CODE`, `GPA`, `REFERRAL`, `WHY_US`, `COVER_LETTER_FILE`), but `resolveValue()` was not updated symmetrically, causing validly classified fields to resolve to `""`.
+  2. **Tag Geometry Blindness in Field Classification:** Regex patterns like `SCHOOL` (`/school|university|college/i`) were evaluating against full label texts of multi-line `<textarea>` elements without restricting scalar types to single-line inputs (`<input>`).
+  3. **Keyword Collision in Legal / Regulatory Disclosures:** The English verb "state" in legal phrasing ("state which applies to you") collided with US address geographic "state" regexes without negative lookaheads or forbidden keyword guards.
+  4. **Single-Attempt HUD State Machine:** Transition to `'done'` did not provide a persistent action dock, assuming once done, the user only needed to close the HUD.
+- **The Concrete Surgical Fix:**
+  1. **Canonical Field & Geo-Autocomplete Alignment (`extension/content.js`):**
+     - Added `LOCATION_AUTOCOMPLETE` to `resolveValue()`, mapping to `profile.location || profile.address || ...`.
+     - Added 7 other missing canonical types: `WEBSITE`, `ZIP_CODE`, `PHONE_COUNTRY_CODE`, `GPA`, `REFERRAL`, `WHY_US`, and `COVER_LETTER_FILE`. Genuine missing canonical types dropped from 8 to 0.
+     - Updated `isTrueGeoAutocomplete()` to recognize `LOCATION_AUTOCOMPLETE`.
+  2. **Tag-Type Aware Intent Classifier (`src/lib/autopilot/semanticFieldDiscovery.ts` & `extension/content.js`):**
+     - Prevented `TEXTAREA` elements from matching scalar single-line types (`FIRST_NAME`, `LAST_NAME`, `PHONE`, `EMAIL`, `SCHOOL`, `DEGREE`, `MAJOR`, `COMPANY`, `JOB_TITLE`, `LINKEDIN`, `GITHUB`, etc.).
+     - Added forbidden tokens to `STATE` (`"state which"`, `"please state"`, `"state whether"`, `"regulations"`, `"export"`) to prevent ITAR questions from matching US state.
+     - Constrained `PHONE` so it never matches `SELECT` elements or labels with `"sms"`, `"consent"`, or `"receive"`.
+     - Elevated distinct high-precision multi-word matches (e.g. "how did you hear", "linkedin profile") from 0.60 to 0.85 confidence.
+  3. **BCA Title Compliance & Grounded Technical Project Answers (`extension/content.js`):**
+     - Replaced `"Engineered"` with `"Architected and developed"` and `"Architected AstrePilot and AstreWork..."`.
+     - Upgraded Question 9 fallback to a grounded 175-word narrative covering Project Architecture, Tech Stack (React 19, TypeScript, LibSQL), Core Technical Challenges (Shadow DOM, VDOM reconcilers), Specific Developer Role, and Measurable Outcomes.
+  4. **Resilient AI Oracle API (`src/app/api/autopilot/oracle/route.ts`):**
+     - Wrapped DB access in try-catch with seamless fallback to `getMasterResumeBaseline(isAyushi ? "ayushi" : "roushan")`.
+     - Handled `techStack` whether stored as array or comma-delimited string.
+     - Added guaranteed grounded fallback response if all upstream LLMs timeout or fail, returning HTTP 200 with high-conviction contextual answers.
+  5. **Persistent Post-Autofill HUD Controls (`extension/hud-ui.js`):**
+     - In `renderControls()` under `state === 'done'`, added persistent buttons: `🔄 Re-fill All` and `📋 Review & Submit` (`action-confirm-submit`), terminating the vanishing button bug.
+  6. **Automated Verification Suite (`tests/astranis-deep-audit.test.ts`):**
+     - 5 exhaustive test suites verifying 100% field classification across all Astranis Greenhouse fields, non-null `LOCATION_AUTOCOMPLETE` resolution, BCA compliance, ITAR export resolution to "None of the above.", and AI Oracle HTTP 200 fallback resilience.
+  7. **Full Suite & Packaging:**
+     - Verified 0 TypeScript errors (`npx.cmd tsc --noEmit`).
+     - Ran all 62 test files: **577 passed (577 tests)**, 0 failures.
+     - Re-packaged extension to `public/downloads/astrepilot-extension.zip` (`628.7 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Tag Geometry Separation Law):** Multi-line inputs (`<textarea>`) must never be matched against single-line scalar identity fields (`SCHOOL`, `DEGREE`, `NAME`, `PHONE`). Narrative inputs should strictly route to narrative canonical types (`SCREENING`, `NOTE`, `COVER_LETTER`, `WHY_US`, `WORK_DESCRIPTION`).
+  - **Rule 2 (Legal Verb Disambiguation):** Words like "state", "company", "notice", and "will" frequently appear as verbs in legal disclosures. Regex patterns for geographic or corporate entities must include negative guards against instructional/regulatory phrasing.
+  - **Rule 3 (Value Resolver Symmetry):** Every canonical type declared in the SFD taxonomy MUST have an explicit mapping in `resolveValue()`. An unhandled canonical type is functionally equivalent to an autofill failure.
+- **Status:** Complete, verified (`62/62` test suites passing, `577/577` tests passing, `0` TS errors), committed and pushed to `origin main`.
