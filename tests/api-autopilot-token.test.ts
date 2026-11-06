@@ -54,3 +54,4 @@ describe('API: /api/autopilot/token', () => {
     expect(data.token).toBeDefined();
   });
 });
+
