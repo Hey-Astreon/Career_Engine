@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 85: Invisible reCAPTCHA Enterprise False-Positive Termination, ITAR Export Compliance, React-Select Isolation, Single Sticky CTA & 25/25 Live Greenhouse Test)
+> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 86: AstrePilot V3 Universal Semantic Field Discovery (SFD) Engine, AI Form Oracle & 45-Field Taxonomy)
 
 ---
 
@@ -3695,3 +3695,23 @@ graph TD
   - **Rule 2 (Combobox Menu Encapsulation):** In modern client-side component libraries (React-Select, Headless UI, Radix), multiple menus share identical class names (`.select__menu`). Always scope option lookups strictly to the container or aria-controls linked to that specific input.
   - **Rule 3 (Sticky Master CTA Over Duplicate CTAs):** Never render two identical primary action buttons in the same view. Make the single primary CTA sticky so it remains accessible as long lists scroll.
 - **Status:** Complete, verified (`55/55` test suites passing, `0` TS errors, 25/25 live DOM checks passed), committed and pushed to `origin main`.
+
+
+### Phase 86: AstrePilot V3 Universal Semantic Field Discovery (SFD) Engine, AI Form Oracle & 45-Field Taxonomy (November 6, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - AstrePilot relied heavily on brittle, hardcoded per-ATS selector maps (`GREENHOUSE_EXACT_MAP`, `ICIMS_EXACT_MAP`, `isWorkdayEnvironment()`, etc.) across `extension/content.js`.
+  - On custom enterprise portals (ASP.NET, custom enterprise recruitment systems) or newly encountered ATS platforms (Rippling, BambooHR, Pinpoint, Bullhorn), non-standard input labels and obfuscated IDs caused critical fields to be left blank, requiring manual developer intervention and static selector maintenance for each new site.
+- **Deep Root Cause Diagnosis:**
+  1. **Absence of Unified Semantic Intent Scoring:** Field classification relied on sequential, hardcoded string checks (`if (id.includes('first_name'))`) rather than a multi-signal scoring model that evaluates DOM attributes, labels, structural context, role, and proximity in parallel.
+  2. **Binary Static Failure:** If an element missed static string rules, it fell back to generic heuristics with no confidence metrics or server-side intelligence fallback.
+- **The Concrete Surgical Fix:**
+  1. **Universal Semantic Field Discovery (SFD) Engine (`src/lib/autopilot/semanticFieldDiscovery.ts`):** Architected the 5-signal SFD scoring algorithm across a 45-field canonical taxonomy (Identity, Contact, Location, Legal, Credentials, Education, Experience, Screening, Diversity, Upload, Logistics, Consent). Evaluates raw, clean, and compact attribute/label signals with weighted confidence scoring.
+  2. **Universal Form Fingerprinting (`generateFormFingerprint`):** Created privacy-safe structural SHA-256 fingerprinting that uniquely identifies form layouts without capturing PII.
+  3. **AI Form Oracle Endpoint (`src/app/api/autopilot/analyze-form/route.ts`):** Built a high-performance endpoint that runs local 0ms SFD for standard forms and routes truly ambiguous or novel fields to the multi-provider LLM cascade (Groq 500+ t/s -> Gemini -> Cerebras -> NVIDIA NIM) for structured intent classification.
+  4. **Browser Client Integration (`extension/content.js`):** Embedded the zero-dependency browser-optimized SFD engine directly into the content script. `classifyField()` now uses SFD as its primary intelligence engine, assigning `confidence` (e.g. 0.95+) and `reasoning` to all detected fields.
+  5. **Comprehensive Vitest Suites:** Created `tests/sfd-universal-discovery.test.ts` (verifying 100% classification across Greenhouse, Lever, Workday, ASP.NET custom career portals, and fingerprint determinism) and `tests/api-autopilot-analyze-form.test.ts` (verifying local bypass and Oracle routing). All 57 test files passing (533 tests total).
+  6. **TypeScript & Extension Re-Package:** Verified 0 TS errors (`npx.cmd tsc --noEmit`) and regenerated `public/downloads/astrepilot-extension.zip` (`625.0 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Multi-Signal Scoring Over Static Selectors):** Never depend exclusively on `id` or `name` attributes for form automation. A robust universal autofill engine must cross-reference autocomplete standards, associated labels, structural context, and input roles concurrently with normalized weights.
+  - **Rule 2 (Normalization Dual-Track):** Always evaluate keywords against both space-delimited normalized text (`clean`) and alphanumeric-only compacted text (`compact`) so that `first_name`, `first-name`, `firstName`, and `First Name*` match identically without fragile regex permutations.
+- **Status:** Complete, verified (`57/57` test suites passing, `0` TS errors), committed and pushed to `origin main`.

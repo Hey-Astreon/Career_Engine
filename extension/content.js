@@ -1297,7 +1297,515 @@
     return 'WAI_ARIA';
   }
 
+  /* =========================================================================
+     ASTREPILOT V3: UNIVERSAL SEMANTIC FIELD DISCOVERY (SFD) ENGINE
+     ========================================================================= */
+
+  function sfdClean(str) {
+    if (!str) return '';
+    return String(str)
+      .toLowerCase()
+      .replace(/[*:\(\)\[\]?#]+/g, ' ')
+      .replace(/[\s\-_]+/g, ' ')
+      .trim();
+  }
+
+  function sfdCompact(str) {
+    if (!str) return '';
+    return String(str).toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  const SFD_TAXONOMY = [
+    // Upload
+    {
+      type: 'RESUME',
+      attrs: ['resume', 'cv', 'curriculum', 'resume_file', 'attach_resume', 'dropzone'],
+      labels: ['resume', 'cv', 'curriculum vitae', 'attach resume', 'upload resume'],
+      baseConf: 0.98
+    },
+    {
+      type: 'COVER_LETTER_FILE',
+      attrs: ['coverletter_file', 'cover_letter_upload', 'cover_letter_file'],
+      labels: ['cover letter file', 'upload cover letter', 'attach cover letter'],
+      baseConf: 0.95
+    },
+    // Identity
+    {
+      type: 'FIRST_NAME',
+      attrs: ['firstname', 'first_name', 'first-name', 'fname', 'givenname', 'given_name'],
+      labels: ['first name', 'given name', 'first name*'],
+      autocompletes: ['given-name', 'first-name'],
+      forbidden: ['company', 'referral', 'contact', 'emergency'],
+      baseConf: 0.96
+    },
+    {
+      type: 'LAST_NAME',
+      attrs: ['lastname', 'last_name', 'last-name', 'lname', 'surname', 'familyname', 'family_name'],
+      labels: ['last name', 'surname', 'family name', 'last name*'],
+      autocompletes: ['family-name', 'last-name'],
+      forbidden: ['company', 'referral', 'contact', 'emergency'],
+      baseConf: 0.96
+    },
+    {
+      type: 'FULL_NAME',
+      attrs: ['fullname', 'full_name', 'candidate_name', 'your_name', 'applicant_name'],
+      labels: ['full name', 'your name', 'candidate name', 'legal name'],
+      autocompletes: ['name'],
+      forbidden: ['first', 'last', 'company', 'school', 'emergency'],
+      baseConf: 0.92
+    },
+    {
+      type: 'PREFERRED_NAME',
+      attrs: ['preferred_name', 'preferredname', 'nickname', 'chosen_name'],
+      labels: ['preferred name', 'nickname', 'what should we call you'],
+      baseConf: 0.94
+    },
+    {
+      type: 'PRONOUNS',
+      attrs: ['pronoun', 'pronouns', 'gender_pronouns'],
+      labels: ['pronouns', 'preferred pronouns', 'your pronouns'],
+      baseConf: 0.95
+    },
+    // Contact
+    {
+      type: 'EMAIL',
+      attrs: ['email', 'e-mail', 'email_address', 'electronic_mail'],
+      labels: ['email', 'e-mail', 'email address', 'electronic mail', 'email*'],
+      autocompletes: ['email'],
+      forbidden: ['referral', 'referrer', 'emergency'],
+      baseConf: 0.98
+    },
+    {
+      type: 'PHONE',
+      attrs: ['phone', 'phonenumber', 'phone_number', 'mobile', 'telephone', 'cellular', 'cell', 'cell_phone', 'cellphone'],
+      labels: ['phone', 'phone number', 'mobile', 'mobile number', 'telephone', 'cell', 'cellular', 'contact number'],
+      autocompletes: ['tel', 'mobile'],
+      forbidden: ['country', 'code', 'type', 'emergency', 'referral'],
+      baseConf: 0.95
+    },
+    {
+      type: 'PHONE_COUNTRY_CODE',
+      attrs: ['phone_country_code', 'country_code', 'phonecode', 'dialing_code'],
+      labels: ['country code', 'phone code', 'dialing code', 'prefix'],
+      baseConf: 0.92
+    },
+    {
+      type: 'PHONE_TYPE',
+      attrs: ['phone_type', 'phonetype', 'phone_device_type'],
+      labels: ['phone type', 'device type', 'type of phone'],
+      baseConf: 0.93
+    },
+    {
+      type: 'LINKEDIN',
+      attrs: ['linkedin', 'linkedin_url', 'linkedin_profile', 'linkedinurl'],
+      labels: ['linkedin', 'linkedin profile', 'linkedin url', 'linkedin.com'],
+      baseConf: 0.98
+    },
+    {
+      type: 'GITHUB',
+      attrs: ['github', 'github_url', 'github_profile', 'githuburl'],
+      labels: ['github', 'github profile', 'github url', 'github.com'],
+      baseConf: 0.98
+    },
+    {
+      type: 'PORTFOLIO',
+      attrs: ['portfolio', 'portfolio_url', 'personal_website', 'website_url'],
+      labels: ['portfolio', 'portfolio url', 'personal website', 'personal site', 'showcase'],
+      baseConf: 0.94
+    },
+    {
+      type: 'WEBSITE',
+      attrs: ['website', 'other_website', 'other_url', 'web_url', 'homepage'],
+      labels: ['website', 'other website', 'url', 'link'],
+      forbidden: ['linkedin', 'github', 'portfolio'],
+      baseConf: 0.90
+    },
+    // Location
+    {
+      type: 'ZIP_CODE',
+      attrs: ['zip', 'postal', 'pincode', 'pin_code', 'postcode', 'zip_code', 'postal_code'],
+      labels: ['zip', 'postal code', 'zip code', 'pin code', 'pincode', 'postal'],
+      autocompletes: ['postal-code'],
+      baseConf: 0.95
+    },
+    {
+      type: 'COUNTRY',
+      attrs: ['country', 'country_name', 'candidate_country', 'country_id'],
+      labels: ['country', 'country / region', 'country/region', 'nationality'],
+      autocompletes: ['country', 'country-name'],
+      forbidden: ['code', 'phone'],
+      baseConf: 0.94
+    },
+    {
+      type: 'STATE',
+      attrs: ['state', 'province', 'region', 'state_province'],
+      labels: ['state', 'province', 'state / province', 'region'],
+      autocompletes: ['address-level1'],
+      baseConf: 0.92
+    },
+    {
+      type: 'CITY',
+      attrs: ['city', 'town', 'locality', 'location_city'],
+      labels: ['city', 'town', 'city / town', 'location (city)'],
+      autocompletes: ['address-level2'],
+      baseConf: 0.93
+    },
+    {
+      type: 'LOCATION_AUTOCOMPLETE',
+      attrs: ['job_application_location', 'candidate_location', 'location_search', 'geo_location'],
+      labels: ['location', 'current location', 'where are you located', 'city, state, country'],
+      baseConf: 0.91
+    },
+    {
+      type: 'ADDRESS',
+      attrs: ['address', 'street', 'street_address', 'address_line_1'],
+      labels: ['address', 'street address', 'address line 1', 'residential address'],
+      autocompletes: ['street-address', 'address-line1'],
+      forbidden: ['email', 'ip'],
+      baseConf: 0.93
+    },
+    // Education
+    {
+      type: 'SCHOOL',
+      attrs: ['school', 'university', 'college', 'institution', 'school--0'],
+      labels: ['school', 'university', 'college', 'institution', 'school / university', 'college/university'],
+      baseConf: 0.95
+    },
+    {
+      type: 'DEGREE',
+      attrs: ['degree', 'degree--0', 'education_level', 'highest_education', 'qualification'],
+      labels: ['degree', 'degree level', 'highest degree', 'qualification', 'highest degree earned'],
+      baseConf: 0.95
+    },
+    {
+      type: 'DISCIPLINE',
+      attrs: ['discipline', 'major', 'field_of_study', 'discipline--0', 'area_of_study'],
+      labels: ['discipline', 'major', 'field of study', 'specialization', 'course'],
+      baseConf: 0.96
+    },
+    {
+      type: 'GRADUATION_YEAR',
+      attrs: ['grad_year', 'graduation_year', 'gradyear', 'year_of_graduation'],
+      labels: ['graduation year', 'year of graduation', 'grad year', 'expected graduation'],
+      baseConf: 0.94
+    },
+    {
+      type: 'GPA',
+      attrs: ['gpa', 'grade_point_average', 'marks_cgpa', 'cgpa'],
+      labels: ['gpa', 'cgpa', 'grade point average'],
+      baseConf: 0.95
+    },
+    {
+      type: 'START_MONTH',
+      attrs: ['start_month', 'start-month', 'start_date_month'],
+      labels: ['start date month', 'start month', 'from month'],
+      baseConf: 0.93
+    },
+    {
+      type: 'START_YEAR',
+      attrs: ['start_year', 'start-year', 'start_date_year'],
+      labels: ['start date year', 'start year', 'from year'],
+      baseConf: 0.93
+    },
+    {
+      type: 'END_MONTH',
+      attrs: ['end_month', 'end-month', 'end_date_month'],
+      labels: ['end date month', 'end month', 'to month'],
+      baseConf: 0.93
+    },
+    {
+      type: 'END_YEAR',
+      attrs: ['end_year', 'end-year', 'end_date_year'],
+      labels: ['end date year', 'end year', 'to year'],
+      baseConf: 0.93
+    },
+    // Experience
+    {
+      type: 'COMPANY',
+      attrs: ['company_name', 'employer', 'organization', 'work_company', 'previous_company'],
+      labels: ['company', 'employer', 'current company', 'previous company', 'organization'],
+      autocompletes: ['organization'],
+      baseConf: 0.92
+    },
+    {
+      type: 'EMPLOYMENT_TITLE',
+      attrs: ['job_title', 'role_title', 'designation', 'position_title', 'current_title'],
+      labels: ['job title', 'title', 'designation', 'current role', 'role'],
+      autocompletes: ['organization-title'],
+      baseConf: 0.92
+    },
+    {
+      type: 'CURRENT_ROLE',
+      attrs: ['is_current', 'currently_work_here', 'current_role', 'present_job'],
+      labels: ['i currently work here', 'current role', 'presently working'],
+      baseConf: 0.94
+    },
+    {
+      type: 'WORK_DESCRIPTION',
+      attrs: ['work_description', 'job_description', 'responsibilities', 'duties'],
+      labels: ['description', 'responsibilities', 'summary of work', 'role description'],
+      baseConf: 0.91
+    },
+    // Legal & Work Auth
+    {
+      type: 'WORK_AUTH',
+      attrs: ['work_authorization', 'authorized_to_work', 'work_auth', 'legally_authorized'],
+      labels: ['authorized to work', 'legally authorized', 'work authorization', 'right to work'],
+      baseConf: 0.96
+    },
+    {
+      type: 'VISA',
+      attrs: ['visa_sponsorship', 'require_sponsorship', 'visa', 'sponsorship_required'],
+      labels: ['require sponsorship', 'sponsorship', 'visa sponsorship', 'will you require sponsorship'],
+      baseConf: 0.96
+    },
+    {
+      type: 'SALARY',
+      attrs: ['salary', 'compensation', 'expected_salary', 'desired_salary', 'hourly_rate'],
+      labels: ['salary', 'desired salary', 'expected salary', 'compensation', 'salary expectation'],
+      baseConf: 0.94
+    },
+    {
+      type: 'NOTICE_PERIOD',
+      attrs: ['notice_period', 'availability_days', 'notice', 'start_availability'],
+      labels: ['notice period', 'how soon can you start', 'availability to start', 'days notice'],
+      baseConf: 0.94
+    },
+    // Credentials
+    {
+      type: 'LOGIN_ID',
+      attrs: ['login', 'username', 'login_id', 'user_name'],
+      labels: ['login', 'username', 'login id', 'user id'],
+      autocompletes: ['username'],
+      baseConf: 0.94
+    },
+    {
+      type: 'PASSWORD',
+      attrs: ['password', 'user_password', 'passwd'],
+      labels: ['password', 'create password', 'enter password'],
+      autocompletes: ['new-password', 'current-password'],
+      forbidden: ['confirm', 'verify', 'reenter', 're-enter'],
+      baseConf: 0.97
+    },
+    {
+      type: 'CONFIRM_PASSWORD',
+      attrs: ['confirm_password', 'password_confirm', 'reenter_password', 'verify_password'],
+      labels: ['confirm password', 're-enter password', 'verify password', 'retype password'],
+      baseConf: 0.97
+    },
+    // Diversity & EEO
+    {
+      type: 'GENDER',
+      attrs: ['gender', 'gender_identity', 'sex'],
+      labels: ['gender', 'gender identity', 'what is your gender'],
+      baseConf: 0.96
+    },
+    {
+      type: 'RACE_ETHNICITY',
+      attrs: ['race', 'ethnicity', 'race_ethnicity', 'ethnic_background'],
+      labels: ['race', 'ethnicity', 'race/ethnicity', 'ethnic origin'],
+      baseConf: 0.95
+    },
+    {
+      type: 'HISPANIC_LATINO',
+      attrs: ['hispanic', 'latino', 'hispanic_latino'],
+      labels: ['hispanic', 'latino', 'hispanic or latino', 'are you hispanic/latino'],
+      baseConf: 0.96
+    },
+    {
+      type: 'VETERAN',
+      attrs: ['veteran', 'veteran_status', 'military_status'],
+      labels: ['veteran', 'veteran status', 'military service', 'protected veteran'],
+      baseConf: 0.96
+    },
+    {
+      type: 'DISABILITY',
+      attrs: ['disability', 'disability_status', 'handicap'],
+      labels: ['disability', 'disability status', 'do you have a disability'],
+      baseConf: 0.96
+    },
+    // Logistics & Preferences
+    {
+      type: 'HEAR_ABOUT',
+      attrs: ['hear_about', 'how_did_you_hear', 'referral_source', 'source'],
+      labels: ['how did you hear about us', 'how did you hear', 'source', 'referral source'],
+      baseConf: 0.95
+    },
+    {
+      type: 'REFERRAL',
+      attrs: ['referred_by', 'referrer', 'employee_referral'],
+      labels: ['referred by', 'employee referral', 'who referred you'],
+      baseConf: 0.94
+    },
+    {
+      type: 'PREFERRED_LOCATION',
+      attrs: ['preferred_location', 'desired_location', 'work_location'],
+      labels: ['preferred location', 'desired location', 'preferred office', 'location preference'],
+      baseConf: 0.92
+    },
+    {
+      type: 'WORKPLACE_TYPE',
+      attrs: ['workplace_type', 'work_mode', 'remote_preference'],
+      labels: ['workplace type', 'remote / hybrid / onsite', 'work preference', 'work model'],
+      baseConf: 0.93
+    },
+    // Consent
+    {
+      type: 'TEXT_CONSENT',
+      attrs: ['sms_consent', 'text_consent', 'sms', 'text_message'],
+      labels: ['text message', 'sms consent', 'consent to receive text messages', 'sms updates'],
+      baseConf: 0.96
+    },
+    {
+      type: 'PRIVACY_CONSENT',
+      attrs: ['privacy_policy', 'privacy_consent', 'agree_terms', 'terms_consent'],
+      labels: ['privacy policy', 'i agree to the privacy policy', 'terms and conditions', 'data processing consent'],
+      baseConf: 0.96
+    },
+    // Open-ended / Custom Screening
+    {
+      type: 'COVER_LETTER',
+      attrs: ['cover_letter', 'coverletter', 'letter_to_hiring_manager', 'message_to_recruiter'],
+      labels: ['cover letter', 'message to hiring manager', 'why should we hire you', 'additional information'],
+      baseConf: 0.93
+    },
+    {
+      type: 'WHY_US',
+      attrs: ['why_company', 'why_us', 'why_interested', 'whyus'],
+      labels: ['why do you want to work', 'why do you want to work here', 'why are you interested in this role', 'why us', 'why our company', 'why our organization', 'interest in company'],
+      baseConf: 0.94
+    }
+  ];
+
+  function computeSemanticScoreForDOM(input) {
+    if (!input) return null;
+
+    const rawAttr = [
+      input.getAttribute('name') || '',
+      input.getAttribute('id') || '',
+      input.getAttribute('placeholder') || '',
+      input.getAttribute('autocomplete') || '',
+      input.getAttribute('data-automation-id') || '',
+      input.getAttribute('aria-label') || ''
+    ].join(' ').toLowerCase();
+
+    const cleanAttr = sfdClean(rawAttr);
+    const compactAttr = sfdCompact(rawAttr);
+
+    const rawLabel = (getLabelText(input) || '').toLowerCase();
+    const cleanLabel = sfdClean(rawLabel);
+    const compactLabel = sfdCompact(rawLabel);
+
+    let contextSignal = '';
+    let curr = input.parentElement;
+    for (let depth = 0; depth < 4 && curr; depth++) {
+      const cls = curr.getAttribute('class') || '';
+      const id = curr.id || '';
+      const heading = curr.querySelector('h1, h2, h3, h4, legend, .section-title, .form-title');
+      const headingText = heading ? (heading.textContent || '') : '';
+      contextSignal += ' ' + cls + ' ' + id + ' ' + headingText;
+      curr = curr.parentElement;
+    }
+    const cleanContext = sfdClean(contextSignal);
+
+    const autoSignal = (input.getAttribute('autocomplete') || '').toLowerCase().trim();
+    const isCB = isComboboxOrSelect(input);
+    const isSelect = input.tagName === 'SELECT' || isCB;
+    const isTextarea = input.tagName === 'TEXTAREA';
+    const isFile = input.tagName === 'INPUT' && input.type === 'file';
+
+    // File Upload Fast Path
+    if (isFile) {
+      if (cleanAttr.includes('cover') || cleanLabel.includes('cover')) {
+        return { fieldType: 'COVER_LETTER_FILE', confidence: 0.98, reasoning: 'File input matching cover letter' };
+      }
+      return { fieldType: 'RESUME', confidence: 0.99, reasoning: 'File input recognized as resume/CV' };
+    }
+
+    const isEmploymentSection =
+      cleanContext.includes('employment') ||
+      cleanContext.includes('experience') ||
+      cleanContext.includes('job history') ||
+      cleanAttr.includes('employment') ||
+      cleanAttr.includes('job history');
+
+    let best = { fieldType: 'UNKNOWN', confidence: 0.0, reasoning: '' };
+
+    for (const pattern of SFD_TAXONOMY) {
+      let score = 0.0;
+
+      if (pattern.forbidden && pattern.forbidden.some(f => cleanAttr.includes(f) || compactAttr.includes(f) || cleanLabel.includes(f))) {
+        continue;
+      }
+
+      if (pattern.autocompletes && pattern.autocompletes.length > 0) {
+        if (pattern.autocompletes.some(ac => autoSignal === ac || autoSignal.includes(ac))) {
+          score += 0.60;
+        }
+      }
+
+      if (cleanLabel) {
+        for (const kw of pattern.labels) {
+          if (rawLabel.includes(kw) || cleanLabel.includes(sfdClean(kw)) || compactLabel.includes(sfdCompact(kw))) {
+            score += 0.55;
+            break;
+          }
+        }
+      }
+
+      for (const kw of pattern.attrs) {
+        if (rawAttr.includes(kw) || cleanAttr.includes(sfdClean(kw)) || compactAttr.includes(sfdCompact(kw))) {
+          score += 0.45;
+          break;
+        }
+      }
+
+      let assignedType = pattern.type;
+      if (isEmploymentSection) {
+        if (assignedType === 'COUNTRY') assignedType = 'EXP_COUNTRY';
+        else if (assignedType === 'STATE') assignedType = 'EXP_STATE';
+        else if (assignedType === 'CITY') assignedType = 'EXP_CITY';
+      }
+
+      const conf = Math.min(1.0, score * pattern.baseConf);
+      if (conf > best.confidence && conf >= 0.40) {
+        best = {
+          fieldType: assignedType,
+          confidence: Number(conf.toFixed(2)),
+          reasoning: `SFD V3 (${assignedType} @ ${(conf * 100).toFixed(0)}%)`
+        };
+      }
+    }
+
+    if (best.confidence < 0.70) {
+      if (isSelect) {
+        if (cleanLabel.includes('?') || cleanLabel.includes('*') || cleanAttr.includes('question') || cleanAttr.includes('custom')) {
+          return { fieldType: 'SCREENING_SELECT', confidence: 0.85, reasoning: 'SFD V3 (Screening Select Dropdown)' };
+        }
+      } else if (isTextarea) {
+        if (cleanLabel.includes('why') || cleanLabel.includes('describe') || cleanLabel.includes('explain') || cleanLabel.includes('tell us') || cleanLabel.includes('?')) {
+          return { fieldType: 'SCREENING', confidence: 0.88, reasoning: 'SFD V3 (Behavioral/Technical Textarea)' };
+        }
+        return { fieldType: 'NOTE', confidence: 0.75, reasoning: 'SFD V3 (Multi-line Note)' };
+      } else if (cleanAttr.includes('question') || cleanLabel.includes('?')) {
+        return { fieldType: 'SCREENING', confidence: 0.82, reasoning: 'SFD V3 (Custom Screening Input)' };
+      }
+    }
+
+    return best;
+  }
+
   function classifyField(input) {
+    // 1. AstrePilot V3: Universal Semantic Field Discovery (SFD) Engine
+    const sfdResult = computeSemanticScoreForDOM(input);
+    if (sfdResult && sfdResult.confidence >= 0.75 && sfdResult.fieldType !== 'UNKNOWN') {
+      try {
+        input.__sfdConfidence = sfdResult.confidence;
+        input.__sfdReasoning = sfdResult.reasoning;
+      } catch (e) {}
+      return sfdResult.fieldType;
+    }
+
     const attrSignal = [
       (input.getAttribute('name') || '').toLowerCase(),
       (input.getAttribute('id') || '').toLowerCase(),
@@ -2622,7 +3130,9 @@
           element: canonicalEl,
           type,
           id: fieldId,
-          originalValue: origVal
+          originalValue: origVal,
+          confidence: canonicalEl.__sfdConfidence || 0.90,
+          reasoning: canonicalEl.__sfdReasoning || 'SFD Heuristic'
         });
       });
     });
