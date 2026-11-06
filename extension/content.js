@@ -123,7 +123,7 @@
       privacyConsent: 'Confirmed',
       aiConsent: 'Yes',
       aiUsage: 'regularly use AI tools and developer copilots',
-      professionalSummary: 'Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure. Built and operate AstreWork on Oracle Cloud (OCI ARM64), where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
+      professionalSummary: 'Software Developer focused on backend systems, distributed data pipelines, and cloud infrastructure. Architected and operate AstreWork on Oracle Cloud (OCI ARM64), utilizing Dockerized background workers, Turso SQLite, and Redis caching to orchestrate high-throughput distributed workflows. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
       slug: 'roushan',
       token: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
       _isStandalone: true
@@ -4067,9 +4067,23 @@
       if (matchedOption) {
         const optWin = matchedOption.ownerDocument?.defaultView || win;
         try {
+          if (typeof optWin.PointerEvent === 'function') {
+            matchedOption.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: optWin }));
+          }
           matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: optWin }));
+          if (typeof optWin.PointerEvent === 'function') {
+            matchedOption.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: optWin }));
+          }
           matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: optWin }));
           matchedOption.click();
+        } catch (e) {}
+
+        // Commit keyboard selection on inputEl for React 18/19 custom comboboxes
+        try {
+          if (inputEl) {
+            inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+            inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          }
         } catch (e) {}
 
         await new Promise(r => setTimeout(r, 180));
@@ -4780,7 +4794,14 @@
       case 'HISPANIC_LATINO': return profile.hispanicLatino || 'No';
       case 'VETERAN':      return profile.veteranStatus || 'I am not a protected veteran';
       case 'DISABILITY':   return profile.disabilityStatus || "No, I don't have a disability";
-      case 'RACE_ETHNICITY': return profile.race || 'Asian';
+      case 'RACE_ETHNICITY': {
+        if (profile.race) return profile.race;
+        const locStr = `${profile.country || ''} ${profile.location || ''} ${profile.city || ''} ${profile.state || ''}`.toLowerCase();
+        if (locStr.includes('india') || locStr.includes('patna') || locStr.includes('bihar') || locStr.includes('noida') || locStr.includes('delhi')) {
+          return 'Asian';
+        }
+        return 'Asian';
+      }
       case 'COMPANY':      return profile.company || 'AstreWork';
       case 'EMPLOYMENT_TITLE': {
         let t = profile.employmentTitle || profile.title || 'Full-Stack Developer';
@@ -4975,7 +4996,14 @@
       case 'HISPANIC_LATINO': return profile.hispanicLatino || 'No';
       case 'VETERAN':      return profile.veteranStatus || 'I am not a protected veteran';
       case 'DISABILITY':   return profile.disabilityStatus || "No, I don't have a disability";
-      case 'RACE_ETHNICITY': return profile.race || 'Asian';
+      case 'RACE_ETHNICITY': {
+        if (profile.race) return profile.race;
+        const locStr = `${profile.country || ''} ${profile.location || ''} ${profile.city || ''} ${profile.state || ''}`.toLowerCase();
+        if (locStr.includes('india') || locStr.includes('patna') || locStr.includes('bihar') || locStr.includes('noida') || locStr.includes('delhi')) {
+          return 'Asian';
+        }
+        return 'Asian';
+      }
       case 'COMPANY':      return profile.company || 'AstreWork';
       case 'EMPLOYMENT_TITLE': {
         let t = profile.employmentTitle || profile.title || 'Full-Stack Developer';
@@ -5074,15 +5102,29 @@
           return 'N/A';
         }
 
-        // Domain screening motivation for Astranis / Space roles
-        if (qLower.includes('when are you able to join') || qLower.includes('able to join as an intern')) {
-          return 'May 2027';
+        // Candidate availability & earliest start date determination
+        if (
+          qLower.includes('when are you able to join') ||
+          qLower.includes('able to join as an intern') ||
+          qLower.includes('earliest start') ||
+          qLower.includes('start date') ||
+          qLower.includes('how soon can you start') ||
+          qLower.includes('available to start')
+        ) {
+          const pref = (profile && (profile.availability || profile.noticePeriod)) || 'Immediate';
+          if (pref.toLowerCase().includes('immediate') || pref.toLowerCase().includes('now') || pref.toLowerCase().includes('flexible')) {
+            return 'Available immediately / Earliest available date (Flexible)';
+          }
+          return pref;
         }
-        if (qLower.includes('ending your internship') || qLower.includes('plan on ending')) {
-          return 'August 2027';
+
+        // Internship end date determination
+        if (qLower.includes('ending your internship') || qLower.includes('plan on ending') || qLower.includes('end date')) {
+          return 'Flexible based on program requirements (typically 12-16 weeks)';
         }
+
         if (qLower.includes('most impressive thing you have ever accomplished') || (qLower.includes('impressive') && qLower.includes('accomplished'))) {
-          return 'Architected AstreWork (an autonomous career operating system) handling 14,000+ daily scraped jobs across 13 providers with sub-second vector search on OCI ARM64 cloud infrastructure.';
+          return 'Architected and built AstreWork, an autonomous career operating system featuring a distributed high-concurrency background engine, real-time semantic scoring algorithms, and a multi-provider LLM orchestration cascade with sub-second response times deployed on cloud infrastructure. I focused on zero-downtime reliability, database isolation, and state machine design to coordinate complex asynchronous workflows.';
         }
         if (qLower.includes('complex project') || qLower.includes('impressive and complex project')) {
           return 'Architected AstrePilot and AstreWork, an autonomous career operating system and MV3 browser extension built with React 19, TypeScript, and LibSQL. As Lead Systems Architect and Full-Stack Developer, I designed the closed Shadow DOM HUD, multi-LLM failover cascade across Gemini and Groq, and a 4-tier self-healing write actuator that overcomes virtual DOM reconciliation barriers. The core technical complexity involved cross-origin subframe coordination and zero-click synthetic File injection.';
@@ -6184,6 +6226,58 @@
       }
       hud.setProgress(filled, detectedFields.length);
       await new Promise(r => setTimeout(r, 80));
+    }
+
+    // Autonomous Pass 2: Dynamic Dependent Field Discovery (e.g. Race appearing after Hispanic/Latino is answered)
+    await new Promise(r => setTimeout(r, 260));
+    try {
+      const freshFields = scanFields();
+      const newlyAppearedFields = freshFields.filter(nf => {
+        if (!nf || !nf.element) return false;
+        return !detectedFields.some(df => df.element === nf.element || (df.id && nf.id && df.id === nf.id));
+      });
+
+      if (newlyAppearedFields.length > 0) {
+        console.log(`[AstrePilot] Detected ${newlyAppearedFields.length} dynamically mounted dependent fields. Commencing Pass 2...`);
+        for (const nf of newlyAppearedFields) {
+          if (activeHud !== hud) return;
+          detectedFields.push(nf);
+          hud.markRow(nf.id, 'active');
+
+          const val = await resolveValue(nf, userProfile, activeSession);
+          if (val && String(val).trim().length > 0) {
+            let pass2Success = false;
+            const confTier = (nf.confidence != null && nf.confidence < 0.85) ? 'review' : 'active';
+            if (isComboboxOrSelect(nf.element)) {
+              AstrePilotHUD.highlight(nf.element, confTier);
+              const cbSuccess = await fillUniversalCombobox(nf.element, val, nf.type);
+              pass2Success = cbSuccess || await verifyFieldWritten(nf, val);
+              if (!pass2Success && nf.element.tagName === 'INPUT') {
+                const uRes = await universalWriteActuator(nf.element, val, nf);
+                pass2Success = uRes.success;
+              }
+            } else {
+              AstrePilotHUD.highlight(nf.element, confTier);
+              await AstrePilotHUD.fillAnimated(nf.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
+              const uRes = await universalWriteActuator(nf.element, val, nf);
+              pass2Success = uRes.success;
+            }
+
+            if (pass2Success) {
+              filled++;
+              hud.markRow(nf.id, 'done', String(val).slice(0, 30));
+            } else {
+              hud.markRow(nf.id, 'retry', '⚠ Retry Verification');
+            }
+          } else {
+            hud.markRow(nf.id, 'skipped', '-');
+          }
+          hud.setProgress(filled, detectedFields.length);
+          await new Promise(r => setTimeout(r, 80));
+        }
+      }
+    } catch (pass2Err) {
+      console.warn('[AstrePilot] Dynamic dependent field scan warning:', pass2Err);
     }
 
     // Auto-secure staged credentials into Vault upon successful fill

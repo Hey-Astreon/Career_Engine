@@ -213,7 +213,7 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://linkedin.com/in/astreon4547",
       },
       summary:
-        "Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs AstreWork (astrework.app) on Oracle Cloud, where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Enjoys solving hard concurrency, caching, and infrastructure problems.",
+        "Backend and Full-Stack Developer focused on distributed architectures, high-concurrency data pipelines, and cloud services in Python and TypeScript. Architected and operate AstreWork (astrework.app) on Oracle Cloud, orchestrating distributed background pipelines with Turso LibSQL and Redis caching. Enjoys solving hard concurrency, caching, and infrastructure resilience challenges.",
       skills: [
         {
           categoryName: "Languages",
@@ -247,7 +247,7 @@ export function getMasterResumeBaseline(
           liveDemoUrl: "https://astrework.app",
           githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
           bullets: [
-            "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms.",
+            "Creator & Lead Backend Developer: Architected distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process and deduplicate high-volume career listings with resilient error recovery across multi-platform sources.",
             "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
             "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%.",
           ],

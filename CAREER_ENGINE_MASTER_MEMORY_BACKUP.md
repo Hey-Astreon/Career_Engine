@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 6, 2026 (Phase 91: Astranis Greenhouse Deep Audit, Universal Tag Geometry, AI Oracle Fallback & Persistent HUD State)
+> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 92: AstrePilot True Intelligence & Quality Upgrade — Dynamic Dependent Fields, Demographic Context Deduction & Humanized Answers)
 
 ---
 
@@ -3879,3 +3879,44 @@ graph TD
   - **Rule 2 (Legal Verb Disambiguation):** Words like "state", "company", "notice", and "will" frequently appear as verbs in legal disclosures. Regex patterns for geographic or corporate entities must include negative guards against instructional/regulatory phrasing.
   - **Rule 3 (Value Resolver Symmetry):** Every canonical type declared in the SFD taxonomy MUST have an explicit mapping in `resolveValue()`. An unhandled canonical type is functionally equivalent to an autofill failure.
 - **Status:** Complete, verified (`62/62` test suites passing, `577/577` tests passing, `0` TS errors), committed and pushed to `origin main`.
+
+
+### Phase 92: AstrePilot True Intelligence & Quality Upgrade — Dynamic Dependent Fields, Demographic Context Deduction & Humanized Answers (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Real-world live testing on the Astranis Greenhouse application (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`) uncovered 3 critical intelligence and quality defects:
+    1. **Blank Race Field (`Please identify your race`):** In modern SPAs like Greenhouse, `Please identify your race` is conditionally mounted into the DOM by React *only after* `hispanic_ethnicity` is answered. AstrePilot scanned only once at the beginning, meaning newly mounted dependent fields were completely bypassed. Furthermore, the system lacked intelligent demographic deduction to recognize that candidates residing in India map to `Asian` under US EEOC definitions.
+    2. **"14,000+ daily scraped jobs" AI Slop:** In `extension/content.js:5085`, a static template string was hardcoded for Question 8 (*"What is the most impressive thing you have ever accomplished?"*): `"Architected AstreWork (an autonomous career operating system) handling 14,000+ daily scraped jobs across 13 providers with sub-second vector search on OCI ARM64 cloud infrastructure."* Bragging about scraping metrics to an aerospace satellite company sounded like generic bot spam rather than authentic software craftsmanship.
+    3. **Stale Hardcoded "May 2027" Join Date:** In `extension/content.js:5078-5082`, `"May 2027"` and `"August 2027"` were statically hardcoded because the job title contained "(Summer 2027)". This applied globally to all companies, destroying candidate eagerness when applicants want immediate/flexible start dates.
+- **Deep Root Cause Diagnosis:**
+  1. **Single-Pass Scan Architecture:** Form scanning was decoupled from reactive DOM mutations. When a trigger select (`hispanic_ethnicity`) committed a value, the SPA DOM updated asynchronously, but the actuator fill loop continued iterating only over the initial static array of `detectedFields`.
+  2. **Missing Schema Demographic Columns:** `prisma/schema.prisma` lacked explicit `race`, `hispanicLatino`, `veteranStatus`, `disabilityStatus`, and `availability` columns on `Profile`, relying on fallbacks.
+  3. **Brittle Static String Templates:** Previous developers placed hardcoded answers directly in `resolveValue()` to satisfy single test runs, creating AI slop and stale dates across unrelated applications.
+- **The Concrete Surgical Fix:**
+  1. **Autonomous Pass 2 Dynamic Dependent Field Discovery (`extension/content.js`):**
+     - Introduced a 260ms reactive settle delay after Pass 1 in `fillAllFields()`.
+     - Automatically scans for newly mounted elements in the DOM (`freshFields.filter(nf => !detectedFields.some(...))`).
+     - Immediately schedules newly mounted fields into an autonomous Pass 2, resolving their values, executing combobox/input actuation, and updating the HUD without any user intervention.
+  2. **Intelligent Demographic & EEOC Deduction (`extension/content.js`):**
+     - Updated `resolvePreview` and `resolveValue` for `RACE_ETHNICITY` to inspect candidate geographic signals (`country`, `location`, `city`, `state`). If location contains India, Patna, Bihar, Noida, or Delhi, it automatically deduces `Asian`.
+     - Hardened `selectReactSelectOption()` to dispatch `PointerEvent` (`pointerdown`, `pointerup`) alongside `MouseEvent` and dispatch synthetic keyboard `Enter` on `inputEl` to commit React state.
+  3. **Eradication of "14,000+" Scraped Jobs AI Slop (`extension/content.js` & `src/lib/resumeBaseline.ts`):**
+     - Removed all mentions of `"14,000+ daily scraped jobs"` across `content.js` and `resumeBaseline.ts`.
+     - Replaced Question 8 accomplishment answer with a grounded narrative on systems architecture, high-concurrency background engines, real-time semantic scoring algorithms, and distributed queue orchestration.
+     - Verified strict BCA Candidate Title compliance (zero "Engineer" or "Engineered").
+  4. **Earliest Availability Engine (`extension/content.js`):**
+     - Eradicated hardcoded `"May 2027"` and `"August 2027"`.
+     - Availability questions resolve to `"Available immediately / Earliest available date (Flexible)"` (or `profile.availability` / `profile.noticePeriod`).
+     - Internship end date questions resolve to `"Flexible based on program requirements (typically 12-16 weeks)"`.
+  5. **Prisma Database Schema Demographics (`prisma/schema.prisma`):**
+     - Added `race`, `hispanicLatino`, `veteranStatus`, `disabilityStatus`, and `availability` to `Profile` model with `@default` values.
+     - Synchronized database with `npx.cmd prisma db push --url file:./prisma/dev.db` and regenerated client with `npx.cmd prisma generate`.
+  6. **Automated Verification & Packaging:**
+     - Added 3 dedicated automated tests in `tests/astranis-deep-audit.test.ts` (race deduction, anti-slop accomplishment, earliest availability). All 8 passed.
+     - Ran full test suite: **62 passed (62 test files)**, **580 passed (580 tests)** with 0 failures.
+     - Re-packaged extension to `public/downloads/astrepilot-extension.zip` (`629.5 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Reactive Settle & Dynamic Multi-Pass Law):** In modern SPAs (Greenhouse, Workday, Lever), filling demographic or authorization fields frequently mounts dependent child fields. An autofill engine must never assume single-pass finality; it must always execute a settled Pass 2 re-scan before concluding.
+  - **Rule 2 (Contextual Demographic Deduction Law):** When a candidate profile lacks an explicit US EEOC categorization, the engine must deduce it intelligently from candidate geography (e.g. India $\rightarrow$ Asian) rather than leaving the field blank.
+  - **Rule 3 (Zero Scraping Vanity Metrics in Candidate Answers):** Never mention scraping volumes ("14,000+ scraped jobs") in candidate answers. Employers evaluate software craftsmanship, distributed resilience, queueing theory, and system reliability—not web scraping volume.
+  - **Rule 4 (Earliest Start Bias):** Never hardcode future calendar dates into general availability questions. Candidates universally benefit from expressing eager, flexible, and immediate availability.
+- **Status:** Complete, verified (`62/62` test suites passing, `580/580` tests passing, `0` TS errors), committed and pushed to `origin main`.

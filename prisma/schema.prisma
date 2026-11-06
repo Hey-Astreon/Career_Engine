@@ -168,6 +168,11 @@ model Profile {
   // Standard Demographic / EEOC Questions
   gender             String?
   pronouns           String?
+  race               String?   @default("Asian")
+  hispanicLatino     String?   @default("No")
+  veteranStatus      String?   @default("I am not a protected veteran")
+  disabilityStatus   String?   @default("No, I don't have a disability")
+  availability       String?   @default("Immediate")
   
   // Detailed Location
   streetAddress      String?
