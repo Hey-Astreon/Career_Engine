@@ -4553,9 +4553,6 @@
         }
       }
 
-      // Seamless dual-assurance: pre-download the tailored PDF directly to candidate's local Downloads folder
-      triggerClientDownload(blob, filename);
-
       return { success: true, filename: filename, size: data.size };
     } catch (err) {
       return { success: false, error: err.message || 'Synthetic injection failed' };

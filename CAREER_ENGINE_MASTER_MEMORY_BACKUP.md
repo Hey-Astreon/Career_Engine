@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 98: AstrePilot Infallible Local-First Resume Architecture, Eradication of Broken .txt Downloads & Google Careers Synthetic Upload Actuation)
+> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 99: Eradication of Rogue Autofill Resume Downloads & Strict Separation of File Upload vs. Local Download)
 
 ---
 
@@ -4145,3 +4145,25 @@ graph TD
   - **Rule 2 (The Chrome Download MIME Mutation Law):** When initiating downloads via `chrome.downloads.download({ url })`, never pass an HTTP URL that might return a `text/plain` or `text/html` error page. When Chrome encounters a non-PDF MIME type from a failing server endpoint, it will override the requested `.pdf` extension to `.txt` and display `"Couldn't download - Something went wrong"`. Always download via local Blob object URLs (`URL.createObjectURL(blob)`) or data URLs (`data:application/pdf;base64,...`) where the MIME type is locked to `application/pdf`.
   - **Rule 3 (The Accented Diacritic Regex Law):** Never use plain ASCII `.includes('resume')` when matching ATS UI buttons or headings. Tier-1 enterprise portals (Google, Workday, Lever) frequently spell it with French acute accents: `résumé` (`\u00e9`). Always normalize with `.normalize('NFD').replace(/[\u0300-\u036f]/g, '')` or match using `/r[eé]sum[eé]/i`.
 - **Status:** Complete, verified (`48/48` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [728.2 KB]), committed and pushed to `origin main`.
+
+### Phase 99: Eradication of Rogue Autofill Resume Downloads & Strict Separation of File Upload vs. Local Download (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - When clicking "Autofill" on Google Careers (`https://www.google.com/about/careers/applications/apply/...`), AstrePilot began filling the 16 form fields but simultaneously triggered an unprompted, unsolicited file download of the candidate's resume (`ROUSHAN_KUMAR_Resume_Job.pdf`) directly to the candidate's local computer.
+  - The candidate did not click the download icon in the HUD header, and never gave permission to download files to disk during autofill.
+- **Deep Root Cause Diagnosis:**
+  - In Phase 98, while implementing resume injection fallback for Google Careers split buttons, a rogue call to `triggerClientDownload(blob, filename)` was placed directly inside `injectResumeFile(targetEl)` in `extension/content.js` under the misguided assumption of "seamless dual-assurance".
+  - Because `injectResumeFile` is invoked automatically as part of `fillAllFields` whenever a `RESUME` field is detected in the form, Chrome's download manager was triggered every single time the user clicked "Autofill", downloading the PDF to disk without user intent or permission.
+- **The Concrete Surgical Fix:**
+  - **Excised Rogue Download from `injectResumeFile` (`extension/content.js`):**
+    - Completely removed `triggerClientDownload(blob, filename)` from line 4557 inside `injectResumeFile(targetEl)`.
+    - Form autofill now operates strictly in-memory: it converts the Base64 stream into a `File` object, populates `DataTransfer`, attaches it to the DOM's `input[type="file"]` (via `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'files').set`), and dispatches synthetic `input`, `change`, and `DragEvent` ('drop') events. Zero disk downloads are triggered.
+  - **Strict User-Initiated Download Gating:**
+    - Confirmed that `triggerClientDownload` is now EXCLUSIVELY invoked inside `runDownloadResume()` (line 6015), which is strictly bound to explicit user clicks on the HUD header download icon (`action-download-resume`) or user-invoked extension actions.
+  - **Repackaging & Verification:**
+    - Repackaged `public/downloads/astrepilot-extension.zip` via `node scripts/package-extension.js` (728.1 KB).
+    - Verified all 40 core tests passing (`vitest run tests/ats_drivers.test.ts tests/astrepilot-combobox-and-brain.test.ts tests/resume-synthetic-upload.test.ts`).
+    - Verified TypeScript typecheck (`npx tsc --noEmit`) with 0 errors.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (The Zero-Unprompted-Side-Effects Law):** An "Autofill" action must ONLY mutate in-page DOM inputs and form state. It must NEVER initiate host filesystem side-effects (such as downloading files to disk, printing, or clipboard copying) unless the user explicitly and intentionally clicked an action dedicated to that side-effect (e.g. the Download Resume icon).
+  - **Rule 2 (Strict Decoupling of In-Memory File Injection vs. File Download):** Synthetic file upload (`injectResumeFile`) and client file download (`triggerClientDownload`) must remain 100% decoupled in separate execution pipelines. Synthetic file injection feeds the target webpage's `HTMLInputElement` via `DataTransfer`; it must never call the browser's download manager.
+- **Status:** Complete, verified (`40/40` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [728.1 KB]), committed and pushed to `origin main`.
