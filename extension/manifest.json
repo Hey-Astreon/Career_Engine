@@ -53,7 +53,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["hud.shadow.css", "icons/*", "fonts/*", "styles/*"],
+      "resources": ["hud.shadow.css", "icons/*", "fonts/*", "styles/*", "resumes/*"],
       "matches": ["<all_urls>"]
     }
   ]

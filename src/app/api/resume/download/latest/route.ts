@@ -49,30 +49,37 @@ export async function GET(req: Request) {
     const candidateSlug = (url.searchParams.get("slug") || url.searchParams.get("candidate") || "").toLowerCase().trim();
 
     let profile = null;
-    if (userId) {
-      profile = await db.profile.findFirst({ where: { userId } });
+    try {
+      if (userId) {
+        profile = await db.profile.findFirst({ where: { userId } });
+      }
+
+      // Graceful founder fallback: allow verified founder profiles if unlinked in database
+      if (!profile && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
+        profile = await db.profile.findFirst({ where: { slug: candidateSlug } });
+      }
+
+      // Default to roushan if no profile found
+      if (!profile) {
+        profile = await db.profile.findFirst({ where: { slug: "roushan" } });
+      }
+    } catch (dbErr) {
+      console.warn("[Resume Download] Database lookup error, using founder fallback:", dbErr);
     }
 
-    // Graceful founder fallback: allow verified founder profiles if unlinked in database
-    if (!profile && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
-      profile = await db.profile.findFirst({ where: { slug: candidateSlug } });
+    let session = null;
+    try {
+      if (profile) {
+        session = await db.autopilotSession.findFirst({
+          where: { profileId: profile.id },
+          orderBy: { createdAt: "desc" },
+        });
+      }
+    } catch (sessionErr) {
+      console.warn("[Resume Download] Session lookup error:", sessionErr);
     }
 
-    // Default to roushan if no profile found
-    if (!profile) {
-      profile = await db.profile.findFirst({ where: { slug: "roushan" } });
-    }
-
-    if (!profile) {
-      return new NextResponse("Candidate profile not found", { status: 404, headers: CORS_HEADERS });
-    }
-
-    const session = await db.autopilotSession.findFirst({
-      where: { profileId: profile.id },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const normalizedSlug = (profile.slug || "roushan").toLowerCase();
+    const normalizedSlug = (profile?.slug || candidateSlug || "roushan").toLowerCase();
     const folder = normalizedSlug === "ayushi" ? "2_Ayushi_Raj" : "3_Roushan_Kumar";
     const defaultFileName = normalizedSlug === "ayushi" ? "Ayushi_Raj_Resume.pdf" : "Roushan_Kumar_Resume.pdf";
 
@@ -85,30 +92,47 @@ export async function GET(req: Request) {
     );
     const targetFileName = recommended.fileName || defaultFileName;
 
-    const basePath = path.join(process.cwd(), "public", "candidates", folder);
-    let resolvedPath = path.join(basePath, targetFileName);
+    // Robust multi-path resolution across dev, standalone build, and Docker ARM64 container
+    const possibleBasePaths = [
+      path.join(process.cwd(), "public", "candidates", folder),
+      path.join(process.cwd(), ".next", "standalone", "public", "candidates", folder),
+      path.resolve(process.cwd(), "..", "public", "candidates", folder),
+    ];
 
-    if (!fs.existsSync(resolvedPath)) {
-      resolvedPath = path.join(basePath, defaultFileName);
-    }
-
-    // Secondary fallback: find any PDF in candidate folder
-    if (!fs.existsSync(resolvedPath)) {
-      if (fs.existsSync(basePath)) {
-        const anyPdf = fs.readdirSync(basePath).find((f) => f.toLowerCase().endsWith(".pdf"));
+    let resolvedPath = "";
+    for (const bp of possibleBasePaths) {
+      if (fs.existsSync(bp)) {
+        const candidateFile = path.join(bp, targetFileName);
+        if (fs.existsSync(candidateFile)) {
+          resolvedPath = candidateFile;
+          break;
+        }
+        const defaultFile = path.join(bp, defaultFileName);
+        if (fs.existsSync(defaultFile)) {
+          resolvedPath = defaultFile;
+          break;
+        }
+        const anyPdf = fs.readdirSync(bp).find((f) => f.toLowerCase().endsWith(".pdf"));
         if (anyPdf) {
-          resolvedPath = path.join(basePath, anyPdf);
+          resolvedPath = path.join(bp, anyPdf);
+          break;
         }
       }
     }
 
-    if (!fs.existsSync(resolvedPath)) {
-      console.error(`[Resume Download] File not found on disk at: ${resolvedPath}`);
-      return new NextResponse("Resume file not found on disk", { status: 404 });
+    if (!resolvedPath || !fs.existsSync(resolvedPath)) {
+      console.error(`[Resume Download] File not found on disk for folder: ${folder}`);
+      return new NextResponse(JSON.stringify({ error: "Resume file not found on disk" }), {
+        status: 404,
+        headers: {
+          ...CORS_HEADERS,
+          "Content-Type": "application/json",
+        },
+      });
     }
 
     const fileBuffer = await fs.promises.readFile(resolvedPath);
-    const candidateName = profile.fullName?.replace(/[^a-zA-Z0-9]/g, "_") || "Candidate";
+    const candidateName = profile?.fullName?.replace(/[^a-zA-Z0-9]/g, "_") || (normalizedSlug === "ayushi" ? "AYUSHI_RAJ" : "ROUSHAN_KUMAR");
     const company = session?.company?.replace(/[^a-zA-Z0-9]/g, "_") || "Job";
     const downloadFileName = `${candidateName}_Resume_${company}.pdf`;
 

@@ -3201,6 +3201,42 @@
         wfSeen.forEach(el => seenElements.add(el));
       }
 
+      // Google Careers Resume Section Fast-Path
+      const host = (window.location.hostname || '').toLowerCase();
+      const href = (window.location.href || '').toLowerCase();
+      if (host.includes('google.com') && href.includes('/about/careers')) {
+        const fileInp = targetDoc.querySelector('input[type="file"]');
+        if (fileInp && !seenElements.has(fileInp)) {
+          seenElements.add(fileInp);
+          seenTypes['RESUME'] = true;
+          results.push({
+            element: fileInp,
+            type: 'RESUME',
+            id: 'resume_google_careers',
+            originalValue: '',
+            confidence: 0.99,
+            reasoning: 'Google Careers Resume File Upload'
+          });
+        } else {
+          const resumeBtn = Array.from(targetDoc.querySelectorAll('button, div[role="button"], [class*="VfPpkd-LgbsSe"]')).find(b => {
+            const txt = (b.textContent || '').trim().toLowerCase();
+            return txt.includes('upload from computer') || txt.includes('upload resume') || (b.getAttribute('aria-label') || '').toLowerCase().includes('resume');
+          });
+          if (resumeBtn && !seenElements.has(resumeBtn)) {
+            seenElements.add(resumeBtn);
+            seenTypes['RESUME'] = true;
+            results.push({
+              element: resumeBtn,
+              type: 'RESUME',
+              id: 'resume_google_careers_btn',
+              originalValue: '',
+              confidence: 0.98,
+              reasoning: 'Google Careers Resume Upload Action'
+            });
+          }
+        }
+      }
+
       // Deep Shadow DOM query: finds all standard & Web Component inputs across open shadow roots
       const inputs = deepQuerySelectorAll(targetDoc, COMBOBOX_QUERY);
       lastFormFingerprint = generateBrowserFormFingerprint(inputs);
@@ -4409,13 +4445,22 @@
         fileInput = targetEl;
       } else {
         fileInput = targetEl.querySelector('input[type="file"]') ||
-          (targetEl.closest('form, [class*="application"], body') && targetEl.closest('form, [class*="application"], body').querySelector('input[type="file"]'));
+          (targetEl.closest('form, [class*="application"], body') && targetEl.closest('form, [class*="application"], body').querySelector('input[type="file"]')) ||
+          document.querySelector('input[type="file"]');
       }
 
       if (fileInput) {
         try {
-          fileInput.files = dt.files;
-        } catch (filesErr) {}
+          const proto = window.HTMLInputElement.prototype;
+          const descriptor = Object.getOwnPropertyDescriptor(proto, 'files');
+          if (descriptor && descriptor.set) {
+            descriptor.set.call(fileInput, dt.files);
+          } else {
+            fileInput.files = dt.files;
+          }
+        } catch (filesErr) {
+          try { fileInput.files = dt.files; } catch (e) {}
+        }
         fileInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
         fileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
       }
@@ -5904,7 +5949,7 @@
         const resumeFields = (detectedFields || []).filter(f => f.type === 'RESUME');
         let targetEl = resumeFields.length > 0 ? resumeFields[0].element : null;
         if (!targetEl) {
-          targetEl = document.querySelector('input[type="file"], [class*="dropzone"], [data-automation-id*="upload"]');
+          targetEl = document.querySelector('input[type="file"], [class*="dropzone"], [data-automation-id*="upload"], button[aria-label*="resume" i], [aria-label*="upload" i]');
         }
 
         if (targetEl) {
@@ -5912,9 +5957,21 @@
             const file = new File([blob], filename, { type: mimeType, lastModified: Date.now() });
             const dt = new DataTransfer();
             dt.items.add(file);
-            let fileInput = targetEl.tagName === 'INPUT' && targetEl.type === 'file' ? targetEl : targetEl.querySelector('input[type="file"]');
+            let fileInput = targetEl.tagName === 'INPUT' && targetEl.type === 'file'
+              ? targetEl
+              : targetEl.querySelector('input[type="file"]') || document.querySelector('input[type="file"]');
             if (fileInput) {
-              try { fileInput.files = dt.files; } catch (e) {}
+              try {
+                const proto = window.HTMLInputElement.prototype;
+                const descriptor = Object.getOwnPropertyDescriptor(proto, 'files');
+                if (descriptor && descriptor.set) {
+                  descriptor.set.call(fileInput, dt.files);
+                } else {
+                  fileInput.files = dt.files;
+                }
+              } catch (filesErr) {
+                try { fileInput.files = dt.files; } catch (e) {}
+              }
               fileInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
               fileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
             }

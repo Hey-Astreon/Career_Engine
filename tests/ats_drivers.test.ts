@@ -90,6 +90,11 @@ describe('ATS Driver Registry & Detection', () => {
     expect(engine).toBe('WELLFOUND');
   });
 
+  it('correctly detects Google Careers from URL', () => {
+    const engine = detectAtsEngine('https://www.google.com/about/careers/applications/jobs/results/12345');
+    expect(engine).toBe('GOOGLE_CAREERS');
+  });
+
   it('falls back to GENERIC for unknown job board URLs', () => {
     const engine = detectAtsEngine('https://careers.somecompany.com/apply/now');
     expect(engine).toBe('GENERIC');

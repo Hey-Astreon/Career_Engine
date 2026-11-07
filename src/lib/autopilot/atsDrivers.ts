@@ -669,6 +669,7 @@ export function detectAtsEngine(url: string, htmlSnippet: string = ''): string {
   if (target.includes('taleo.net') || target.includes('oraclecloud.com') || domText.includes('taleo')) return 'TALEO';
   if (target.includes('breezy.hr') || domText.includes('breezy.hr')) return 'BREEZY';
   if (target.includes('wellfound.com') || domText.includes('wellfound')) return 'WELLFOUND';
+  if (target.includes('google.com/about/careers') || target.includes('careers.google.com') || domText.includes('google careers')) return 'GOOGLE_CAREERS';
   return 'GENERIC';
 }
 

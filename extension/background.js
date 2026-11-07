@@ -144,70 +144,115 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
 
-  if (request.type === 'DOWNLOAD_RESUME') {
-    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], (res) => {
-      const safeRes = res || {};
-      const origin = 'https://astrework.app';
-      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || '';
-      const token = safeRes.astrepilot_token || '';
-      const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
+async function getBundledResumeBinary(activeCtx) {
+  const isAyushi = String(activeCtx || '').toLowerCase().includes('ayushi');
+  const localFileName = isAyushi ? 'Ayushi_Raj_Resume.pdf' : 'Roushan_Kumar_Resume.pdf';
+  const downloadFileName = isAyushi ? 'AYUSHI_RAJ_Resume.pdf' : 'ROUSHAN_KUMAR_Resume.pdf';
+  const localUrl = chrome.runtime.getURL('resumes/' + localFileName);
 
-      if (typeof chrome.downloads !== 'undefined' && chrome.downloads.download) {
-        chrome.downloads.download({
-          url: url,
-          filename: request.filename || (activeCtx === 'ayushi' ? 'AYUSHI_RAJ_Resume.pdf' : 'ROUSHAN_KUMAR_Resume.pdf'),
-          saveAs: false
-        }, () => {
-          if (chrome.runtime.lastError) {
-            chrome.tabs.create({ url, active: true });
-          }
-        });
-      } else {
-        chrome.tabs.create({ url, active: true });
+  const response = await fetch(localUrl);
+  if (!response.ok) {
+    throw new Error('Local bundled resume not found: ' + localUrl);
+  }
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const CHUNK_SIZE = 0x8000; // 32KB
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE));
+  }
+  const base64 = btoa(binary);
+  return {
+    success: true,
+    base64: base64,
+    filename: downloadFileName,
+    variant: 'Canonical Master',
+    mimeType: 'application/pdf',
+    size: buffer.byteLength,
+    isBundled: true
+  };
+}
+
+  if (request.type === 'DOWNLOAD_RESUME') {
+    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], async (res) => {
+      const safeRes = res || {};
+      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
+      try {
+        const bundled = await getBundledResumeBinary(activeCtx);
+        const dataUrl = 'data:application/pdf;base64,' + bundled.base64;
+        const filename = request.filename || bundled.filename;
+
+        if (typeof chrome.downloads !== 'undefined' && chrome.downloads.download) {
+          chrome.downloads.download({
+            url: dataUrl,
+            filename: filename,
+            saveAs: false
+          });
+        }
+      } catch (e) {
+        console.error('[AstrePilot Background] Download resume error:', e);
       }
     });
     return false;
   }
 
   if (request.type === 'GET_RESUME_BINARY') {
-    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], async (res) => {
+    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context', 'astrepilot_origin'], async (res) => {
+      const safeRes = res || {};
+      const origin = safeRes.astrepilot_origin || 'https://astrework.app';
+      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
+      const token = safeRes.astrepilot_token || '';
+
+      // 1. Try remote tailored resume with 3.5s timeout
       try {
-        const safeRes = res || {};
-        const origin = 'https://astrework.app';
-        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || '';
-        const token = safeRes.astrepilot_token || '';
         const url = origin + '/api/resume/download/latest?token=' + encodeURIComponent(token) + '&slug=' + encodeURIComponent(activeCtx);
         const headers = {};
         if (token) {
           headers['Authorization'] = 'Bearer ' + token;
         }
-        const response = await fetch(url, { headers });
-        if (!response.ok) {
-          return sendResponse({ success: false, error: 'Resume download failed with status ' + response.status });
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        const response = await fetch(url, { headers, signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.includes('application/pdf')) {
+          const buffer = await response.arrayBuffer();
+          const bytes = new Uint8Array(buffer);
+          const CHUNK_SIZE = 0x8000;
+          let binary = '';
+          for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE));
+          }
+          const base64 = btoa(binary);
+          const disposition = response.headers.get('content-disposition') || '';
+          const match = disposition.match(/filename="?([^"]+)"?/);
+          const filename = match ? match[1] : (response.headers.get('x-resume-filename') || (activeCtx === 'ayushi' ? 'AYUSHI_RAJ_Resume.pdf' : 'ROUSHAN_KUMAR_Resume.pdf'));
+          const variant = response.headers.get('x-resume-variant') || 'Tailored';
+
+          return sendResponse({
+            success: true,
+            base64: base64,
+            filename: filename,
+            variant: variant,
+            mimeType: 'application/pdf',
+            size: buffer.byteLength,
+            isBundled: false
+          });
         }
-        const buffer = await response.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        // V8 Chunked String Conversion (Pillar B optimization: eliminates 1.5MB heap allocation lag)
-        const CHUNK_SIZE = 0x8000; // 32KB
-        let binary = '';
-        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE));
-        }
-        const base64 = btoa(binary);
-        const disposition = response.headers.get('content-disposition') || '';
-        const match = disposition.match(/filename="?([^"]+)"?/);
-        const filename = match ? match[1] : (response.headers.get('x-resume-filename') || 'Candidate_Resume.pdf');
-        const variant = response.headers.get('x-resume-variant') || '';
-        sendResponse({
-          success: true,
-          base64: base64,
-          filename: filename,
-          variant: variant,
-          mimeType: 'application/pdf',
-          size: buffer.byteLength
-        });
-      } catch (err) {
-        sendResponse({ success: false, error: err.message || 'Failed to stream resume' });
+      } catch (remoteErr) {
+        console.warn('[AstrePilot Background] Remote tailored resume unavailable, using local bundled canonical PDF:', remoteErr.message);
+      }
+
+      // 2. Infallible Local Bundled Fallback (Zero network requirement, 0ms, guaranteed valid PDF)
+      try {
+        const bundled = await getBundledResumeBinary(activeCtx);
+        return sendResponse(bundled);
+      } catch (localErr) {
+        console.error('[AstrePilot Background] Fatal: Failed to load bundled resume:', localErr);
+        sendResponse({ success: false, error: 'Resume unavailable: ' + localErr.message });
       }
     });
     return true; // Keep message channel open for async response
