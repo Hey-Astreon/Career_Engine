@@ -4129,16 +4129,19 @@ graph TD
      - In `extension/content.js` (`runDownloadResume`): Always downloads directly via `triggerClientDownload(blob, filename)` with the verified PDF blob. Never delegates to a failing remote URL.
      - In `injectResumeFile`: Broadened file input discovery to include `document.querySelector('input[type="file"]')` and Google Careers upload triggers. Uses `HTMLInputElement.prototype.files` property descriptor setter and dispatches synthetic input, change, and drag/drop events.
   3. **Google Careers Resume Fast-Path in `scanFields`:**
-     - Added dedicated Google Careers resume detector scanning for `input[type="file"]` and Material 3 upload buttons (`upload from computer`, `upload resume`, `aria-label*="resume"`), registering them with 0.99 confidence.
+     - Added dedicated Google Careers resume detector with full Unicode NFD accent normalization (`.normalize('NFD').replace(/[\u0300-\u036f]/g, '')`), defeating the French/Latin diacritic trap where Google's button `Upload résumé ▾` (`\u00e9`) failed naive ASCII `'resume'` matching.
+     - Added heading-based section card discovery targeting Google's `Résumé` container and dropzone.
+     - In `injectResumeFile`: Added automated Material 3 split-button click actuation to expose and trigger Google's `"Upload from computer"` submenu item, followed by synthetic Drag & Drop events and dual-assurance pre-download.
      - Added `GOOGLE_CAREERS` to `detectAtsEngine` in `src/lib/autopilot/atsDrivers.ts`.
   4. **Server Route `/api/resume/download/latest` Hardening:**
      - Added `CORS_HEADERS` to all error responses.
      - Added robust multi-path resolution (`public/candidates`, `.next/standalone/public/candidates`, relative paths).
      - Added unconditional founder fallback for `roushan` and `ayushi` even if the database is offline or unlinked.
   5. **Extension Packaged & Verified:**
-     - Repackaged `public/downloads/astrepilot-extension.zip` (727.1 KB).
+     - Repackaged `public/downloads/astrepilot-extension.zip` (728.2 KB).
      - Verified with TypeScript (`0 errors`) and Vitest (`48/48 core tests passing`).
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (The Local-First Infallibility Principle):** Never make a mission-critical browser extension feature (such as candidate resume injection or download) strictly dependent on an external server roundtrip. Always package a local canonical binary asset inside the extension bundle (`web_accessible_resources`) as an infallible tier.
   - **Rule 2 (The Chrome Download MIME Mutation Law):** When initiating downloads via `chrome.downloads.download({ url })`, never pass an HTTP URL that might return a `text/plain` or `text/html` error page. When Chrome encounters a non-PDF MIME type from a failing server endpoint, it will override the requested `.pdf` extension to `.txt` and display `"Couldn't download - Something went wrong"`. Always download via local Blob object URLs (`URL.createObjectURL(blob)`) or data URLs (`data:application/pdf;base64,...`) where the MIME type is locked to `application/pdf`.
-- **Status:** Complete, verified (`48/48` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [727.1 KB]), committed and pushed to `origin main`.
+  - **Rule 3 (The Accented Diacritic Regex Law):** Never use plain ASCII `.includes('resume')` when matching ATS UI buttons or headings. Tier-1 enterprise portals (Google, Workday, Lever) frequently spell it with French acute accents: `résumé` (`\u00e9`). Always normalize with `.normalize('NFD').replace(/[\u0300-\u036f]/g, '')` or match using `/r[eé]sum[eé]/i`.
+- **Status:** Complete, verified (`48/48` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [728.2 KB]), committed and pushed to `origin main`.

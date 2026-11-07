@@ -3201,10 +3201,13 @@
         wfSeen.forEach(el => seenElements.add(el));
       }
 
-      // Google Careers Resume Section Fast-Path
+      // Google Careers Resume Section Fast-Path (Accent-Aware: handles "Upload résumé ▾")
       const host = (window.location.hostname || '').toLowerCase();
       const href = (window.location.href || '').toLowerCase();
       if (host.includes('google.com') && href.includes('/about/careers')) {
+        const normalizeStr = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+        // 1. Check for explicit input[type="file"]
         const fileInp = targetDoc.querySelector('input[type="file"]');
         if (fileInp && !seenElements.has(fileInp)) {
           seenElements.add(fileInp);
@@ -3218,10 +3221,21 @@
             reasoning: 'Google Careers Resume File Upload'
           });
         } else {
-          const resumeBtn = Array.from(targetDoc.querySelectorAll('button, div[role="button"], [class*="VfPpkd-LgbsSe"]')).find(b => {
-            const txt = (b.textContent || '').trim().toLowerCase();
-            return txt.includes('upload from computer') || txt.includes('upload resume') || (b.getAttribute('aria-label') || '').toLowerCase().includes('resume');
+          // 2. Button with "Upload résumé" / "Upload resume" / "From computer" (handles accent marks: résumé vs resume)
+          const allButtons = Array.from(targetDoc.querySelectorAll('button, div[role="button"], [class*="VfPpkd-LgbsSe"], [class*="button"], a[role="button"]'));
+          const resumeBtn = allButtons.find(b => {
+            const normText = normalizeStr(b.textContent || b.innerText);
+            const normAria = normalizeStr(b.getAttribute('aria-label') || '');
+            return (
+              (normText.includes('upload') && normText.includes('resume')) ||
+              normText.includes('upload resume') ||
+              normText.startsWith('resume') ||
+              normText.includes('from computer') ||
+              (normAria.includes('upload') && normAria.includes('resume')) ||
+              normAria.includes('resume')
+            );
           });
+
           if (resumeBtn && !seenElements.has(resumeBtn)) {
             seenElements.add(resumeBtn);
             seenTypes['RESUME'] = true;
@@ -3233,6 +3247,31 @@
               confidence: 0.98,
               reasoning: 'Google Careers Resume Upload Action'
             });
+          } else {
+            // 3. Container-based fallback: look for the "Résumé" card container
+            const headings = Array.from(targetDoc.querySelectorAll('h1, h2, h3, h4, h5, h6, legend, [class*="title"], [class*="header"], strong, b'));
+            const resumeHeading = headings.find(h => {
+              const norm = normalizeStr(h.textContent);
+              return norm === 'resume' || norm.startsWith('resume') || norm.includes('resume');
+            });
+            if (resumeHeading) {
+              const card = (resumeHeading.closest && resumeHeading.closest('section, form, div[class*="card"], div[class*="section"], div[class*="container"]')) || resumeHeading.parentElement;
+              if (card) {
+                const btnInside = card.querySelector('button, div[role="button"], [class*="VfPpkd-LgbsSe"]') || card;
+                if (btnInside && !seenElements.has(btnInside)) {
+                  seenElements.add(btnInside);
+                  seenTypes['RESUME'] = true;
+                  results.push({
+                    element: btnInside,
+                    type: 'RESUME',
+                    id: 'resume_google_careers_card',
+                    originalValue: '',
+                    confidence: 0.95,
+                    reasoning: 'Google Careers Résumé Card Dropzone'
+                  });
+                }
+              }
+            }
           }
         }
       }
@@ -4445,8 +4484,31 @@
         fileInput = targetEl;
       } else {
         fileInput = targetEl.querySelector('input[type="file"]') ||
-          (targetEl.closest('form, [class*="application"], body') && targetEl.closest('form, [class*="application"], body').querySelector('input[type="file"]')) ||
+          (targetEl.closest && targetEl.closest('form, [class*="application"], body, section, div[class*="card"]') && targetEl.closest('form, [class*="application"], body, section, div[class*="card"]').querySelector('input[type="file"]')) ||
           document.querySelector('input[type="file"]');
+      }
+
+      // If file input not immediately found and target is a button (e.g. Google Careers "Upload résumé ▾"),
+      // click it to trigger dropdown menu or lazy-mount the hidden file input
+      if (!fileInput && (targetEl.tagName === 'BUTTON' || (targetEl.getAttribute && targetEl.getAttribute('role') === 'button') || (targetEl.className && String(targetEl.className).includes('VfPpkd-LgbsSe')))) {
+        try {
+          targetEl.click();
+          await new Promise(r => setTimeout(r, 180));
+
+          // Check if Google Careers dropdown menu opened with "Upload from computer"
+          const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], .VfPpkd-StrnGf-rymPhb, [class*="menu-item"], [class*="item"]'));
+          const computerOption = menuItems.find(mi => {
+            const txt = (mi.textContent || '').toLowerCase();
+            return txt.includes('computer') || txt.includes('upload') || txt.includes('device');
+          });
+          if (computerOption) {
+            computerOption.click();
+            await new Promise(r => setTimeout(r, 180));
+          }
+
+          fileInput = document.querySelector('input[type="file"]') ||
+            (targetEl.closest && targetEl.closest('section, form, div') && targetEl.closest('section, form, div').querySelector('input[type="file"]'));
+        } catch (menuErr) {}
       }
 
       if (fileInput) {
@@ -4465,24 +4527,34 @@
         fileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
       }
 
-      // Dispatch Drag & Drop events on dropzone wrapper if present
+      // Dispatch Drag & Drop events on dropzone wrapper and card if present
       const dropzone = targetEl.tagName === 'INPUT'
         ? (targetEl.closest('[class*="dropzone"], [data-automation-id*="upload"], [class*="resume-upload"], .file-upload, [id*="dropzone"]') || targetEl.parentElement)
         : targetEl;
 
-      if (dropzone && dropzone !== fileInput) {
+      const dropTargets = [dropzone, targetEl];
+      if (targetEl.closest) {
+        const card = targetEl.closest('section, div[class*="card"], div[class*="section"]');
+        if (card && !dropTargets.includes(card)) dropTargets.push(card);
+      }
+
+      for (const dEl of dropTargets) {
+        if (!dEl || dEl === fileInput) continue;
         try {
-          dropzone.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: dt }));
-          dropzone.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
-          dropzone.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+          dEl.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: dt }));
+          dEl.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+          dEl.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
         } catch (dragErr) {
           try {
             const dropEvt = new CustomEvent('drop', { bubbles: true, cancelable: true });
             dropEvt.dataTransfer = dt;
-            dropzone.dispatchEvent(dropEvt);
+            dEl.dispatchEvent(dropEvt);
           } catch (e) {}
         }
       }
+
+      // Seamless dual-assurance: pre-download the tailored PDF directly to candidate's local Downloads folder
+      triggerClientDownload(blob, filename);
 
       return { success: true, filename: filename, size: data.size };
     } catch (err) {
