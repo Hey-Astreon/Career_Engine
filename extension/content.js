@@ -228,6 +228,10 @@
     return new Promise((resolve) => {
       const timer = setTimeout(() => resolve({ success: true }), 400);
       try {
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+          clearTimeout(timer);
+          return resolve({ success: true });
+        }
         chrome.runtime.sendMessage({
           type: 'ACQUIRE_FILL_LOCK',
           url: window.location.href,
@@ -249,11 +253,15 @@
   function startFillHeartbeat() {
     if (fillHeartbeatTimer) clearInterval(fillHeartbeatTimer);
     fillHeartbeatTimer = setInterval(() => {
-      chrome.runtime.sendMessage({
-        type: 'HEARTBEAT_FILL_LOCK',
-        url: window.location.href,
-        ttlMs: 45000
-      });
+      try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({
+            type: 'HEARTBEAT_FILL_LOCK',
+            url: window.location.href,
+            ttlMs: 45000
+          });
+        }
+      } catch (e) {}
     }, 10000);
   }
 
@@ -262,10 +270,14 @@
       clearInterval(fillHeartbeatTimer);
       fillHeartbeatTimer = null;
     }
-    chrome.runtime.sendMessage({
-      type: 'RELEASE_FILL_LOCK',
-      url: window.location.href
-    }, () => {});
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({
+          type: 'RELEASE_FILL_LOCK',
+          url: window.location.href
+        }, () => {});
+      }
+    } catch (e) {}
     if (syncChannel) {
       try {
         syncChannel.postMessage({
@@ -281,6 +293,9 @@
   function cdpInput(action, params = {}) {
     return new Promise((resolve) => {
       try {
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+          return resolve({ success: false, error: 'Extension runtime unavailable' });
+        }
         chrome.runtime.sendMessage({
           type: 'CDP_DISPATCH_INPUT',
           action,
@@ -350,7 +365,9 @@
     }
     return false;
   };
-  chrome.runtime.onMessage.addListener(messageListener);
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+    try { chrome.runtime.onMessage.addListener(messageListener); } catch (e) {}
+  }
 
   let childFrameSource = null;
   let childFrameOrigin = null;
@@ -430,7 +447,9 @@
   }
 
   window.__ASTREPILOT_CLEANUP__ = () => {
-    chrome.runtime.onMessage.removeListener(messageListener);
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      try { chrome.runtime.onMessage.removeListener(messageListener); } catch (e) {}
+    }
     window.removeEventListener('message', windowMessageListener);
     if (syncChannel) {
       try { syncChannel.close(); } catch (e) {}
@@ -772,16 +791,23 @@
 
   async function getStoredConfig() {
     return new Promise((resolve) => {
+      if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) {
+        return resolve({
+          token: STANDALONE_PROFILES.roushan.token,
+          origin: 'https://astrework.app',
+          activeContext: 'roushan'
+        });
+      }
       chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (res) => {
         const safeRes = res || {};
         chrome.storage.local.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (localRes) => {
           const merged = { ...(localRes || {}), ...safeRes };
           const origin = 'https://astrework.app';
-          if (merged.astrepilot_origin !== origin) {
+          if (merged.astrepilot_origin !== origin && chrome.storage.sync) {
             chrome.storage.sync.set({ astrepilot_origin: origin });
           }
-          const activeCtx = merged.astrepilot_active_context || null;
-          const token = merged.astrepilot_token || null;
+          const activeCtx = merged.astrepilot_active_context || 'roushan';
+          const token = merged.astrepilot_token || STANDALONE_PROFILES.roushan.token;
           resolve({
             token,
             origin,
@@ -1285,12 +1311,23 @@
         if (forLabel) labelText = forLabel.textContent || '';
       } catch (e) {}
     }
-    // Check parent or sibling container label (crucial for iCIMS, Workday, Taleo table rows)
+    // Check parent or sibling container label (crucial for Greenhouse, Workday, Lever, Taleo)
     if (!labelText) {
-      const container = input.closest('.form-group, .field, .form-row, tr, div');
+      const container = input.closest('.select__container, .select, .field, .form-group, .form-row, [class*="field"], [class*="form-group"], tr');
       if (container) {
         const nearLabel = container.querySelector('label, .iCIMS_Label, .field-label, [class*="label" i]');
         if (nearLabel) labelText = nearLabel.textContent || '';
+      }
+      if (!labelText) {
+        let p = input.parentElement;
+        while (p && p !== ownerDoc.body && p !== ownerDoc.documentElement) {
+          const l = p.querySelector('label, [class*="label" i]');
+          if (l) {
+            labelText = l.textContent || '';
+            break;
+          }
+          p = p.parentElement;
+        }
       }
     }
     const placeholder = (input.placeholder || '').toLowerCase();
@@ -2535,7 +2572,7 @@
       { type: 'GENDER', selectors: ['#question_69351130', '[id*="question_"][aria-label*="gender" i]'] },
       { type: 'GENDER', selectors: ['#gender', 'input#gender', 'select#gender', '[name="gender"]', '[id="gender"]'] },
       { type: 'HISPANIC_LATINO', selectors: ['#hispanic_ethnicity', 'input#hispanic_ethnicity', 'select#hispanic_ethnicity', '[name*="hispanic"]'] },
-      { type: 'RACE_ETHNICITY', selectors: ['#race', 'input#race', 'select#race', '[name*="race" i]', '[id*="race" i]', '[id*="ethnicity" i]', '[aria-label*="race" i]'] },
+      { type: 'RACE_ETHNICITY', selectors: ['#race', 'input#race', 'select#race', 'input[name*="race" i]', 'select[name*="race" i]', '[id="race"]', '[name="race"]', '[aria-label*="race" i]'] },
       { type: 'VETERAN', selectors: ['#veteran_status', 'input#veteran_status', 'select#veteran_status', '[name*="veteran"]'] },
       { type: 'DISABILITY', selectors: ['#disability_status', 'input#disability_status', 'select#disability_status', '[name*="disability"]'] },
       { type: 'SCREENING_SELECT', selectors: ['#question_69351112'] },
@@ -2557,6 +2594,9 @@
         if (el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') {
           const inner = el.querySelector('input, select, textarea, [role="combobox"]');
           if (inner) interactive = inner;
+        }
+        if (!interactive || interactive.tagName === 'LABEL' || (interactive.tagName === 'INPUT' && interactive.type === 'hidden')) {
+          return;
         }
         seenElements.add(interactive);
         seenElements.add(el);
@@ -3313,7 +3353,7 @@
     'remote': ['remote', 'remote (us)', 'remote - us', 'remote - united states', 'remote / virtual', 'remote eligible', 'work from home', 'wfh', 'virtual', 'home-based', 'home based', 'anywhere', 'telecommute', 'flexible / remote']
   };
 
-  const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;
+  const PLACEHOLDER_REGEX = /^(\s*(--|—|select\b|choose\b|placeholder\b|please select\b|select an option\b))/i;
   const OTHER_FALLBACK_REGEX = /^(0\s*-\s*other|other\b|not listed\b|unlisted\b|not applicable\b|other institution\b|other school\b)/i;
 
   function resolveSemanticOptionMatch(options, targetVal, fieldType = '') {
@@ -3496,6 +3536,49 @@
         });
         if (match) return match;
       }
+    }
+
+    // Invariant: Month Resolution (e.g. July, August, 07, 7, May)
+    if (fieldType === 'START_MONTH' || fieldType === 'END_MONTH' || /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(targetLower)) {
+      const monthMap = {
+        'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+        'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'sept': 9, 'oct': 10, 'nov': 11, 'dec': 12
+      };
+      const monthNum = monthMap[targetLower] || parseInt(targetLower, 10);
+      if (monthNum && monthNum >= 1 && monthNum <= 12) {
+        const monthNames = ['', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        const mName = monthNames[monthNum];
+        const mShort = mName.slice(0, 3);
+        const mPad = String(monthNum).padStart(2, '0');
+        const mStr = String(monthNum);
+
+        const monthMatch = pool.find(o => {
+          const t = (o.textContent || o.text || '').trim().toLowerCase();
+          const v = (o.value || '').trim().toLowerCase();
+          return t === mName || t.includes(mName) || t.includes(mShort) || v === mStr || v === mPad || t === mStr || t === mPad;
+        });
+        if (monthMatch) return monthMatch;
+      }
+    }
+
+    // Invariant: Internship Season Resolution (e.g. Summer 2027, Fall 2027)
+    if (targetLower.includes('summer') || targetLower.includes('fall') || targetLower.includes('spring') || targetLower.includes('winter')) {
+      const cleanTarget = targetLower.replace(/[^a-z0-9]/g, '');
+      const seasonMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').trim().toLowerCase();
+        const cleanOpt = t.replace(/[^a-z0-9]/g, '');
+        return t === targetLower || cleanOpt === cleanTarget || cleanOpt.includes(cleanTarget) || cleanTarget.includes(cleanOpt);
+      });
+      if (seasonMatch) return seasonMatch;
+    }
+
+    if (fieldType === 'DEGREE' || fieldType === 'EDUCATION') {
+      const degMatch = pool.find(o => {
+        const t = (o.textContent || o.text || '').toLowerCase();
+        return t.includes("bachelor's") || t.includes('bachelor') || t.includes('undergraduate') || t.includes('other');
+      });
+      if (degMatch) return degMatch;
     }
 
     if (fieldType === 'VETERAN' || targetLower.includes('veteran')) {
@@ -3792,28 +3875,41 @@
       return await fillGeoAutocomplete(inputEl, targetVal);
     }
 
-    const container = (inputEl.closest && inputEl.closest('.select-shell, .select__container, [class*="react-select"], [class*="Select-control"], .select')) || inputEl.parentElement;
+    const container = (inputEl.closest && inputEl.closest('.select-shell, .select__container, [class*="react-select"], [class*="Select-control"], .select')) || (inputEl.classList && inputEl.classList.contains('select-shell') ? inputEl : inputEl.parentElement);
     if (!container) return false;
 
+    const actualInput = (inputEl.tagName === 'INPUT' ? inputEl : container.querySelector('input:not([type="hidden"])')) || container.querySelector('input') || inputEl;
     const control = container.querySelector('.select__control') || container;
     const doc = container.ownerDocument || document;
     const win = doc.defaultView || window;
 
     // Helper: query currently visible options from local container OR matching portal
     const getVisibleOptions = () => {
-      // 1. Check local container menu first
-      const localMenu = container.querySelector('.select__menu, [class*="menu"]');
+      // 1. Check matching listbox via input's aria-controls FIRST (strict target isolation)
+      const ariaControls = actualInput && actualInput.getAttribute ? actualInput.getAttribute('aria-controls') : null;
+      if (ariaControls) {
+        const ariaMenu = doc.getElementById(ariaControls);
+        if (ariaMenu) {
+          const ariaOpts = Array.from(ariaMenu.querySelectorAll('.select__option, [role="option"], div[id*="-option-"]')).filter(o => {
+            const txt = (o.textContent || o.text || '').trim();
+            return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
+          });
+          if (ariaOpts.length > 0) return ariaOpts;
+        }
+      }
+
+      // 2. Check local container menu (strictly .select__menu, avoiding control class with --menu-is-open!)
+      const localMenu = container.querySelector('.select__menu .select__menu-list, .select__menu');
       if (localMenu) {
-        const localOpts = Array.from(localMenu.querySelectorAll('.select__option, div[id*="-option-"]'));
-        const filtered = localOpts.filter(o => {
+        const localOpts = Array.from(localMenu.querySelectorAll('.select__option, [role="option"], div[id*="-option-"]')).filter(o => {
           const txt = (o.textContent || o.text || '').trim();
           return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
         });
-        if (filtered.length > 0) return filtered;
+        if (localOpts.length > 0) return localOpts;
       }
 
-      // 2. Check portal options strictly matching this input's id (strip '-input' suffix for React-Select v5)
-      const inputId = inputEl.id || '';
+      // 3. Check portal options strictly matching this input's id (strip '-input' suffix for React-Select v5)
+      const inputId = (actualInput && actualInput.id) || (inputEl && inputEl.id) || '';
       const baseInputId = inputId.replace(/-input$/, '');
       if (baseInputId) {
         const portalOpts = Array.from(doc.querySelectorAll(`div[id*="${baseInputId}-option-"]`)).filter(o => {
@@ -3823,21 +3919,8 @@
         if (portalOpts.length > 0) return portalOpts;
       }
 
-      // 3. Document fallback only if aria-controls on input matches menu
-      const ariaControls = inputEl.getAttribute ? inputEl.getAttribute('aria-controls') : null;
-      if (ariaControls) {
-        const ariaMenu = doc.getElementById(ariaControls);
-        if (ariaMenu) {
-          const ariaOpts = Array.from(ariaMenu.querySelectorAll('.select__option, div[id*="-option-"]')).filter(o => {
-            const txt = (o.textContent || o.text || '').trim();
-            return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
-          });
-          if (ariaOpts.length > 0) return ariaOpts;
-        }
-      }
-
-      // 4. Universal Document Portal fallback for active React-Select menu
-      const globalMenuOpts = Array.from(doc.querySelectorAll('.select__menu .select__option, .select__menu-list .select__option, div[class*="select__option"], div[id*="-option-"], [role="listbox"] [role="option"]')).filter(o => {
+      // 4. Global fallback ONLY for select__menu-list (NEVER generic [role="listbox"] which catches telephone country picker!)
+      const globalMenuOpts = Array.from(doc.querySelectorAll('.select__menu .select__option, .select__menu-list .select__option')).filter(o => {
         const txt = (o.textContent || o.text || '').trim();
         return txt.length > 0 && !PLACEHOLDER_REGEX.test(txt);
       });
@@ -3847,94 +3930,108 @@
     };
 
     // Helper: check if a valid selection has already been rendered in this container
+    // MANDATORY LAW: Never verify by checking inputEl.value!
     const isContainerPopulated = () => {
       const single = container.querySelector('.select__single-value, [class*="singleValue"], .select__multi-value__label, [class*="multiValue"]');
       if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
       if (single && single.getAttribute('data-astrework-display')) return true;
       const req = container.querySelector('input[class*="requiredInput"]');
       if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
-      if (inputEl.value && inputEl.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(inputEl.value.trim())) return true;
       return false;
     };
 
     // Helper: simulate typing to trigger search/filter in React-Select
-    const typeSearchString = (searchStr) => {
-      if (!inputEl || inputEl.tagName !== 'INPUT' || inputEl.readOnly) return;
+    const typeSearchString = async (searchStr) => {
+      if (!actualInput || actualInput.tagName !== 'INPUT' || actualInput.readOnly) return;
       try {
-        inputEl.focus();
-        const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(inputEl);
+        actualInput.focus();
+        const proto = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(actualInput);
         const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
         if (setter) {
-          setter.call(inputEl, '');
+          setter.call(actualInput, '');
         } else {
-          inputEl.value = '';
+          actualInput.value = '';
         }
-        if (inputEl._valueTracker) inputEl._valueTracker.setValue('__clear__');
-        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        if (actualInput._valueTracker) actualInput._valueTracker.setValue('__clear__');
+        actualInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-        let typed = false;
-        try {
-          typed = doc.execCommand && doc.execCommand('insertText', false, searchStr);
-        } catch (e) {}
-        if (!typed) {
-          if (setter) {
-            setter.call(inputEl, searchStr);
-          } else {
-            inputEl.value = searchStr;
+        if (searchStr) {
+          // Attempt hardware CDP typing first for native React event fidelity
+          const cdpRes = await cdpInput('TYPE', { text: searchStr, delay: 30 });
+          if (!cdpRes || !cdpRes.success) {
+            let typed = false;
+            try {
+              typed = doc.execCommand && doc.execCommand('insertText', false, searchStr);
+            } catch (e) {}
+            if (!typed) {
+              if (setter) {
+                setter.call(actualInput, searchStr);
+              } else {
+                actualInput.value = searchStr;
+              }
+              if (actualInput._valueTracker) actualInput._valueTracker.setValue('');
+              actualInput.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
+              actualInput.dispatchEvent(new Event('input', { bubbles: true }));
+              actualInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
           }
-          if (inputEl._valueTracker) inputEl._valueTracker.setValue('');
-          inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: searchStr }));
-          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-          inputEl.dispatchEvent(new Event('change', { bubbles: true }));
         }
       } catch (e) {}
     };
 
-    // Helper: open the dropdown menu cleanly without toggle collisions
+    // Helper: open the dropdown menu cleanly with Keyboard ArrowDown as PRIMARY actuator
     const openMenu = async () => {
       cleanupLingeringPopovers();
       let opts = getVisibleOptions();
       if (opts.length > 0) return opts;
 
-      // Click the select control directly with full mouse sequence
+      // 1. Primary Actuation: ArrowDown keydown + keyup on actualInput (Verified 100% reliable on Greenhouse React-Select)
       try {
-        control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: win }));
-        control.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: win }));
-        control.click();
+        actualInput.scrollIntoView({ behavior: 'instant', block: 'center' });
+        actualInput.focus();
+        actualInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, which: 40, bubbles: true }));
+        actualInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, which: 40, bubbles: true }));
       } catch (e) {}
 
-      // Wait up to 600ms for options to mount and stabilize
+      // 2. Secondary Actuation: Click the flyout indicator button if present
+      const flyoutBtn = container.querySelector('button[aria-label*="flyout"], button[aria-label*="Toggle"], .select__dropdown-indicator');
+      if (flyoutBtn) {
+        try { flyoutBtn.click(); } catch (e) {}
+      }
+
+      // Wait up to 350ms for options to mount and stabilize
       const start = Date.now();
       let lastCount = 0;
-      while (Date.now() - start < 600) {
+      while (Date.now() - start < 350) {
         opts = getVisibleOptions();
         if (opts.length > 0) {
           if (opts.length === lastCount) break;
           lastCount = opts.length;
         }
-        await new Promise(r => setTimeout(r, 60));
+        await new Promise(r => setTimeout(r, 40));
       }
 
-      // If still not open, try direct focus on input and ArrowDown
+      // 3. Tertiary Escalation: Hardware CDP Click on control center if still closed
       if (opts.length === 0) {
         try {
-          if (doc.activeElement !== inputEl) inputEl.focus();
-          inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }));
-        } catch (e) {}
-
-        const start2 = Date.now();
-        while (Date.now() - start2 < 600) {
-          opts = getVisibleOptions();
-          if (opts.length > 0) {
-            if (opts.length === lastCount) break;
-            lastCount = opts.length;
+          const rect = control.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            await cdpInput('CLICK', {
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2
+            });
+            const start3 = Date.now();
+            while (Date.now() - start3 < 350) {
+              opts = getVisibleOptions();
+              if (opts.length > 0) break;
+              await new Promise(r => setTimeout(r, 50));
+            }
           }
-          await new Promise(r => setTimeout(r, 60));
-        }
+        } catch (e) {}
       }
 
-      // If menu list is scrollable, ensure bottom options (e.g. "None of the above.") are populated
-      const menuList = container.querySelector('.select__menu-list');
+      // Scrollable menu list bottom visibility
+      const menuList = container.querySelector('.select__menu-list') || doc.querySelector('.select__menu-list');
       if (menuList && menuList.scrollHeight > menuList.clientHeight) {
         try {
           menuList.scrollTop = menuList.scrollHeight;
@@ -3953,20 +4050,21 @@
     for (const singleVal of targets) {
       if (!singleVal) continue;
 
-      // 1. Open the dropdown
+      // Open the dropdown
       let options = await openMenu();
 
-      let matchedOption = null;
+      // 1. First, attempt semantic matching on the FULL open option pool
+      let matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
 
-      // 2. Specialized School handling (Amity University / Unlisted institutions)
-      if (fieldType === 'SCHOOL' || singleVal.toLowerCase().includes('amity') || singleVal.toLowerCase().includes('university')) {
+      // 2. School fallback: if searching for university (Amity) and not in initial pool, type to search
+      if (!matchedOption && (fieldType === 'SCHOOL' || singleVal.toLowerCase().includes('amity') || singleVal.toLowerCase().includes('university'))) {
         let schoolOpt = options.find(o => (o.textContent || '').trim().toLowerCase().includes('amity'));
         if (!schoolOpt) {
-          typeSearchString('Other');
+          await typeSearchString('Other');
           const startOther = Date.now();
-          while (Date.now() - startOther < 3500) {
+          while (Date.now() - startOther < 2500) {
             const curOpts = getVisibleOptions();
-            const menuEl = container.querySelector('.select__menu, .select__menu-list');
+            const menuEl = container.querySelector('.select__menu, .select__menu-list') || doc.querySelector('.select__menu, .select__menu-list');
             const isLoading = menuEl && menuEl.querySelector('.select__menu-notice--loading');
             if (!isLoading) {
               schoolOpt = curOpts.find(o => (o.textContent || o.text || '').trim().toLowerCase() === 'other') ||
@@ -3974,136 +4072,85 @@
                 curOpts.find(o => OTHER_FALLBACK_REGEX.test((o.textContent || o.text || '').trim()));
               if (schoolOpt) break;
             }
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 80));
           }
         }
         if (schoolOpt) {
           matchedOption = schoolOpt;
+        } else {
+          await typeSearchString('');
         }
       }
 
-      // 3. Attempt semantic matching on currently visible options if not already matched
-      if (!matchedOption) {
-        matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
-      }
-
-      // 4. If no match and input is searchable, TYPE the target string to filter!
-      const searchStr = String(singleVal).trim();
-      if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
-        typeSearchString(searchStr);
+      // 3. Non-destructive typeSearch only if STILL not matched
+      if (!matchedOption && actualInput.tagName === 'INPUT' && !actualInput.readOnly) {
+        const searchStr = String(singleVal).replace(/[.,]/g, '').trim();
+        await typeSearchString(searchStr);
         const searchStart = Date.now();
-        while (Date.now() - searchStart < 600) {
+        while (Date.now() - searchStart < 500) {
+          const curOpts = getVisibleOptions();
+          matchedOption = resolveSemanticOptionMatch(curOpts, singleVal, fieldType);
+          if (matchedOption) {
+            options = curOpts;
+            break;
+          }
+          await new Promise(r => setTimeout(r, 50));
+        }
+
+        // If typing destroyed options with 0 matches, reset search input to restore full pool!
+        if (!matchedOption) {
+          await typeSearchString('');
+          await new Promise(r => setTimeout(r, 100));
           options = getVisibleOptions();
           matchedOption = resolveSemanticOptionMatch(options, singleVal, fieldType);
-          if (matchedOption) break;
-          await new Promise(r => setTimeout(r, 60));
         }
       }
 
-      // Degree fallback: if BCA not in list, select "Bachelor's Degree" or "Bachelor's" or "Other"
-      if (!matchedOption && (fieldType === 'DEGREE' || fieldType === 'EDUCATION')) {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes("bachelor's") || t.includes('bachelor') || t.includes('undergraduate') || t.includes('other');
-        });
-      }
-
-      // Discipline fallback: if not in list, select Computer Science or Other
-      if (!matchedOption && fieldType === 'DISCIPLINE') {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('computer science') || t.includes('information technology') || t.includes('software') || t.includes('computing') || t.includes('other');
-        });
-        if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
-          typeSearchString('Computer Science');
-          await new Promise(r => setTimeout(r, 300));
-          options = getVisibleOptions();
-          matchedOption = options.find(o => {
-            const t = (o.textContent || o.text || '').toLowerCase();
-            return t.includes('computer science') || t.includes('other');
-          });
-        }
-      }
-
-      // Graduation Year fallback: if 2028 not in list, select closest future year
-      if (!matchedOption && (fieldType === 'GRADUATION_YEAR' || singleVal === '2028' || singleVal === '2026')) {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('2028') || t.includes('2027') || t.includes('already graduated');
-        });
-      }
-
-      // Consent / Privacy fallback
-      if (!matchedOption && (fieldType === 'PRIVACY_CONSENT' || singleVal.toLowerCase().includes('agree') || singleVal.toLowerCase() === 'yes')) {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('i accept') || t.includes('i agree') || t.includes('agree') || t === 'yes' || t.includes('acknowledge');
-        });
-      }
-
-      // Product fallback: Riot Games / Tech products
-      if (!matchedOption && (fieldType === 'SCREENING_SELECT' || singleVal.toLowerCase().includes('league'))) {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t.includes('league of legends') || t.includes('valorant') || t.includes('technology');
-        });
-      }
-
-      // Space technology / Export regulations fallback ("None of the above.")
-      if (!matchedOption && singleVal.toLowerCase().includes('none of the above')) {
-        matchedOption = options.find(o => (o.textContent || o.text || '').toLowerCase().includes('none of the above')) ||
-                        container.querySelector('div[id*="-option-4"], div[id*="none" i]');
-      }
-
-      // Preferred Office / Workplace / Remote fallback
-      if (!matchedOption && (fieldType === 'PREFERRED_LOCATION' || fieldType === 'WORKPLACE_TYPE' || singleVal.toLowerCase() === 'remote')) {
-        matchedOption = options.find(o => {
-          const t = (o.textContent || o.text || '').toLowerCase();
-          return t === 'remote' || t.startsWith('remote') || t.includes('remote') || t.includes('virtual') || t.includes('work from home');
-        });
-        if (!matchedOption && inputEl.tagName === 'INPUT' && !inputEl.readOnly) {
-          typeSearchString('Remote');
-          await new Promise(r => setTimeout(r, 300));
-          options = getVisibleOptions();
-          matchedOption = options.find(o => {
-            const t = (o.textContent || o.text || '').toLowerCase();
-            return t.includes('remote');
-          });
-        }
-        if (!matchedOption) {
-          // If no remote option at all, select first non-placeholder office so required field is never blank
-          matchedOption = options.find(o => {
-            const t = (o.textContent || o.text || '').trim();
-            return t.length > 0 && !PLACEHOLDER_REGEX.test(t);
-          });
-        }
-      }
-
-      // 5. Click the matched option with full Pointer + Mouse sequence
+      // 4. Click the matched option with Synthetic Sequence + CDP Escalation
       if (matchedOption) {
+        matchedOption.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+        await new Promise(r => setTimeout(r, 40));
         const optWin = matchedOption.ownerDocument?.defaultView || win;
+        const optRect = matchedOption.getBoundingClientRect();
+        const eventInit = {
+          bubbles: true,
+          cancelable: true,
+          view: optWin,
+          clientX: optRect.left + optRect.width / 2,
+          clientY: optRect.top + optRect.height / 2,
+          button: 0,
+          buttons: 1,
+        };
         try {
           if (typeof optWin.PointerEvent === 'function') {
-            matchedOption.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: optWin }));
+            matchedOption.dispatchEvent(new PointerEvent('pointerdown', eventInit));
           }
-          matchedOption.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: optWin }));
+          matchedOption.dispatchEvent(new MouseEvent('mousedown', eventInit));
           if (typeof optWin.PointerEvent === 'function') {
-            matchedOption.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: optWin }));
+            matchedOption.dispatchEvent(new PointerEvent('pointerup', eventInit));
           }
-          matchedOption.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: optWin }));
-          matchedOption.click();
+          matchedOption.dispatchEvent(new MouseEvent('mouseup', eventInit));
+          matchedOption.dispatchEvent(new MouseEvent('click', eventInit));
         } catch (e) {}
 
-        // Commit keyboard selection on inputEl for React 18/19 custom comboboxes
-        try {
-          if (inputEl) {
-            inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-            inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-          }
-        } catch (e) {}
+        await new Promise(r => setTimeout(r, 150));
 
-        await new Promise(r => setTimeout(r, 180));
-        anySuccess = true;
+        // If synthetic click failed to mount single-value, escalate to CDP Hardware Click!
+        if (!isContainerPopulated()) {
+          try {
+            if (optRect.width > 0 && optRect.height > 0) {
+              await cdpInput('CLICK', {
+                x: optRect.left + optRect.width / 2,
+                y: optRect.top + optRect.height / 2
+              });
+              await new Promise(r => setTimeout(r, 150));
+            }
+          } catch (e) {}
+        }
+
+        if (isContainerPopulated()) {
+          anySuccess = true;
+        }
 
         // Visual perfection for custom / unlisted schools (e.g. Amity University)
         if (fieldType === 'SCHOOL' && (singleVal.toLowerCase().includes('amity') || singleVal.toLowerCase().includes('university'))) {
@@ -4309,6 +4356,9 @@
     return new Promise((resolve) => {
       try {
         const activeCtx = userProfile ? (userProfile.slug || 'roushan') : 'roushan';
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+          return resolve({ success: false, error: 'Extension runtime unavailable' });
+        }
         chrome.runtime.sendMessage({ type: 'GET_RESUME_BINARY', activeContext: activeCtx }, (res) => {
           if (chrome.runtime.lastError) {
             resolve({ success: false, error: chrome.runtime.lastError.message });
@@ -4404,6 +4454,9 @@
         const jobTitle = (activeSession && activeSession.jobTitle) ? activeSession.jobTitle : '';
         const jdText = (activeSession && activeSession.jdText) || extractPageContent();
 
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+          return resolve({ success: false, error: 'Extension runtime unavailable' });
+        }
         chrome.runtime.sendMessage({
           type: 'GET_COVER_LETTER_BINARY',
           activeContext: activeCtx,
@@ -5155,19 +5208,6 @@
           return 'Flexible based on program requirements (typically 12-16 weeks)';
         }
 
-        const isAyushi = (profile && profile.fullName && profile.fullName.toLowerCase().includes('ayushi')) || (profile && profile.email && profile.email.toLowerCase().includes('ayushi'));
-
-        if (qLower.includes('most impressive thing you have ever accomplished') || (qLower.includes('impressive') && qLower.includes('accomplished'))) {
-          return isAyushi
-            ? 'Co-developing AstreWork and leading its frontend architecture. I built a responsive, accessible career dashboard using React 19 and Tailwind CSS, focusing on clean information density, smooth micro-interactions, and sub-100ms client state transitions. Creating an interface that makes complex job tracking effortless for users has been my most rewarding engineering accomplishment.'
-            : 'Building AstreWork and running it live in production on an Oracle Cloud ARM64 server. I designed the platform from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea all the way to a functioning platform that people actually rely on has been my proudest technical milestone.';
-        }
-        if (qLower.includes('complex project') || qLower.includes('impressive and complex project')) {
-          return isAyushi
-            ? 'I built the frontend autofill HUD for the AstrePilot extension using closed Shadow DOM encapsulation, TypeScript, and React 19. The core challenge was rendering a persistent floating cockpit inside arbitrary third-party web pages without having host website CSS styles bleed in or break the layout. I solved this by isolating all styling within a closed Shadow Root and building a lightweight custom event bridge for host page coordination.'
-            : 'I developed AstrePilot, a browser extension built with Manifest V3, React 19, and TypeScript that automates complex job application workflows across dynamic single-page applications. As the lead developer, the hardest technical challenge was reliably writing values into virtual-DOM-managed forms (like React 19 and Greenhouse comboboxes) where standard DOM value assignments are immediately overwritten by internal state trackers. To solve this, I designed a multi-tier write actuator combining synthetic input events, native property descriptors, and keyboard event simulation, ensuring high-fidelity input persistence across custom dropdowns and dynamic forms.';
-        }
-
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
         const jobTitle = session && session.jobTitle ? session.jobTitle : '';
 
@@ -5227,10 +5267,66 @@
           }
         } catch (e) {}
 
-        // Autonomous Offline Fallback for Screening Questions
+        // Autonomous Offline Grounded Multi-Story Resolver for Screening Questions
+        const isAyushi = (profile && profile.slug === 'ayushi') || (profile && /ayushi/i.test(profile.fullName || ''));
+
+        // Topic 1: Most Impressive Accomplishment / Greatest Achievement / Proudest Milestone
+        if (
+          qLower.includes('accomplish') ||
+          qLower.includes('proudest') ||
+          qLower.includes('achievement') ||
+          qLower.includes('success') ||
+          qLower.includes('biggest impact')
+        ) {
+          return isAyushi
+            ? "Designing and shipping AstreWork's frontend architecture and responsive design system has been my proudest technical milestone. I built a 6-stage Shadow DOM interface and real-time ATS resume canvas, ensuring sub-frame render times, full keyboard accessibility, and a seamless candidate experience."
+            : "Building AstreWork and running it live in production on an Oracle Cloud ARM64 server has been my proudest technical achievement. I engineered the system from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea to a functioning platform that people actually rely on has been deeply rewarding.";
+        }
+
+        // Topic 2: Most Complex Project / Hardest Technical Challenge
+        if (
+          qLower.includes('complex project') ||
+          qLower.includes('impressive project') ||
+          qLower.includes('impressive and complex') ||
+          qLower.includes('technical challenge') ||
+          qLower.includes('project you have worked on') ||
+          qLower.includes('past project') ||
+          qLower.includes('school project')
+        ) {
+          return isAyushi
+            ? "My most complex project was engineering Alyra Lock, a zero-knowledge credential vault running client-side using the WebCrypto API. The hardest challenge was ensuring zero plaintext data ever touches the network. I implemented client-side PBKDF2 key derivation with 600,000 iterations and AES-256-GCM encryption, guaranteeing security without relying on server trust."
+            : "My most complex project was Astra Vision, a code analysis service built with Python and FastAPI. The core challenge was safely parsing code into abstract syntax trees (ASTs) using Tree-Sitter and constructing dependency graphs for untrusted user snippets. I designed an isolated subprocess sandbox with memory limits and syscall filtering, maintaining sub-200ms analysis times while preventing arbitrary execution.";
+        }
+
+        // Topic 3: Hardest Problem / Bug / Obstacle Overcome
+        if (
+          qLower.includes('challenge') ||
+          qLower.includes('bug') ||
+          qLower.includes('problem you solved') ||
+          qLower.includes('difficult') ||
+          qLower.includes('obstacle')
+        ) {
+          return isAyushi
+            ? "While building our browser extension HUD, I solved host CSS bleeding by migrating our interface to a closed Shadow DOM container. By scoping custom CSS properties and bridging synthetic DOM events, I completely prevented third-party portal styles and event listeners from crashing the UI."
+            : "While scaling AstreWork's background workers, I diagnosed an intermittent SQLite database lock caused by concurrent write transactions. I traced the timing contention, introduced an in-memory queue with exponential backoff and connection pooling, and verified zero locked queries across tens of thousands of automated cycles.";
+        }
+
+        // Topic 4: Role Motivation / Why This Company
+        if (
+          qLower.includes('why') ||
+          qLower.includes('interest') ||
+          qLower.includes('motivation') ||
+          qLower.includes('excited')
+        ) {
+          return isAyushi
+            ? `I want to contribute to ${company} because I admire your focus on high-quality, reliable software products. As a Full-Stack Developer passionate about responsive architectures, design systems, and frontend performance, I thrive in environments where engineering discipline and user empathy meet.`
+            : `I am excited to apply to ${company} to contribute to mission-critical, high-reliability software systems. With hands-on experience in backend architectures, distributed data pipelines, and low-latency cloud infrastructure, I enjoy solving hard engineering challenges where correctness and performance truly matter.`;
+        }
+
+        // Topic 5: General Fallback
         return (profile.professionalSummary && profile.professionalSummary.length > 20)
           ? profile.professionalSummary
-          : "I am an enthusiastic Full-Stack Developer with deep experience building scalable cloud applications, resilient API microservices, and high-performance data systems. I bring a strong work ethic, technical curiosity, and collaborative mindset to ship reliable software.";
+          : "I am a dedicated Software Developer with deep experience building scalable cloud applications, resilient API microservices, and high-performance data systems. I bring a strong work ethic, technical curiosity, and collaborative mindset to ship reliable software.";
       }
       default: return null;
     }
@@ -5835,13 +5931,17 @@
       }
 
       // Fallback: request background to trigger download via chrome.downloads or tab
-      chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME', activeContext: activeCtx });
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME', activeContext: activeCtx });
+      }
       if (hud) {
         hud.setState('ready');
       }
     } catch (err) {
       console.warn('[AstrePilot] Direct resume download error, falling back to background:', err);
-      chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME', activeContext: activeCtx });
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME', activeContext: activeCtx });
+      }
       if (hud) {
         hud.setState('ready');
       }
@@ -5976,20 +6076,22 @@
       return !PLACEHOLDER_REGEX.test(optText) && (optVal !== '' && optVal !== '0');
     }
 
-    // 2. Custom ARIA Combobox / React-Select
+    // 2. Custom ARIA Combobox / React-Select (Strict Anti-False-Positive Firewall)
     if (isComboboxOrSelect(el)) {
       const container = (el.closest && el.closest('.select-shell, .select__container, [class*="react-select"], .select, .form-group')) || el.parentElement;
       if (container) {
         const single = container.querySelector('.select__single-value, [class*="singleValue"], .select__multi-value__label, [class*="multiValue"]');
         if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
-        const req = container.querySelector('input[class*="requiredInput"]');
-        if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
+        const req = container.querySelector('input[class*="requiredInput"], input[type="hidden"][name]');
+        if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim()) && req.value.trim() !== '0') return true;
       }
-      const text = (el.innerText || el.textContent || '').trim().toLowerCase();
-      const ariaVal = (el.getAttribute('aria-valuenow') || el.getAttribute('aria-label') || '').toLowerCase();
-      if (text && !PLACEHOLDER_REGEX.test(text) && text.length > 0) return true;
-      if (ariaVal && ariaVal.length > 0 && !PLACEHOLDER_REGEX.test(ariaVal)) return true;
-      if (el.value && el.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(el.value.trim())) return true;
+      // For button/div-based comboboxes (Radix/Headless UI/Workday promptOption)
+      if (el.tagName !== 'INPUT') {
+        const text = (el.innerText || el.textContent || '').trim().toLowerCase();
+        const ariaVal = (el.getAttribute('aria-valuenow') || el.getAttribute('aria-label') || '').toLowerCase();
+        if (text && !PLACEHOLDER_REGEX.test(text) && text.length > 0) return true;
+        if (ariaVal && ariaVal.length > 0 && !PLACEHOLDER_REGEX.test(ariaVal)) return true;
+      }
       return false;
     }
 
@@ -6224,10 +6326,6 @@
             AstrePilotHUD.highlight(f.element, confTier);
             const cbSuccess = await fillUniversalCombobox(f.element, val, f.type);
             writeSuccess = cbSuccess || await verifyFieldWritten(f, val);
-            if (!writeSuccess && f.element.tagName === 'INPUT') {
-              const uRes = await universalWriteActuator(f.element, val, f);
-              writeSuccess = uRes.success;
-            }
             if (writeSuccess) {
               filled++;
               hud.markRow(f.id, 'done', String(val).slice(0, 30));
@@ -6280,7 +6378,7 @@
     }
 
     // Autonomous Pass 2: Dynamic Dependent Field Discovery (e.g. Race appearing after Hispanic/Latino is answered)
-    await new Promise(r => setTimeout(r, 260));
+    await new Promise(r => setTimeout(r, 600));
     try {
       const freshFields = scanFields();
       const newlyAppearedFields = freshFields.filter(nf => {
@@ -6303,10 +6401,6 @@
               AstrePilotHUD.highlight(nf.element, confTier);
               const cbSuccess = await fillUniversalCombobox(nf.element, val, nf.type);
               pass2Success = cbSuccess || await verifyFieldWritten(nf, val);
-              if (!pass2Success && nf.element.tagName === 'INPUT') {
-                const uRes = await universalWriteActuator(nf.element, val, nf);
-                pass2Success = uRes.success;
-              }
             } else {
               AstrePilotHUD.highlight(nf.element, confTier);
               await AstrePilotHUD.fillAnimated(nf.element, String(val), (el, v, isFinal) => setNativeValue(el, v, isFinal));
@@ -6698,4 +6792,16 @@
       }, 1000);
     }, 1000);
   }
+
+  // Automated Test & Diagnostics Bridge
+  window.__ASTREPILOT_RUN_AUTOFILL__ = runAutofill;
+  window.__ASTREPILOT_TOGGLE_HUD__ = toggleAstrePilotHUD;
+  window.__ASTREPILOT_SCAN_FIELDS__ = scanFields;
+  window.__ASTREPILOT_GET_DETECTED_FIELDS__ = () => detectedFields;
+  window.__ASTREPILOT_GET_HUD__ = () => activeHud;
+  window.__ASTREPILOT_RESOLVE_VALUE__ = resolveValue;
+  window.__ASTREPILOT_FILL_COMBOBOX__ = fillUniversalCombobox;
+  window.__ASTREPILOT_RESOLVE_SCREENING_SELECT__ = resolveScreeningSelect;
+  window.__ASTREPILOT_GET_LABEL_TEXT__ = getLabelText;
+  window.__ASTREPILOT_PROFILES__ = STANDALONE_PROFILES;
 })();

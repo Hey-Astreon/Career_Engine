@@ -1005,12 +1005,28 @@ window.AstrePilotHUD = (function () {
         };
         const aiCount = this.fields.filter(f => isFieldAI(f)).length;
         const highConfCount = this.fields.filter(f => (f.confidence || 0.90) >= 0.85 && !isFieldAI(f)).length;
-        const reviewCount = Math.max(0, this.fields.length - aiCount - highConfCount);
+        const doneCount = this.fields.filter(f => f.status === 'done').length;
+        const retryCount = this.fields.filter(f => f.status === 'retry').length;
+        const skippedCount = this.fields.filter(f => f.status === 'skipped').length;
 
-        let breakdownText = `${this.fields.length} fields (${highConfCount} verified`;
-        if (reviewCount > 0) breakdownText += ` · ${reviewCount} review`;
-        if (aiCount > 0) breakdownText += ` · ${aiCount} AI`;
-        breakdownText += ')';
+        let statusText = '';
+        let breakdownText = '';
+
+        if (this.state === 'filling') {
+          statusText = `<div class="pulse"></div> Filling...`;
+          breakdownText = `${doneCount} of ${this.fields.length} filled`;
+        } else if (this.state === 'done') {
+          if (retryCount > 0) {
+            statusText = `<span style="color:#d97706;font-weight:700">⚠ ${doneCount} / ${this.fields.length} filled</span>`;
+            breakdownText = `${retryCount} need review · ${doneCount} verified`;
+          } else {
+            statusText = `<span style="color:var(--ap-success);font-weight:700">✓ Done</span>`;
+            breakdownText = `${doneCount} verified (${aiCount} AI)`;
+          }
+        } else {
+          statusText = `<div class="pulse"></div> Ready to fill`;
+          breakdownText = `${this.fields.length} fields detected (${highConfCount} auto · ${aiCount} AI)`;
+        }
 
         const isBusy = this.state === 'scanning' || this.state === 'filling';
         const btnText = this.state === 'scanning'
@@ -1021,9 +1037,7 @@ window.AstrePilotHUD = (function () {
           <div class="summary-action-block">
             <div class="summary-line">
               <div class="status-indicator">
-                ${this.state === 'filling' ? `<div class="pulse"></div> Filling...` :
-                  this.state === 'done' ? `<span style="color:var(--ap-success)">✓ Done</span>` :
-                  `<div class="pulse"></div> Ready to fill`}
+                ${statusText}
               </div>
               <div>${breakdownText}</div>
             </div>
@@ -1218,14 +1232,20 @@ window.AstrePilotHUD = (function () {
       const conf = f.confidence != null ? f.confidence : 0.95;
       const pct = Math.round(conf <= 1 ? conf * 100 : conf);
       let badgeHtml = '';
-      if (isVault) {
+      if (f.status === 'done') {
+        badgeHtml = `<span class="badge-confidence badge-verified" style="display:inline-flex;margin:0 0 0 6px;background:rgba(16,185,129,0.1);color:#059669;border:1px solid rgba(16,185,129,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">✓ Verified</span>`;
+      } else if (f.status === 'retry') {
+        badgeHtml = `<span class="badge-confidence badge-review" style="display:inline-flex;margin:0 0 0 6px;background:rgba(239,68,68,0.1);color:#dc2626;border:1px solid rgba(239,68,68,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">⚠ Needs Review</span>`;
+      } else if (f.status === 'skipped') {
+        badgeHtml = `<span class="badge-confidence" style="display:inline-flex;margin:0 0 0 6px;background:rgba(148,163,184,0.1);color:#64748b;border:1px solid rgba(148,163,184,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">Skipped</span>`;
+      } else if (isVault) {
         badgeHtml = `<span class="badge-confidence badge-vault" style="display:inline-flex;margin:0 0 0 6px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">Vault ${pct}%</span>`;
       } else if (isScreeningOrCL) {
         badgeHtml = `<span class="badge-confidence badge-ai" style="display:inline-flex;margin:0 0 0 6px;background:var(--ap-ai-soft, rgba(37,99,235,0.1));color:var(--ap-ai, #2563eb);border:1px solid rgba(37,99,235,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">AI · ${pct}%</span>`;
       } else if (conf < 0.85) {
         badgeHtml = `<span class="badge-confidence badge-review" style="display:inline-flex;margin:0 0 0 6px;background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.3);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">Review ${pct}%</span>`;
       } else {
-        badgeHtml = `<span class="badge-confidence badge-verified" style="display:inline-flex;margin:0 0 0 6px;background:rgba(16,185,129,0.1);color:#059669;border:1px solid rgba(16,185,129,0.25);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">✓ Verified</span>`;
+        badgeHtml = `<span class="badge-confidence" style="display:inline-flex;margin:0 0 0 6px;background:rgba(0,113,227,0.08);color:#0071e3;border:1px solid rgba(0,113,227,0.2);font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700">Auto · ${pct}%</span>`;
       }
 
       const canSaveVault = isScreeningOrCL && val && val !== '...';

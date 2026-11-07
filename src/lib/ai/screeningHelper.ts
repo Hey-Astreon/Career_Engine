@@ -98,6 +98,7 @@ CRITICAL INSTRUCTIONS:
 - Sound authentic, not like a corporate AI robot or a formal cover letter template.
 - NEVER start answers with "Architected" or formulaic verb openings like "Architected and built...". Use natural, varied verbs like "Building and shipping...", "I developed...", "I led the development of...", etc.
 - NEVER stack corporate AI buzzwords (e.g. "autonomous career operating system", "multi-provider LLM failover cascade", "distributed high-concurrency background engine"). Speak about real code, architecture, and tangible outcomes with human clarity and humility.
+- NEVER mention browser extensions, form autofill, or Greenhouse/ATS DOM actuators when applying for aerospace, satellite, systems, defense, or backend roles. Ground technical projects in runtime isolation, concurrency, data pipelines, or code sandbox execution.
 - When answering multiple questions for the same candidate, never repeat the same project, identical sentence structures, or identical word counts.
 - Never invent past job titles, years of experience, certifications, or employers not present in the provided candidate context.
 - Never start with sycophantic openers like "I am thrilled to apply..." or "I am excited to..." or use AI slop like "passionate", "spearheaded", or "utilizing".${bcaLaw}
@@ -131,15 +132,29 @@ export function rankProjectsForContext(
 
   const tokenSet = new Set(targetTokens);
 
+  const isSystemsRole = /(?:flight|satellite|astranis|embedded|systems|low-level|telemetry|sandbox|kernel|concurrency)/i.test(question + " " + jobDescription);
+
   const scored = projects.map((p) => {
-    const pTokens = (p.title + " " + p.description + " " + (p.techStack || ""))
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, " ")
-      .split(/\s+/);
+    const pText = (p.title + " " + p.description + " " + (p.techStack || "")).toLowerCase();
+    const pTokens = pText.replace(/[^a-z0-9\s]/g, " ").split(/\s+/);
 
     let matchCount = 0;
     for (const t of pTokens) {
       if (tokenSet.has(t)) matchCount++;
+    }
+
+    // Domain weighting: For systems/satellite/flight software, heavily prioritize low-level, telemetry, and sandbox isolation
+    if (isSystemsRole) {
+      if (pText.includes("telemetry") || pText.includes("orbit") || pText.includes("flight") || pText.includes("embedded") || pText.includes("real-time")) {
+        matchCount += 15;
+      }
+      if (pText.includes("sandbox") || pText.includes("syscall") || pText.includes("subprocess") || pText.includes("tree-sitter")) {
+        matchCount += 10;
+      }
+      // Penalize browser extension talk on aerospace/systems applications
+      if (pText.includes("extension") || pText.includes("autofill") || pText.includes("manifest v3")) {
+        matchCount -= 10;
+      }
     }
 
     return { project: p, score: matchCount };

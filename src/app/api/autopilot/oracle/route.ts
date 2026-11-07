@@ -175,9 +175,17 @@ ${profileContext ? `Relevant Projects & Experience Context:\n${JSON.stringify(pr
     }
 
     // High-conviction project grounding if offline or LLM network unavailable
-    if (!answer && profileContext && profileContext.projects.length > 0) {
+    if (!answer && profileContext && profileContext.projects && profileContext.projects.length > 0) {
       const topProj = profileContext.projects[0];
-      answer = `As a ${profileContext.title || "Full-Stack Developer"}, I architected ${topProj.title} using ${topProj.techStack || "TypeScript, React 19, and cloud services"}. ${topProj.description || "I designed scalable distributed systems and high-reliability software architectures."}`;
+      const cleanTitle = topProj.title.split(/\s+[—–-]\s+/)[0].trim();
+      const roleLower = `${jobTitle || ""} ${company || ""}`.toLowerCase();
+      const isSystemsOrLowLevel = roleLower.includes("flight") || roleLower.includes("satellite") || roleLower.includes("astranis") || roleLower.includes("system") || roleLower.includes("embed") || roleLower.includes("backend");
+
+      if (isSystemsOrLowLevel && profileContext.projects.some((p: any) => p.title.toLowerCase().includes("astra vision"))) {
+        answer = `I developed Astra Vision, a Python code-analysis backend and execution sandbox built with FastAPI and Tree-Sitter AST parsers. The core technical challenge was safely running untrusted user code, which I solved by building a subprocess runner with syscall and socket guards to isolate execution and prevent unauthorized network or filesystem access.`;
+      } else {
+        answer = `I developed and deployed ${cleanTitle}, focusing on distributed systems reliability and clean architecture. My focus was building fault-tolerant background data pipelines and database isolation to ensure zero downtime and high availability under load.`;
+      }
     }
 
     const cleanFallbackAnswer = sanitizeScreeningText(answer, isBca);

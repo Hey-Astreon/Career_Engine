@@ -155,7 +155,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (typeof chrome.downloads !== 'undefined' && chrome.downloads.download) {
         chrome.downloads.download({
           url: url,
-          filename: request.filename || undefined,
+          filename: request.filename || (activeCtx === 'ayushi' ? 'AYUSHI_RAJ_Resume.pdf' : 'ROUSHAN_KUMAR_Resume.pdf'),
           saveAs: false
         }, () => {
           if (chrome.runtime.lastError) {
@@ -423,6 +423,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           });
           await new Promise(r => setTimeout(r, 40));
           await sendCdpCommand(tabId, 'Input.insertText', { text });
+          return sendResponse({ success: true });
+        }
+
+        if (action === 'TYPE') {
+          const text = String(request.text || '');
+          const delay = request.delay || 35;
+          for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const code = 'Key' + char.toUpperCase();
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'keyDown',
+              text: char,
+              unmodifiedText: char,
+              key: char,
+              code: code
+            });
+            await new Promise(r => setTimeout(r, 10));
+            await sendCdpCommand(tabId, 'Input.dispatchKeyEvent', {
+              type: 'keyUp',
+              key: char,
+              code: code
+            });
+            await new Promise(r => setTimeout(r, delay));
+          }
           return sendResponse({ success: true });
         }
 

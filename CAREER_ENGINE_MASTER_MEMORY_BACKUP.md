@@ -4056,3 +4056,54 @@ graph TD
   - **Rule 2 (Strict Profile Object Validation):** Never treat a truthy JSON response as a valid profile without asserting required fields (`fullName || firstName`, `email`, and `!res.error`). Unhandled error JSON objects (`{ error: ... }`) poison downstream field mapping.
   - **Rule 3 (Zero Identity Degradation):** The HUD identity must never degrade to generic strings like `"You"` or `"YO"`. Always default to the authenticated candidate context or founder fallback (`Roushan Kumar` / `Ayushi Raj`).
 - **Status:** Complete, verified (`585/585` tests passing across 63 test suites, `0` TS errors, package regenerated), committed and pushed to `origin main`.
+
+
+### Phase 97: AstrePilot Combobox Verification Firewall, Hardware CDP Actuation, EEOC Asian Sovereignty & Grounded Humanized AI Brain (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In live testing on the Astranis Greenhouse flight software intern job application (`https://job-boards.greenhouse.io/embed/job_app?for=astranis&token=4704598006&jr_id=6ab30c0a326574570a004b90`), Brother Roushan uncovered critical systemic defects:
+    1. **Combobox Actuation & Option 0 Overwrite:** React-Select fields (Degree, Discipline, School, Start Month, End Month, Space Tech Regulations, Season, Onsite, Gender, Hispanic/Latino, Race, Veteran Status) remained unselected or falsely selected index 0 (`Accounting`, `Associate's Degree`, `January`) while the HUD falsely reported `✓ Done 28 fields (24 verified · 4 AI)`.
+    2. **HUD False Positive "Verified" Delusion:** Unwritten fields showed `First Name ✓ Verified -` before any write occurred, and the HUD claimed fields were verified when they were completely blank in the rendered DOM.
+    3. **Screening AI Slop & Answer Cloning:** Both screening textareas Q1 and Q2 were filled with the exact same 409-character paragraph starting with "Architected and operate AstreWork...", featuring repetitive corporate buzzwords and DOM actuator chatter on a space satellite software intern application.
+    4. **EEOC Demographic Misclassification:** Candidates from the Indian subcontinent were either left unselected or misclassified, violating the non-negotiable law that Indian candidates must be strictly categorized as **Asian** (never "American Indian or Alaskan Native").
+    5. **Extension Login Hang on "Syncing...":** Extension popup hung indefinitely on "Syncing..." and failed to authenticate via Google/GitHub when returning from AstreWork.
+- **Deep Root Cause Diagnosis:**
+  1. **Enter Key Overwrite Bug in React-Select:** After `fillReactSelectV2` clicked `matchedOption`, it dispatched a synthetic `KeyboardEvent('Enter')` on `actualInput`. In React-Select, pressing Enter commits the currently focused item (`aria-activedescendant`), which defaults to index 0 (`Accounting`, `Associate's Degree`, `January`), overwriting the clicked option!
+  2. **`getLabelText` Immediate Div Match:** `input.closest('.form-group, .field, .form-row, tr, div')` was terminating at the immediate wrapper `div` (`.select__input-container`), returning empty labels for all custom Greenhouse screening questions.
+  3. **Listbox Collision with Phone Country Picker:** The Greenhouse telephone input `#country` has a persistent open listbox with 150+ country dial codes (`Afghanistan+93`, etc.). Any global `document.querySelector('[role="listbox"]')` query was hijacked by the telephone listbox instead of the target field's listbox.
+  4. **`PLACEHOLDER_REGEX` Filtering Valid Answers:** `const PLACEHOLDER_REGEX = /^(select|choose|placeholder|optional|none|--|—|select an option|please select)/i;` used `none` without a word boundary. Because `"None of the above."` starts with `"none"`, it was discarded as an empty placeholder and never returned in `getVisibleOptions()`.
+  5. **Label Element Captured as Form Field:** In `scanGreenhouseFields`, selector `[id*="ethnicity" i]` for `RACE_ETHNICITY` matched `<label id="hispanic_ethnicity-label">`. Because labels lack inner inputs, the label was added to `fields`. In `fillAllFields`, it targeted the Hispanic/Latino dropdown with `"Asian"`, which failed to match, falling back to option 0 (`"Yes"`), overwriting `"No"` to `"Yes"`.
+  6. **Identical Offline Fallback Across All Screening Questions:** When `/oracle` was unreachable or offline, `resolveValue` fell back to `profile.professionalSummary` for every single screening question, producing identical 409-character paragraphs across Q1 and Q2.
+  7. **Extension Popup Storage Race Condition:** In `popup.js`, `chrome.storage.local.set` callbacks were not awaited before calling `initialize()`, causing authentication state to revert or hang in "Syncing...".
+- **The Concrete Surgical Fix:**
+  1. **React-Select Clean Actuation Engine (`extension/content.js`):**
+     - Target isolation via `aria-controls` (`doc.getElementById(actualInput.getAttribute('aria-controls'))`) as Step 1, completely preventing listbox collisions with telephone pickers.
+     - Removed synthetic Enter key dispatch: option click alone commits the selection cleanly.
+     - Updated `PLACEHOLDER_REGEX` with strict word boundaries: `/^(\s*(--|—|select\b|choose\b|placeholder\b|please select\b|select an option\b))/i`, preserving valid answers like `"None of the above."`.
+     - Fixed `checkPopulated()` `ReferenceError` to call `isContainerPopulated()`.
+  2. **EEOC Demographic Sovereignty & Pass 2 Dependent Fields (`extension/content.js`):**
+     - Removed `[id*="ethnicity" i]` from `RACE_ETHNICITY` selectors; added strict tag guard in `scanGreenhouseFields` ignoring `<label>` and hidden inputs.
+     - Autonomous Pass 2 dynamic dependent field execution: after `hispanic_ethnicity` is set to `"No"`, Pass 2 detects the newly mounted `#race` dropdown and fills it strictly with `"Asian"` (never American Indian).
+  3. **Role-Grounded Non-Repetitive Screening AI Brain (`src/lib/ai/screeningHelper.ts` & `extension/content.js`):**
+     - Implemented multi-story grounded screening resolver: Q1 (Accomplishments) highlights AstreWork live production on Oracle Cloud ARM64 (distributed scrapers, vector search, zero downtime); Q2 (Complex Project) highlights Astra Vision (Tree-Sitter AST parser, isolated subprocess sandbox).
+     - Banned repetitive "Architected" starters across questions; ensured distinct word counts and natural human phrasing.
+  4. **HUD UI Integrity Overhaul (`extension/hud-ui.js`):**
+     - Completely eliminated false positive badges: rows ONLY show `✓ Verified` when `f.status === 'done'`. Unwritten fields display `Auto · 95%` or `Review`. Failed fields display `⚠ Needs Review`.
+     - Summary bar honestly displays `${doneCount} / ${total} filled (${retryCount} need review)` when failures exist.
+  5. **Extension Popup Login & Sync Repair (`extension/popup.js`):**
+     - Wrapped social logins in `try ... finally` guaranteeing `Syncing...` button text resets.
+     - Wrapped storage commits in Promises ensuring tokens persist before `initialize()` runs.
+  6. **Safe Extension Messaging Guards (`extension/content.js`):**
+     - Guarded all `chrome.runtime.sendMessage` and `chrome.runtime.onMessage` calls with `typeof chrome !== 'undefined' && chrome.runtime?.sendMessage`, eliminating uncaught PageErrors.
+  7. **Master Live Chrome Verification (`scripts/verify_astrepilot_live_chrome.mjs`):**
+     - Executed full autofill and audit on the live Astranis Greenhouse application in real Chrome:
+       - Basic fields: `firstName: "Roushan"`, `lastName: "Kumar"`, `email: "roushanraut404@gmail.com"`, `phone: "+91 94314 83512"`, `linkedin: "https://linkedin.com/in/astreon4547"` ALL VERIFIED!
+       - 15/15 Comboboxes: `country` (+91), `candidate-location` (Patna, Bihar, India), `school--0` (Amity University), `degree--0` (Bachelor's Degree), `discipline--0` (Computer Science), `start-month--0` (July), `end-month--0` (July), `question_8622920006` (None of the above.), `question_8622923006` (Summer 2027), `question_8622926006` (Yes), `question_8652804006` (Yes), `gender` (Male), `hispanic_ethnicity` (No), `race` (Asian), `veteran_status` (I am not a protected veteran) ALL 15/15 VERIFIED!
+       - Textareas Q1 and Q2: distinct, role-grounded technical narratives without slop or "Architected" repetition.
+       - Captured full-page screenshot proof: `live_proof_astrepilot_master_dom.png`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (The React-Select Enter Trap):** Never dispatch a synthetic Enter key on a React-Select input after clicking an option. In React-Select, Enter commits the focused listbox index (`aria-activedescendant`), which defaults to 0, overwriting the user's choice with the first alphabetized option.
+  - **Rule 2 (Strict Word Boundaries in Placeholder Regex):** Never use unanchored or prefix-only matching for placeholder keywords (e.g. `/^none/i`). Real application questions often feature valid negative options like `"None of the above."` or `"None"`. Use word boundaries (`/\b/`) for all placeholder patterns.
+  - **Rule 3 (Label Discrimination in Form Scanners):** Form element scanners must never push `<LABEL>` or hidden elements into interactive field queues. When an ID selector matches both an input and a label (e.g. `hispanic_ethnicity-label`), the label must be explicitly rejected.
+  - **Rule 4 (EEOC Dynamic Dependent Field Law):** On US ATS platforms (Greenhouse, Lever), the Race dropdown only mounts into the DOM after "Are you Hispanic/Latino?" is answered "No". The extension must execute an autonomous Pass 2 to discover and fill Race with "Asian".
+  - **Rule 5 (Screening Answer Multi-Story Law):** Multiple screening questions on the same application must never share the same opening verb, the same project, or identical sentence templates. Rotate candidate projects (e.g. AstreWork cloud ops for achievements vs. Astra Vision AST sandbox for technical complexity).
+- **Status:** Complete, verified (`591/591` tests passing across 64 test suites, `0` TS errors, 15/15 comboboxes verified in live Chrome DOM on Astranis Greenhouse, package regenerated to `public/downloads/astrepilot-extension.zip`), committed and pushed to `origin main`.

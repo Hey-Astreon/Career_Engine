@@ -285,8 +285,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             astrepilot_logged_out: false
           };
 
-          if (chrome.storage.sync) chrome.storage.sync.set(payload);
-          if (chrome.storage.local) chrome.storage.local.set(payload);
+          if (chrome.storage.sync) {
+            await new Promise(r => chrome.storage.sync.set(payload, r));
+          }
+          if (chrome.storage.local) {
+            await new Promise(r => chrome.storage.local.set(payload, r));
+          }
           return token;
         }
       } catch (e) {
@@ -612,7 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Social Auth Buttons (Google & GitHub: Instant Auto-Connect)
+  // Social Auth Buttons (Google & GitHub: Instant Auto-Connect & Portal Redirection)
   if (btnSocialGoogle) {
     btnSocialGoogle.addEventListener('click', async () => {
       if (btnQuickSyncText) btnQuickSyncText.textContent = 'Syncing…';
@@ -622,11 +626,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           await initialize();
           return;
         }
+        // If no authenticated tab open, open AstreWork Google login
+        chrome.tabs.create({ url: PROD_ORIGIN + '/login?social=google' });
+      } catch (err) {
+        console.warn('[AstrePilot Popup] Google login sync error:', err);
         await activateStandaloneProfile('roushan');
         await initialize();
-      } catch {
-        await activateStandaloneProfile('roushan');
-        await initialize();
+      } finally {
+        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with AstreWork Web Session';
       }
     });
   }
@@ -640,11 +647,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           await initialize();
           return;
         }
+        // If no authenticated tab open, open AstreWork GitHub login
+        chrome.tabs.create({ url: PROD_ORIGIN + '/login?social=github' });
+      } catch (err) {
+        console.warn('[AstrePilot Popup] GitHub login sync error:', err);
         await activateStandaloneProfile('roushan');
         await initialize();
-      } catch {
-        await activateStandaloneProfile('roushan');
-        await initialize();
+      } finally {
+        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with AstreWork Web Session';
       }
     });
   }

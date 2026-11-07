@@ -68,6 +68,15 @@ AstreWork partitions intelligence into 4 specialized agents backed by a 5-stage 
 - Always split project titles with `.split(/\s+[—–-]\s+/)[0].trim()` (never literal `.split(" - ")[0]`) so only the clean project name (`"AstreWork"`) is interpolated into cover letter prose.
 - Never reference retired projects (`IDBI`, `FinSync`, `Axiom Gateway`, `Coco AI`) or prohibited `"Engineer"` candidate titles in `drafter.ts`, `outreachGenerator.ts`, or `screeningHelper.ts`.
 
+### 3. Context-Aware Screening Question AI Grounding (`screeningHelper.ts` & `oracle/route.ts`)
+- **Ban Static Hardcoded Screening Interceptors:** Never intercept screening questions in `content.js` with static hardcoded strings. All screening questions must be evaluated dynamically by the Screening Q&A Vault or AI Oracle.
+- **Strict Role-Domain Grounding:** When applying for a role, map the company and role requirements to the most relevant candidate projects:
+  - Space tech / Satellite / Systems / Low-Level / Security roles (e.g. Astranis Flight Software) $\rightarrow$ Highlight **Astra Vision** (Python code sandbox, subprocess runner with syscall and socket isolation, Tree-Sitter AST parser) and **AstreWork** (OCI ARM64 distributed pipelines, zero-downtime reliability).
+  - Web / Full-Stack roles $\rightarrow$ Highlight **AstreWork** (full-stack web platform, real-time client state, responsive UI) or **Alyra Lock** (client-side cryptography).
+  - NEVER mention browser extension DOM reconciliation actuators on aerospace, hardware, or non-extension applications.
+- **Anti-AI Buzzword Ban:** Forbid corporate marketing jargon: "autonomous career operating system", "multi-provider LLM failover cascade", "distributed high-concurrency background engine". Speak with humble, crisp developer clarity.
+- **Immediate Availability Invariant:** For internship/job start date questions, always offer earliest/immediate availability (e.g. "Available immediately / Earliest available date (Flexible)") rather than artificially deferring to remote future dates.
+
 ---
 
 ## 🛡️ PART 4: ASTRESHIELD 4-TIER FRAUD & GHOST JOB DETECTION (`astreShield.ts` & `astreShield.dict.ts`)
