@@ -132,9 +132,13 @@ export async function GET(req: Request) {
     }
 
     const fileBuffer = await fs.promises.readFile(resolvedPath);
-    const candidateName = profile?.fullName?.replace(/[^a-zA-Z0-9]/g, "_") || (normalizedSlug === "ayushi" ? "AYUSHI_RAJ" : "ROUSHAN_KUMAR");
-    const company = session?.company?.replace(/[^a-zA-Z0-9]/g, "_") || "Job";
-    const downloadFileName = `${candidateName}_Resume_${company}.pdf`;
+    let downloadFileName = "Roushan_Kumar_resume.pdf";
+    if (normalizedSlug === "ayushi") {
+      downloadFileName = "Ayushi_Raj_resume.pdf";
+    } else if (profile?.fullName) {
+      const cleanName = profile.fullName.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
+      downloadFileName = `${cleanName}_resume.pdf`;
+    }
 
     return new Response(fileBuffer, {
       status: 200,

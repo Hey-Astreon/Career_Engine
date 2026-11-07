@@ -127,12 +127,20 @@ export async function GET(req: Request) {
 
     const fileBuffer = await fs.promises.readFile(resolved.resolvedPath);
     const dispositionType = isInline ? "inline" : "attachment";
+    const isCustomVariant = fileNameParam && !fileNameParam.toLowerCase().includes("resume.pdf");
+    const downloadName = isCustomVariant
+      ? resolved.fileName
+      : (slugParam?.toLowerCase() === "ayushi"
+          ? "Ayushi_Raj_resume.pdf"
+          : (slugParam?.toLowerCase() === "roushan"
+              ? "Roushan_Kumar_resume.pdf"
+              : `${profile.fullName?.trim().replace(/\s+/g, "_") || "Candidate"}_resume.pdf`));
 
     return new Response(fileBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `${dispositionType}; filename="${resolved.fileName}"`,
+        "Content-Disposition": `${dispositionType}; filename="${downloadName}"`,
         "Content-Length": fileBuffer.length.toString(),
         "Cache-Control": "private, max-age=3600",
       },

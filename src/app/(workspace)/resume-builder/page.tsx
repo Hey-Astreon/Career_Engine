@@ -385,9 +385,13 @@ ${portfolio}`;
    * 1-Click Auto-Named PDF Export
    */
   const handlePrint = () => {
-    const candidate = activeProfile?.fullName || resumeData.header.fullName || "Candidate";
-    const company = resumeData.targetCompany || "Company";
-    const targetFilename = `${candidate.replace(/[^a-zA-Z0-9]/g, "_")}_Resume_${company.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    let targetFilename = "Roushan_Kumar_resume";
+    if (activeProfile?.slug === "ayushi" || (activeProfile?.fullName && activeProfile.fullName.toLowerCase().includes("ayushi"))) {
+      targetFilename = "Ayushi_Raj_resume";
+    } else if (activeProfile?.fullName) {
+      const cleanName = activeProfile.fullName.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
+      targetFilename = `${cleanName}_resume`;
+    }
     const originalTitle = document.title;
 
     document.title = targetFilename;
@@ -521,7 +525,7 @@ ${portfolio}`;
           <button
             onClick={handlePrint}
             className="ce-button-primary !min-h-9 !px-4"
-            title={`Downloads as ${activeProfile?.fullName || "Candidate"}_Resume_${resumeData.targetCompany || "Company"}.pdf`}
+            title={`Downloads as ${activeProfile?.slug === "ayushi" ? "Ayushi_Raj_resume.pdf" : "Roushan_Kumar_resume.pdf"}`}
           >
             <Printer className="h-3.5 w-3.5" />
             Download / Print A4 PDF

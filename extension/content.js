@@ -4467,7 +4467,10 @@
     }
 
     try {
-      const filename = data.filename || 'Candidate_Resume.pdf';
+      const fallbackName = (userProfile && (userProfile.slug === 'ayushi' || (userProfile.name && userProfile.name.toLowerCase().includes('ayushi'))))
+        ? 'Ayushi_Raj_resume.pdf'
+        : 'Roushan_Kumar_resume.pdf';
+      const filename = data.filename || fallbackName;
       const mimeType = data.mimeType || 'application/pdf';
       const blob = base64ToBlob(data.base64, mimeType);
       const file = new File([blob], filename, {
@@ -6007,7 +6010,10 @@
       const data = await getResumeBinaryFromBackground();
 
       if (data && data.success && data.base64) {
-        const filename = data.filename || 'Candidate_Resume.pdf';
+        const fallbackName = (activeCtx === 'ayushi' || (userProfile && userProfile.slug === 'ayushi'))
+          ? 'Ayushi_Raj_resume.pdf'
+          : 'Roushan_Kumar_resume.pdf';
+        const filename = data.filename || fallbackName;
         const mimeType = data.mimeType || 'application/pdf';
         const blob = base64ToBlob(data.base64, mimeType);
 

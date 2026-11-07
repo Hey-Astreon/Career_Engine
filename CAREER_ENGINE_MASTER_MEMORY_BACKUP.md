@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 99: Eradication of Rogue Autofill Resume Downloads & Strict Separation of File Upload vs. Local Download)
+> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 100: Canonical Clean Resume Naming Standardization (`Roushan_Kumar_resume.pdf`) Across AstreWork & AstrePilot)
 
 ---
 
@@ -4167,3 +4167,30 @@ graph TD
   - **Rule 1 (The Zero-Unprompted-Side-Effects Law):** An "Autofill" action must ONLY mutate in-page DOM inputs and form state. It must NEVER initiate host filesystem side-effects (such as downloading files to disk, printing, or clipboard copying) unless the user explicitly and intentionally clicked an action dedicated to that side-effect (e.g. the Download Resume icon).
   - **Rule 2 (Strict Decoupling of In-Memory File Injection vs. File Download):** Synthetic file upload (`injectResumeFile`) and client file download (`triggerClientDownload`) must remain 100% decoupled in separate execution pipelines. Synthetic file injection feeds the target webpage's `HTMLInputElement` via `DataTransfer`; it must never call the browser's download manager.
 - **Status:** Complete, verified (`40/40` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [728.1 KB]), committed and pushed to `origin main`.
+
+### Phase 100: Canonical Clean Resume Naming Standardization (`Roushan_Kumar_resume.pdf`) Across AstreWork & AstrePilot (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Customized resume downloads generated overly long, clumsy, and weird-looking file names (such as `ROUSHAN_KUMAR_Resume_Job.pdf` or `ROUSHAN_KUMAR_Resume_Job (1).pdf` and `Roushan_Kumar_Tier1_Resume.pdf`).
+  - Founder Roushan identified that all tailored resumes generated and downloaded across both the AstreWork web app and the AstrePilot Chrome extension must use the clean, professional, canonical standard: `Roushan_Kumar_resume.pdf` (and `Ayushi_Raj_resume.pdf` for Ayushi).
+- **Deep Root Cause Diagnosis:**
+  - `src/app/api/resume/download/latest/route.ts` used string concatenation `${candidateName}_Resume_${company}.pdf` with uppercase fallback `ROUSHAN_KUMAR` and fallback company `Job`.
+  - `extension/background.js` used uppercase `ROUSHAN_KUMAR_Resume.pdf` / `AYUSHI_RAJ_Resume.pdf` for downloads and stream headers.
+  - `extension/content.js` used `'Candidate_Resume.pdf'` as fallback in `injectResumeFile` and `runDownloadResume`.
+  - `src/app/(workspace)/resume-builder/page.tsx` used `${candidate}_Resume_${company}` as `document.title` before `window.print()`.
+  - `src/app/(workspace)/resume-maker/page.tsx` used `${candidate}_Tier1_Resume` as `document.title` before `window.print()`.
+- **The Concrete Surgical Fix:**
+  - **Standardized Download Route (`src/app/api/resume/download/latest/route.ts`):**
+    - Set `downloadFileName` strictly to `Roushan_Kumar_resume.pdf` for Roushan, `Ayushi_Raj_resume.pdf` for Ayushi, and `${cleanFullName}_resume.pdf` for general profiles.
+    - Synchronized `Content-Disposition` attachment header and `X-Resume-Filename` response header.
+  - **Synchronized AstrePilot Extension (`extension/background.js` & `extension/content.js`):**
+    - Updated `getBundledResumeBinary` and `GET_RESUME_BINARY` listener in `background.js` to return `Roushan_Kumar_resume.pdf` / `Ayushi_Raj_resume.pdf`.
+    - Updated fallback filename resolution in `content.js` across both synthetic in-memory injection and explicit user download actions.
+  - **Aligned Workspace Resume Studios (`resume-builder` & `resume-maker`):**
+    - In `src/app/(workspace)/resume-builder/page.tsx` and `src/app/(workspace)/resume-maker/page.tsx`, updated `handlePrint` so `document.title` dynamically sets `Roushan_Kumar_resume` (or `Ayushi_Raj_resume`), ensuring Chrome's print-to-PDF defaults to `Roushan_Kumar_resume.pdf`.
+  - **Repackaging & Verification:**
+    - Repackaged `public/downloads/astrepilot-extension.zip` via `node scripts/package-extension.js` (728.2 KB).
+    - Verified all 49 core tests passing (`vitest run tests/ats_drivers.test.ts tests/astrepilot-combobox-and-brain.test.ts tests/resume-synthetic-upload.test.ts tests/resume-download-and-autofill.test.ts tests/candidate_resumes_audit.test.ts`).
+    - Verified TypeScript typecheck (`npx tsc --noEmit`) with 0 errors.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Canonical Clean Resume Naming Law):** Every tailored resume PDF generated, exported, downloaded, or attached across AstreWork and AstrePilot must adhere to the clean recruiter-facing standard: `<First_Last>_resume.pdf` (e.g. `Roushan_Kumar_resume.pdf` or `Ayushi_Raj_resume.pdf`). Never append company tags (`_Job`, `_Company`), internal tiers (`_Tier1_Resume`), or shouty uppercase casing (`ROUSHAN_KUMAR`).
+- **Status:** Complete, verified (`49/49` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [728.2 KB]), committed and pushed to `origin main`.

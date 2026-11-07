@@ -147,7 +147,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function getBundledResumeBinary(activeCtx) {
   const isAyushi = String(activeCtx || '').toLowerCase().includes('ayushi');
   const localFileName = isAyushi ? 'Ayushi_Raj_Resume.pdf' : 'Roushan_Kumar_Resume.pdf';
-  const downloadFileName = isAyushi ? 'AYUSHI_RAJ_Resume.pdf' : 'ROUSHAN_KUMAR_Resume.pdf';
+  const downloadFileName = isAyushi ? 'Ayushi_Raj_resume.pdf' : 'Roushan_Kumar_resume.pdf';
   const localUrl = chrome.runtime.getURL('resumes/' + localFileName);
 
   const response = await fetch(localUrl);
@@ -229,7 +229,7 @@ async function getBundledResumeBinary(activeCtx) {
           const base64 = btoa(binary);
           const disposition = response.headers.get('content-disposition') || '';
           const match = disposition.match(/filename="?([^"]+)"?/);
-          const filename = match ? match[1] : (response.headers.get('x-resume-filename') || (activeCtx === 'ayushi' ? 'AYUSHI_RAJ_Resume.pdf' : 'ROUSHAN_KUMAR_Resume.pdf'));
+          const filename = match ? match[1] : (response.headers.get('x-resume-filename') || (activeCtx === 'ayushi' ? 'Ayushi_Raj_resume.pdf' : 'Roushan_Kumar_resume.pdf'));
           const variant = response.headers.get('x-resume-variant') || 'Tailored';
 
           return sendResponse({

@@ -301,8 +301,13 @@ export default function ResumeMakerPage() {
 
   // Action Bar Handlers
   const handlePrint = () => {
-    const candidate = resumeData.header.fullName || "Candidate";
-    const targetFilename = `${candidate.replace(/[^a-zA-Z0-9]/g, "_")}_Tier1_Resume`;
+    let targetFilename = "Roushan_Kumar_resume";
+    if (resumeData.header.fullName && resumeData.header.fullName.toLowerCase().includes("ayushi")) {
+      targetFilename = "Ayushi_Raj_resume";
+    } else if (resumeData.header.fullName) {
+      const cleanName = resumeData.header.fullName.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
+      targetFilename = `${cleanName}_resume`;
+    }
     const originalTitle = document.title;
     document.title = targetFilename;
     window.print();
