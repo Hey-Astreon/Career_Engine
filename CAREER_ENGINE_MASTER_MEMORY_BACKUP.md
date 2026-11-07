@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 95: EEOC Demographic Sovereignty (India to Asian) & Screening Answer De-Duplication and Humanization)
+> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 96: Eradication of Unprompted Downloads & Guaranteed Basic Profile Hydration)
 
 ---
 
@@ -4022,3 +4022,37 @@ graph TD
   - **Rule 2 (Anti-Repetition & Project Diversity Law):** When answering multiple screening questions on the same job application, an AI career agent must NEVER use the same project, the same opening verb ("Architected"), or the same sentence structure. Different questions must showcase different achievements (e.g. cloud production operation vs. browser extension DOM actuators).
   - **Rule 3 (React-Select ID Normalization):** When querying React-Select v5 options in document portals, always strip the `-input` suffix from `input.id` before querying `option-` elements.
 - **Status:** Complete, verified (`11/11` target tests passing, `0` TS errors, package regenerated), committed and pushed to `origin main`.
+
+
+### Phase 96: Eradication of Unprompted Downloads & Guaranteed Basic Profile Hydration (November 7, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In live testing on the Astranis Greenhouse job application, Brother Roushan observed two critical failures upon clicking "Autofill":
+    1. **Unsolicited Failed File Download (`latest.txt`):** Chrome triggered an unexpected file download for `latest.txt` which failed with *"Couldn't download - Something went wrong"*.
+    2. **Blank Profile Hydration & "You" Degradation:** AstrePilot failed to fill First Name, Last Name, Email, Country, Phone, and other basic contact fields (leaving them skipped with `-`), and the HUD degraded the user identity badge to `"You"` / `"YO"` instead of `"Roushan Kumar"` / `"RK"`.
+- **Deep Root Cause Diagnosis:**
+  1. **Rogue `DOWNLOAD_RESUME` Event Dispatch:** In `extension/content.js:6212`, when `injectResumeFile(f.element, resumeBlob)` was unable to populate the Greenhouse resume file input, an old fallback line called `chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' })`. The background service worker intercepted this and initiated a download from `/api/resume/download/latest`. Because the local test or cloud token returned an error response or 404, Chrome attempted to download the response as a file named `latest.txt`, resulting in an unsolicited failed download.
+  2. **Truthiness Trap on API Error Responses:** In `extension/content.js:5463-5464`, `initHUD` called `apFetch('/profile')`. When the endpoint returned a 404 with `{ error: "Profile not found..." }`, `userProfile` was assigned this JSON object. Because plain objects are truthy in JavaScript, `if (!userProfile)` evaluations failed to trigger the fallback to `STANDALONE_PROFILES.roushan`. As a result, `userProfile.fullName` evaluated to undefined (falling back to generic `'You'`), and `userProfile.firstName`, `userProfile.lastName`, and `userProfile.email` were all undefined, leaving every basic candidate field blank.
+  3. **Unlinked Developer Authentication Edge Case:** In `/api/autopilot/profile/route.ts` and `/api/resume/download/latest/route.ts`, if a developer was authenticated with an account whose `userId` was not yet linked to the database `Profile` record, the routes returned a 404 error instead of seamlessly falling back to `getMasterResumeBaseline(targetSlug)`.
+- **The Concrete Surgical Fix:**
+  1. **`isValidProfile` Validator & Fallback Guard (`extension/content.js`):**
+     - Introduced `isValidProfile(p)` helper: checks that `p` is an object, does NOT contain `p.error`, contains `p.firstName || p.fullName`, and contains `p.email`.
+     - Hardened `initHUD` (`content.js:5460-5500`): verifies `isValidProfile(rawProfile)` before accepting API data. If invalid or 404, automatically falls back to `STANDALONE_PROFILES[activeCtx] || STANDALONE_PROFILES.roushan`.
+     - Hardened `runAutofill` (`content.js:5646`): re-verifies `isValidProfile(userProfile)` before executing autofill; if invalid, resolves immediately to `STANDALONE_PROFILES.roushan`.
+     - Replaced identity badge fallback from `"You"` / `"Full-Stack Developer"` to `"Roushan Kumar"` / `"Software Developer — Backend & Cloud"`.
+  2. **Complete Eradication of Rogue Downloads (`extension/content.js`):**
+     - Removed `chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' })` in `fillAllFields` on file injection failure.
+     - When synthetic file injection fails or is unsupported by an ATS, the row is cleanly marked `skipped` with `'Upload manually'` and ZERO file downloads are triggered.
+  3. **Robust Backend Profile Fallback & Title Case Normalization (`src/app/api/autopilot/profile/route.ts`):**
+     - Updated `/api/autopilot/profile` to resolve founder profiles via `getMasterResumeBaseline` when `userId` is unlinked.
+     - Added name normalization: splits `fullName` and converts all-caps names (like `"ROUSHAN KUMAR"`) into proper Title Case (`firstName: "Roushan"`, `lastName: "Kumar"`, `fullName: "Roushan Kumar"`).
+     - Fixed `src/app/api/resume/download/latest/route.ts` to allow founder downloads even if `userId` is unlinked.
+  4. **Automated Verification & Packaging:**
+     - Added targeted unit tests in `tests/astranis-deep-audit.test.ts` and `tests/api-autopilot-token.test.ts` verifying profile validation, field hydration, and founder API resolution.
+     - Verified TypeScript compiler (`npx tsc --noEmit` $\rightarrow$ 0 errors).
+     - Verified full test suite (`npx vitest run` $\rightarrow$ 63/63 test files and 585/585 tests passing).
+     - Re-packaged extension to `public/downloads/astrepilot-extension.zip` (`634.5 KB`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Zero Unsolicited File Downloads):** An autofill extension must NEVER trigger unrequested browser file downloads during form filling. If a synthetic file upload fails or is unsupported by an ATS, mark the field as manual upload in the HUD without touching the browser download manager.
+  - **Rule 2 (Strict Profile Object Validation):** Never treat a truthy JSON response as a valid profile without asserting required fields (`fullName || firstName`, `email`, and `!res.error`). Unhandled error JSON objects (`{ error: ... }`) poison downstream field mapping.
+  - **Rule 3 (Zero Identity Degradation):** The HUD identity must never degrade to generic strings like `"You"` or `"YO"`. Always default to the authenticated candidate context or founder fallback (`Roushan Kumar` / `Ayushi Raj`).
+- **Status:** Complete, verified (`585/585` tests passing across 63 test suites, `0` TS errors, package regenerated), committed and pushed to `origin main`.

@@ -53,5 +53,27 @@ describe('API: /api/autopilot/token', () => {
     const data = await res.json();
     expect(data.token).toBeDefined();
   });
+
+  it('verifies /api/autopilot/profile returns complete profile for founder slug even with unlinked userId', async () => {
+    const { GET: handleProfile } = await import('../src/app/api/autopilot/profile/route');
+    const { generateAutopilotToken } = await import('../src/lib/autopilot/tokenUtils');
+    const token = generateAutopilotToken('unlinked_google_user_9999');
+
+    const req = new Request('http://localhost:3000/api/autopilot/profile?slug=roushan', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const res = await handleProfile(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.fullName).toContain('Roushan');
+    expect(data.firstName).toBe('Roushan');
+    expect(data.lastName).toBe('Kumar');
+    expect(data.email).toBe('roushanraut404@gmail.com');
+    expect(data.phone).toBeDefined();
+    expect(data.country).toBeDefined();
+  });
 });
 

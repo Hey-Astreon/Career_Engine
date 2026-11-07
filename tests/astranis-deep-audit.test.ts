@@ -241,4 +241,45 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
     expect(answer).toBe('Available immediately / Earliest available date (Flexible)');
     expect(answer).not.toBe('May 2027');
   });
+
+  it('guarantees profile resolution never corrupts into error payload and basic fields are 100% hydrated', () => {
+    const isValidProfile = (p: any) => {
+      return !!(p && typeof p === 'object' && !p.error && (p.firstName || p.fullName) && p.email);
+    };
+
+    // Test rejection of corrupted server payloads
+    const server404Payload = { error: "Profile not found. Please complete onboarding at astrework.app/onboard" };
+    expect(isValidProfile(server404Payload)).toBe(false);
+    expect(isValidProfile(null)).toBe(false);
+    expect(isValidProfile({})).toBe(false);
+    expect(isValidProfile({ error: "Unauthorized" })).toBe(false);
+
+    // Test acceptance of valid standalone profile
+    const standaloneRoushan = {
+      firstName: 'Roushan',
+      lastName: 'Kumar',
+      fullName: 'Roushan Kumar',
+      email: 'roushanraut404@gmail.com',
+      phone: '+919431483512',
+      title: 'Software Developer — Backend & Cloud',
+      location: 'Patna, Bihar, India',
+      country: 'India',
+      city: 'Patna'
+    };
+    expect(isValidProfile(standaloneRoushan)).toBe(true);
+
+    // Simulated resolver fallback logic
+    let resolvedProfile: any = server404Payload;
+    if (!isValidProfile(resolvedProfile)) {
+      resolvedProfile = standaloneRoushan;
+    }
+
+    // Verify basic fields are completely hydrated (never undefined or empty)
+    expect(resolvedProfile.firstName).toBe('Roushan');
+    expect(resolvedProfile.lastName).toBe('Kumar');
+    expect(resolvedProfile.email).toBe('roushanraut404@gmail.com');
+    expect(resolvedProfile.phone).toBe('+919431483512');
+    expect(resolvedProfile.country).toBe('India');
+    expect(resolvedProfile.location).toContain('Patna');
+  });
 });

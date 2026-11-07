@@ -53,13 +53,13 @@ export async function GET(req: Request) {
       profile = await db.profile.findFirst({ where: { userId } });
     }
 
-    // Graceful offline fallback: allow verified founder profiles only when unauthenticated/unpaired
-    if (!profile && !userId && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
+    // Graceful founder fallback: allow verified founder profiles if unlinked in database
+    if (!profile && (candidateSlug === "roushan" || candidateSlug === "ayushi")) {
       profile = await db.profile.findFirst({ where: { slug: candidateSlug } });
     }
 
-    // Default to roushan if no profile found and no token provided
-    if (!profile && !userId) {
+    // Default to roushan if no profile found
+    if (!profile) {
       profile = await db.profile.findFirst({ where: { slug: "roushan" } });
     }
 

@@ -31,17 +31,72 @@ export async function GET(req: Request) {
       select: { id: true, email: true },
     });
 
+    const url = new URL(req.url);
+    const requestedSlug = (url.searchParams.get("slug") || url.searchParams.get("candidate") || "").toLowerCase().trim();
+
     let profile = await db.profile.findFirst({
       where: { userId },
       include: { projects: true, virtualExps: true },
     });
 
-    if (!profile && isDeveloperEmail(user?.email)) {
-      const ownSlug = getDeveloperDefaultSlug(user?.email);
-      profile = await db.profile.findFirst({
-        where: { slug: ownSlug },
-        include: { projects: true, virtualExps: true },
-      });
+    if (!profile) {
+      const targetSlug = (requestedSlug === "roushan" || requestedSlug === "ayushi")
+        ? requestedSlug
+        : isDeveloperEmail(user?.email)
+          ? getDeveloperDefaultSlug(user?.email)
+          : null;
+
+      if (targetSlug) {
+        profile = await db.profile.findFirst({
+          where: { slug: targetSlug },
+          include: { projects: true, virtualExps: true },
+        });
+
+        if (!profile) {
+          const baseline = getMasterResumeBaseline(targetSlug as "roushan" | "ayushi");
+          profile = {
+            id: "founder-" + targetSlug,
+            slug: targetSlug,
+            fullName: baseline.header.fullName,
+            title: baseline.header.targetHeadline,
+            email: baseline.header.email,
+            phone: baseline.header.phone,
+            location: baseline.header.location,
+            linkedinUrl: (baseline.header as any).linkedinUrl || (baseline.header as any).linkedin || "",
+            githubUrl: (baseline.header as any).githubUrl || (baseline.header as any).github || "",
+            portfolioUrl: (baseline.header as any).portfolioUrl || (baseline.header as any).portfolio || "",
+            highestEducation: (Array.isArray(baseline.education) ? (baseline.education as any[])[0]?.degree : (baseline.education as any)?.degree) || "Bachelor of Computer Applications (BCA)",
+            streetAddress: "Patna, Bihar",
+            apartment: "",
+            zipCode: "800024",
+            noticePeriod: "Immediate",
+            willingnessToRelocate: true,
+            gender: targetSlug === "ayushi" ? "Female" : "Male",
+            pronouns: targetSlug === "ayushi" ? "She/Her" : "He/Him",
+            careerStage: "early_career",
+            yearsOfExperience: 2,
+            workType: "remote",
+            salaryRange: "$70k-$100k",
+            workAuthorized: true,
+            requiresVisa: targetSlug === "roushan",
+            targetCountries: "[\"United States\",\"Remote\",\"India\"]",
+            primarySkills: JSON.stringify(baseline.skills.flatMap(s => s.skillsText.split(",").map(x => x.trim()))),
+            projects: baseline.projects.map(p => ({
+              id: "proj-" + p.title,
+              title: p.title,
+              techStack: Array.isArray(p.techStack) ? p.techStack.join(", ") : (p.techStack || ""),
+              architecture: Array.isArray(p.bullets) ? p.bullets.join(". ") : "",
+            })),
+            virtualExps: (baseline.simulations || []).map(s => ({
+              id: "sim-" + s.company,
+              company: s.company,
+              roleTitle: s.roleTitle,
+              actionTaken: s.actionTaken || "",
+              outcome: s.engineeringOutcome || "",
+            })),
+          } as any;
+        }
+      }
     }
 
     if (!profile) {
@@ -53,8 +108,10 @@ export async function GET(req: Request) {
 
     // Split full name into first/last for granular form filling
     const nameParts = profile.fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] ?? "";
-    const lastName = (nameParts.slice(1).join(" ") || nameParts[0]) ?? "";
+    const formatName = (s: string) => s && s === s.toUpperCase() && s.length > 1 ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+    const firstName = formatName(nameParts[0] ?? "");
+    const lastName = formatName((nameParts.slice(1).join(" ") || nameParts[0]) ?? "");
+    const displayFullName = `${firstName} ${lastName}`.trim();
 
     // Build professional summary from profile context
     const projectNames = profile.projects.map((p) => p.title.split(/\s+[—–-]\s+/)[0]).slice(0, 3).join(", ");
@@ -101,7 +158,7 @@ export async function GET(req: Request) {
     return NextResponse.json(
       {
         profileId: profile.id,
-        fullName: profile.fullName,
+        fullName: displayFullName || profile.fullName,
         firstName,
         lastName,
         title: profile.title,

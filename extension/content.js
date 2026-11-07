@@ -182,6 +182,10 @@
     }
   };
 
+  function isValidProfile(p) {
+    return !!(p && typeof p === 'object' && !p.error && (p.firstName || p.fullName) && p.email);
+  }
+
   // Pillar E: Cross-Tab Broadcast Channel & Message Bus
   let syncChannel = null;
   try {
@@ -5457,11 +5461,16 @@
 
     if (!config.token) {
       isOffline = true;
-      userProfile = (config.activeContext && STANDALONE_PROFILES[config.activeContext]) ? STANDALONE_PROFILES[config.activeContext] : null;
+      userProfile = (config.activeContext && STANDALONE_PROFILES[config.activeContext]) ? STANDALONE_PROFILES[config.activeContext] : STANDALONE_PROFILES.roushan;
     } else {
       try {
         const profileRes = await apFetch(`/profile${activeCtx ? `?slug=${encodeURIComponent(activeCtx)}` : ''}`);
-        userProfile = await profileRes.json();
+        if (profileRes.ok) {
+          const rawProfile = await profileRes.json();
+          if (isValidProfile(rawProfile)) {
+            userProfile = rawProfile;
+          }
+        }
         if (userProfile && activeCtx && userProfile.slug && userProfile.slug !== activeCtx) {
           userProfile = STANDALONE_PROFILES[activeCtx] || userProfile;
         }
@@ -5474,15 +5483,22 @@
       } catch (err) {
         // Fallback to standalone offline profile if cloud un-paired or server down
         isOffline = true;
-        userProfile = (config.activeContext && STANDALONE_PROFILES[config.activeContext]) ? STANDALONE_PROFILES[config.activeContext] : null;
       }
     }
+
+    if (!isValidProfile(userProfile)) {
+      isOffline = true;
+      userProfile = (activeCtx && STANDALONE_PROFILES[activeCtx])
+        ? STANDALONE_PROFILES[activeCtx]
+        : ((config.activeContext && STANDALONE_PROFILES[config.activeContext]) ? STANDALONE_PROFILES[config.activeContext] : STANDALONE_PROFILES.roushan);
+    }
+
     if (!activeHud) return; // user closed the HUD while loading
 
     if (userProfile) {
       activeHud.setIdentity({
-        fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'You',
-        title: userProfile.title || 'Full-Stack Developer',
+        fullName: userProfile.fullName || ((userProfile.firstName || '') + ' ' + (userProfile.lastName || '')).trim() || 'Roushan Kumar',
+        title: userProfile.title || 'Software Developer — Backend & Cloud',
         primedCompany: activeSession ? activeSession.company : null
       });
     } else {
@@ -5627,9 +5643,11 @@
     const hud = activeHud;
     if (!hud || isFilling) return;
 
-    if (!userProfile) {
+    if (!isValidProfile(userProfile)) {
       const config = await getStoredConfig();
-      userProfile = STANDALONE_PROFILES[config.activeContext || 'roushan'] || STANDALONE_PROFILES.roushan;
+      userProfile = (config.activeContext && STANDALONE_PROFILES[config.activeContext])
+        ? STANDALONE_PROFILES[config.activeContext]
+        : STANDALONE_PROFILES.roushan;
     }
 
     if (!detectedFields || !detectedFields.length) {
@@ -6191,8 +6209,7 @@
               filled++;
               hud.markRow(f.id, 'done', uploadRes.filename || 'Uploaded');
             } else {
-              chrome.runtime.sendMessage({ type: 'DOWNLOAD_RESUME' });
-              hud.markRow(f.id, 'skipped', 'Downloaded to disk');
+              hud.markRow(f.id, 'skipped', 'Upload manually');
             }
           } else if (f.type === 'COVER_LETTER' && f.element.tagName === 'INPUT' && f.element.type === 'file') {
             AstrePilotHUD.highlight(f.element, confTier);
