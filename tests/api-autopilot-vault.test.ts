@@ -43,6 +43,24 @@ describe("AstrePilot Q&A Vault API Endpoints", () => {
       });
     }
 
+    // Guarantee that candidate profile has a linked user and valid userId
+    if (!profile.userId) {
+      let user = await db.user.findFirst({ where: { email: profile.email } });
+      if (!user) {
+        user = await db.user.create({
+          data: {
+            name: "Roushan Kumar",
+            email: profile.email || "playboxstation460@gmail.com",
+          },
+        });
+      }
+      profile = await db.profile.update({
+        where: { id: profile.id },
+        data: { userId: user.id },
+        select: { id: true, userId: true, slug: true, email: true },
+      });
+    }
+
     testProfile = profile as { id: string; userId: string; slug: string; email: string };
     authToken = generateAutopilotToken(testProfile.userId);
   });

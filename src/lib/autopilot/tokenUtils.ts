@@ -8,6 +8,10 @@ const TOKEN_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days in ms
  * Format: base64url(payload).hmac_signature
  */
 export function generateAutopilotToken(userId: string): string {
+  if (!userId) {
+    throw new Error("Cannot generate autopilot token for undefined/null userId");
+  }
+
   const payload = Buffer.from(
     JSON.stringify({ uid: userId, exp: Date.now() + TOKEN_TTL })
   ).toString("base64url");

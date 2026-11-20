@@ -26,10 +26,35 @@ async function resolveProfile(req: Request) {
     extractBearerToken(req.headers.get("Authorization")) ?? ""
   );
   if (bearerUserId) {
-    const profile = await db.profile.findFirst({
-      where: { userId: bearerUserId },
+    let profile = await db.profile.findFirst({
+      where: {
+        OR: [
+          { userId: bearerUserId },
+          { id: bearerUserId },
+        ],
+      },
     });
     if (profile) return profile;
+
+    // Check user email association if bearerUserId is a user ID
+    const user = await db.user.findUnique({
+      where: { id: bearerUserId },
+      select: { id: true, email: true },
+    });
+    if (user?.email) {
+      profile = await db.profile.findFirst({
+        where: { email: user.email },
+      });
+      if (profile) {
+        if (!profile.userId) {
+          await db.profile.update({
+            where: { id: profile.id },
+            data: { userId: user.id },
+          }).catch(() => {});
+        }
+        return profile;
+      }
+    }
   }
 
   try {

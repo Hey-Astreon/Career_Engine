@@ -14,10 +14,22 @@ export async function seedCandidateProfiles() {
 
     console.log(`\nSyncing candidate profile [${slug}]: ${baseline.header.fullName}`);
 
+    const userEmail = slug === "ayushi" ? "ayushi29507@gmail.com" : "playboxstation460@gmail.com";
+    let user = await db.user.findUnique({ where: { email: userEmail } });
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          name: baseline.header.fullName,
+          email: userEmail,
+        },
+      });
+    }
+
     // Upsert Profile
     const profile = await db.profile.upsert({
       where: { slug },
       update: {
+        userId: user.id,
         fullName: baseline.header.fullName,
         title: baseline.header.targetHeadline,
         location: baseline.header.location,
@@ -34,6 +46,7 @@ export async function seedCandidateProfiles() {
       },
       create: {
         slug,
+        userId: user.id,
         fullName: baseline.header.fullName,
         title: baseline.header.targetHeadline,
         location: baseline.header.location,

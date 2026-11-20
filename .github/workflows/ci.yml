@@ -39,6 +39,7 @@ jobs:
           DATABASE_URL: file:./prisma/dev.db
           TURSO_DATABASE_URL: ""
           TURSO_AUTH_TOKEN: ""
+          NEXTAUTH_SECRET: "stride-continuous-integration-jwt-secret-key-2026"
 
       - name: Lint
         run: npm run lint
@@ -48,8 +49,10 @@ jobs:
         env:
           DATABASE_URL: file:./prisma/dev.db
           VITEST: "true"
+          NEXTAUTH_SECRET: "stride-continuous-integration-jwt-secret-key-2026"
 
       - name: Build
         run: npm run build
         env:
           DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: "stride-continuous-integration-jwt-secret-key-2026"
