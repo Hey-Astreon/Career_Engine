@@ -2,8 +2,8 @@ import OnboardingWizard from "@/components/OnboardingWizard";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { StrideLogo } from "@/components/brand/StrideLogo";
 
 export default async function OnboardingPage() {
   const session = await getServerSession(authOptions);
@@ -19,14 +19,7 @@ export default async function OnboardingPage() {
         <div className="mb-8 text-center">
           <div className="flex justify-center items-center mb-6">
             <Link href="/" className="inline-block transition-transform hover:scale-105">
-              <Image
-                src="/stride-brand.png"
-                alt="Stride Logo"
-                width={1760}
-                height={363}
-                className="h-10 w-auto object-contain"
-                priority
-              />
+              <StrideLogo variant="light" height={36} />
             </Link>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-2">Set up your workspace</h1>

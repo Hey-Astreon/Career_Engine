@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { StrideLogo } from "@/components/brand/StrideLogo";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Globe2, Target, FileCheck, Sparkles, ChevronRight, Briefcase, Clock, Send, KeyRound } from "lucide-react";
@@ -62,15 +62,8 @@ export function Sidebar() {
         className="group block transition-all"
         aria-label="Stride - Autonomous Remote Career Intelligence"
       >
-        <div className="flex h-[52px] w-full items-center justify-center rounded-xl border border-[var(--line)] bg-white px-2 py-1 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
-          <Image
-            src="/stride-brand.png"
-            alt="Stride - Autonomous Remote Career Intelligence"
-            width={1760}
-            height={363}
-            className="w-full h-auto max-h-[44px] object-contain"
-            priority
-          />
+        <div className="flex h-[52px] w-full items-center justify-center rounded-xl border border-[var(--line)] bg-white px-3 py-1 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
+          <StrideLogo variant="light" height={26} />
         </div>
       </Link>
       <div className="ce-nav-label !mt-4">Candidate workspace</div>

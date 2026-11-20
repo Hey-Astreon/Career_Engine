@@ -4,8 +4,8 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { StrideLogo } from "@/components/brand/StrideLogo";
 
 /* ─── Google SVG ─────────────────────────────────────────────────────────── */
 function GoogleIcon() {
@@ -138,14 +138,7 @@ export default function RegisterPage() {
           {/* Logo */}
           <div className="flex justify-center mb-7">
             <Link href="/" className="inline-block transition-all hover:opacity-80 hover:scale-[1.02] active:scale-[0.98]">
-              <Image
-                src="/stride-brand.png"
-                alt="Stride"
-                width={1760}
-                height={363}
-                className="h-9 w-auto object-contain"
-                priority
-              />
+              <StrideLogo variant="light" height={36} />
             </Link>
           </div>
 

@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { StrideLogo } from "@/components/brand/StrideLogo";
 
 interface LegalPageLayoutProps {
   title: string;
@@ -14,11 +15,8 @@ export default function LegalPageLayout({ title, lastUpdated, children }: LegalP
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-xl border-b border-black/[0.04] z-50 flex items-center px-6 sm:px-12">
         <div className="flex-1 flex items-center space-x-2.5">
-          <Link href="/" className="flex items-center space-x-2.5">
-            <svg viewBox="0 0 100 100" className="w-5 h-5 text-[#1d1d1f]" fill="currentColor">
-              <path d="M10,90 Q50,10 90,90 H70 Q50,40 30,90 Z" />
-            </svg>
-            <span className="font-bold tracking-tight text-[15px]">Stride</span>
+          <Link href="/" className="flex items-center space-x-2.5 group">
+            <StrideLogo variant="light" height={24} className="transition-transform group-hover:scale-[1.02]" />
           </Link>
         </div>
       </nav>

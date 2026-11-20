@@ -7,6 +7,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import HeroInteractiveShowcase from "@/components/HeroInteractiveShowcase";
 import HeroInteractiveBackground from "@/components/HeroInteractiveBackground";
+import { StrideLogo } from "@/components/brand/StrideLogo";
 
 /* ── Animation Presets ── */
 const fadeUp: Variants = {
@@ -77,13 +78,10 @@ function ModernAgencyNavbar() {
         {/* Brand & Telemetry Pill */}
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center group">
-            <Image
-              src="/stride-brand.png"
-              alt="Stride Logo"
-              width={1760}
-              height={363}
-              className="h-7 w-auto object-contain transition-transform group-hover:scale-[1.02]"
-              priority
+            <StrideLogo
+              variant="light"
+              height={28}
+              className="transition-transform group-hover:scale-[1.02]"
             />
           </Link>
 
@@ -1029,14 +1027,8 @@ function ModernAgencyFooter() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-14">
           {/* Brand Info */}
           <div className="col-span-2 space-y-4">
-            <Link href="/" className="inline-block">
-              <Image
-                src="/stride-brand.png"
-                alt="Stride Logo"
-                width={1760}
-                height={363}
-                className="h-7 w-auto object-contain"
-              />
+            <Link href="/" className="inline-block transition-transform hover:scale-[1.02]">
+              <StrideLogo variant="light" height={28} />
             </Link>
             <p className="text-[14px] text-[#52525b] leading-relaxed max-w-sm font-medium">
               Autonomous career operating system integrating 21+ direct ATS feeds, StrideShield fraud detection, and single-page A4 print typography.

@@ -70,14 +70,17 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico?v=2", sizes: "any" },
-      { url: "/icon.png?v=2", type: "image/png", sizes: "32x32" },
-      { url: "/icon-192.png?v=2", type: "image/png", sizes: "192x192" },
-      { url: "/icon-512.png?v=2", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/apple-icon.png?v=2", sizes: "180x180" }],
-    shortcut: "/favicon.ico?v=2",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/favicon.ico",
   },
+  manifest: "/site.webmanifest",
 };
 
 const jsonLd = {
@@ -132,7 +135,7 @@ const jsonLd = {
       "@id": `${siteConfig.url}/#organization`,
       "name": "Stride",
       "url": siteConfig.url,
-      "logo": `${siteConfig.url}/icon.png`,
+      "logo": `${siteConfig.url}/brand/stride-logo-light.png`,
       "sameAs": [
         "https://github.com/Hey-Astreon/Career_Engine",
         "https://astreon.me",

@@ -31,7 +31,7 @@ export const siteConfig = {
   description:
     "Stride is the premier autonomous remote career intelligence platform. Featuring 21-provider automated job scraping, deep ATS resume scoring, 1-click tailored application kits, and background job synchronization.",
   url: SITE_URL,
-  ogImage: `${SITE_URL}/landing-dashboard.png`,
+  ogImage: `${SITE_URL}/og-image.png`,
   author: "Ayushi Raj & Roushan Kumar",
   creator: "Ayushi Raj & Roushan Kumar",
   links: {

@@ -4270,3 +4270,35 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (Holistic Rebranding Infallibility Law):** A brand migration is never complete until the secondary and tertiary tiers are purged: JSON-LD SEO schemas, email digest templates, AI dynamic prose interpolators, Q&A vault starter ammunition, compiled binary PDFs on disk, and internal AI system prompts/skills.
 - **Status:** Complete, verified (100% passing across all 64 test files [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.
+
+### Phase 103: Stride Brand Kit v3 Integration & Vector SVG Asset Deployment Across Web & Extension (November 20, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Following the initial name change, the actual visual assets (favicons, PWA icons, touch icons, open-graph cards, extension toolbar icons, and workspace logos) still relied on either old AstreWork images or temporary placeholders.
+  - Hardcoded `1760x363` dimensions caused aspect ratio mismatches with Stride's new 3.6:1 (`360x100`) two-tone emblem and wordmark.
+- **Deep Root Cause Diagnosis:**
+  - Raster PNG scaling on high-DPI Retina screens causes blurry edges if the source asset is not vector SVG.
+  - Different surfaces require distinct contrast variants: light surfaces (`bg-white`, `bg-[#fafafa]`, light cards) need the Royal Blue (`#2254EB`) + Ink Black (`#09131C`) wordmark, while dark surfaces (such as the closed Shadow DOM StridePilot HUD `#stridepilot-root`) require the Royal Blue (`#2254EB`) + Pure White (`#FFFFFF`) wordmark.
+- **The Concrete Surgical Fix:**
+  - **1. Deployed Brand Kit v3 Directory (`public/brand/`):**
+    - Copied the complete set of calibrated Stride assets: `stride-logo-light.svg`, `stride-logo-light.png`, `stride-logo-dark.svg`, `stride-logo-dark.png`, and marks (`stride-mark-*.png`).
+  - **2. Installed First-Class React Vector Component (`src/components/brand/StrideLogo.tsx`):**
+    - Provides zero-latency inline SVG rendering with automated `light`/`dark` variant switching and `iconOnly` mark mode.
+    - Replaced hardcoded raster `<Image>` tags with `<StrideLogo />` across:
+      - Landing Page Navbar (`h=28`) and Footer (`h=28`)
+      - Workspace Left Rail Sidebar (`h=26` inside optical white container)
+      - Login & Registration Floating Cards (`h=36`)
+      - Onboarding Wizard Header (`h=36`)
+      - Legal Pages Navigation (`h=24`)
+  - **3. Synchronized Web & PWA Metadata (`public/` & `src/app/layout.tsx`):**
+    - Installed `favicon.ico`, `favicon.svg`, `favicon-16x16.png`, `favicon-32x32.png`, `favicon-48x48.png`.
+    - Installed `apple-touch-icon.png` (180x180), `icon-192x192.png`, `icon-512x512.png`, `site.webmanifest`, and `og-image.png`.
+    - Cleaned up obsolete `astrework-brand.png` from `public/` and `extension/`.
+  - **4. Upgraded StridePilot Chrome Extension (`extension/`):**
+    - Updated extension icons: `icon16.png`, `icon32.png`, `icon48.png`, and `icon128.png`.
+    - Updated `extension/stride-brand.png` for popup rendering at 3.6:1 aspect ratio.
+    - Updated `extension/hud-ui.js` `ICONS.logo` and `ICONS.logoLg` with the official Stride polygon mark SVG.
+    - Rebuilt `stridepilot-extension.zip` and `astrepilot-extension.zip` via `package-extension.js`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (The Vector-First Brand Law):** Core brand logos in web applications should always be rendered as vector SVGs (`<StrideLogo />`) rather than static raster bitmaps. SVGs render at infinite sharpness across all device pixel ratios, eliminate network roundtrips, and allow dynamic theme adaptations without asset swaps.
+  - **Rule 2 (Surface-Aware Contrast Protocol):** Never use a single logo variant across opposing surface brightnesses. Light backgrounds (`bg-white`, `bg-[#fafafa]`) demand the Ink Black (`#09131C`) wordmark for maximum WCAG AAA contrast, while dark backgrounds (`#stridepilot-root`) demand the Pure White (`#FFFFFF`) wordmark.
+- **Status:** Complete, verified (all 64 test suites passing [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.
