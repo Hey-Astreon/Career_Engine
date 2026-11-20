@@ -29,11 +29,21 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Prepare Test Database
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+
       - name: Lint
         run: npm run lint
 
       - name: Test
         run: npx vitest run
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          VITEST: "true"
 
       - name: Build
         run: npm run build
+        env:
+          DATABASE_URL: file:./prisma/dev.db

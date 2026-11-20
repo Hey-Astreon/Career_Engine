@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 20, 2026 (Phase 104: StrideLogo Optical ViewBox Calibration & Sidebar Brand Card Anti-Blank Space Refinement)
+> **LAST COGNITIVE SYNC:** November 20, 2026 (Phase 105: GitHub Actions CI Automated SQLite Push & Commit Red-Cross Elimination Protocol)
 
 ---
 
@@ -4327,3 +4327,24 @@ graph TD
   - **Rule (The Optical Container Density Law):** A brand logo in a bounded UI card container must occupy between 60% and 75% of the container's vertical height (e.g. 34px logo inside a 48px card). Any logo under 55% of container height produces an unnatural, empty "stamp-in-a-field" defect that signals sloppy frontend design.
   - **Rule (Tight SVG ViewBox Geometry):** Never allow exported SVGs to include phantom trailing whitespace beyond the typographic bounding box. The `viewBox` width must be pinned directly to the rightmost glyph's edge ($x \approx 298$ for Stride at font-size 64) so CSS flexbox centering aligns the visual centroid accurately.
 - **Status:** Complete, verified (64/64 test suites passing [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.
+
+### Phase 105: GitHub Actions CI Automated SQLite Push & Commit Red-Cross Elimination Protocol (November 20, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In GitHub commit history, commits displayed a red cross (`❌ 2/3`) badge, creating a negative visual impression for visiting recruiters and engineering hiring managers.
+  - While Continuous Deployment (CD) successfully compiled and pushed ARM64 Docker images, `.github/workflows/ci.yml` consistently failed at `Step: Test (npx vitest run)`.
+  - In addition, an obsolete legacy Vercel integration was triggering deployment checks and failing on every push.
+- **Deep Root Cause Diagnosis:**
+  - `prisma/dev.db` is strictly ignored by `.gitignore` (`*.db`).
+  - When clean GitHub Actions Ubuntu runners cloned the repository, no SQLite database existed.
+  - `ci.yml` executed `npx prisma generate` followed immediately by `npx vitest run`, without running `npx prisma db push`.
+  - When test suites queried Prisma database models (`db.user`, `db.siteCredential`, `db.opportunity`, `db.candidateProfile`), SQLite threw table-not-found errors, failing the CI runner.
+- **The Concrete Surgical Fix:**
+  - **1. Injected Automated SQLite Setup in CI (`.github/workflows/ci.yml`):**
+    - Added `Step: Prepare Test Database` executing `npx prisma db push --accept-data-loss` with `DATABASE_URL: file:./prisma/dev.db`.
+    - Explicitly set `DATABASE_URL: file:./prisma/dev.db` and `VITEST: "true"` across both the `Test` and `Build` steps.
+    - Ensured Prisma creates the local schema before tests run, enabling 100% test pass on headless cloud runners.
+  - **2. Legacy Vercel Remediation:**
+    - Documented the exact one-click steps for Founder Roushan to delete or disconnect the dead Vercel project webhook so Vercel stops posting redundant failed check statuses to GitHub commits.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The CI Database Bootstrap Law):** In any project where `.db` files are ignored by version control, the CI pipeline MUST explicitly execute `prisma db push` (or equivalent migration) before running tests or production builds. Never assume an in-memory or file-based database exists on clean ephemeral runners.
+- **Status:** Complete, verified, committed and pushed to `origin main`.
