@@ -12,6 +12,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -42,10 +44,21 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npx vitest run --fileParallelism=false
+        run: npx vitest run --fileParallelism=false 2>&1 | tee vitest.log
         env:
           DATABASE_URL: file:./prisma/dev.db
           VITEST: "true"
+
+      - name: Save Failure Log
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci-failure-log
+          tail -n 150 vitest.log > CI_FAILURE.txt
+          git add CI_FAILURE.txt
+          git commit -m "ci: capture vitest failure output"
+          git push -f origin ci-failure-log
 
       - name: Build
         run: npm run build
