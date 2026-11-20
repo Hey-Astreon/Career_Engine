@@ -3,11 +3,11 @@ name: astrework-ui-design-system
 description: >-
   Complete frontend architecture, curated CSS design tokens (--canvas, --surface, --ink, --blue, --green, --red, --amber, --line),
   dark mode protocols, typography scales, button hierarchy, workspace dashboard layout (.ce-shell, .ce-rail, .ce-header, .ce-drawer),
-  keyboard shortcuts (Cmd+K, Alt+Shift+A, J/K), and public landing page conversion & Framer Motion rules for AstreWork
+  keyboard shortcuts (Cmd+K, Alt+Shift+A, J/K), and public landing page conversion & Framer Motion rules for Stride
   (src/app/globals.css, src/app/(workspace)/dashboard/page.tsx, src/app/(public)/page.tsx).
 ---
 
-# 🎨 AstreWork UI Design System, Workspace Geometry & Landing Page Mastery
+# 🎨 Stride UI Design System, Workspace Geometry & Landing Page Mastery
 
 This unified skill governs all visual tokens, dark mode variables, typography hierarchies, interactive buttons, dashboard workspace geometry (`.ce-*`), keyboard navigation, and public landing page choreography across `src/app/globals.css`, `src/app/(workspace)/*`, and `src/app/(public)/page.tsx`.
 
@@ -15,7 +15,7 @@ This unified skill governs all visual tokens, dark mode variables, typography hi
 
 ## 🎨 PART 1: CORE COLOR TOKENS & TYPOGRAPHY (`src/app/globals.css`)
 
-AstreWork avoids raw uncalibrated primary colors (`#000000`, `#ff0000`, `#0000ff`). Every token is calibrated for optical balance and $\ge 7:1$ WCAG AAA heading contrast.
+Stride avoids raw uncalibrated primary colors (`#000000`, `#ff0000`, `#0000ff`). Every token is calibrated for optical balance and $\ge 7:1$ WCAG AAA heading contrast.
 
 ### 1. Light Mode (`:root`) & Dark Mode (`[data-theme='dark']`) Tokens
 ```css

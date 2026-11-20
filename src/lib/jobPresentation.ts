@@ -1,5 +1,5 @@
 /**
- * Browser-safe display helpers for the AstreWork UI.
+ * Browser-safe display helpers for the Stride UI.
  *
  * These functions deliberately contain no provider, ORM, HTML-parser, or Node
  * dependencies. Backend normalization remains in src/lib/providers/normalize.ts.

@@ -26,7 +26,7 @@ describe("AstrePilot Q&A Vault API Endpoints", () => {
       const user = await db.user.create({
         data: {
           name: "Roushan Kumar",
-          email: "test_roushan@astrework.app",
+          email: "test_roushan@stride.app",
         },
       });
       profile = await db.profile.create({
@@ -34,7 +34,7 @@ describe("AstrePilot Q&A Vault API Endpoints", () => {
           slug: "roushan-test",
           fullName: "Roushan Kumar",
           title: "Full-Stack Developer",
-          email: "test_roushan@astrework.app",
+          email: "test_roushan@stride.app",
           location: "Patna, Bihar, India",
           masterResumePath: "public/candidates/3_Roushan_Kumar/Resume.pdf",
           userId: user.id,

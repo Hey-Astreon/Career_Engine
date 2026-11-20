@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showView(viewConnected);
   }
 
-  // Top Utility Pills (All strictly routed to https://astrework.app)
+  // Top Utility Pills (All strictly routed to https://stride.app)
   if (btnTopDashboard) {
     btnTopDashboard.addEventListener('click', () => {
       chrome.tabs.create({ url: PROD_ORIGIN + '/dashboard' });
@@ -639,7 +639,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await activateStandaloneProfile('roushan');
         await initialize();
       } finally {
-        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with AstreWork Web Session';
+        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with Stride Web Session';
       }
     });
   }

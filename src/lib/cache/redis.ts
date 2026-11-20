@@ -1,7 +1,7 @@
 import Redis from "ioredis";
 
 /**
- * AstreWork Enterprise In-Memory Cache Engine
+ * Stride Enterprise In-Memory Cache Engine
  * -------------------------------------------
  * Designed with a Defensive Cache-Aside Architecture.
  * If Redis is offline or not configured, it gracefully degrades to an in-memory LRU store.
@@ -283,11 +283,14 @@ class RedisCacheManager implements CacheClient {
 
 // Global singleton for Next.js Fast Refresh & Node runtime
 const globalForCache = globalThis as unknown as {
+  strideCache: RedisCacheManager | undefined;
   astreworkCache: RedisCacheManager | undefined;
 };
 
-export const cache: CacheClient = globalForCache.astreworkCache ?? new RedisCacheManager();
+export const cache: CacheClient =
+  globalForCache.strideCache ?? globalForCache.astreworkCache ?? new RedisCacheManager();
 
 if (process.env.NODE_ENV !== "production") {
+  globalForCache.strideCache = cache as RedisCacheManager;
   globalForCache.astreworkCache = cache as RedisCacheManager;
 }

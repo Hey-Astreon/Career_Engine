@@ -1,6 +1,6 @@
 /**
  * exportEngine.ts
- * High-precision multi-format spreadsheet and data export suite for AstreWork.
+ * High-precision multi-format spreadsheet and data export suite for Stride.
  * Generates RFC 4180 CSV (with UTF-8 BOM and formula injection shielding),
  * Microsoft Excel XML Spreadsheet 2003 (.xls), Semantic XML, and TSV clipboard formats.
  */
@@ -203,9 +203,9 @@ export function generateApplicationsExcelXml(
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
  xmlns:html="http://www.w3.org/TR/REC-html40">
  <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
-  <Author>${escXml(candidateName)} — AstreWork AI Career Engine</Author>
+  <Author>${escXml(candidateName)} — Stride AI Career Engine</Author>
   <Created>${exportDate}</Created>
-  <Company>AstreWork</Company>
+  <Company>Stride</Company>
  </DocumentProperties>
  <Styles>
   <Style ss:ID="Default" ss:Name="Normal">

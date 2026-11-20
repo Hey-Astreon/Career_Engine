@@ -124,7 +124,7 @@ export function ProviderHealthReport({ rows, nowTick = Date.now() }: { rows: Pro
             </span>
           </div>
           <span className="ce-chip ce-chip-green text-[9px] font-mono font-bold">
-            AGENT CORE LIVE (agent.astrework.app)
+            AGENT CORE LIVE (agent.stride.app)
           </span>
         </div>
       </div>

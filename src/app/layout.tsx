@@ -87,7 +87,7 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteConfig.url}/#website`,
       "url": siteConfig.url,
-      "name": "AstreWork",
+      "name": "Stride",
       "description": siteConfig.description,
       "publisher": {
         "@id": `${siteConfig.url}/#organization`,
@@ -104,7 +104,7 @@ const jsonLd = {
     {
       "@type": "SoftwareApplication",
       "@id": `${siteConfig.url}/#software`,
-      "name": "AstreWork",
+      "name": "Stride",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "All Modern Web Browsers",
       "url": siteConfig.url,
@@ -130,7 +130,7 @@ const jsonLd = {
     {
       "@type": "Organization",
       "@id": `${siteConfig.url}/#organization`,
-      "name": "AstreWork",
+      "name": "Stride",
       "url": siteConfig.url,
       "logo": `${siteConfig.url}/icon.png`,
       "sameAs": [
@@ -165,10 +165,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          "name": "How is AstreWork different from LinkedIn or Indeed?",
+          "name": "How is Stride different from LinkedIn or Indeed?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "AstreWork continuously scans 19+ verified remote developer boards every 3 hours, eliminates expired and ghost listings, scores your profile against job descriptions, and generates tailored ATS-proof resumes and outreach kits automatically.",
+            "text": "Stride continuously scans 19+ verified remote developer boards every 3 hours, eliminates expired and ghost listings, scores your profile against job descriptions, and generates tailored ATS-proof resumes and outreach kits automatically.",
           },
         },
         {
@@ -181,10 +181,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          "name": "Is AstreWork free?",
+          "name": "Is Stride free?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. AstreWork is free to use for individual job seekers, built by engineers to eliminate the frustration of sending applications into the void.",
+            "text": "Yes. Stride is free to use for individual job seekers, built by software developers to eliminate the frustration of sending applications into the void.",
           },
         },
       ],

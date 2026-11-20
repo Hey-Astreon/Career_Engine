@@ -17,7 +17,7 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
     location: "Patna, Bihar, India",
     linkedinUrl: "https://linkedin.com/in/hey-astreon",
     githubUrl: "https://github.com/Hey-Astreon",
-    portfolioUrl: "https://astrework.app",
+    portfolioUrl: "https://stride.app",
     school: "Amity University",
     degree: "Bachelor of Computer Applications (BCA)",
     discipline: "Computer Science",
@@ -101,10 +101,10 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
   });
 
   it('verifies Question 9 answer comprehensively covers all 5 criteria with 0 BCA title violations', () => {
-    const q9Answer = 'Architected AstrePilot and AstreWork, an autonomous career operating system and MV3 browser extension built with React 19, TypeScript, and LibSQL. As Lead Systems Architect and Full-Stack Developer, I designed the closed Shadow DOM HUD, multi-LLM failover cascade across Gemini and Groq, and a 4-tier self-healing write actuator that overcomes virtual DOM reconciliation barriers. The core technical complexity involved cross-origin subframe coordination and zero-click synthetic File injection.';
+    const q9Answer = 'Architected StridePilot and Stride, an autonomous career operating system and MV3 browser extension built with React 19, TypeScript, and LibSQL. As Lead Systems Architect and Full-Stack Developer, I designed the closed Shadow DOM HUD, multi-LLM failover cascade across Gemini and Groq, and a 4-tier self-healing write actuator that overcomes virtual DOM reconciliation barriers. The core technical complexity involved cross-origin subframe coordination and zero-click synthetic File injection.';
 
     // 1. Comprehensive content coverage
-    expect(q9Answer).toContain('AstrePilot and AstreWork');
+    expect(q9Answer).toMatch(/(?:AstrePilot and AstreWork|StridePilot and Stride)/);
     expect(q9Answer).toContain('React 19, TypeScript');
     expect(q9Answer).toContain('Lead Systems Architect and Full-Stack Developer');
     expect(q9Answer).toContain('Shadow DOM');
@@ -193,7 +193,7 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
   });
 
   it('verifies screening answers are de-duplicated, humanized, do not start with "Architected", and describe distinct accomplishments and projects', () => {
-    const qAccomplishmentAnswer = 'Building AstreWork and running it live in production on an Oracle Cloud ARM64 server. I designed the platform from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea all the way to a functioning platform that people actually rely on has been my proudest technical milestone.';
+    const qAccomplishmentAnswer = 'Building Stride and running it live in production on an Oracle Cloud ARM64 server. I designed the platform from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea all the way to a functioning platform that people actually rely on has been my proudest technical milestone.';
     const qComplexProjectAnswer = 'I developed AstrePilot, a browser extension built with Manifest V3, React 19, and TypeScript that automates complex job application workflows across dynamic single-page applications. As the lead developer, the hardest technical challenge was reliably writing values into virtual-DOM-managed forms (like React 19 and Greenhouse comboboxes) where standard DOM value assignments are immediately overwritten by internal state trackers. To solve this, I designed a multi-tier write actuator combining synthetic input events, native property descriptors, and keyboard event simulation, ensuring high-fidelity input persistence across custom dropdowns and dynamic forms.';
 
     // Assert zero AI scraping vanity metrics
@@ -206,7 +206,7 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
 
     // Assert de-duplication: they must not describe the exact same system with the same wording
     expect(qAccomplishmentAnswer).not.toBe(qComplexProjectAnswer);
-    expect(qAccomplishmentAnswer).toContain('AstreWork');
+    expect(qAccomplishmentAnswer).toMatch(/(?:AstreWork|Stride)/);
     expect(qComplexProjectAnswer).toContain('AstrePilot');
     expect(qComplexProjectAnswer).toContain('write actuator');
 
@@ -248,7 +248,7 @@ describe('Astranis Greenhouse Deep Audit & Vulnerability Elimination', () => {
     };
 
     // Test rejection of corrupted server payloads
-    const server404Payload = { error: "Profile not found. Please complete onboarding at astrework.app/onboard" };
+    const server404Payload = { error: "Profile not found. Please complete onboarding at stride.app/onboard" };
     expect(isValidProfile(server404Payload)).toBe(false);
     expect(isValidProfile(null)).toBe(false);
     expect(isValidProfile({})).toBe(false);

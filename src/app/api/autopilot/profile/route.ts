@@ -101,7 +101,7 @@ export async function GET(req: Request) {
 
     if (!profile) {
       return NextResponse.json(
-        { error: "Profile not found. Please complete onboarding at astrework.app/onboard" },
+        { error: "Profile not found. Please complete onboarding at stride.app/onboard" },
         { status: 404, headers: CORS }
       );
     }
@@ -194,7 +194,7 @@ export async function GET(req: Request) {
         endYear: "2028",
         graduationYear: "2028",
         // Employment fields
-        company: profile.virtualExps[0]?.company ?? "AstreWork",
+        company: profile.virtualExps[0]?.company ?? "Stride",
         employmentTitle: profile.virtualExps[0]?.roleTitle ?? profile.title ?? "Full-Stack Developer",
         workDescription: profile.virtualExps[0]
           ? `${profile.virtualExps[0].actionTaken}. ${profile.virtualExps[0].outcome}`

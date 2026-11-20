@@ -7,7 +7,7 @@ import { db } from "../src/lib/db";
 
 async function main() {
   console.log("=================================================");
-  console.log("🚀 AstreWork Autonomous Discovery Engine (CLI)");
+  console.log("🚀 Stride Autonomous Discovery Engine (CLI)");
   console.log("=================================================");
   const start = Date.now();
 

@@ -350,9 +350,9 @@ const ROUSHAN_CONTACT = `Patna, Bihar, India (Open to Remote) | +91-9431483512 |
 
 const ROUSHAN_PROJECTS = [
   {
-    title: "AstreWork — Autonomous Career Engine & Distributed Harvester",
+    title: "Stride — Autonomous Career Engine & Distributed Harvester",
     techStack: "Next.js 16, Python, OCI, Docker, Redis",
-    linksHtml: `<a href="https://astrework.app">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Career_Engine">GitHub</a>`,
+    linksHtml: `<a href="https://stride.app">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Career_Engine">GitHub</a>`,
     bullets: [
       `<b>Creator & Lead Backend Developer:</b> Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms.`,
       `<b>Cloud Infrastructure:</b> Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.`,
@@ -385,12 +385,12 @@ const AYUSHI_CONTACT = `Bihar, India (Open to Remote) | +91-8709852305 | <a href
 
 const AYUSHI_PROJECTS = [
   {
-    title: "AstreWork — AI Career Platform & AstrePilot Extension",
+    title: "Stride — AI Career Platform & StridePilot Extension",
     techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
-    linksHtml: `<a href="https://astrework.app">Live Demo</a> | <a href="https://github.com/Silenttears-cloud/Career_Engine">GitHub</a>`,
+    linksHtml: `<a href="https://stride.app">Live Demo</a> | <a href="https://github.com/Silenttears-cloud/Career_Engine">GitHub</a>`,
     bullets: [
-      `<b>Co-Developer & Lead Frontend Architect:</b> Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.`,
-      `<b>AstrePilot Chrome Extension (MV3):</b> Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.`,
+      `<b>Co-Developer & Lead Frontend Architect:</b> Built Stride's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.`,
+      `<b>StridePilot Chrome Extension (MV3):</b> Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.`,
       `<b>Workspace & Print Engine:</b> Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift.`,
     ],
   },
@@ -423,7 +423,7 @@ const MASTER_RESUMES = [
     name: "ROUSHAN KUMAR",
     headline: "Software Developer — Backend & Cloud",
     contactHtml: ROUSHAN_CONTACT,
-    summaryHtml: `Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs <b>AstreWork</b> (astrework.app) on Oracle Cloud, where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Enjoys solving hard concurrency, caching, and infrastructure problems.`,
+    summaryHtml: `Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs <b>Stride</b> (stride.app) on Oracle Cloud, where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Enjoys solving hard concurrency, caching, and infrastructure problems.`,
     skills: [
       ["Languages", "TypeScript, JavaScript, Python, Java, C#, SQL, Bash"],
       ["Backend & APIs", "FastAPI, Node.js, Express.js, .NET Core Web API, REST APIs, Microservices"],
@@ -441,7 +441,7 @@ const MASTER_RESUMES = [
     name: "AYUSHI RAJ",
     headline: "Software Developer — Full-Stack & AI",
     contactHtml: AYUSHI_CONTACT,
-    summaryHtml: `Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built <b>AstreWork</b> (astrework.app), shipping its live resume-scoring studio and the <b>AstrePilot</b> Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security.`,
+    summaryHtml: `Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built <b>Stride</b> (stride.app), shipping its live resume-scoring studio and the <b>StridePilot</b> Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security.`,
     skills: [
       ["Languages", "TypeScript, JavaScript, Python, Java, C#, SQL, HTML5/CSS3"],
       ["Frontend & UI", "React 19, Next.js 16 (App Router), Redux, Zustand, Tailwind CSS, Monaco Editor"],

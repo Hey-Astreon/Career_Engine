@@ -93,7 +93,7 @@ function generateStartupPitch(
   slug: string = "roushan"
 ): string {
   const p1 = candidate.masterProjects[0] || {
-    title: "AstreWork",
+    title: "Stride",
     architecture: "distributed scraping pipelines and career discovery engine",
   };
   const p2 = candidate.masterProjects[1] || {

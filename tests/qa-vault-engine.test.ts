@@ -149,7 +149,7 @@ describe("AstrePilot Q&A Vault Engine", () => {
       );
 
       expect(match.matched).toBe(true);
-      expect(match.interpolatedAnswer).toContain("AstreWork");
+      expect(match.interpolatedAnswer).toMatch(/(?:AstreWork|Stride)/);
       expect(match.interpolatedAnswer).toContain("19+ distinct ATS feeds");
       expect(match.category).toBe("TECHNICAL");
     });

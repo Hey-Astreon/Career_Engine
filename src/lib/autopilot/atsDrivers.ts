@@ -1,7 +1,7 @@
 /**
  * atsDrivers.ts
  * -------------
- * Modular ATS Driver Architecture for AstrePilot & AstreWork.
+ * Modular ATS Driver Architecture for StridePilot & Stride.
  * Provides deterministic schema detection and field mapping for enterprise ATS portals
  * (iCIMS, Workday, Greenhouse, Lever, Ashby, etc.), bypassing brittle fuzzy heuristics.
  */

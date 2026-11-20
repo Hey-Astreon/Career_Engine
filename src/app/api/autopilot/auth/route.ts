@@ -16,9 +16,9 @@ export async function OPTIONS() {
 
 /**
  * POST /api/autopilot/auth
- * Direct authentication endpoint for AstrePilot extension.
+ * Direct authentication endpoint for StridePilot extension.
  * Allows candidates to sign in directly from the extension popup or HUD
- * without needing an active astrework.app tab.
+ * without needing an active stride.app tab.
  */
 export async function POST(req: Request) {
   try {

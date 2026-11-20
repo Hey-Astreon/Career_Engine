@@ -91,9 +91,9 @@ async function run() {
 
     const roushanProjects = [
       {
-        title: "AstreWork — Autonomous Career Engine & Distributed Harvester",
+        title: "Stride — Autonomous Career Engine & Distributed Harvester",
         techStack: "Next.js 16, Python, OCI, Docker, Redis",
-        liveDemoUrl: "https://astrework.app",
+        liveDemoUrl: "https://stride.app",
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bullets: [
@@ -240,14 +240,14 @@ async function run() {
 
     const ayushiProjects = [
       {
-        title: "AstreWork — AI Career Platform & AstrePilot Extension",
+        title: "Stride — AI Career Platform & StridePilot Extension",
         techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
-        liveDemoUrl: "https://astrework.app",
+        liveDemoUrl: "https://stride.app",
         githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
-        architecture: "Intelligent candidate matching engine and AstrePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
+        architecture: "Intelligent candidate matching engine and StridePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bullets: [
-          "Co-Developer & Lead Frontend Architect: Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
-          "AstrePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
+          "Co-Developer & Lead Frontend Architect: Built Stride's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
+          "StridePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
           "Workspace & Print Engine: Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift."
         ]
       },

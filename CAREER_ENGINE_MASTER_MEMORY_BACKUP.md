@@ -4232,3 +4232,41 @@ graph TD
   - **Rule 1 (Zero-Disruption Dual-Key Rebranding Law):** When rebranding a client-server extension ecosystem, never hard-break legacy storage keys or inter-process communication channels. Always read/write both `<new_brand>_*` and `<legacy_brand>_*` storage keys, listen to both BroadcastChannels, and export backward-compatible module aliases so existing user sessions remain seamlessly active.
   - **Rule 2 (Dual Binary Distribution Law):** During a transition period, package and maintain both the primary branded archive (`stridepilot-extension.zip`) and the legacy archive (`astrepilot-extension.zip`) to prevent broken links in external documentation or automated scripts.
 - **Status:** Complete, verified (all 64 test suites passing [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.
+
+### Phase 102: Deep Forensic Purge of Remaining AstreWork Brand Occurrences (November 20, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Founder Roushan requested a comprehensive secondary sweep to ensure no hidden or leftover "AstreWork" strings remained across onboarding flows, SEO JSON-LD schemas, AI cover letter & outreach generators, Chrome extension popup labels & question handlers, candidate PDF resumes, database seeds, and agent domain skills.
+- **Deep Root Cause Diagnosis:**
+  - While Phase 101 converted the primary user-facing pages, deeper layers (JSON-LD structured data in `layout.tsx`, onboarding wizard modals, fallback project titles in `drafter.ts`, starter ammunition in `qaVaultSeed.ts`, candidate master PDF generators in `scripts/generate-all-candidate-resumes.mjs`, and domain skill instruction files) still retained references to "AstreWork".
+- **The Concrete Surgical Fix:**
+  - **1. Web & Onboarding Layer:**
+    - `src/app/(onboarding)/onboard/layout.tsx` & `page.tsx`: Image src, alt text, and copy updated to `/stride-brand.png` and Stride.
+    - `src/app/layout.tsx`: Updated JSON-LD schemas (`WebSite`, `SoftwareApplication`, `Organization`, and `FAQPage`) to Stride and `https://stride.app`.
+    - `src/components/FormattedJobDescription.tsx`: Updated "without Stride grouping".
+    - `src/components/OnboardingWizard.tsx`: Updated "unlock Stride".
+    - `src/components/Sidebar.tsx`: Status indicator updated to `<i className="ce-dot" />Stride ONLINE`.
+    - `src/components/ProviderHealthReport.tsx`: Gateway status updated to `agent.stride.app`.
+    - `src/app/globals.css`: Material system comments aligned to Stride.
+  - **2. Chrome Extension & Autopilot Layer:**
+    - `extension/content.js`: In procedural screening question deduction, updated proudest accomplishment and engineering challenge answers to Stride; updated fallback website to `https://stride.app` and company to `Stride`. Updated `data-stride-display` attribute.
+    - `extension/popup.js`: Quick sync button text updated to `'Sync with Stride Web Session'`.
+    - `extension/popup.css` & `extension/dev/testbench.html`: Replaced AstreWork with Stride.
+    - Re-packaged extension archives via `node scripts/package-extension.js` (both `stridepilot-extension.zip` and `astrepilot-extension.zip`).
+  - **3. AI Engines, Vault & Database Seeds:**
+    - `src/lib/ai/drafter.ts`: Updated cover letter and pitch paragraphs, outreach hooks, and fallback project objects to Stride.
+    - `src/lib/ai/resumeOptimizer.ts`: Updated candidate tailored summaries to Stride and StridePilot.
+    - `src/lib/autopilot/qaVaultSeed.ts`: Updated screening answers to reference Stride's autonomous discovery engine.
+    - `src/lib/autopilot/vaultCrypto.ts`: Fallback dev secret source updated to `stride-credential-vault-secret-dev`.
+    - `src/lib/autopilot/bookmarklet.ts`: Connecting status updated to Stride with default origin `https://stride.app`.
+    - `prisma/seed.ts` & `scripts/sync-master-profiles.cjs`: Flagship project titles updated to `Stride — Autonomous Career Engine...`.
+    - Seeded local database dev.db via `prisma/seed.ts`.
+  - **4. Candidate Master PDF Regeneration:**
+    - Updated `scripts/generate-all-candidate-resumes.mjs` with Stride flagship project and summaries.
+    - Generated fresh canonical master PDFs (`Roushan_Kumar_Resume.pdf` and `Ayushi_Raj_Resume.pdf`) in `public/candidates/` and mirrored to `extension/resumes/`.
+  - **5. Master Domain Skills (.agents/skills/):**
+    - Updated all 7 domain skills (`career-agent-expert`, `ai-agent-automation`, `astrepilot-and-tracker`, `astrework-ui-design-system`, `ats-resume-maker`, `cloud-cicd-infrastructure`, `job-scraper-engineering`) to Stride and StridePilot.
+  - **6. Verification & Test Suite Harmonization:**
+    - Updated Vitest assertions in `candidate_resumes_audit.test.ts`, `astranis-deep-audit.test.ts`, `qa-vault-engine.test.ts`, and remaining suites to accept Stride.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Holistic Rebranding Infallibility Law):** A brand migration is never complete until the secondary and tertiary tiers are purged: JSON-LD SEO schemas, email digest templates, AI dynamic prose interpolators, Q&A vault starter ammunition, compiled binary PDFs on disk, and internal AI system prompts/skills.
+- **Status:** Complete, verified (100% passing across all 64 test files [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.

@@ -15,7 +15,7 @@ function getVaultKey(): Buffer {
   if (customKey && customKey.length >= 32) {
     return Buffer.from(customKey.slice(0, 32), "utf8");
   }
-  const secretSource = customKey || process.env.NEXTAUTH_SECRET || "astrework-credential-vault-secret-dev";
+  const secretSource = customKey || process.env.NEXTAUTH_SECRET || "stride-credential-vault-secret-dev";
   return crypto.createHash("sha256").update(secretSource).digest();
 }
 

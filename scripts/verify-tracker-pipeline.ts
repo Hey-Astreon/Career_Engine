@@ -12,7 +12,7 @@ import { ApplicationStatus, PlatformSource } from "@prisma/client";
 
 async function main() {
   console.log("=================================================");
-  console.log("🔍 ASTREWORK APPLICATION TRACKER VERIFICATION RUN");
+  console.log("🔍 STRIDE APPLICATION TRACKER VERIFICATION RUN");
   console.log("=================================================");
 
   // 1. Verify URL Normalization & Formula Shield

@@ -8,7 +8,7 @@ import { getEarlyCareerTierPresentation, getFreshnessBadgeInfo } from "../src/li
 
 async function main() {
   console.log("=================================================");
-  console.log("  ASTREWORK ULTRA-FRESH INTERNSHIP SCRAPE TEST   ");
+  console.log("  STRIDE ULTRA-FRESH INTERNSHIP SCRAPE TEST   ");
   console.log("=================================================");
   const startTime = Date.now();
 

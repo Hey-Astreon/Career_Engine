@@ -436,7 +436,7 @@ export default function HeroInteractiveShowcase() {
                     </div>
                   </div>
 
-                  {/* After: AstreWork Optimized */}
+                  {/* After: Stride Optimized */}
                   <div className="p-4 sm:p-5 rounded-2xl bg-white border border-emerald-300 shadow-xs flex flex-col justify-between relative overflow-hidden">
                     {/* Laser sweep animation bar */}
                     {isScanningResume && (

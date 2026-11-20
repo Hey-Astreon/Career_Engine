@@ -7,7 +7,7 @@ if (
   process.env.NEXTAUTH_URL.includes("career-engine")
 ) {
   if (process.env.NODE_ENV === "production") {
-    process.env.NEXTAUTH_URL = "https://astrework.app";
+    process.env.NEXTAUTH_URL = "https://stride.app";
   }
 }
 if (

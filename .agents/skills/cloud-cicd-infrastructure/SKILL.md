@@ -1,7 +1,7 @@
 ---
 name: cloud-cicd-infrastructure
 description: >-
-  Complete cloud infrastructure, database, and CI/CD architecture for AstreWork: Oracle Cloud (OCI Ampere A1 ARM64
+  Complete cloud infrastructure, database, and CI/CD architecture for Stride: Oracle Cloud (OCI Ampere A1 ARM64
   4 OCPU / 24GB RAM, PUPPETEER_EXECUTABLE_PATH, shm_size 2gb), Caddy HTTP/3 QUIC SSL termination, Docker Compose
   isolation, Prisma 7 + Turso Cloud LibSQL (@prisma/adapter-libsql, serverExternalPackages, Vitest DB isolation in
   src/lib/db.ts), 3-hour GitHub Actions cron (.github/workflows/job-sync.yml), verify-turso.cjs secret auto-recovery,
@@ -10,14 +10,14 @@ description: >-
 
 # ☁️ Oracle Cloud ARM64, Prisma 7 + Turso LibSQL & GitHub Actions CI/CD Mastery
 
-This unified skill governs AstreWork's production cloud infrastructure (`Caddyfile`, `docker-compose.prod.yml`, `Dockerfile`), database persistence layer (`prisma/schema.prisma`, `src/lib/db.ts`, `next.config.ts`), and automated CI/CD pipelines (`.github/workflows/job-sync.yml`, `scripts/verify-turso.cjs`).
+This unified skill governs Stride's production cloud infrastructure (`Caddyfile`, `docker-compose.prod.yml`, `Dockerfile`), database persistence layer (`prisma/schema.prisma`, `src/lib/db.ts`, `next.config.ts`), and automated CI/CD pipelines (`.github/workflows/job-sync.yml`, `scripts/verify-turso.cjs`).
 
 ---
 
 ## ☁️ PART 1: ORACLE CLOUD (OCI) AMPERE A1 ARM64 & CADDY REVERSE PROXY
 
 ### 1. OCI Ampere A1 ARM64 Hardware & Container Constraints
-- **Instance:** 4 ARM64 OCPUs (Ampere Altra), 24 GB RAM, 200 GB NVMe Boot Volume, Ubuntu 24.04 LTS (`ap-mumbai-1`, IP `137.23.43.128`, domain `astrework.app`).
+- **Instance:** 4 ARM64 OCPUs (Ampere Altra), 24 GB RAM, 200 GB NVMe Boot Volume, Ubuntu 24.04 LTS (`ap-mumbai-1`, IP `137.23.43.128`, domain `stride.app`).
 - **ARM64 Chromium Law (`PUPPETEER_EXECUTABLE_PATH`):** Never rely on default x64 Chromium downloads on ARM64 processors. Always point Puppeteer/Playwright to system Chromium via `process.env.PUPPETEER_EXECUTABLE_PATH` and allocate `shm_size: '2gb'` in Docker to prevent renderer crashes.
 - **Next.js Standalone Webpack Law (`next.config.ts`):** Native LibSQL binaries (`@libsql/client` and `@prisma/adapter-libsql`) MUST be listed in `serverExternalPackages` in `next.config.ts` so Webpack/Turbopack never bundles them into broken server chunks.
 
@@ -30,7 +30,7 @@ This unified skill governs AstreWork's production cloud infrastructure (`Caddyfi
 ## 💾 PART 2: PRISMA 7 + TURSO CLOUD LIBSQL & VITEST ISOLATION (`src/lib/db.ts`)
 
 ### 1. Dual-Environment LibSQL Adapter Architecture
-AstreWork uses **Prisma 7** with `@prisma/adapter-libsql` and `@libsql/client`:
+Stride uses **Prisma 7** with `@prisma/adapter-libsql` and `@libsql/client`:
 - **Production / Cloud Sync:** Connects to Turso Cloud (`libsql://astrework-db-hey-astreon.aws-ap-south-1.turso.io`) using `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
 - **Local Development & Vitest Test Isolation (`src/lib/db.ts`):**
   ```ts

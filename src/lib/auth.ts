@@ -15,7 +15,7 @@ if (
   process.env.NEXTAUTH_URL.includes("career-engine")
 ) {
   if (process.env.NODE_ENV === "production") {
-    process.env.NEXTAUTH_URL = "https://astrework.app";
+    process.env.NEXTAUTH_URL = "https://stride.app";
   }
 }
 if (
@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
               const res = await fetch("https://api.github.com/user/emails", {
                 headers: {
                   Authorization: `Bearer ${tokens.access_token}`,
-                  "User-Agent": "AstreWork-OAuth-Client",
+                  "User-Agent": "Stride-OAuth-Client",
                   Accept: "application/vnd.github.v3+json",
                 },
               });
@@ -92,7 +92,7 @@ export const authOptions: NextAuthOptions = {
     }),
     EmailProvider({
       server: process.env.EMAIL_SERVER || "",
-      from: process.env.EMAIL_FROM || "noreply@astrework.com",
+      from: process.env.EMAIL_FROM || "noreply@stride.app",
     }),
     CredentialsProvider({
       name: "Credentials",

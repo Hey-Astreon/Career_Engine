@@ -22,7 +22,7 @@ describe("Internship Application Kit Tailoring", () => {
         architecture: "AST code-graph parsing engine and isolated runtime sandbox",
       },
       {
-        title: "AstreWork",
+        title: "Stride",
         techStack: "Next.js 16, TypeScript, Playwright, Redis, Turso LibSQL",
         architecture: "Autonomous career engine on OCI with Playwright and Redis 7",
       },

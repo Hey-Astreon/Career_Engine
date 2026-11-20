@@ -96,7 +96,7 @@ describe("POST /api/diagnostics/heal", () => {
     // Make fetch simulate gateway failure then successful direct probe
     global.fetch = vi.fn().mockImplementation((url: string | URL | Request) => {
       const urlStr = url.toString();
-      if (urlStr.includes("8000") || urlStr.includes("agent.astrework.app")) {
+      if (urlStr.includes("8000") || urlStr.includes("agent.stride.app") || urlStr.includes("agent.astrework.app")) {
         return Promise.reject(new Error("Agent Gateway offline"));
       }
       return Promise.resolve({

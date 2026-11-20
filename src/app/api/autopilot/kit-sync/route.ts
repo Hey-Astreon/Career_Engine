@@ -15,7 +15,7 @@ export async function OPTIONS() {
 /**
  * POST /api/autopilot/kit-sync
  * Synchronizes the candidate's active application kit (extracted JD, company, role,
- * tailored cover letter, pitch, and screening Q&A) into the AstreWork database in real time.
+ * tailored cover letter, pitch, and screening Q&A) into the Stride database in real time.
  */
 export async function POST(req: Request) {
   try {
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
         sessionId: session.id,
         company: session.company,
         jobTitle: session.jobTitle,
-        message: "Application kit synchronized in real time with AstreWork.",
+        message: "Application kit synchronized in real time with Stride.",
       },
       { headers: CORS }
     );

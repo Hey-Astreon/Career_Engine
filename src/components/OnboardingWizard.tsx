@@ -352,7 +352,7 @@ export default function OnboardingWizard() {
         {step === 5 && (
           <motion.div key="s5" initial={{ opacity:0, x:15 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-15 }} transition={{ duration:0.35 }}>
             <div className="flex items-center gap-2 mb-1"><Globe className="w-5 h-5 text-[#0071e3]" /><h2 className="text-2xl font-semibold text-[#1d1d1f] tracking-tight">Review & launch</h2></div>
-            <p className="text-[#86868b] text-[15px] mb-5">Everything look good? Hit Create Profile to unlock AstreWork.</p>
+            <p className="text-[#86868b] text-[15px] mb-5">Everything look good? Hit Create Profile to unlock Stride.</p>
             <div className="grid grid-cols-2 gap-3 text-[13px]">
               {[
                 ["Full Name",     formData.fullName],

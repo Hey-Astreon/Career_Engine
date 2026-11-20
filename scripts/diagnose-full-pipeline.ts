@@ -2,8 +2,8 @@
  * Comprehensive System Health & Diagnostic Pipeline (scripts/diagnose-full-pipeline.ts)
  * ------------------------------------------------------------------------------------
  * Verifies end-to-end integrity across:
- * 1. Database models & candidate profile seeding (AstreWork flagship, BCA Developer titles)
- * 2. Generated candidate PDF resumes on disk (single page A4, AstreWork project, no "Engineer")
+ * 1. Database models & candidate profile seeding (Stride flagship, BCA Developer titles)
+ * 2. Generated candidate PDF resumes on disk (single page A4, Stride project, no "Engineer")
  * 3. AstrePilot Extension packaging and HMAC token verification
  * 4. Provider synchronization and scraper error telemetry
  */
@@ -58,13 +58,13 @@ async function checkDatabase() {
         record("Database", "Roushan BCA Title", "PASS", `Title "${roushan.title}" is 100% Section 5 compliant`);
       }
 
-      const hasAstreWork = roushan.projects.some(
-        (p) => p.title.toLowerCase().includes("astrework") || (p.liveDemoUrl && p.liveDemoUrl.includes("astrework"))
+      const hasStride = roushan.projects.some(
+        (p) => /(?:astrework|stride)/i.test(p.title) || (p.liveDemoUrl && /(?:astrework|stride)/i.test(p.liveDemoUrl))
       );
-      if (hasAstreWork) {
-        record("Database", "Roushan Flagship Project", "PASS", `Found AstreWork among ${roushan.projects.length} projects`);
+      if (hasStride) {
+        record("Database", "Roushan Flagship Project", "PASS", `Found Stride among ${roushan.projects.length} projects`);
       } else {
-        record("Database", "Roushan Flagship Project", "FAIL", `AstreWork missing among ${roushan.projects.length} projects`);
+        record("Database", "Roushan Flagship Project", "FAIL", `Stride missing among ${roushan.projects.length} projects`);
       }
 
       record(
@@ -85,13 +85,13 @@ async function checkDatabase() {
         record("Database", "Ayushi BCA Title", "PASS", `Title "${ayushi.title}" is 100% Section 5 compliant`);
       }
 
-      const hasAstreWork = ayushi.projects.some(
-        (p) => p.title.toLowerCase().includes("astrework") || (p.liveDemoUrl && p.liveDemoUrl.includes("astrework"))
+      const hasStride = ayushi.projects.some(
+        (p) => /(?:astrework|stride)/i.test(p.title) || (p.liveDemoUrl && /(?:astrework|stride)/i.test(p.liveDemoUrl))
       );
-      if (hasAstreWork) {
-        record("Database", "Ayushi Flagship Project", "PASS", `Found AstreWork among ${ayushi.projects.length} projects`);
+      if (hasStride) {
+        record("Database", "Ayushi Flagship Project", "PASS", `Found Stride among ${ayushi.projects.length} projects`);
       } else {
-        record("Database", "Ayushi Flagship Project", "FAIL", `AstreWork missing among ${ayushi.projects.length} projects`);
+        record("Database", "Ayushi Flagship Project", "FAIL", `Stride missing among ${ayushi.projects.length} projects`);
       }
     }
 
@@ -164,12 +164,12 @@ async function checkPdfs() {
           record("Resumes", `${sample} Page Count`, "PASS", `100% single page A4 geometry (1 page)`);
         }
 
-        // 2. AstreWork presence
-        const hasAstreWork = text.includes("AstreWork") || text.includes("astrework.app");
-        if (!hasAstreWork) {
-          record("Resumes", `${sample} AstreWork Flagship`, "FAIL", `Resume lacks AstreWork project`);
+        // 2. Stride flagship presence
+        const hasStride = /(?:AstreWork|Stride)/i.test(text) || /(?:astrework|stride)\.app/i.test(text);
+        if (!hasStride) {
+          record("Resumes", `${sample} Stride Flagship`, "FAIL", `Resume lacks Stride project`);
         } else {
-          record("Resumes", `${sample} AstreWork Flagship`, "PASS", `AstreWork flagship present and prominent`);
+          record("Resumes", `${sample} Stride Flagship`, "PASS", `Stride flagship present and prominent`);
         }
 
         // 3. Section 5 BCA Title check: no "Engineer" candidate title
@@ -273,7 +273,7 @@ async function checkScraperResilience() {
 
 async function main() {
   console.log("================================================================================");
-  console.log("🏛️ CAREERAGENT / ASTREWORK — COMPREHENSIVE PIPELINE HEALTH AUDIT");
+  console.log("🏛️ CAREERAGENT / STRIDE — COMPREHENSIVE PIPELINE HEALTH AUDIT");
   console.log("================================================================================");
   const startTime = Date.now();
 

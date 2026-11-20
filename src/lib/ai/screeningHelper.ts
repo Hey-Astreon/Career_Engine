@@ -1,5 +1,5 @@
 /**
- * AstreWork Autonomous Screening & Procedural Question Helper
+ * Stride Autonomous Screening & Procedural Question Helper
  * -------------------------------------------------------------
  * Intercepts compliance, nepotism/relatives, and conditional follow-up
  * questions so form fields receive clean, human "N/A" / "None" inputs

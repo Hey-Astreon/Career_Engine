@@ -1,5 +1,5 @@
 /**
- * AstreWork Screening Q&A Vault - Starter Ammunition
+ * Stride Screening Q&A Vault - Starter Ammunition
  * -------------------------------------------------------------
  * Verified, high-impact, BCA-Title-compliant screening question responses
  * pre-seeded for candidate profiles.
@@ -28,7 +28,7 @@ export const ROUSHAN_KUMAR_STARTER_VAULT: StarterVaultEntry[] = [
     category: "TECHNICAL",
     questionPattern: "Describe a challenging technical problem you solved.",
     answerText:
-      "While architecting AstreWork's autonomous discovery engine, I had to orchestrate high-throughput scraping across 19+ distinct ATS feeds without triggering anti-bot circuit breakers or suffering data loss. I solved this by building a distributed pipeline utilizing stealth HTTP/3 headless automation, rolling 48-hour freshness windows to eliminate transient drop-offs, and Turso Cloud LibSQL distributed WAL persistence paired with Redis 7 LRU caching. This reduced sync latency by 74% and ensured 99.9% ingestion reliability.",
+      "While architecting Stride's autonomous discovery engine, I had to orchestrate high-throughput scraping across 19+ distinct ATS feeds without triggering anti-bot circuit breakers or suffering data loss. I solved this by building a distributed pipeline utilizing stealth HTTP/3 headless automation, rolling 48-hour freshness windows to eliminate transient drop-offs, and Turso Cloud LibSQL distributed WAL persistence paired with Redis 7 LRU caching. This reduced sync latency by 74% and ensured 99.9% ingestion reliability.",
     isFavorite: true,
   },
   {

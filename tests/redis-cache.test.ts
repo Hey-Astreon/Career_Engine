@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { cache } from "@/lib/cache/redis";
 
-describe("AstreWork Redis & In-Memory Cache Engine", () => {
+describe("Stride Redis & In-Memory Cache Engine", () => {
   beforeEach(async () => {
     // Clear out test keys before each test
     await cache.delPattern("test:*");

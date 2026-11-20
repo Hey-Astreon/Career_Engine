@@ -1,7 +1,7 @@
 /**
  * comboboxEngine.ts
  * -----------------
- * The Universal Combobox & Dropdown Engine (UCDE) for AstrePilot & AstreWork.
+ * The Universal Combobox & Dropdown Engine (UCDE) for StridePilot & Stride.
  * Provides framework detection, 6-stage semantic option resolution,
  * candidate compliance invariants, and synonym dictionaries.
  */

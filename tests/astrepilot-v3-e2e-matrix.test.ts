@@ -169,7 +169,7 @@ describe('Phase 90: AstrePilot V3 End-to-End Verification Matrix', () => {
   describe('4. Real-Time JD-Aware Context Engine & RAG Grounding', () => {
     const candidateProjects: CandidateProjectContext[] = [
       {
-        title: 'AstreWork Autonomous Career Engine',
+        title: 'Stride Autonomous Career Engine',
         description: 'Multi-LLM router cascade, 4-tier anti-fraud AstreShield, and LibSQL WAL caching.',
         techStack: 'TypeScript, Next.js, Prisma, Turso, Groq',
       },

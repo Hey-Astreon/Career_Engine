@@ -2,7 +2,7 @@ import path from "path";
 
 /**
  * Canonical Master Resume Resolver
- * Static pre-baked variants have been retired in favor of AstreWork's live /resume-maker
+ * Static pre-baked variants have been retired in favor of Stride's live /resume-maker
  * and the single canonical Master Resume PDF for each founder.
  */
 

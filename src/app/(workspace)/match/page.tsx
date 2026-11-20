@@ -288,7 +288,7 @@ export default function MatchStudioPage() {
                       Antigravity Agent Bullet Tailor
                     </strong>
                     <span className="font-mono text-[8px] text-[var(--muted)] uppercase tracking-wider">
-                      Autonomous STAR & Google X-Y-Z Optimization · {tailorResult?.source === "antigravity-agent" ? "Live Agent Gateway (https://agent.astrework.app)" : "Multi-LLM Fallback"}
+                      Autonomous STAR & Google X-Y-Z Optimization · {tailorResult?.source === "antigravity-agent" ? "Live Agent Gateway (https://agent.stride.app)" : "Multi-LLM Fallback"}
                     </span>
                   </div>
                 </div>

@@ -105,7 +105,7 @@ export function Sidebar() {
       </div>
       <div className="ce-rail-footer flex flex-col gap-1 items-start">
         <div>
-          <i className="ce-dot" />AstreWork ONLINE
+          <i className="ce-dot" />Stride ONLINE
         </div>
         {schedulerStatus && (
           <div className="text-[9px] text-gray-500 flex items-center gap-1 mt-1">

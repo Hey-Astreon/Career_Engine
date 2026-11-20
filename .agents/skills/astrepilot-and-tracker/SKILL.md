@@ -3,7 +3,7 @@ name: astrepilot-and-tracker
 description: >-
   Complete system design for the AstrePilot Chrome Extension (Manifest V3 background.js, content.js, closed Shadow DOM
   #astrepilot-hud-host, esc() XSS sanitization, UCDE combobox engine, zero-click synthetic resume upload, multi-step
-  form state machine, Smart Q&A Semantic Vault) and the AstreWork Application Tracker Pipeline (2-stage submission
+  form state machine, Smart Q&A Semantic Vault) and the Stride Application Tracker Pipeline (2-stage submission
   confirmation, canonical URL deduplication, Days Silent Follow-up Studio, and 4-in-1 spreadsheet export engine)
   across extension/, src/lib/autopilot/, src/app/api/autopilot/, src/app/(workspace)/applications/, and src/lib/exportEngine.ts.
 ---

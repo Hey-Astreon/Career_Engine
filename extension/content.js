@@ -4019,7 +4019,7 @@
     const isContainerPopulated = () => {
       const single = container.querySelector('.select__single-value, [class*="singleValue"], .select__multi-value__label, [class*="multiValue"]');
       if (single && single.textContent.trim().length > 0 && !PLACEHOLDER_REGEX.test(single.textContent.trim())) return true;
-      if (single && single.getAttribute('data-astrework-display')) return true;
+      if (single && (single.getAttribute('data-stride-display') || single.getAttribute('data-astrework-display'))) return true;
       const req = container.querySelector('input[class*="requiredInput"]');
       if (req && req.value && req.value.trim().length > 0 && !PLACEHOLDER_REGEX.test(req.value.trim())) return true;
       return false;
@@ -4243,6 +4243,7 @@
             const singleEl = container.querySelector('.select__single-value, [class*="singleValue"]');
             if (singleEl) {
               singleEl.textContent = 'Amity University';
+              singleEl.setAttribute('data-stride-display', 'Amity University');
               singleEl.setAttribute('data-astrework-display', 'Amity University');
             }
           } catch (e) {}
@@ -5014,7 +5015,7 @@
         }
         return 'Asian';
       }
-      case 'COMPANY':      return profile.company || 'AstreWork';
+      case 'COMPANY':      return profile.company || 'Stride';
       case 'EMPLOYMENT_TITLE': {
         let t = profile.employmentTitle || profile.title || 'Full-Stack Developer';
         t = t.replace(/\bEngineer\b/gi, 'Developer');
@@ -5167,7 +5168,7 @@
       case 'LINKEDIN':    return profile.linkedinUrl;
       case 'GITHUB':      return profile.githubUrl;
       case 'PORTFOLIO':
-      case 'WEBSITE':     return profile.portfolioUrl || profile.website || 'https://astrework.app';
+      case 'WEBSITE':     return profile.portfolioUrl || profile.website || 'https://stride.app';
       case 'GPA':         return profile.gpa || '9.2';
       case 'WHY_US': {
         const company = session && session.company ? session.company : document.title.replace(/ \|.*/, '').trim().slice(0, 60);
@@ -5216,7 +5217,7 @@
         }
         return 'Asian';
       }
-      case 'COMPANY':      return profile.company || 'AstreWork';
+      case 'COMPANY':      return profile.company || 'Stride';
       case 'EMPLOYMENT_TITLE': {
         let t = profile.employmentTitle || profile.title || 'Full-Stack Developer';
         t = t.replace(/\bEngineer\b/gi, 'Developer');
@@ -5406,8 +5407,8 @@
           qLower.includes('biggest impact')
         ) {
           return isAyushi
-            ? "Designing and shipping AstreWork's frontend architecture and responsive design system has been my proudest technical milestone. I built a 6-stage Shadow DOM interface and real-time ATS resume canvas, ensuring sub-frame render times, full keyboard accessibility, and a seamless candidate experience."
-            : "Building AstreWork and running it live in production on an Oracle Cloud ARM64 server has been my proudest technical achievement. I engineered the system from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea to a functioning platform that people actually rely on has been deeply rewarding.";
+            ? "Designing and shipping Stride's frontend architecture and responsive design system has been my proudest technical milestone. I built a 6-stage Shadow DOM interface and real-time ATS resume canvas, ensuring sub-frame render times, full keyboard accessibility, and a seamless candidate experience."
+            : "Building Stride and running it live in production on an Oracle Cloud ARM64 server has been my proudest technical achievement. I engineered the system from scratch to aggregate and rank opportunities from over a dozen sources with sub-second vector search, maintaining database isolation and zero downtime. Taking a complex distributed system from an initial idea to a functioning platform that people actually rely on has been deeply rewarding.";
         }
 
         // Topic 2: Most Complex Project / Hardest Technical Challenge
@@ -5435,7 +5436,7 @@
         ) {
           return isAyushi
             ? "While building our browser extension HUD, I solved host CSS bleeding by migrating our interface to a closed Shadow DOM container. By scoping custom CSS properties and bridging synthetic DOM events, I completely prevented third-party portal styles and event listeners from crashing the UI."
-            : "While scaling AstreWork's background workers, I diagnosed an intermittent SQLite database lock caused by concurrent write transactions. I traced the timing contention, introduced an in-memory queue with exponential backoff and connection pooling, and verified zero locked queries across tens of thousands of automated cycles.";
+            : "While scaling Stride's background workers, I diagnosed an intermittent SQLite database lock caused by concurrent write transactions. I traced the timing contention, introduced an in-memory queue with exponential backoff and connection pooling, and verified zero locked queries across tens of thousands of automated cycles.";
         }
 
         // Topic 4: Role Motivation / Why This Company

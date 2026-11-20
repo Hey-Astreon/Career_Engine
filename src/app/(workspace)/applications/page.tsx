@@ -105,6 +105,7 @@ export default function ApplicationsPage() {
     setViewMode(mode);
     try {
       localStorage.setItem("stride_applications_view_mode", mode);
+      localStorage.setItem("stride_applications_view_mode", mode);
       localStorage.setItem("astrework_applications_view_mode", mode);
     } catch {
       /* ignore */

@@ -3,10 +3,10 @@ name: ats-resume-maker
 description: >-
   Expert guidance, typography rules, single-page A4 geometry laws (210mm x 297mm, 8.5pt floor, 4-Tier Vertical Rhythm),
   6-second recruiter F-scan psychology, Style B headlines, dark non-underlined 600 semi-bold links, Google XYZ bullets,
-  anti-AI slop rules, BCA title compliance, and canonical PDF generation for AstreWork (/resume-maker, /resume-builder, src/lib/resumeBaseline.ts).
+  anti-AI slop rules, BCA title compliance, and canonical PDF generation for Stride (/resume-maker, /resume-builder, src/lib/resumeBaseline.ts).
 ---
 
-# 📄 AstreWork ATS Resume Maker — Recruiter Psychology & Single-Page A4 Geometry Mastery
+# 📄 Stride ATS Resume Maker — Recruiter Psychology & Single-Page A4 Geometry Mastery
 
 This skill governs the visual formatting, typographical hierarchy, single-page A4 geometry, recruiter cognitive psychology, ATS parser compliance, and master baseline synchronization across `/resume-maker`, `/resume-builder`, `src/lib/resumeBaseline.ts`, `scripts/generate-all-candidate-resumes.mjs`, and `scripts/sync-master-profiles.cjs`.
 
@@ -42,13 +42,13 @@ This skill governs the visual formatting, typographical hierarchy, single-page A
    - **Ayushi Raj:** `Software Developer — Full-Stack & AI`
    - Satisfies the recruiter's role classification check in `< 0.8s` without multi-pipe keyword stuffing.
 2. **Enterprise Data-Pipeline Framing (Zero Flight-Risk Anxiety):**
-   - Never describe AstreWork in consumer job-seeker language (*"scrapes remote jobs to apply faster"*), which triggers HR flight-risk suspicion.
+   - Never describe Stride in consumer job-seeker language (*"scrapes remote jobs to apply faster"*), which triggers HR flight-risk suspicion.
    - Frame it strictly as high-volume distributed data engineering:
      > *"where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis."*
 3. **Zero Plagiarism / Co-Founder Domain Separation:**
    - **Roushan (Creator & Lead Backend Developer):** Owns OCI ARM64 distributed Playwright/Puppeteer scrapers, Turso SQLite WAL + Redis caching, and C#/.NET + Python/FastAPI backend architecture.
    - **Ayushi (Co-Developer & Lead Frontend Architect):** Owns Next.js 16 / React 19 UI studio, Gemini ATS scoring studio, Chrome MV3 AstrePilot extension (`#astrepilot-hud-host`), and Web Crypto (`AES-GCM`, `PBKDF2`) security UX.
-   - **Zero Shared Project or Simulation Bullets:** Every bullet across all 3 projects (`AstreWork`, `CodeVanta`, `CipherVault`) and all 3 simulations (`CommBank`, `Shiptivity`, `Walmart USA`) must be 100% distinct between Roushan and Ayushi (`sharedBullets === 0`).
+   - **Zero Shared Project or Simulation Bullets:** Every bullet across all 3 projects (`Stride`, `Astra Vision`, `Alyra Lock`) and all 3 simulations (`CommBank`, `Shiptivity`, `Walmart USA`) must be 100% distinct between Roushan and Ayushi (`sharedBullets === 0`).
 
 ---
 

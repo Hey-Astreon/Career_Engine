@@ -1,5 +1,5 @@
 /**
- * AstreWork Autonomous Screening Q&A Vault Engine
+ * Stride Autonomous Screening Q&A Vault Engine
  * -------------------------------------------------------------
  * Deterministic and fuzzy semantic matching engine for AstrePilot
  * screening questions with slot interpolation ({{COMPANY}}, {{ROLE}}),

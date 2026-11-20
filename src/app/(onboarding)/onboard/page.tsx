@@ -20,8 +20,8 @@ export default async function OnboardingPage() {
           <div className="flex justify-center items-center mb-6">
             <Link href="/" className="inline-block transition-transform hover:scale-105">
               <Image
-                src="/astrework-brand.png"
-                alt="AstreWork Logo"
+                src="/stride-brand.png"
+                alt="Stride Logo"
                 width={1760}
                 height={363}
                 className="h-10 w-auto object-contain"
@@ -30,7 +30,7 @@ export default async function OnboardingPage() {
             </Link>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-2">Set up your workspace</h1>
-          <p className="text-[#86868b] text-[15px] font-medium">Let&apos;s personalize AstreWork for your career goals.</p>
+          <p className="text-[#86868b] text-[15px] font-medium">Let&apos;s personalize Stride for your career goals.</p>
         </div>
         
         {/* Wizard */}

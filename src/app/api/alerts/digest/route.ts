@@ -115,9 +115,9 @@ export async function POST() {
         const nodemailer = await import("nodemailer");
         const transporter = nodemailer.createTransport(process.env.EMAIL_SERVER);
         await transporter.sendMail({
-          from: process.env.EMAIL_FROM || "noreply@astrework.com",
+          from: process.env.EMAIL_FROM || "noreply@stride.app",
           to: user.email,
-          subject: "✨ AstreWork Career Digest: Your Curated Matches",
+          subject: "✨ Stride Career Digest: Your Curated Matches",
           html: html,
         });
         emailSent = true;

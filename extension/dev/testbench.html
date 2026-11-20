@@ -267,7 +267,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
           <div>
             <label for="w-company">Company Name</label>
-            <input type="text" id="w-company" name="company" placeholder="AstreWork">
+            <input type="text" id="w-company" name="company" placeholder="Stride">
           </div>
           <div>
             <label for="w-title">Job Title</label>
@@ -579,7 +579,7 @@
     document.getElementById('btn-simulate-edit')?.addEventListener('click', () => {
       const textarea = document.getElementById('tb-q-motivation');
       if (textarea) {
-        textarea.value = "I have followed AstreWork's architecture closely and admire how the distributed scraping pipelines achieve 99.9% uptime with zero socket leaks. I want to build resilient distributed tools with your team.";
+        textarea.value = "I have followed Stride's architecture closely and admire how the distributed scraping pipelines achieve 99.9% uptime with zero socket leaks. I want to build resilient distributed tools with your team.";
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
         textarea.dispatchEvent(new Event('change', { bubbles: true }));
       }

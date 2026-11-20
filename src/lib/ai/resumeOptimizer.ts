@@ -232,8 +232,8 @@ function generateDynamicOptimizedFallback(
   const topSkillStr = targetSkills.length > 0 ? targetSkills.slice(0, 4).join(", ") : isAyushi ? "React 19, Next.js, TypeScript, and AI tooling" : "REST APIs, distributed systems, and cloud infrastructure";
 
   const tailoredSummary = isAyushi
-    ? `Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered applications across ${topSkillStr}. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), alongside client-side cryptographic vaults and interactive developer tooling, focused on delivering ${jobTitle} outcomes at ${company}.`
-    : `Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure across ${topSkillStr}. Built and operate AstreWork on Oracle Cloud (OCI ARM64), alongside AST code-graph sandboxes and zero-knowledge cryptographic tools, focused on delivering ${jobTitle} outcomes at ${company}.`;
+    ? `Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered applications across ${topSkillStr}. Co-developed Stride and the StridePilot Chrome Extension (MV3), alongside client-side cryptographic vaults and interactive developer tooling, focused on delivering ${jobTitle} outcomes at ${company}.`
+    : `Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure across ${topSkillStr}. Built and operate Stride on Oracle Cloud (OCI ARM64), alongside AST code-graph sandboxes and zero-knowledge cryptographic tools, focused on delivering ${jobTitle} outcomes at ${company}.`;
 
   const tailoredSkills = baseline.skills.map((cat) => {
     const items = cat.skillsText.split(",").map((s) => s.trim()).filter(Boolean);

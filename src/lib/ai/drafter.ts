@@ -120,7 +120,7 @@ export function formatFormalCoverLetter(
         `I am writing to express my interest in the ${jobTitle} internship opportunity at ${company}. As an early-career software developer focused on ${skillList}, I have built and shipped production web applications and am ready to contribute clean, well-tested code to your sprints.`
       );
       paragraphs.push(
-        `Across my technical work, I have built and deployed production applications from scratch. In AstreWork, I built a distributed career platform and job harvesting pipeline using Playwright, Puppeteer, and Redis 7 on Oracle Cloud (OCI), deduplicating 14,000+ daily career listings. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2).`
+        `Across my technical work, I have built and deployed production applications from scratch. In Stride, I built a distributed career platform and job harvesting pipeline using Playwright, Puppeteer, and Redis 7 on Oracle Cloud (OCI), deduplicating 14,000+ daily career listings. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2).`
       );
       paragraphs.push(
         `I work with high curiosity, rapid learning velocity, and strict automated testing standards (Vitest, Jest, Pytest, TypeScript). I am available to commit full-time remote hours to this internship at ${company} without timezone or schedule constraints, ready to collaborate with your team and deliver immediate value.`
@@ -133,7 +133,7 @@ export function formatFormalCoverLetter(
         `I am writing to express my interest in the ${jobTitle} position at ${company}. As a ${candidate.title}, I specialize in building reliable software systems with a strong focus on ${skillList}. I have followed ${company}'s technical work closely and am eager to contribute directly to your product roadmap.`
       );
       paragraphs.push(
-        `Across my technical work, I have built and shipped high-performance systems from the ground up. In AstreWork, I built a distributed career platform and the AstrePilot Chrome Extension (MV3) on Oracle Cloud with sub-50ms API response times. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2), ensuring user data privacy through client-side encryption.`
+        `Across my technical work, I have built and shipped high-performance systems from the ground up. In Stride, I built a distributed career platform and the StridePilot Chrome Extension (MV3) on Oracle Cloud with sub-50ms API response times. In Astra Vision, I built an AST code-graph parsing engine with subprocess sandbox isolation, parsing full-stack dependency trees under 200ms. In Alyra Lock, I developed a zero-knowledge password vault using Web Crypto API primitives (AES-GCM 256-bit, PBKDF2), ensuring user data privacy through client-side encryption.`
       );
       paragraphs.push(
         `I work with high autonomy, automated test discipline (Vitest, xUnit, Jest, Pytest), and clean system design patterns. I am available to commit full-time remote hours to ${company} without timezone or schedule constraints, bringing immediate shipping velocity and strong code quality to your team.`
@@ -191,7 +191,7 @@ export function generateRecruiterMessage(
   const portfolio = candidate.portfolioUrl || "portfolio";
   const github = candidate.githubUrl || "github";
 
-  const p1 = candidate.masterProjects[0] || { title: "AstreWork", architecture: "Distributed career platform and headless harvester on Oracle Cloud" };
+  const p1 = candidate.masterProjects[0] || { title: "Stride", architecture: "Distributed career platform and headless harvester on Oracle Cloud" };
   const p2 = candidate.masterProjects[1] || { title: "Astra Vision", architecture: "AST code-graph parsing engine and isolated runtime sandbox" };
 
   const tier = determineEarlyCareerTier(jobTitle, jobDescription);
@@ -246,7 +246,7 @@ export function generateColdEmail(
   const portfolio = candidate.portfolioUrl || "portfolio";
   const github = candidate.githubUrl || "github";
 
-  const p1 = candidate.masterProjects[0] || { title: "AstreWork", architecture: "Autonomous career engine on OCI with Playwright and Redis 7" };
+  const p1 = candidate.masterProjects[0] || { title: "Stride", architecture: "Autonomous career engine on OCI with Playwright and Redis 7" };
   const p2 = candidate.masterProjects[1] || { title: "Astra Vision", architecture: "AST code parsing with isolated runtime sandboxes under 200ms" };
   const p3 = candidate.masterProjects[2] || { title: "Alyra Lock", architecture: "Client-side zero-knowledge vault using Web Crypto AES-GCM (256-bit)" };
 
@@ -443,8 +443,8 @@ function generateFallbackKit(
   const isInternship = tier === EarlyCareerTier.TIER_1_INTERNSHIP;
 
   const summary = isInternship
-    ? `Software Developer with hands-on experience in ${skillString}. Built and deployed distributed job discovery pipelines (AstreWork), AST code-graph sandboxes (Astra Vision), and zero-knowledge cryptography vaults (Alyra Lock), ready to contribute clean code execution to the ${jobTitle} internship at ${company}.`
-    : `${candidate.title} with hands-on experience building production distributed systems and full-stack applications using ${skillString}. Built and deployed AstreWork (distributed career discovery platform and MV3 extension), Astra Vision (AST code-graph sandbox), and Alyra Lock (zero-knowledge cryptographic vault), tailored for ${jobTitle} initiatives at ${company}.`;
+    ? `Software Developer with hands-on experience in ${skillString}. Built and deployed distributed job discovery pipelines (Stride), AST code-graph sandboxes (Astra Vision), and zero-knowledge cryptography vaults (Alyra Lock), ready to contribute clean code execution to the ${jobTitle} internship at ${company}.`
+    : `${candidate.title} with hands-on experience building production distributed systems and full-stack applications using ${skillString}. Built and deployed Stride (distributed career discovery platform and MV3 extension), Astra Vision (AST code-graph sandbox), and Alyra Lock (zero-knowledge cryptographic vault), tailored for ${jobTitle} initiatives at ${company}.`;
 
   const formattedLetter = formatFormalCoverLetter(
     candidate,

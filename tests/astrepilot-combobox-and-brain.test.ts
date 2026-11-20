@@ -60,7 +60,7 @@ describe('Phase 97: AstrePilot Combobox Actuation & Context-Aware AI Brain', () 
         techStack: 'FastAPI, Python, Tree-Sitter, ChromaDB',
       },
       {
-        title: 'AstreWork — Autonomous Career Engine',
+        title: 'Stride — Autonomous Career Engine',
         description: 'Distributed ingestion pipelines on Oracle Cloud ARM64 with Docker and Redis caching',
         techStack: 'Next.js 16, Python, OCI ARM64, Docker, Redis',
       },

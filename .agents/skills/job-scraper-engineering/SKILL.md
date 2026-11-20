@@ -3,12 +3,12 @@ name: job-scraper-engineering
 description: >-
   Architectural laws, 4-level multi-engine scraping strategies (Internal APIs, Cheerio HTTP, Playwright, Puppeteer, Selenium),
   SHA-256 URL & semantic tuple deduplication, 48-hour rolling freshness window, zero-discovery circuit breakers,
-  and 13 active production providers for AstreWork (src/lib/providers/ & scripts/run-discovery-cli.ts).
+  and 13 active production providers for Stride (src/lib/providers/ & scripts/run-discovery-cli.ts).
 ---
 
 # 🕷️ Job Scraper Engineering: Multi-Engine Harvesters, Deduplication & Circuit Breakers
 
-This skill codifies the architectural rules, deduplication mathematics, title normalization laws, anti-bot bypass protocols, and database ingestion safeguards for AstreWork's job harvesting pipelines (`src/lib/providers/`, `scripts/run-discovery-cli.ts`, and `.github/workflows/job-sync.yml`).
+This skill codifies the architectural rules, deduplication mathematics, title normalization laws, anti-bot bypass protocols, and database ingestion safeguards for Stride's job harvesting pipelines (`src/lib/providers/`, `scripts/run-discovery-cli.ts`, and `.github/workflows/job-sync.yml`).
 
 ---
 

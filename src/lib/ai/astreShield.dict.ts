@@ -3,7 +3,7 @@
  * ─────────────────────────────────
  * All pattern data for the scam detection engine.
  * Separated from logic so this file can grow independently as we
- * encounter new scam variants — "training the AstreWork brain on big data."
+ * encounter new scam variants — "training the StrideShield brain on big data."
  *
  * DESIGN PHILOSOPHY:
  *   • Tech-term-only typo checking → avoids penalizing non-native English
