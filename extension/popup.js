@@ -1,11 +1,11 @@
 /**
- * AstrePilot Popup Controller (Manifest V3)
+ * StridePilot Popup Controller (Manifest V3)
  * -----------------------------------------
- * Hard-locked to global production (https://astrework.app).
+ * Hard-locked to global production (https://stride.app).
  * Zero-Lockout Architecture with Autonomous Standalone Profiles.
  */
 
-const PROD_ORIGIN = 'https://astrework.app';
+const PROD_ORIGIN = 'https://stride.app';
 
 // Autonomous Standalone Profiles (BCA Candidate Title Compliant: Developer / Architect, NEVER Engineer)
 const STANDALONE_PROFILES = {
@@ -49,7 +49,7 @@ const STANDALONE_PROFILES = {
     veteranStatus: 'I am not a protected veteran',
     disabilityStatus: "No, I don't have a disability",
     race: 'Asian',
-    company: 'AstreWork',
+    company: 'Stride',
     employmentTitle: 'Creator & Lead Backend Developer',
     noticePeriod: 'Immediate',
     willingnessToRelocate: true,
@@ -57,7 +57,7 @@ const STANDALONE_PROFILES = {
     privacyConsent: 'Confirmed',
     aiConsent: 'Yes',
     aiUsage: 'regularly use AI tools and developer copilots',
-    professionalSummary: 'Software Developer focused on backend systems, distributed data pipelines, and cloud infrastructure. Architected and operate AstreWork on Oracle Cloud (OCI ARM64), utilizing Dockerized background workers, Turso SQLite, and Redis caching to orchestrate high-throughput distributed workflows. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
+    professionalSummary: 'Software Developer focused on backend systems, distributed data pipelines, and cloud infrastructure. Architected and operate Stride on Oracle Cloud (OCI ARM64), utilizing Dockerized background workers, Turso SQLite, and Redis caching to orchestrate high-throughput distributed workflows. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
     slug: 'roushan',
     token: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
     _isStandalone: true
@@ -103,7 +103,7 @@ const STANDALONE_PROFILES = {
     veteranStatus: 'I am not a protected veteran',
     disabilityStatus: "No, I don't have a disability",
     race: 'Asian',
-    company: 'AstreWork',
+    company: 'Stride',
     employmentTitle: 'Co-Developer & Lead Frontend Architect',
     noticePeriod: 'Immediate',
     willingnessToRelocate: true,
@@ -111,7 +111,7 @@ const STANDALONE_PROFILES = {
     privacyConsent: 'Confirmed',
     aiConsent: 'Yes',
     aiUsage: 'regularly use AI tools and developer copilots',
-    professionalSummary: 'Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.',
+    professionalSummary: 'Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed Stride and the StridePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.',
     token: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
     _isStandalone: true
   }
@@ -168,22 +168,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /**
    * Reads stored configuration from both chrome.storage.local and chrome.storage.sync.
+   * Supports both StridePilot and legacy AstrePilot keys.
    */
   async function getStoredConfig() {
+    const keys = [
+      'stridepilot_token', 'astrepilot_token',
+      'stridepilot_origin', 'astrepilot_origin',
+      'stridepilot_active_context', 'astrepilot_active_context',
+      'stridepilot_candidate_slug', 'astrepilot_candidate_slug',
+      'stridepilot_logged_out', 'astrepilot_logged_out'
+    ];
     return new Promise((resolve) => {
-      chrome.storage.local.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context', 'astrepilot_candidate_slug', 'astrepilot_logged_out'], (localRes) => {
+      chrome.storage.local.get(keys, (localRes) => {
         const local = localRes || {};
-        chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context', 'astrepilot_candidate_slug', 'astrepilot_logged_out'], (syncRes) => {
+        chrome.storage.sync.get(keys, (syncRes) => {
           const sync = syncRes || {};
-          const token = local.astrepilot_token || sync.astrepilot_token || null;
-          const activeContext = local.astrepilot_active_context || sync.astrepilot_active_context || 'roushan';
-          const isLoggedOut = !!(local.astrepilot_logged_out || sync.astrepilot_logged_out);
+          const token = local.stridepilot_token || local.astrepilot_token || sync.stridepilot_token || sync.astrepilot_token || null;
+          const activeContext = local.stridepilot_active_context || local.astrepilot_active_context || sync.stridepilot_active_context || sync.astrepilot_active_context || 'roushan';
+          const isLoggedOut = !!(local.stridepilot_logged_out || local.astrepilot_logged_out || sync.stridepilot_logged_out || sync.astrepilot_logged_out);
 
-          if (local.astrepilot_origin !== PROD_ORIGIN && chrome.storage.local) {
-            chrome.storage.local.set({ astrepilot_origin: PROD_ORIGIN });
+          if (local.stridepilot_origin !== PROD_ORIGIN && chrome.storage.local) {
+            chrome.storage.local.set({ stridepilot_origin: PROD_ORIGIN, astrepilot_origin: PROD_ORIGIN });
           }
-          if (sync.astrepilot_origin !== PROD_ORIGIN && chrome.storage.sync) {
-            chrome.storage.sync.set({ astrepilot_origin: PROD_ORIGIN });
+          if (sync.stridepilot_origin !== PROD_ORIGIN && chrome.storage.sync) {
+            chrome.storage.sync.set({ stridepilot_origin: PROD_ORIGIN, astrepilot_origin: PROD_ORIGIN });
           }
 
           resolve({
@@ -206,11 +214,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = profile.token || STANDALONE_PROFILES.roushan.token;
 
     const payload = {
+      stridepilot_token: token,
       astrepilot_token: token,
+      stridepilot_origin: PROD_ORIGIN,
       astrepilot_origin: PROD_ORIGIN,
+      stridepilot_active_context: safeSlug,
       astrepilot_active_context: safeSlug,
+      stridepilot_candidate_slug: safeSlug,
       astrepilot_candidate_slug: safeSlug,
+      stridepilot_profile: profile,
       astrepilot_profile: profile,
+      stridepilot_logged_out: false,
       astrepilot_logged_out: false
     };
 
@@ -225,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Attempts to auto-sync token from an open AstreWork tab with a strict 1500ms timeout.
+   * Attempts to auto-sync token from an open Stride tab with a strict 1500ms timeout.
    */
   async function tryAutoSyncFromOpenTab() {
     const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
@@ -234,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (!chrome.tabs || !chrome.tabs.query) return null;
         const tabs = await chrome.tabs.query({});
-        const astreTab = tabs.find(t => t.url && (t.url.startsWith(PROD_ORIGIN) || t.url.includes('astrework.app') || t.url.startsWith('http://localhost:3000')));
+        const astreTab = tabs.find(t => t.url && (t.url.startsWith(PROD_ORIGIN) || t.url.includes('stride.app') || t.url.includes('astrework.app') || t.url.startsWith('http://localhost:3000')));
         if (!astreTab || !astreTab.id) return null;
 
         const origin = astreTab.url.startsWith('http://localhost:3000') ? 'http://localhost:3000' : PROD_ORIGIN;
@@ -278,10 +292,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           } catch (e) {}
 
           const payload = {
+            stridepilot_token: token,
             astrepilot_token: token,
+            stridepilot_origin: origin,
             astrepilot_origin: origin,
+            stridepilot_active_context: candidateSlug,
             astrepilot_active_context: candidateSlug,
+            stridepilot_candidate_slug: candidateSlug,
             astrepilot_candidate_slug: candidateSlug,
+            stridepilot_logged_out: false,
             astrepilot_logged_out: false
           };
 
@@ -294,7 +313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           return token;
         }
       } catch (e) {
-        console.warn('[AstrePilot Popup] Auto-sync attempt error:', e);
+        console.warn('[StridePilot Popup] Auto-sync attempt error:', e);
       }
       return null;
     };
@@ -482,18 +501,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnTopLogout) {
     btnTopLogout.addEventListener('click', async () => {
       const keysToRemove = [
+        'stridepilot_token',
         'astrepilot_token',
+        'stridepilot_active_context',
         'astrepilot_active_context',
+        'stridepilot_candidate_slug',
         'astrepilot_candidate_slug',
+        'stridepilot_profile',
         'astrepilot_profile'
       ];
       await new Promise((resolve) => chrome.storage.sync.remove(keysToRemove, resolve));
       if (chrome.storage.local) {
         await new Promise((resolve) => chrome.storage.local.remove(keysToRemove, resolve));
-        chrome.storage.local.set({ astrepilot_logged_out: true });
+        chrome.storage.local.set({ stridepilot_logged_out: true, astrepilot_logged_out: true });
       }
       if (chrome.storage.sync) {
-        chrome.storage.sync.set({ astrepilot_logged_out: true });
+        chrome.storage.sync.set({ stridepilot_logged_out: true, astrepilot_logged_out: true });
       }
       if (inputPassword) inputPassword.value = '';
       if (btnTopLogout) btnTopLogout.classList.add('hidden');
@@ -550,10 +573,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (res.ok && data.success && data.token) {
               const candidateSlug = data.profile?.slug || (isAyushi ? 'ayushi' : 'roushan');
               const payload = {
+                stridepilot_token: data.token,
                 astrepilot_token: data.token,
+                stridepilot_origin: PROD_ORIGIN,
                 astrepilot_origin: PROD_ORIGIN,
+                stridepilot_active_context: candidateSlug,
                 astrepilot_active_context: candidateSlug,
+                stridepilot_candidate_slug: candidateSlug,
                 astrepilot_candidate_slug: candidateSlug,
+                stridepilot_logged_out: false,
                 astrepilot_logged_out: false
               };
               if (chrome.storage.sync) chrome.storage.sync.set(payload);
@@ -626,14 +654,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           await initialize();
           return;
         }
-        // If no authenticated tab open, open AstreWork Google login
+        // If no authenticated tab open, open Stride Google login
         chrome.tabs.create({ url: PROD_ORIGIN + '/login?social=google' });
       } catch (err) {
-        console.warn('[AstrePilot Popup] Google login sync error:', err);
+        console.warn('[StridePilot Popup] Google login sync error:', err);
         await activateStandaloneProfile('roushan');
         await initialize();
       } finally {
-        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with AstreWork Web Session';
+        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with Stride Web Session';
       }
     });
   }
@@ -647,14 +675,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           await initialize();
           return;
         }
-        // If no authenticated tab open, open AstreWork GitHub login
+        // If no authenticated tab open, open Stride GitHub login
         chrome.tabs.create({ url: PROD_ORIGIN + '/login?social=github' });
       } catch (err) {
-        console.warn('[AstrePilot Popup] GitHub login sync error:', err);
+        console.warn('[StridePilot Popup] GitHub login sync error:', err);
         await activateStandaloneProfile('roushan');
         await initialize();
       } finally {
-        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with AstreWork Web Session';
+        if (btnQuickSyncText) btnQuickSyncText.textContent = 'Sync with Stride Web Session';
       }
     });
   }
@@ -662,7 +690,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Reactive Storage Listener: Automatically flips from login view to connected cockpit
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (changes.astrepilot_token && changes.astrepilot_token.newValue) {
+      if ((changes.stridepilot_token && changes.stridepilot_token.newValue) || (changes.astrepilot_token && changes.astrepilot_token.newValue)) {
         initialize();
       }
     });

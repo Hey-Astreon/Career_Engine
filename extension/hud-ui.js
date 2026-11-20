@@ -1,10 +1,10 @@
 /**
  * hud-ui.js
- * AstrePilot Premium UI
+ * StridePilot Premium UI
  * Handles the Shadow DOM presentation layer. Does not contain any field scanning or network logic.
  */
 
-window.AstrePilotHUD = (function () {
+window.StridePilotHUD = (function () {
   const ICONS = {
     logo: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
     logoLg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
@@ -160,7 +160,7 @@ window.AstrePilotHUD = (function () {
         autoAdvance: false,
         strictVerify: true,
         autoTailor: true,
-        origin: 'https://astrework.app'
+        origin: 'https://stride.app'
       };
 
       // Restore position if possible
@@ -178,13 +178,13 @@ window.AstrePilotHUD = (function () {
       // Load saved settings from chrome.storage.sync
       try {
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-          chrome.storage.sync.get(['ap_auto_password', 'ap_auto_advance', 'ap_strict_verify', 'ap_auto_tailor', 'astrepilot_origin'], (res) => {
+          chrome.storage.sync.get(['ap_auto_password', 'ap_auto_advance', 'ap_strict_verify', 'ap_auto_tailor', 'stridepilot_origin', 'astrepilot_origin'], (res) => {
             if (res) {
               if (res.ap_auto_password !== undefined) this.settings.autoPassword = Boolean(res.ap_auto_password);
               if (res.ap_auto_advance !== undefined) this.settings.autoAdvance = Boolean(res.ap_auto_advance);
               if (res.ap_strict_verify !== undefined) this.settings.strictVerify = Boolean(res.ap_strict_verify);
               if (res.ap_auto_tailor !== undefined) this.settings.autoTailor = Boolean(res.ap_auto_tailor);
-              this.settings.origin = 'https://astrework.app';
+              this.settings.origin = res.stridepilot_origin || res.astrepilot_origin || 'https://stride.app';
             }
           });
         }
@@ -192,17 +192,17 @@ window.AstrePilotHUD = (function () {
 
       this._buildDOM(options.css || '');
       this._attachEvents();
-      try { window.__ASTREPILOT_HUD_INSTANCE__ = this; } catch (e) {}
+      try { window.__STRIDEPILOT_HUD_INSTANCE__ = this; window.__ASTREPILOT_HUD_INSTANCE__ = this; } catch (e) {}
     }
 
     _ensureFonts() {
       try {
-        if (document.getElementById('astrepilot-fonts')) return;
+        if (document.getElementById('stridepilot-fonts') || document.getElementById('astrepilot-fonts')) return;
         if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.getURL) return;
         const interUrl = chrome.runtime.getURL('fonts/Inter-Variable.woff2');
         const monoUrl = chrome.runtime.getURL('fonts/JetBrainsMono-Variable.woff2');
         const fontStyle = document.createElement('style');
-        fontStyle.id = 'astrepilot-fonts';
+        fontStyle.id = 'stridepilot-fonts';
         fontStyle.textContent = `
           @font-face {
             font-family: 'Inter Variable';
@@ -226,7 +226,8 @@ window.AstrePilotHUD = (function () {
     _buildDOM(cssString) {
       this._ensureFonts();
       this.host = document.createElement('div');
-      this.host.id = 'astrepilot-root';
+      this.host.id = 'stridepilot-root';
+      this.host.setAttribute('data-legacy-id', 'astrepilot-root');
       this.host.style.all = 'initial';
       this.host.style.position = 'fixed';
       this.host.style.zIndex = '2147483647';
@@ -248,8 +249,8 @@ window.AstrePilotHUD = (function () {
       this.shadow.appendChild(style);
 
       this.container = document.createElement('div');
-      this.container.id = 'astrepilot-container';
-      this.container.className = 'astrepilot-ui';
+      this.container.id = 'stridepilot-container';
+      this.container.className = 'stridepilot-ui astrepilot-ui';
       this._applyPosition();
       
       // Card
@@ -261,11 +262,11 @@ window.AstrePilotHUD = (function () {
       this.header.innerHTML = `
         <div class="hud-title">
           <div class="logo-icon">${ICONS.logo}</div>
-          AstrePilot
+          StridePilot
         </div>
         <div class="hud-actions">
           <button type="button" class="icon-btn action-rescan" title="Re-scan Form Fields" aria-label="Re-scan Form Fields">${ICONS.refresh}</button>
-          <button type="button" class="icon-btn action-extract-jd" title="Extract JD to AstreWork" aria-label="Extract JD">${ICONS.scan}</button>
+          <button type="button" class="icon-btn action-extract-jd" title="Extract JD to Stride" aria-label="Extract JD">${ICONS.scan}</button>
           <button type="button" class="icon-btn action-download-resume" title="Download Resume" aria-label="Download Resume">${ICONS.download}</button>
           <button type="button" class="icon-btn action-settings" title="Settings" aria-label="Settings">${ICONS.settings}</button>
           <button type="button" class="icon-btn action-collapse" title="Collapse (Esc)" aria-label="Collapse">${ICONS.minimize}</button>
@@ -284,7 +285,7 @@ window.AstrePilotHUD = (function () {
       this.pill.className = 'hud-pill';
       this.pill.innerHTML = `
         <div class="pill-logo">${ICONS.logoLg}</div>
-        <span>AstrePilot</span>
+        <span>StridePilot</span>
         <div class="pill-status">
           <div class="pulse"></div>
         </div>
@@ -336,10 +337,15 @@ window.AstrePilotHUD = (function () {
           this.toggleSettings();
         }
         else if (btn.classList.contains('action-logout')) {
-          if (confirm('Sign out of AstreWork on AstrePilot?')) {
+          if (confirm('Sign out of Stride on StridePilot?')) {
             try {
               if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-                chrome.storage.sync.remove(['astrepilot_token', 'astrepilot_active_context', 'astrepilot_candidate_slug', 'astrepilot_profile']);
+                chrome.storage.sync.remove([
+                  'stridepilot_token', 'astrepilot_token',
+                  'stridepilot_active_context', 'astrepilot_active_context',
+                  'stridepilot_candidate_slug', 'astrepilot_candidate_slug',
+                  'stridepilot_profile', 'astrepilot_profile'
+                ]);
               }
             } catch (err) {}
             this.profile = null;
@@ -360,7 +366,7 @@ window.AstrePilotHUD = (function () {
           }
           btn.textContent = 'Signing in…';
           btn.disabled = true;
-          const origin = (this.settings.origin || 'https://astrework.app').replace(/\/$/, '');
+          const origin = (this.settings.origin || 'https://stride.app').replace(/\/$/, '');
           fetch(origin + '/api/autopilot/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -373,8 +379,11 @@ window.AstrePilotHUD = (function () {
                 this.profile = data.profile;
                 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
                   chrome.storage.sync.set({
+                    stridepilot_token: data.token,
                     astrepilot_token: data.token,
+                    stridepilot_active_context: slug,
                     astrepilot_active_context: slug,
+                    stridepilot_candidate_slug: slug,
                     astrepilot_candidate_slug: slug
                   });
                 }
@@ -390,7 +399,7 @@ window.AstrePilotHUD = (function () {
               alert('Login request failed: ' + err.message);
             })
             .finally(() => {
-              btn.textContent = 'Sign In to AstreWork';
+              btn.textContent = 'Sign In to Stride';
               btn.disabled = false;
             });
         }
@@ -420,7 +429,7 @@ window.AstrePilotHUD = (function () {
             this.settings.origin = origin;
             try {
               if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-                chrome.storage.sync.set({ astrepilot_origin: origin });
+                chrome.storage.sync.set({ stridepilot_origin: origin, astrepilot_origin: origin });
               }
             } catch (err) {}
             if (this.options.onSwitchOrigin) {
@@ -811,12 +820,12 @@ window.AstrePilotHUD = (function () {
 
         if (this.state === 'not-connected') {
            msg = 'Not connected';
-           sub = 'Please log in to AstreWork to continue.';
+           sub = 'Please log in to Stride to continue.';
            btn = 'Open Settings';
         } else if (this.state === 'no-profile') {
            msg = 'Profile not found';
-           sub = 'Set up your AstreWork profile first.';
-           btn = 'Open AstreWork';
+           sub = 'Set up your Stride profile first.';
+           btn = 'Open Stride';
         } else if (this.state === 'extracting') {
            msg = 'Extracting Details...';
            sub = (this.meta && this.meta.step) ? this.meta.step : 'Scanning the document using AI...';
@@ -880,10 +889,10 @@ window.AstrePilotHUD = (function () {
                 <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #b45309; background: rgba(245,158,11,0.18); padding: 2px 6px; border-radius: 4px;">⚠️ Already Applied</span>
                 <span style="font-weight: 700; font-size: 11px; color: var(--ap-ink, #0f172a);">${daysAgoText}</span>
               </div>
-              <a href="https://astrework.app/applications" target="_blank" rel="noopener noreferrer" style="font-size: 11px; font-weight: 600; color: var(--ap-ai, #0071e3); text-decoration: none;">View Pipeline ↗</a>
+              <a href="https://stride.app/applications" target="_blank" rel="noopener noreferrer" style="font-size: 11px; font-weight: 600; color: var(--ap-ai, #0071e3); text-decoration: none;">View Pipeline ↗</a>
             </div>
             <div style="font-size: 11px; color: var(--ap-ink-2, #475569); margin-top: 4px; line-height: 1.3;">
-              Status: <b>${esc(this.duplicateAlert.status)}</b> · Submitted via ${esc(this.duplicateAlert.source || 'AstrePilot')}. Re-submitting may flag your profile as duplicate in employer ATS.
+              Status: <b>${esc(this.duplicateAlert.status)}</b> · Submitted via ${esc(this.duplicateAlert.source || 'StridePilot')}. Re-submitting may flag your profile as duplicate in employer ATS.
             </div>
             <div style="margin-top: 8px; display: flex; gap: 6px;">
               <button type="button" class="action-dismiss-duplicate" style="flex: 1; padding: 4px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); background: transparent; color: var(--ap-ink-2, #475569); cursor: pointer;">
@@ -987,7 +996,7 @@ window.AstrePilotHUD = (function () {
               </div>
             ` : `
               <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                <span style="font-size: 10px; color: var(--ap-ink-2, #475569);">Sync directly into AstreWork Feed</span>
+                <span style="font-size: 10px; color: var(--ap-ink-2, #475569);">Sync directly into Stride Feed</span>
                 <button type="button" class="action-sync-harvester" style="padding: 3px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); background: var(--ap-success, #059669); color: white; cursor: pointer; white-space: nowrap;">
                   Sync to Feed ⚡
                 </button>
@@ -1074,7 +1083,7 @@ window.AstrePilotHUD = (function () {
         const msg = isPrimed ? 'Job Intelligence Primed' : 'Job Posting Detected';
         const sub = isPrimed ? 
           `Brain primed for ${esc(this.profile.primedCompany)}. Click below to start your application.` : 
-          'AstrePilot has analyzed this role. Click below to begin your application.';
+          'StridePilot has analyzed this role. Click below to begin your application.';
         html += `
           <div class="empty-state" style="margin-top: 10px; padding: 16px 14px; background: rgba(0, 113, 227, 0.05); border: 1px dashed rgba(0, 113, 227, 0.28); border-radius: 10px; text-align: center;">
             <div class="empty-icon" style="color: var(--ap-ai); margin-bottom: 8px;">${ICONS.sparkle}</div>
@@ -1121,7 +1130,7 @@ window.AstrePilotHUD = (function () {
           if (isConfirmed) {
             html += `
               <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
-                <div style="color: var(--ap-success, #10b981); font-weight: 700; font-size: 13px;">✓ Confirmed in AstreWork!</div>
+                <div style="color: var(--ap-success, #10b981); font-weight: 700; font-size: 13px;">✓ Confirmed in Stride!</div>
                 <div style="color: var(--ap-ink-2, #475569); font-size: 11px; margin-top: 2px;">Tracked with timestamp in your Application Table.</div>
               </div>
               <button class="btn-primary action-close">Close HUD</button>
@@ -1131,7 +1140,7 @@ window.AstrePilotHUD = (function () {
               <div style="background: rgba(0, 113, 227, 0.08); border: 1px solid rgba(0, 113, 227, 0.2); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px;">
                 <div style="color: var(--ap-ai, #0071e3); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
                   <span>Form Filled (Draft Tracked)</span>
-                  <a href="https://astrework.app/applications" target="_blank" rel="noopener noreferrer" style="color: var(--ap-ai, #0071e3); font-size: 11px; text-decoration: none; font-weight: 600;">View Tracker ↗</a>
+                  <a href="https://stride.app/applications" target="_blank" rel="noopener noreferrer" style="color: var(--ap-ai, #0071e3); font-size: 11px; text-decoration: none; font-weight: 600;">View Tracker ↗</a>
                 </div>
                 <div style="color: var(--ap-ink-2, #475569); font-size: 10px; margin-top: 3px;">Review form fields on this page, then click below once submitted.</div>
               </div>
@@ -1178,7 +1187,7 @@ window.AstrePilotHUD = (function () {
           } else {
             html += `
               <button class="btn-primary action-sync-harvester" style="background: var(--ap-success, #059669); border-color: var(--ap-success, #059669); color: white;">
-                ${ICONS.sparkle} Sync ${count} Roles to AstreWork
+                ${ICONS.sparkle} Sync ${count} Roles to Stride
               </button>
               <div class="footnote">Direct feed ingestion · Remote roles</div>
             `;
@@ -1274,18 +1283,18 @@ window.AstrePilotHUD = (function () {
         autoAdvance: false,
         strictVerify: true,
         autoTailor: true,
-        origin: 'https://astrework.app'
+        origin: 'https://stride.app'
       };
 
       const profile = this.profile;
       const isAuthed = !!profile && !!profile.fullName;
       const candidateName = profile ? profile.fullName : 'Not Signed In';
-      const candidateRole = profile ? (profile.title || 'Full-Stack Developer') : 'Sign in to link AstreWork profile';
+      const candidateRole = profile ? (profile.title || 'Full-Stack Developer') : 'Sign in to link Stride profile';
       const addressDisplay = profile ? (profile.location || profile.city || 'Indrapuri, North Patel Nagar, Patna, Bihar · PIN 800024') : '';
       
       const initials = candidateName && candidateName !== 'Not Signed In'
         ? candidateName.split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()
-        : 'AW';
+        : 'ST';
 
       return `
         <div class="hud-settings-panel">
@@ -1293,7 +1302,7 @@ window.AstrePilotHUD = (function () {
             <button type="button" class="btn-subtle action-settings-back">
               ${ICONS.arrowLeft} <span>Back</span>
             </button>
-            <div class="settings-top-title"><span>⚙️</span> AstrePilot Settings</div>
+            <div class="settings-top-title"><span>⚙️</span> StridePilot Settings</div>
             <button type="button" class="btn-subtle action-settings-done" style="color: var(--ap-ai); font-weight: 700;">Done</button>
           </div>
 
@@ -1315,15 +1324,15 @@ window.AstrePilotHUD = (function () {
             <div class="settings-auth-actions" style="margin-top: 10px;">
               ${isAuthed ? `
                 <button type="button" class="action-logout" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 12px; font-size: 11.5px; font-weight: 600; border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-danger-soft); color: var(--ap-danger); background: var(--ap-danger-soft); cursor: pointer;">
-                  <span>🚪</span> Sign Out of AstreWork
+                  <span>🚪</span> Sign Out of Stride
                 </button>
               ` : `
                 <div class="settings-login-box" style="padding: 10px; background: var(--ap-surface); border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-line);">
-                  <div style="font-size: 11px; color: var(--ap-ink-2); margin-bottom: 8px;">Sign in with your AstreWork account:</div>
+                  <div style="font-size: 11px; color: var(--ap-ink-2); margin-bottom: 8px;">Sign in with your Stride account:</div>
                   <input type="email" id="ap-hud-email" placeholder="Email Address" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
                   <input type="password" id="ap-hud-password" placeholder="Password" class="ap-inline-input" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; font-size: 11.5px; border-radius: 4px; border: 1px solid var(--ap-line); background: var(--ap-bg-solid); color: var(--ap-ink);">
                   <button type="button" class="btn-primary action-inline-login" style="width: 100%; justify-content: center; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: 4px; cursor: pointer;">
-                    Sign In to AstreWork
+                    Sign In to Stride
                   </button>
                 </div>
               `}
@@ -1381,7 +1390,7 @@ window.AstrePilotHUD = (function () {
             </div>
           </div>
 
-          <!-- Section 3: AstreWork Quick Vault Links -->
+          <!-- Section 3: Stride Quick Vault Links -->
           <div class="settings-section">
             <div class="settings-section-header">
               <span class="section-tag">Quick Vault Navigation</span>
@@ -1414,7 +1423,7 @@ window.AstrePilotHUD = (function () {
           <!-- Section 4: Telemetry & Shortcuts -->
           <div class="settings-footer-info">
             <div>Shortcut: <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></div>
-            <div>AstrePilot Cognitive Engine v2.0 · AstreWork</div>
+            <div>StridePilot Cognitive Engine v2.0 · Stride</div>
           </div>
         </div>
       `;
@@ -1486,3 +1495,6 @@ window.AstrePilotHUD = (function () {
     }
   };
 })();
+
+// Backward compatibility alias
+window.AstrePilotHUD = window.StridePilotHUD;

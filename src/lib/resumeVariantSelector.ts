@@ -48,9 +48,9 @@ export function selectRecommendedResumeVariant(
       fileName: "Ayushi_Raj_Resume.pdf",
       pdfPath: resolveMasterResumePdf("2_Ayushi_Raj"),
       reasoning:
-        "Canonical single-page A4 Master Resume covering AstreWork (Next.js 16 & Gemini scoring studio), AstrePilot Chrome Extension (MV3), Alyra Lock zero-knowledge cryptography, and Astra Vision AST sandbox. Use /resume-maker for role-specific tailoring.",
+        "Canonical single-page A4 Master Resume covering Stride (Next.js 16 & Gemini scoring studio), StridePilot Chrome Extension (MV3), Alyra Lock zero-knowledge cryptography, and Astra Vision AST sandbox. Use /resume-maker for role-specific tailoring.",
       keyStrengths: [
-        "AstreWork & AstrePilot (Chrome MV3)",
+        "Stride & StridePilot (Chrome MV3)",
         "React 19 & Next.js 16",
         "Alyra Lock (AES-GCM/PBKDF2)",
         "Astra Vision AST Sandbox",
@@ -63,9 +63,9 @@ export function selectRecommendedResumeVariant(
     fileName: "Roushan_Kumar_Resume.pdf",
     pdfPath: resolveMasterResumePdf("3_Roushan_Kumar"),
     reasoning:
-      "Canonical single-page A4 Master Resume covering AstreWork distributed scrapers on Oracle Cloud (OCI ARM64), Turso LibSQL WAL, Redis 7 caching, Astra Vision AST parser, and Alyra Lock zero-knowledge vault. Use /resume-maker for role-specific tailoring.",
+      "Canonical single-page A4 Master Resume covering Stride distributed scrapers on Oracle Cloud (OCI ARM64), Turso LibSQL WAL, Redis 7 caching, Astra Vision AST parser, and Alyra Lock zero-knowledge vault. Use /resume-maker for role-specific tailoring.",
     keyStrengths: [
-      "AstreWork (OCI ARM64 & Distributed Scrapers)",
+      "Stride (OCI ARM64 & Distributed Scrapers)",
       "Turso LibSQL & Redis 7",
       "Astra Vision (FastAPI & Tree-Sitter)",
       "Alyra Lock (Web Crypto AES-GCM)",
@@ -83,9 +83,9 @@ export function getAllResumeVariants(profileSlug: string): OfficialResumeVariant
         fileName: "Ayushi_Raj_Resume.pdf",
         category: "Master",
         description:
-          "Canonical single-page A4 Master Resume covering AstreWork, AstrePilot Chrome Extension, Alyra Lock, and Astra Vision.",
+          "Canonical single-page A4 Master Resume covering Stride, StridePilot Chrome Extension, Alyra Lock, and Astra Vision.",
         keyStrengths: [
-          "AstreWork & AstrePilot (Chrome MV3)",
+          "Stride & StridePilot (Chrome MV3)",
           "React 19 & Next.js 16",
           "Alyra Lock (AES-GCM/PBKDF2)",
           "Astra Vision AST Sandbox",
@@ -100,9 +100,9 @@ export function getAllResumeVariants(profileSlug: string): OfficialResumeVariant
       fileName: "Roushan_Kumar_Resume.pdf",
       category: "Master",
       description:
-        "Canonical single-page A4 Master Resume covering AstreWork OCI distributed platform, Astra Vision AST sandbox, Alyra Lock, and virtual simulations.",
+        "Canonical single-page A4 Master Resume covering Stride OCI distributed platform, Astra Vision AST sandbox, Alyra Lock, and virtual simulations.",
       keyStrengths: [
-        "AstreWork OCI Harvester",
+        "Stride OCI Harvester",
         "Turso LibSQL & Redis 7",
         "Astra Vision AST Sandbox",
         "Alyra Lock Zero-Knowledge",

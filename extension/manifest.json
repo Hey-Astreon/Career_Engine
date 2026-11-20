@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AstrePilot — Autonomous Job Application Assistant",
+  "name": "StridePilot — Autonomous Job Application Assistant",
   "version": "3.0.0",
-  "description": "AI-powered 1-click job application autofill and screening assistant powered by AstreWork.",
+  "description": "AI-powered 1-click job application autofill and screening assistant powered by Stride.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -21,7 +21,7 @@
     "*://*/*"
   ],
   "action": {
-    "default_title": "AstrePilot — Job Application Assistant",
+    "default_title": "StridePilot — Job Application Assistant",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
@@ -48,7 +48,7 @@
         "default": "Alt+Shift+A",
         "mac": "Alt+Shift+A"
       },
-      "description": "Launch or Toggle AstrePilot HUD"
+      "description": "Launch or Toggle StridePilot HUD"
     }
   },
   "web_accessible_resources": [

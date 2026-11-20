@@ -78,8 +78,8 @@ function ModernAgencyNavbar() {
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center group">
             <Image
-              src="/astrework-brand.png"
-              alt="AstreWork Logo"
+              src="/stride-brand.png"
+              alt="Stride Logo"
               width={1760}
               height={363}
               className="h-7 w-auto object-contain transition-transform group-hover:scale-[1.02]"
@@ -180,7 +180,7 @@ function ModernAgencyHero({ metrics }: { metrics: { totalJobsIndexed: number; to
             variants={fadeUp}
             className="text-[17px] sm:text-[20px] md:text-[21px] text-[#475569] max-w-2xl mx-auto leading-relaxed mb-10 font-normal"
           >
-            Tired of applying to black holes? AstreWork bypasses middleman job boards to scrape{" "}
+            Tired of applying to black holes? Stride bypasses middleman job boards to scrape{" "}
             <span className="text-[#090d16] font-semibold">direct company ATS feeds</span>, eliminates ghost postings, and scores your resume against real recruiter algorithms—so you{" "}
             <span className="text-[#090d16] font-semibold underline decoration-blue-500/30 decoration-2 underline-offset-4">actually get interviews</span>.
           </motion.p>
@@ -405,13 +405,13 @@ function ModernAgencyEngines() {
               </div>
 
               <div className="flex items-center justify-between pt-2 text-[12px] text-[#71717a]">
-                <span>AstrePilot In-Browser Assistant</span>
+                <span>StridePilot In-Browser Assistant</span>
                 <span className="text-blue-600 font-semibold">Ready to Autofill →</span>
               </div>
             </div>
           </div>
 
-          {/* Card B: AstreShield (Span 5) */}
+          {/* Card B: StrideShield (Span 5) */}
           <div className="lg:col-span-5 rounded-3xl bg-[#fafafa] border border-black/[0.06] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:border-black/15 transition-all">
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
@@ -778,22 +778,22 @@ function ModernAgencyBenchmark() {
     {
       dimension: "Layout Architecture",
       generic: "Multi-column tables & floating textboxes (Breaks Workday & Greenhouse parser line ordering).",
-      astrework: "Clean semantic flexbox hanging-indent layout. 100% linear ATS extraction guarantee.",
+      stride: "Clean semantic flexbox hanging-indent layout. 100% linear ATS extraction guarantee.",
     },
     {
       dimension: "Content & Impact",
       generic: "Fluffy generic AI buzzwords ('Responsible for architecting scalable cloud pipelines').",
-      astrework: "Google XYZ impact formula ('Engineered X using Y achieving Z% measurable throughput').",
+      stride: "Google XYZ impact formula ('Engineered X using Y achieving Z% measurable throughput').",
     },
     {
       dimension: "Page Geometry",
       generic: "Unbounded 1.2 to 2 pages (Auto-clipped by recruiter 6-second F-scan and print margins).",
-      astrework: "Strict 297mm vertical ceiling. Zero layout shift single-page A4 print optimization.",
+      stride: "Strict 297mm vertical ceiling. Zero layout shift single-page A4 print optimization.",
     },
     {
       dimension: "Candidate Compliance",
       generic: "Hallucinated engineer credentials risking corporate & academic audit sanctions.",
-      astrework: "Strict BCA Developer title compliance (Developer/Architect) and isolated candidate vaults.",
+      stride: "Strict BCA Developer title compliance (Developer/Architect) and isolated candidate vaults.",
     },
   ];
 
@@ -813,7 +813,7 @@ function ModernAgencyBenchmark() {
             Zero guesswork.
           </h2>
           <p className="text-[17px] sm:text-[18px] text-[#52525b] font-medium leading-relaxed">
-            Why standard resumes fail Workday, Greenhouse, and Lever — and how AstreWork’s deterministic engine guarantees parseability.
+            Why standard resumes fail Workday, Greenhouse, and Lever — and how Stride’s deterministic engine guarantees parseability.
           </p>
         </div>
 
@@ -822,7 +822,7 @@ function ModernAgencyBenchmark() {
           <div className="grid grid-cols-1 md:grid-cols-12 bg-white border-b border-black/[0.08] p-6 text-[12px] font-semibold tracking-wider text-[#71717a] uppercase">
             <div className="md:col-span-3">SPECIFICATION</div>
             <div className="md:col-span-4 text-red-600/80">GENERIC RESUME / CANVA</div>
-            <div className="md:col-span-5 text-[#0f0f11]">ASTREWORK ATS ENGINE</div>
+            <div className="md:col-span-5 text-[#0f0f11]">STRIDE ATS ENGINE</div>
           </div>
 
           <div className="divide-y divide-black/[0.06]">
@@ -841,9 +841,9 @@ function ModernAgencyBenchmark() {
 
                 <div className="md:col-span-5 text-[14px] text-[#0f0f11] font-medium leading-relaxed bg-white p-4 rounded-xl border border-black/[0.05] shadow-xs">
                   <span className="inline-block md:hidden text-[11px] font-semibold text-emerald-600 uppercase tracking-wider mb-1">
-                    ASTREWORK:
+                    STRIDE:
                   </span>
-                  {c.astrework}
+                  {c.stride}
                 </div>
               </div>
             ))}
@@ -862,23 +862,23 @@ function ModernAgencyFAQ() {
 
   const faqs = [
     {
-      q: "How does AstreWork eliminate ghost jobs and fake postings?",
-      a: "AstreWork’s AstreShield engine implements a 4-tier heuristic verification pipeline. We cross-reference direct ATS endpoints (Greenhouse, Ashby, Lever), inspect company domain registrations, verify active salary ranges, and penalize listings older than 48 hours. Any postings containing Telegram/crypto escrow demands are instantly quarantined.",
+      q: "How does Stride eliminate ghost jobs and fake postings?",
+      a: "Stride’s StrideShield engine implements a 4-tier heuristic verification pipeline. We cross-reference direct ATS endpoints (Greenhouse, Ashby, Lever), inspect company domain registrations, verify active salary ranges, and penalize listings older than 48 hours. Any postings containing Telegram/crypto escrow demands are instantly quarantined.",
     },
     {
       q: "How is candidate privacy and context isolation enforced?",
-      a: "Candidate data is strictly isolated by authenticated account tokens. Third-party users cannot view, query, or leak other profiles or resumes. AstreWork enforces dual founder permissions exclusively for Roushan Kumar and Ayushi Raj, while all third parties operate strictly in their own sandboxed vault.",
+      a: "Candidate data is strictly isolated by authenticated account tokens. Third-party users cannot view, query, or leak other profiles or resumes. Stride enforces dual founder permissions exclusively for Roushan Kumar and Ayushi Raj, while all third parties operate strictly in their own sandboxed vault.",
     },
     {
-      q: "How does AstrePilot interact with ATS job portals?",
-      a: "AstrePilot runs as a modern Manifest V3 Chrome Extension. It injects an isolated closed Shadow DOM HUD directly onto application pages without altering or polluting the page’s global DOM or scripts. It maps 40+ dynamic fields on Greenhouse, Ashby, and Lever, generating one-click autofills from your verified profile.",
+      q: "How does StridePilot interact with ATS job portals?",
+      a: "StridePilot runs as a modern Manifest V3 Chrome Extension. It injects an isolated closed Shadow DOM HUD directly onto application pages without altering or polluting the page’s global DOM or scripts. It maps 40+ dynamic fields on Greenhouse, Ashby, and Lever, generating one-click autofills from your verified profile.",
     },
     {
       q: "Why is strict single-page A4 geometry non-negotiable?",
-      a: "Recruiters spend an average of 6 seconds scanning a resume. Resumes that overflow to 1.1 or 1.2 pages create orphan lines and are frequently clipped by enterprise print drivers or auto-rejected by screening scripts. AstreWork enforces a strict 297mm vertical ceiling with responsive micro-adjustments.",
+      a: "Recruiters spend an average of 6 seconds scanning a resume. Resumes that overflow to 1.1 or 1.2 pages create orphan lines and are frequently clipped by enterprise print drivers or auto-rejected by screening scripts. Stride enforces a strict 297mm vertical ceiling with responsive micro-adjustments.",
     },
     {
-      q: "Is AstreWork free to use for developers?",
+      q: "Is Stride free to use for developers?",
       a: "Yes. The core discovery engine, ATS benchmark audits, and single-page resume canvas are 100% free for individual builders. We are dedicated to providing the most powerful career engine to software developers worldwide.",
     },
   ];
@@ -1031,15 +1031,15 @@ function ModernAgencyFooter() {
           <div className="col-span-2 space-y-4">
             <Link href="/" className="inline-block">
               <Image
-                src="/astrework-brand.png"
-                alt="AstreWork Logo"
+                src="/stride-brand.png"
+                alt="Stride Logo"
                 width={1760}
                 height={363}
                 className="h-7 w-auto object-contain"
               />
             </Link>
             <p className="text-[14px] text-[#52525b] leading-relaxed max-w-sm font-medium">
-              Autonomous career operating system integrating 21+ direct ATS feeds, AstreShield fraud detection, and single-page A4 print typography.
+              Autonomous career operating system integrating 21+ direct ATS feeds, StrideShield fraud detection, and single-page A4 print typography.
             </p>
             <div className="flex items-center gap-2 pt-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -1081,12 +1081,12 @@ function ModernAgencyFooter() {
             <ul className="space-y-2.5 text-[13px] text-[#71717a] font-medium">
               <li>
                 <a href="#engines" className="hover:text-[#0f0f11] transition-colors">
-                  AstrePilot MV3
+                  StridePilot MV3
                 </a>
               </li>
               <li>
                 <a href="#engines" className="hover:text-[#0f0f11] transition-colors">
-                  AstreShield Heuristics
+                  StrideShield Heuristics
                 </a>
               </li>
               <li>
@@ -1129,7 +1129,7 @@ function ModernAgencyFooter() {
 
         {/* Bottom Credits & Strict Developer Title Compliance */}
         <div className="pt-8 border-t border-black/[0.06] flex flex-col md:flex-row items-center justify-between text-[12px] text-[#71717a] font-medium gap-4">
-          <p>© {currentYear} AstreWork. All rights reserved.</p>
+          <p>© {currentYear} Stride. All rights reserved.</p>
           <p className="text-center md:text-right text-[12px] text-[#52525b]">
             Architected & Built by Roushan Kumar & Ayushi Raj — Software Developers & Systems Architects.
           </p>

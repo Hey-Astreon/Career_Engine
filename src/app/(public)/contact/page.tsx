@@ -5,7 +5,7 @@ import { Mail, MessageSquare } from "lucide-react";
 export const metadata: Metadata = {
   title: "Contact Us & Support",
   description:
-    "Get in touch with the AstreWork team. Reach out for support, feedback, feature requests, or enterprise partnerships.",
+    "Get in touch with the Stride team. Reach out for support, feedback, feature requests, or enterprise partnerships.",
   alternates: {
     canonical: "/contact",
   },
@@ -15,7 +15,7 @@ export default function ContactUs() {
   return (
     <LegalPageLayout title="Contact Us">
       <p className="text-lg text-[#424245] mb-10">
-        Have questions, feedback, or need help with your AstreWork workspace? We're here to help.
+        Have questions, feedback, or need help with your Stride workspace? We're here to help.
       </p>
 
       <div className="grid sm:grid-cols-2 gap-6 mt-8">
@@ -27,8 +27,8 @@ export default function ContactUs() {
           <p className="text-[14px] text-[#6e6e73] !mb-4">
             Reach out to our support team for any technical issues or billing inquiries. We typically respond within 24 hours.
           </p>
-          <a href="mailto:support@astrework.com" className="text-[14px] font-medium text-[#0071e3] hover:underline">
-            support@astrework.com
+          <a href="mailto:support@stride.app" className="text-[14px] font-medium text-[#0071e3] hover:underline">
+            support@stride.app
           </a>
         </div>
 
@@ -38,10 +38,10 @@ export default function ContactUs() {
           </div>
           <h3 className="!mt-0 text-[17px] font-semibold text-[#1d1d1f]">Feedback & Feature Requests</h3>
           <p className="text-[14px] text-[#6e6e73] !mb-4">
-            Got an idea to make AstreWork better? We love hearing from our users. Send your thoughts directly to the product team.
+            Got an idea to make Stride better? We love hearing from our users. Send your thoughts directly to the product team.
           </p>
-          <a href="mailto:feedback@astrework.com" className="text-[14px] font-medium text-[#0071e3] hover:underline">
-            feedback@astrework.com
+          <a href="mailto:feedback@stride.app" className="text-[14px] font-medium text-[#0071e3] hover:underline">
+            feedback@stride.app
           </a>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function ContactUs() {
       <div className="mt-12">
         <h2>Business Inquiries</h2>
         <p>
-          For partnerships, press inquiries, or enterprise deployments, please contact our business team at <a href="mailto:hello@astrework.com">hello@astrework.com</a>.
+          For partnerships, press inquiries, or enterprise deployments, please contact our business team at <a href="mailto:hello@stride.app">hello@stride.app</a>.
         </p>
       </div>
     </LegalPageLayout>

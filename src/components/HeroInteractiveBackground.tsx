@@ -274,7 +274,7 @@ export default function HeroInteractiveBackground() {
           <span className="text-emerald-700 font-mono text-[11px]">Workday Safe</span>
         </motion.div>
 
-        {/* Floating Chip 3: Mid-Left (AstreShield Ghost Defense) */}
+        {/* Floating Chip 3: Mid-Left (StrideShield Ghost Defense) */}
         <motion.div
           style={{ x: badge3X, y: badge3Y }}
           animate={{

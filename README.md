@@ -1,19 +1,19 @@
 <div align="center">
 
-# ✨ AstreWork
+# ✨ Stride
 ### Autonomous Remote Career Intelligence & Application Operating System
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.3.0%20(Turbopack)-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.0.0-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9%20(Strict)-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma 7](https://img.shields.io/badge/Prisma-7%20(LibSQL)-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](https://astrework.app/api/sources/health)
+[![Provider Health](https://img.shields.io/badge/Providers-19%2F19%20HEALTHY-brightgreen?style=for-the-badge)](https://stride.app/api/sources/health)
 [![Job Sync Engine](https://img.shields.io/badge/Job%20Sync-100%25%20PASSING-brightgreen?style=for-the-badge&logo=githubactions)](https://github.com/Hey-Astreon/Career_Engine/actions/workflows/job-sync.yml)
-[![Live Production](https://img.shields.io/badge/Live%20Production-astrework.app-success?style=for-the-badge)](https://astrework.app)
+[![Live Production](https://img.shields.io/badge/Live%20Production-stride.app-success?style=for-the-badge)](https://stride.app)
 
-**AstreWork** is an autonomous, high-density AI Career Operating System engineered to streamline remote job discovery, multi-signal deduplication, deep 2-stage fit scoring, tailored application kit generation, and background auto-sync scheduling.
+**Stride** is an autonomous, high-density AI Career Operating System engineered to streamline remote job discovery, multi-signal deduplication, deep 2-stage fit scoring, tailored application kit generation, and background auto-sync scheduling.
 
-🌐 **Live Production Deployment:** [https://astrework.app](https://astrework.app)
+🌐 **Live Production Deployment:** [https://stride.app](https://stride.app)
 
 </div>
 
@@ -49,11 +49,11 @@ A resilient, concurrent scraping engine executing via `Promise.allSettled()` wit
     - **Match Studio Integration:** 1-Click "Download Tailored PDF" button, "Preview PDF" button, and collapsible catalog explorer for all candidate variants.
     - **Quick Apply Toolkit:** Integrated tailored PDF card inside `QuickApplyDrawer` with dynamic variant pre-selection, instant download, and preview.
 
-### 4. 🚀 AstrePilot (Autonomous Form Autofill & AI Injector)
+### 4. 🚀 StridePilot (Autonomous Form Autofill & AI Injector)
 - **Native Chrome Extension (Manifest V3):** Packaged browser extension featuring a clean light glass action popup, background service worker, automatic ATS portal detection badge (`boards.greenhouse.io`, `jobs.lever.co`, `myworkdayjobs.com`, `ashbyhq.com`, etc.), and global keyboard shortcut (`Alt+Shift+A`).
-- **Shadow DOM HUD:** Draggable, collapsible overlay (full card ↔ pill) rendered in a closed Shadow DOM so host-page CSS cannot interfere. Shows real-time field classification and profile previews, with a working Settings shortcut to the AstreWork settings page. All dynamic text is HTML-escaped before rendering.
-- **Zero-Hallucination AI Screening:** Automatically intercepts unknown `<textarea>` screening questions and queries the AstreWork multi-LLM backend (`/api/autopilot/answer`) to generate contextually accurate, non-hallucinated answers on the fly based on the active session's tailored resume.
-- **1-Click ZIP Download & Distribution:** Built directly into the AstreWork workspace settings (`astrepilot-extension.zip`) with instant token generation.
+- **Shadow DOM HUD:** Draggable, collapsible overlay (full card ↔ pill) rendered in a closed Shadow DOM so host-page CSS cannot interfere. Shows real-time field classification and profile previews, with a working Settings shortcut to the Stride settings page. All dynamic text is HTML-escaped before rendering.
+- **Zero-Hallucination AI Screening:** Automatically intercepts unknown `<textarea>` screening questions and queries the Stride multi-LLM backend (`/api/autopilot/answer`) to generate contextually accurate, non-hallucinated answers on the fly based on the active session's tailored resume.
+- **1-Click ZIP Download & Distribution:** Built directly into the Stride workspace settings (`stridepilot-extension.zip` and `astrepilot-extension.zip`) with instant token generation.
 
 ### 5. 🔒 Enterprise-Grade API Security & Multi-Tenant Isolation
 - **Pipeline Lockdown:** Complete session-based verification enforcing `CRON_SECRET` and `getServerSession` boundaries over expensive data sync and scrape pipeline triggers.
@@ -175,21 +175,21 @@ npm run build
 
 ## ☁️ Autonomous Production Deployment (LIVE)
 
-AstreWork is officially live in production at **[https://astrework.app](https://astrework.app)** running on Oracle Cloud Always-Free ARM Ampere A1 (4 OCPUs, 24 GB RAM) with Caddy reverse proxy (automated Let's Encrypt SSL/TLS & HTTP/3), Turso LibSQL Cloud, and automated Watchtower continuous deployment.
+Stride is officially live in production at **[https://stride.app](https://stride.app)** running on Oracle Cloud Always-Free ARM Ampere A1 (4 OCPUs, 24 GB RAM) with Caddy reverse proxy (automated Let's Encrypt SSL/TLS & HTTP/3), Turso LibSQL Cloud, and automated Watchtower continuous deployment.
 
 ### 1. Production Architecture
 - **Dedicated Hardware:** Oracle Cloud `VM.Standard.A1.Flex` (4 ARM64 OCPUs, 24 GB RAM in Mumbai `ap-mumbai-1`)
-- **Reverse Proxy & SSL:** Caddy (`caddy:alpine`) with automatic HTTPS & TLS-ALPN-01 certificates for `astrework.app` and `agent.astrework.app`
+- **Reverse Proxy & SSL:** Caddy (`caddy:alpine`) with automatic HTTPS & TLS-ALPN-01 certificates for `stride.app` and `agent.stride.app`
 - **Container Mesh (`docker-compose.prod.yml`):**
-  - `astrepilot_web`: Next.js 16 standalone web application (:3000)
-  - `astrework_agent`: Antigravity Python Agent Core gateway (:8000)
-  - `astrework_redis`: Redis 7 LRU cache
+  - `stridepilot_web`: Next.js 16 standalone web application (:3000)
+  - `stride_agent`: Antigravity Python Agent Core gateway (:8000)
+  - `stride_redis`: Redis 7 LRU cache
   - `caddy`: Dual reverse proxy & automated TLS
   - `watchtower`: Continuous deployment watcher auto-reloading containers on new GHCR image pushes
 - **CD Automation:** GitHub Actions ARM64 buildx pushes both `career_engine:latest` and `career_engine-agent:latest` to GHCR on `git push origin main`
 - **Live Production URLs:**
-  - Web Application: [https://astrework.app](https://astrework.app)
-  - Antigravity Agent Core: [https://agent.astrework.app](https://agent.astrework.app)
+  - Web Application: [https://stride.app](https://stride.app)
+  - Antigravity Agent Core: [https://agent.stride.app](https://agent.stride.app)
 
 ### 2. Configure Production Environment Variables (`.env`)
 In your production `.env` file on the Oracle Cloud server, configure the following keys:
@@ -203,8 +203,8 @@ In your production `.env` file on the Oracle Cloud server, configure the followi
 | `CEREBRAS_API_KEY` | Cerebras fast fallback API key (`qwen-3.8-27b`) |
 | `NVIDIA_NIM_API_KEY` | NVIDIA NIM enterprise reasoning key (`meta/llama-4-maverick`) |
 | `NEXTAUTH_SECRET` | NextAuth session encryption secret |
-| `NEXTAUTH_URL` | Production deployment URL (`https://astrework.app`) |
-| `AGENT_GATEWAY_URL` | Internal Docker agent URL (`http://agent:8000` or `https://agent.astrework.app`) |
+| `NEXTAUTH_URL` | Production deployment URL (`https://stride.app`) |
+| `AGENT_GATEWAY_URL` | Internal Docker agent URL (`http://agent:8000` or `https://agent.stride.app`) |
 
 ### 3. Synchronize Cloud Database Anytime
 Whenever new opportunities or candidate updates are made locally, sync them to Turso Cloud in one command:
@@ -233,7 +233,7 @@ Career_Engine/
 │   ├── config.py                       # Antigravity SDK Agent configurations
 │   ├── main.py                         # FastAPI Agent Gateway (:8000)
 │   └── requirements.txt                # Python SDK dependencies
-├── extension/                          # AstrePilot MV3 extension (popup, HUD, background worker)
+├── extension/                          # StridePilot MV3 extension (popup, HUD, background worker)
 ├── prisma/                             # Database schema & candidate seed data
 ├── docs/                               # System documentation & interview vaults
 │   └── interview_vaults/               # Consolidated candidate interview vaults

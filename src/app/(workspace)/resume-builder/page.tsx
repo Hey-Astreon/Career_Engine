@@ -164,7 +164,7 @@ export default function ResumeBuilderPage() {
     void loadJobs();
   }, []);
 
-  // Auto-load AstrePilot session if requested via URL
+  // Auto-load StridePilot session if requested via URL
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -224,7 +224,7 @@ export default function ResumeBuilderPage() {
 
 I am writing to express my strong interest in the ${roleTitle} role at ${companyName}. As a Software Developer specializing in low-latency backend architectures, distributed APIs, and full-stack web development, I have built and deployed production systems across Python FastAPI, C#/.NET Core, Java Spring Boot, and modern TypeScript runtimes.
 
-Across my technical work, I focus on building fault-tolerant infrastructure with clear performance guarantees. My flagship projects include AstreWork—an AI career platform and distributed job harvester on Oracle Cloud (OCI ARM64) with Dockerized Playwright and Puppeteer scrapers and sub-50ms API response times—Astra Vision, an AST code-graph parser and execution sandbox featuring subprocess isolation and sub-200ms latency, and Alyra Lock, a client-side AES-256-GCM zero-knowledge password vault. Furthermore, my virtual experience simulations reinforced my discipline in 3NF database normalization, asynchronous event processing, and automated unit testing (Vitest, xUnit, Jest, PyTest).
+Across my technical work, I focus on building fault-tolerant infrastructure with clear performance guarantees. My flagship projects include Stride—an AI career platform and distributed job harvester on Oracle Cloud (OCI ARM64) with Dockerized Playwright and Puppeteer scrapers and sub-50ms API response times—Astra Vision, an AST code-graph parser and execution sandbox featuring subprocess isolation and sub-200ms latency, and Alyra Lock, a client-side AES-256-GCM zero-knowledge password vault. Furthermore, my virtual experience simulations reinforced my discipline in 3NF database normalization, asynchronous event processing, and automated unit testing (Vitest, xUnit, Jest, PyTest).
 
 ${companyName}'s technical standards align directly with my background in low-latency systems and clean software design. I welcome the opportunity to contribute to your team's core services, optimize API throughput, and ship reliable product features.
 
@@ -242,7 +242,7 @@ Hi [Hiring Lead / Founder],
 
 I’ve been following ${companyName}'s product milestones and wanted to reach out regarding the ${roleTitle} position.
 
-I build high-throughput, low-latency software systems across Python (FastAPI), TypeScript (Next.js/React 19), C#/.NET Core, and Java Spring Boot. In my recent work on AstreWork and Astra Vision, I built distributed Playwright/Puppeteer pipelines on Oracle Cloud and an isolated subprocess code-graph sandbox executing in under 200ms.
+I build high-throughput, low-latency software systems across Python (FastAPI), TypeScript (Next.js/React 19), C#/.NET Core, and Java Spring Boot. In my recent work on Stride and Astra Vision, I built distributed Playwright/Puppeteer pipelines on Oracle Cloud and an isolated subprocess code-graph sandbox executing in under 200ms.
 
 I’d love to contribute to ${companyName}’s product velocity and system reliability. You can explore my live demos and codebase at ${portfolio} and ${github}.
 

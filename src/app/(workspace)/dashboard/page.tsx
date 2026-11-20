@@ -48,7 +48,7 @@ export function formatRelativeAge(postedAtStr?: string | null, fallbackDateStr?:
 function MatchBadge({ score }: { score?: FeedScoreInfo }) {
   if (!score) return <span className="ce-chip">EVALUATING</span>;
   if (score.scoreType === "INELIGIBLE") return <span title={score.rejectionReason || "Hard eligibility constraint"} className="ce-chip ce-chip-red">INELIGIBLE</span>;
-  if (score.scoreType === "SHIELD_BLOCKED") return <span title={score.rejectionReason || "AstreShield flagged this posting"} className="ce-chip ce-chip-red">BLOCKED</span>;
+  if (score.scoreType === "SHIELD_BLOCKED") return <span title={score.rejectionReason || "StrideShield flagged this posting"} className="ce-chip ce-chip-red">BLOCKED</span>;
   return <span title={score.cached ? "Cached composite evaluation" : "Deterministic match signal"} className={`ce-chip ${score.scoreType === "FINAL_MATCH" ? "ce-chip-green" : "ce-chip-blue"}`}>{score.scoreType === "FINAL_MATCH" && <Sparkles className="h-3 w-3" />}{score.displayLabel}</span>;
 }
 
@@ -57,14 +57,14 @@ function ShieldBadge({ score }: { score?: FeedScoreInfo }) {
   if (!score?.trustTier || score.trustTier === "GREEN") return null;
   if (score.trustTier === "AMBER") {
     return (
-      <span className="shield-badge shield-badge--amber" title={score.trustDetail || "Verify this posting before sharing personal information"} aria-label="AstreShield caution">
+      <span className="shield-badge shield-badge--amber" title={score.trustDetail || "Verify this posting before sharing personal information"} aria-label="StrideShield caution">
         <ShieldAlert className="h-2.5 w-2.5" />
         Verify
       </span>
     );
   }
   return (
-    <span className="shield-badge shield-badge--red" title={score.trustDetail || "AstreShield flagged this posting as likely fraudulent"} aria-label="AstreShield alert">
+    <span className="shield-badge shield-badge--red" title={score.trustDetail || "StrideShield flagged this posting as likely fraudulent"} aria-label="StrideShield alert">
       <ShieldX className="h-2.5 w-2.5" />
       Flagged
     </span>
@@ -265,7 +265,7 @@ export default function Home() {
           🦅 All Roles ({eligibleJobs.length})
         </button>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 border-y border-[var(--line)] py-3 sm:grid-cols-2 lg:grid-cols-[minmax(200px,1fr)_160px_160px_140px_165px_auto]"><label className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]" /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search role, company, or skill" className="ce-field pl-9 pr-3" /></label><select value={selectedPlatform} onChange={(event) => setSelectedPlatform(event.target.value)} className="ce-field px-3" aria-label="Filter by source"><option value="ALL">All sources ({policyEligibleJobs.length})</option>{Object.keys(platformCounts).sort().map((platform) => <option key={platform} value={platform}>{platform} ({platformCounts[platform]})</option>)}</select><select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="ce-field px-3" aria-label="Filter by category"><option value="ALL">All role categories</option><option>React Developer</option><option>Backend Developer</option><option>Frontend Developer</option><option>Full Stack Developer</option><option>Python Developer</option><option>AI / ML Engineer</option></select><select value={minMatchScore} onChange={(event) => setMinMatchScore(event.target.value as typeof minMatchScore)} className="ce-field px-3" aria-label="Filter by match score"><option value="ALL">Any match score</option><option value="80">80+ match score</option><option value="70">70+ match score</option><option value="50">50+ match score</option></select><select value={sortBy} onChange={(event) => { setSortBy(event.target.value as JobSortCriteria); setFeedPage(1); }} className="ce-field px-3" aria-label="Sort roles"><option value="EARLY_BIRD">🦅 Early Bird (Intern & Fresh)</option><option value="RECENT">⚡ Recently posted</option><option value="MATCH_SCORE">🎯 Highest match score</option><option value="COMPANY_ASC">🏢 Company (A–Z)</option><option value="TITLE_ASC">💼 Role title (A–Z)</option><option value="OLDEST">⏳ Oldest posted</option></select><button onClick={() => setHideShieldFlagged((v) => !v)} className={`ce-button-secondary !px-3 ${hideShieldFlagged ? "!border-[var(--green)] !text-[var(--green)]" : ""}`} title={hideShieldFlagged ? "Showing only Shield-safe roles — click to show all" : "Hide roles flagged by AstreShield"} aria-pressed={hideShieldFlagged}><ShieldCheck className="h-3.5 w-3.5" />{hideShieldFlagged ? "Shield ON" : "Shield"}</button>{(searchTerm || selectedPlatform !== "ALL" || selectedCategory !== "ALL" || minMatchScore !== "ALL" || sortBy !== "EARLY_BIRD" || hideShieldFlagged) && <button onClick={resetFilters} className="ce-button-quiet"><X className="h-3.5 w-3.5" />Reset</button>}</div>
+      <div className="mt-3 grid grid-cols-1 gap-2 border-y border-[var(--line)] py-3 sm:grid-cols-2 lg:grid-cols-[minmax(200px,1fr)_160px_160px_140px_165px_auto]"><label className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]" /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search role, company, or skill" className="ce-field pl-9 pr-3" /></label><select value={selectedPlatform} onChange={(event) => setSelectedPlatform(event.target.value)} className="ce-field px-3" aria-label="Filter by source"><option value="ALL">All sources ({policyEligibleJobs.length})</option>{Object.keys(platformCounts).sort().map((platform) => <option key={platform} value={platform}>{platform} ({platformCounts[platform]})</option>)}</select><select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="ce-field px-3" aria-label="Filter by category"><option value="ALL">All role categories</option><option>React Developer</option><option>Backend Developer</option><option>Frontend Developer</option><option>Full Stack Developer</option><option>Python Developer</option><option>AI / ML Engineer</option></select><select value={minMatchScore} onChange={(event) => setMinMatchScore(event.target.value as typeof minMatchScore)} className="ce-field px-3" aria-label="Filter by match score"><option value="ALL">Any match score</option><option value="80">80+ match score</option><option value="70">70+ match score</option><option value="50">50+ match score</option></select><select value={sortBy} onChange={(event) => { setSortBy(event.target.value as JobSortCriteria); setFeedPage(1); }} className="ce-field px-3" aria-label="Sort roles"><option value="EARLY_BIRD">🦅 Early Bird (Intern & Fresh)</option><option value="RECENT">⚡ Recently posted</option><option value="MATCH_SCORE">🎯 Highest match score</option><option value="COMPANY_ASC">🏢 Company (A–Z)</option><option value="TITLE_ASC">💼 Role title (A–Z)</option><option value="OLDEST">⏳ Oldest posted</option></select><button onClick={() => setHideShieldFlagged((v) => !v)} className={`ce-button-secondary !px-3 ${hideShieldFlagged ? "!border-[var(--green)] !text-[var(--green)]" : ""}`} title={hideShieldFlagged ? "Showing only Shield-safe roles — click to show all" : "Hide roles flagged by StrideShield"} aria-pressed={hideShieldFlagged}><ShieldCheck className="h-3.5 w-3.5" />{hideShieldFlagged ? "Shield ON" : "Shield"}</button>{(searchTerm || selectedPlatform !== "ALL" || selectedCategory !== "ALL" || minMatchScore !== "ALL" || sortBy !== "EARLY_BIRD" || hideShieldFlagged) && <button onClick={resetFilters} className="ce-button-quiet"><X className="h-3.5 w-3.5" />Reset</button>}</div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[10px] text-[var(--muted)]"><span className="flex items-center gap-2"><SlidersHorizontal className="h-3.5 w-3.5 text-[var(--blue)]" />{filteredJobs.length} roles match active filters</span><span className="font-mono text-[9px] tracking-wide">CANDIDATE CONTEXT: {activeProfile?.fullName?.toUpperCase() || "LOADING"}</span></div>
       {isLoadingJobs ? <div className="grid min-h-64 place-items-center text-[11px] text-[var(--muted)]"><span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin text-[var(--blue)]" />Loading verified postings</span></div> : filteredJobs.length === 0 ? <div className="mt-5 grid min-h-56 place-items-center border-t border-[var(--line)] text-center"><div><Search className="mx-auto h-6 w-6 text-[var(--blue)]" /><b className="mt-3 block text-[13px] text-[var(--ink)]">No roles match the current filters</b><p className="mt-2 text-[11px] text-[var(--muted)]">Clear a filter or refresh the provider run to inspect new strict-eligible roles.</p></div></div> : <><div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3 text-[10px] text-[var(--muted)]"><span>Showing {feedPagination.startIndex + 1}–{feedPagination.endIndexExclusive} of {feedPagination.totalItems} roles</span><nav aria-label="Career feed pagination" className="flex items-center gap-2"><button type="button" onClick={() => setFeedPage(feedPagination.currentPage - 1)} disabled={feedPagination.currentPage === 1} className="ce-button-quiet disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous feed page"><ChevronLeft className="h-3.5 w-3.5" />Previous</button><span className="font-mono text-[9px] text-[var(--ink)]">PAGE {feedPagination.currentPage} / {feedPagination.totalPages}</span><button type="button" onClick={() => setFeedPage(feedPagination.currentPage + 1)} disabled={feedPagination.currentPage === feedPagination.totalPages} className="ce-button-quiet disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next feed page">Next<ChevronRight className="h-3.5 w-3.5" /></button></nav></div>{viewMode === "list" ? <div className="border-t border-[var(--line)]">{visibleJobs.map((job) => <RoleListRow key={job.id} job={job} score={scoresMap[job.id]} nowTick={nowTick} onOpen={() => setDrawerJob(job)} onQuickApply={() => setQuickApplyJob(job)} />)}</div> : <div className="grid grid-cols-1 gap-3 border-t border-[var(--line)] pt-4 md:grid-cols-2 xl:grid-cols-3">{visibleJobs.map((job) => <RoleCard key={job.id} job={job} score={scoresMap[job.id]} nowTick={nowTick} onOpen={() => setDrawerJob(job)} onQuickApply={() => setQuickApplyJob(job)} />)}</div>}</>}
     </section>
@@ -454,17 +454,17 @@ function JobDrawer({ job, score, nowTick, onClose, onGenerateKit, onOpenQuickApp
 function DrawerMetric({ label, value }: { label: string; value: React.ReactNode }) { return <div><span className="block font-mono text-[8px] font-bold uppercase tracking-[.09em] text-[var(--muted)]">{label}</span><div className="mt-2 text-[10px] font-semibold leading-4 text-[var(--ink)]">{value}</div></div>; }
 function SkillGroup({ label, skills, green }: { label: string; skills?: string[]; green?: boolean }) { if (!skills?.length) return null; return <div><span className="font-mono text-[8px] font-bold uppercase tracking-[.09em] text-[var(--muted)]">{label}</span><div className="mt-2 flex flex-wrap gap-1">{skills.map((skill) => <span key={skill} className={`ce-chip ${green ? "ce-chip-green" : ""}`}>{skill}</span>)}</div></div>; }
 
-/** Full AstreShield audit breakdown — shown in JobDrawer sidebar */
+/** Full StrideShield audit breakdown — shown in JobDrawer sidebar */
 function ShieldAuditPanel({ score }: { score?: FeedScoreInfo }) {
   if (!score) return null;
 
   if (!score.trustTier || score.trustTier === "GREEN") {
     return (
-      <section className="rounded-lg border border-[var(--green)] bg-[var(--green-soft)] p-3 text-[11px] leading-5 text-[var(--ink)]" aria-label="AstreShield trust audit verified">
+      <section className="rounded-lg border border-[var(--green)] bg-[var(--green-soft)] p-3 text-[11px] leading-5 text-[var(--ink)]" aria-label="StrideShield trust audit verified">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 font-bold text-[var(--green)]">
             <ShieldCheck className="h-4 w-4" />
-            <span>AstreShield Verified</span>
+            <span>StrideShield Verified</span>
           </div>
           <span className="ce-chip ce-chip-green !min-h-5 !px-2 !text-[9px]">
             TRUST {score.trustScore ?? 100}/100
@@ -482,11 +482,11 @@ function ShieldAuditPanel({ score }: { score?: FeedScoreInfo }) {
   const deductions = (score.trustFlags ?? []).filter((f) => f.impact < 0);
   const bonuses = (score.trustFlags ?? []).filter((f) => f.impact > 0);
   return (
-    <section className={panelClass} aria-label="AstreShield trust audit">
+    <section className={panelClass} aria-label="StrideShield trust audit">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {isRed ? <ShieldX className="h-4 w-4 text-[var(--red)]" /> : <ShieldAlert className="h-4 w-4 text-[var(--amber)]" />}
-          <b className="text-[12px] text-[var(--ink)]">AstreShield Audit</b>
+          <b className="text-[12px] text-[var(--ink)]">StrideShield Audit</b>
         </div>
         <span className={`ce-chip ${isRed ? "ce-chip-red" : "ce-chip-amber"}`} title="Trust score: 100 points minus detected signal deductions">
           TRUST {score.trustScore ?? "—"}/100
@@ -522,7 +522,7 @@ function ShieldAuditPanel({ score }: { score?: FeedScoreInfo }) {
       )}
       {isRed && (
         <p className="mt-4 border-t border-[var(--red)] pt-3 text-[10px] leading-5 text-[var(--red)]">
-          ⚠ AstreWork strongly recommends not applying or sharing personal information with this posting.
+          ⚠ Stride strongly recommends not applying or sharing personal information with this posting.
         </p>
       )}
     </section>

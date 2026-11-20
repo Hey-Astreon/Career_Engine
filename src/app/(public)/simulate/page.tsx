@@ -55,23 +55,21 @@ function SimulationJobContent() {
   const handlePrimeBrain = async () => {
     setIsPriming(true);
     try {
-      // Store in localStorage for extension & local simulations to read
-      localStorage.setItem(
-        "astrepilot_simulation_session",
-        JSON.stringify({
-          company: selectedCompany.name,
-          jobTitle: selectedCompany.roleTitle,
-          stipend: selectedCompany.stipend,
-          location: selectedCompany.location,
-          about: selectedCompany.aboutCompany,
-          screeningPrompt: selectedCompany.screeningPrompt,
-          techStack: selectedCompany.techStack,
-          primedAt: new Date().toISOString()
-        })
-      );
+      const simData = {
+        company: selectedCompany.name,
+        jobTitle: selectedCompany.roleTitle,
+        stipend: selectedCompany.stipend,
+        location: selectedCompany.location,
+        about: selectedCompany.aboutCompany,
+        screeningPrompt: selectedCompany.screeningPrompt,
+        techStack: selectedCompany.techStack,
+        primedAt: new Date().toISOString()
+      };
+      localStorage.setItem("stridepilot_simulation_session", JSON.stringify(simData));
+      localStorage.setItem("astrepilot_simulation_session", JSON.stringify(simData));
 
       // Attempt to prime actual backend session if user has a token
-      const token = localStorage.getItem("astrepilot_token");
+      const token = localStorage.getItem("stridepilot_token") || localStorage.getItem("astrepilot_token");
       if (token) {
         await fetch("/api/autopilot/session", {
           method: "POST",
@@ -116,10 +114,10 @@ function SimulationJobContent() {
           <div className="flex items-center gap-2.5">
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--blue-soft)] text-[var(--blue)] font-bold text-[10px] uppercase tracking-wider">
               <Sparkles className="w-3 h-3" />
-              AstrePilot Test Simulation
+              StridePilot Test Simulation
             </span>
             <span className="text-[var(--muted)] hidden sm:inline">
-              Simulated Employer Portal for testing AstreWork & AstrePilot autofill
+              Simulated Employer Portal for testing Stride & StridePilot autofill
             </span>
           </div>
 
@@ -170,7 +168,7 @@ function SimulationJobContent() {
               ) : (
                 <>
                   <Zap className="w-3.5 h-3.5" />
-                  <span>{isPriming ? "Priming..." : "Prime AstrePilot"}</span>
+                  <span>{isPriming ? "Priming..." : "Prime StridePilot"}</span>
                 </>
               )}
             </button>
@@ -192,7 +190,7 @@ function SimulationJobContent() {
         {/* Breadcrumb Navigation */}
         <div className="flex items-center gap-2 text-[12px] text-[var(--muted)] mb-6">
           <Link href="/dashboard" className="hover:text-[var(--ink)] transition-colors">
-            AstreWork
+            Stride
           </Link>
           <ChevronRight className="w-3 h-3" />
           <span>Careers Portal</span>
@@ -402,16 +400,16 @@ function SimulationJobContent() {
               </div>
             </div>
 
-            {/* AstrePilot Testing Tip Card */}
+            {/* StridePilot Testing Tip Card */}
             <div className="rounded-xl border border-[var(--blue)]/30 bg-[var(--blue-soft)]/50 p-5">
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="w-4 h-4 text-[var(--blue)]" />
                 <h4 className="text-[13px] font-bold text-[var(--ink)]">
-                  Testing with AstrePilot
+                  Testing with StridePilot
                 </h4>
               </div>
               <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed mb-3">
-                This page simulates a live remote internship listing. Clicking below takes you to the standard job application form where you can test AstrePilot&apos;s auto-fill HUD and AI screening answers.
+                This page simulates a live remote internship listing. Clicking below takes you to the standard job application form where you can test StridePilot&apos;s auto-fill HUD and AI screening answers.
               </p>
               <div className="space-y-2">
                 <button
@@ -419,7 +417,7 @@ function SimulationJobContent() {
                   className="w-full py-2 px-3 rounded-lg bg-[var(--surface)] border border-[var(--blue)]/30 text-[var(--blue)] hover:bg-[var(--blue)] hover:text-white font-bold text-[11px] transition-all flex items-center justify-center gap-1.5"
                 >
                   <Zap className="w-3.5 h-3.5" />
-                  {isPrimed ? "Brain Primed with this JD!" : "Prime AstrePilot Brain Now"}
+                  {isPrimed ? "Brain Primed with this JD!" : "Prime StridePilot Brain Now"}
                 </button>
 
                 <Link
@@ -456,7 +454,7 @@ function SimulationJobContent() {
             Ready to test the application workflow?
           </h3>
           <p className="text-[13px] text-[var(--muted)] max-w-xl mx-auto mb-6">
-            Proceed to the job application form for {selectedCompany.name}. Test AstrePilot&apos;s auto-fill, screening response generation, and form submission.
+            Proceed to the job application form for {selectedCompany.name}. Test StridePilot&apos;s auto-fill, screening response generation, and form submission.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link

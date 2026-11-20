@@ -96,7 +96,7 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://www.linkedin.com/in/alrya404/",
       },
       summary:
-        "Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built AstreWork (astrework.app), shipping its live resume-scoring studio and the AstrePilot Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security.",
+        "Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built Stride (stride.app), shipping its live resume-scoring studio and the StridePilot Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security.",
       skills: [
         {
           categoryName: "Languages",
@@ -125,13 +125,13 @@ export function getMasterResumeBaseline(
       ],
       projects: [
         {
-          title: "AstreWork — AI Career Platform & AstrePilot Extension",
+          title: "Stride — AI Career Platform & StridePilot Extension",
           techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
-          liveDemoUrl: "https://astrework.app",
+          liveDemoUrl: "https://stride.app",
           githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
           bullets: [
-            "Co-Developer & Lead Frontend Architect: Built AstreWork's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
-            "AstrePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
+            "Co-Developer & Lead Frontend Architect: Built Stride's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
+            "StridePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
             "Workspace & Print Engine: Built the React 19 and Zustand workspace with live resume-audit checks and a single-page A4 print layout with zero layout shift.",
           ],
         },
@@ -213,7 +213,7 @@ export function getMasterResumeBaseline(
         linkedinUrl: "https://linkedin.com/in/astreon4547",
       },
       summary:
-        "Backend and Full-Stack Developer focused on distributed architectures, high-concurrency data pipelines, and cloud services in Python and TypeScript. Architected and operate AstreWork (astrework.app) on Oracle Cloud, orchestrating distributed background pipelines with Turso LibSQL and Redis caching. Enjoys solving hard concurrency, caching, and infrastructure resilience challenges.",
+        "Backend and Full-Stack Developer focused on distributed architectures, high-concurrency data pipelines, and cloud services in Python and TypeScript. Architected and operate Stride (stride.app) on Oracle Cloud, orchestrating distributed background pipelines with Turso LibSQL and Redis caching. Enjoys solving hard concurrency, caching, and infrastructure resilience challenges.",
       skills: [
         {
           categoryName: "Languages",
@@ -242,9 +242,9 @@ export function getMasterResumeBaseline(
       ],
       projects: [
         {
-          title: "AstreWork — Autonomous Career Engine & Distributed Harvester",
+          title: "Stride — Autonomous Career Engine & Distributed Harvester",
           techStack: "Next.js 16, Python, OCI, Docker, Redis",
-          liveDemoUrl: "https://astrework.app",
+          liveDemoUrl: "https://stride.app",
           githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
           bullets: [
             "Creator & Lead Backend Developer: Architected distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process and deduplicate high-volume career listings with resilient error recovery across multi-platform sources.",

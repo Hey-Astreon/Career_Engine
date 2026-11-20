@@ -139,8 +139,8 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-7">
             <Link href="/" className="inline-block transition-all hover:opacity-80 hover:scale-[1.02] active:scale-[0.98]">
               <Image
-                src="/astrework-brand.png"
-                alt="AstreWork"
+                src="/stride-brand.png"
+                alt="Stride"
                 width={1760}
                 height={363}
                 className="h-9 w-auto object-contain"

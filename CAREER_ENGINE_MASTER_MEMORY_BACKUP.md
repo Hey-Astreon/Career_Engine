@@ -1,4 +1,4 @@
-# 🧠 CAREER_ENGINE / ASTREWORK — ENCYCLOPEDIC COGNITIVE MEMORY & NEURAL RESURRECTION VAULT
+# 🧠 CAREER_ENGINE / STRIDE — ENCYCLOPEDIC COGNITIVE MEMORY & NEURAL RESURRECTION VAULT
 # 🌟 DUAL FOUNDER PROTOCOL CODE: 9926 — COMPLETE AUTONOMOUS RETENTION SYSTEM
 
 > **CLASSIFICATION:** TOP-LEVEL AI NEURAL ARCHIVE, SYSTEM LEDGER & COGNITIVE MEMORY  
@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 7, 2026 (Phase 100: Canonical Clean Resume Naming Standardization (`Roushan_Kumar_resume.pdf`) Across AstreWork & AstrePilot)
+> **LAST COGNITIVE SYNC:** November 20, 2026 (Phase 101: Complete Ecosystem Rebranding from AstreWork to Stride Across Codebase, Software, Landing Page, Chrome Extension, and AI Engines)
 
 ---
 
@@ -4194,3 +4194,41 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (Canonical Clean Resume Naming Law):** Every tailored resume PDF generated, exported, downloaded, or attached across AstreWork and AstrePilot must adhere to the clean recruiter-facing standard: `<First_Last>_resume.pdf` (e.g. `Roushan_Kumar_resume.pdf` or `Ayushi_Raj_resume.pdf`). Never append company tags (`_Job`, `_Company`), internal tiers (`_Tier1_Resume`), or shouty uppercase casing (`ROUSHAN_KUMAR`).
 - **Status:** Complete, verified (`49/49` core tests passing, `0` TS errors, package regenerated to `public/downloads/astrepilot-extension.zip` [728.2 KB]), committed and pushed to `origin main`.
+
+### Phase 101: Complete Ecosystem Rebranding from AstreWork to Stride Across Codebase, Software, Landing Page, Chrome Extension, and AI Engines (November 20, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Founder Roushan directed a complete, brand-level name migration away from "AstreWork" to "Stride" across the entire Career Engine software ecosystem.
+  - Using "Astre" repeatedly felt like personal branding rather than a professional, collaborative career operating system built together by Roushan Kumar and Ayushi Raj.
+  - Migration required pervasive updates across marketing copy, site metadata, workspace layouts, navigation rails, legal disclosures, Chrome extension packaging, HUD DOM trees, and test assertions while maintaining 100% backward compatibility for already installed extensions.
+- **Deep Root Cause Diagnosis:**
+  - "AstreWork", "AstrePilot", and "AstreShield" were hardcoded across dozens of metadata tags, components, extension files, download archives, and test suites.
+  - Chrome Extension sessions in the wild rely on chrome.storage keys (`astrepilot_token`, `astrepilot_candidate`) and BroadcastChannel messages (`astrepilot_application_sync`). Simply renaming them without dual-key fallbacks would disconnect active extension users.
+- **The Concrete Surgical Fix:**
+  - **1. Core Configuration & Metadata:**
+    - `src/lib/siteConfig.ts`: Site name set to `"Stride"`, URL `"https://stride.app"`, title `"Stride — Autonomous AI Career Operating System"`, creators `"Roushan Kumar & Ayushi Raj"`.
+    - `src/app/layout.tsx`: OpenGraph metadata, twitter cards, title templates, and publisher tags updated to Stride.
+    - `src/components/Header.tsx`, `Sidebar.tsx`: Brand logos updated to `/stride-brand.png` with text `Stride`.
+  - **2. Public Marketing & Legal Pages:**
+    - `src/app/(public)/page.tsx`: Hero title, value proposition, Bento grid cards, feature comparison table, FAQs, and footer updated.
+    - `HeroInteractiveShowcase.tsx`: Mock HUD and interactive preview updated with `Fast Apply With StridePilot`, `stride.app`, and `Stride-ATS-A4.pdf`.
+    - All 6 legal/company pages (`about`, `contact`, `cookie-policy`, `dmca`, `privacy`, `terms`) and `LegalPageLayout.tsx` updated with Stride branding and `@stride.app` email contacts.
+  - **3. Auth & Workspace Pages:**
+    - `login` and `register` pages updated with `/stride-brand.png` and Stride branding.
+    - `dashboard/page.tsx`: Shield audit panel and status badges updated to StrideShield.
+    - `applications/page.tsx`: Added dual-channel BroadcastChannel listening (`stridepilot_application_sync` and legacy `astrepilot_application_sync`) and dual-source detection.
+    - `credentials/page.tsx` and `settings/page.tsx`: Rebranded to StridePilot Credential Vault.
+    - `AstrePilotCard.tsx`: Download link points to `stridepilot-extension.zip` with dual token sync (`STRIDEPILOT_TOKEN_SYNC` and `ASTREPILOT_TOKEN_SYNC`).
+  - **4. AI Engines & Baselines:**
+    - Created `src/lib/ai/strideShield.ts` and updated `src/lib/ai/astreShield.ts` with backward-compatible re-exports.
+    - `src/lib/resumeBaseline.ts`: Updated Roushan's and Ayushi's baseline flagship projects to `Stride — Autonomous Career Engine...`.
+    - `tests/resume_optimizer.test.ts`: Updated project title assertions to accept either `Stride` or `AstreWork`.
+  - **5. Chrome Extension (`extension/`):**
+    - `manifest.json`: Name updated to `"StridePilot — Autonomous Job Application Assistant"`.
+    - `popup.html`, `popup.js`: Rebranded to StridePilot with dual storage key read/write (`stridepilot_*` and `astrepilot_*`).
+    - `hud-ui.js`: Exported `window.StridePilotHUD` (aliasing `window.AstrePilotHUD`), closed Shadow DOM root `#stridepilot-root` with `data-legacy-id="astrepilot-root"`.
+    - `content.js`: Injected flags `__STRIDEPILOT_INJECTED__`, dual BroadcastChannel dispatches, and dual bridge objects.
+    - `scripts/package-extension.js`: Generates both `public/downloads/stridepilot-extension.zip` and legacy `public/downloads/astrepilot-extension.zip`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (Zero-Disruption Dual-Key Rebranding Law):** When rebranding a client-server extension ecosystem, never hard-break legacy storage keys or inter-process communication channels. Always read/write both `<new_brand>_*` and `<legacy_brand>_*` storage keys, listen to both BroadcastChannels, and export backward-compatible module aliases so existing user sessions remain seamlessly active.
+  - **Rule 2 (Dual Binary Distribution Law):** During a transition period, package and maintain both the primary branded archive (`stridepilot-extension.zip`) and the legacy archive (`astrepilot-extension.zip`) to prevent broken links in external documentation or automated scripts.
+- **Status:** Complete, verified (all 64 test suites passing [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.

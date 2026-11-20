@@ -1,5 +1,5 @@
 /**
- * AstrePilot Content Script (Manifest V3)
+ * StridePilot Content Script (Manifest V3)
  * ---------------------------------------
  * Injected on web pages to scan form fields, render the glassmorphic HUD,
  * and execute AI-powered autofill animations.
@@ -9,9 +9,13 @@
   'use strict';
 
   // Prevent multiple injections: tear down any previous instance (listeners + HUD)
+  if (window.__STRIDEPILOT_CLEANUP__) {
+    try { window.__STRIDEPILOT_CLEANUP__(); } catch (e) {}
+  }
   if (window.__ASTREPILOT_CLEANUP__) {
     try { window.__ASTREPILOT_CLEANUP__(); } catch (e) {}
   }
+  window.__STRIDEPILOT_INJECTED__ = true;
   window.__ASTREPILOT_INJECTED__ = true;
 
   let activeHud = null;
@@ -115,7 +119,7 @@
       veteranStatus: 'I am not a protected veteran',
       disabilityStatus: "No, I don't have a disability",
       race: 'Asian',
-      company: 'AstreWork',
+      company: 'Stride',
       employmentTitle: 'Creator & Lead Backend Developer',
       noticePeriod: 'Immediate',
       willingnessToRelocate: true,
@@ -123,7 +127,7 @@
       privacyConsent: 'Confirmed',
       aiConsent: 'Yes',
       aiUsage: 'regularly use AI tools and developer copilots',
-      professionalSummary: 'Software Developer focused on backend systems, distributed data pipelines, and cloud infrastructure. Architected and operate AstreWork on Oracle Cloud (OCI ARM64), utilizing Dockerized background workers, Turso SQLite, and Redis caching to orchestrate high-throughput distributed workflows. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
+      professionalSummary: 'Software Developer focused on backend systems, distributed data pipelines, and cloud infrastructure. Architected and operate Stride on Oracle Cloud (OCI ARM64), utilizing Dockerized background workers, Turso SQLite, and Redis caching to orchestrate high-throughput distributed workflows. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.',
       slug: 'roushan',
       token: 'eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs',
       _isStandalone: true
@@ -169,7 +173,7 @@
       veteranStatus: 'I am not a protected veteran',
       disabilityStatus: "No, I don't have a disability",
       race: 'Asian',
-      company: 'AstreWork',
+      company: 'Stride',
       employmentTitle: 'Co-Developer & Lead Frontend Architect',
       noticePeriod: 'Immediate',
       willingnessToRelocate: true,
@@ -177,7 +181,7 @@
       privacyConsent: 'Confirmed',
       aiConsent: 'Yes',
       aiUsage: 'regularly use AI tools and developer copilots',
-      professionalSummary: 'Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.',
+      professionalSummary: 'Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed Stride and the StridePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.',
       _isStandalone: true
     }
   };
@@ -188,17 +192,26 @@
 
   // Pillar E: Cross-Tab Broadcast Channel & Message Bus
   let syncChannel = null;
+  let syncChannel2 = null;
   try {
     if (typeof BroadcastChannel !== 'undefined') {
-      syncChannel = new BroadcastChannel('astrepilot_application_sync');
-      syncChannel.onmessage = (event) => {
+      syncChannel = new BroadcastChannel('stridepilot_application_sync');
+      syncChannel2 = new BroadcastChannel('astrepilot_application_sync');
+      const onSyncMsg = (event) => {
         const msg = event && event.data;
         if (!msg) return;
         handleCrossTabSyncMessage(msg);
       };
+      syncChannel.onmessage = onSyncMsg;
+      syncChannel2.onmessage = onSyncMsg;
     }
   } catch (e) {
     /* BroadcastChannel fallback */
+  }
+
+  function broadcastSync(payload) {
+    try { if (syncChannel) syncChannel.postMessage(payload); } catch (e) {}
+    try { if (syncChannel2) syncChannel2.postMessage(payload); } catch (e) {}
   }
 
   function handleCrossTabSyncMessage(msg) {
@@ -278,15 +291,11 @@
         }, () => {});
       }
     } catch (e) {}
-    if (syncChannel) {
-      try {
-        syncChannel.postMessage({
-          type: 'FILL_LOCK_RELEASED',
-          timestamp: Date.now(),
-          payload: { url: window.location.href }
-        });
-      } catch (e) {}
-    }
+    broadcastSync({
+      type: 'FILL_LOCK_RELEASED',
+      timestamp: Date.now(),
+      payload: { url: window.location.href }
+    });
   }
 
   /* -- PILLAR F: CDP HARDWARE INPUT BRIDGE -- */
@@ -611,8 +620,8 @@
 
   function isNextStepButton(btn) {
     if (!btn) return false;
-    // Strict isolation: Never match buttons inside AstrePilot HUD
-    if (btn.closest && (btn.closest('#astrepilot-root') || btn.closest('.astrepilot-ui'))) return false;
+    // Strict isolation: Never match buttons inside StridePilot / AstrePilot HUD
+    if (btn.closest && (btn.closest('#stridepilot-root') || btn.closest('#astrepilot-root') || btn.closest('.stridepilot-ui') || btn.closest('.astrepilot-ui'))) return false;
 
     const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
     // Exclude page-level autofill buttons (e.g. Greenhouse "Autofill my application" or external scrapers)
@@ -794,20 +803,21 @@
       if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) {
         return resolve({
           token: STANDALONE_PROFILES.roushan.token,
-          origin: 'https://astrework.app',
+          origin: 'https://stride.app',
           activeContext: 'roushan'
         });
       }
-      chrome.storage.sync.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (res) => {
+      const keys = ['stridepilot_token', 'astrepilot_token', 'stridepilot_origin', 'astrepilot_origin', 'stridepilot_active_context', 'astrepilot_active_context'];
+      chrome.storage.sync.get(keys, (res) => {
         const safeRes = res || {};
-        chrome.storage.local.get(['astrepilot_token', 'astrepilot_origin', 'astrepilot_active_context'], (localRes) => {
+        chrome.storage.local.get(keys, (localRes) => {
           const merged = { ...(localRes || {}), ...safeRes };
-          const origin = 'https://astrework.app';
-          if (merged.astrepilot_origin !== origin && chrome.storage.sync) {
-            chrome.storage.sync.set({ astrepilot_origin: origin });
+          const origin = 'https://stride.app';
+          if (merged.stridepilot_origin !== origin && chrome.storage.sync) {
+            chrome.storage.sync.set({ stridepilot_origin: origin, astrepilot_origin: origin });
           }
-          const activeCtx = merged.astrepilot_active_context || 'roushan';
-          const token = merged.astrepilot_token || STANDALONE_PROFILES.roushan.token;
+          const activeCtx = merged.stridepilot_active_context || merged.astrepilot_active_context || 'roushan';
+          const token = merged.stridepilot_token || merged.astrepilot_token || STANDALONE_PROFILES.roushan.token;
           resolve({
             token,
             origin,
@@ -5607,15 +5617,11 @@
             }
             f.source = 'vault';
             if (activeHud) activeHud.updateField(f);
-            if (syncChannel) {
-              try {
-                syncChannel.postMessage({
-                  type: 'VAULT_ENTRY_SAVED',
-                  timestamp: Date.now(),
-                  payload: { questionPattern: question }
-                });
-              } catch (e) {}
-            }
+            broadcastSync({
+              type: 'VAULT_ENTRY_SAVED',
+              timestamp: Date.now(),
+              payload: { questionPattern: question }
+            });
           } else {
             if (btnEl) {
               btnEl.textContent = 'Save Failed';
@@ -5645,20 +5651,16 @@
               if (activeHud && !activeHud.isCollapsed) activeHud.collapse();
             }, 3500);
           }
-          if (syncChannel) {
-            try {
-              syncChannel.postMessage({
-                type: 'APPLICATION_CONFIRMED',
-                timestamp: Date.now(),
-                payload: {
-                  fillId: meta && meta.fillId,
-                  applicationId: meta && meta.applicationId,
-                  siteUrl: window.location.href,
-                  company: (activeSession && activeSession.company) || ''
-                }
-              });
-            } catch (e) {}
-          }
+          broadcastSync({
+            type: 'APPLICATION_CONFIRMED',
+            timestamp: Date.now(),
+            payload: {
+              fillId: meta && meta.fillId,
+              applicationId: meta && meta.applicationId,
+              siteUrl: window.location.href,
+              company: (activeSession && activeSession.company) || ''
+            }
+          });
         } catch (e) {
           console.error('[AstrePilot] Confirm failed', e);
         }
@@ -5900,15 +5902,11 @@
     isFilling = true;
     startFillHeartbeat();
     try {
-      if (syncChannel) {
-        try {
-          syncChannel.postMessage({
-            type: 'FILL_LOCK_ACQUIRED',
-            timestamp: Date.now(),
-            payload: { url: window.location.href, company: activeSession ? activeSession.company : '' }
-          });
-        } catch (e) {}
-      }
+      broadcastSync({
+        type: 'FILL_LOCK_ACQUIRED',
+        timestamp: Date.now(),
+        payload: { url: window.location.href, company: activeSession ? activeSession.company : '' }
+      });
       await fillAllFields(hud);
     } catch (fillErr) {
       console.error('[AstrePilot] Autofill fatal execution error:', fillErr);
@@ -6674,21 +6672,17 @@
             }).catch(() => {});
           } catch (e) {}
         }
-        if (syncChannel) {
-          try {
-            syncChannel.postMessage({
-              type: 'APPLICATION_DRAFT_LOGGED',
-              timestamp: Date.now(),
-              payload: {
-                fillId: curSession.activeFillId,
-                applicationId: curSession.activeApplicationId,
-                siteUrl: window.location.href,
-                company: (activeSession && activeSession.company) || '',
-                jobTitle: (activeSession && activeSession.jobTitle) || ''
-              }
-            });
-          } catch (e) {}
-        }
+        broadcastSync({
+          type: 'APPLICATION_DRAFT_LOGGED',
+          timestamp: Date.now(),
+          payload: {
+            fillId: curSession.activeFillId,
+            applicationId: curSession.activeApplicationId,
+            siteUrl: window.location.href,
+            company: (activeSession && activeSession.company) || '',
+            jobTitle: (activeSession && activeSession.jobTitle) || ''
+          }
+        });
       }
     } catch (e) { /* silent */ }
 
@@ -6842,12 +6836,12 @@
     }
   }
 
-  // Zero-Click Token Sync when user is on AstreWork web app
+  // Zero-Click Token Sync when user is on Stride or AstreWork web app
   const currentHost = (window.location.hostname || '').toLowerCase();
-  const isAstreWorkApp = currentHost === 'astrework.app' || currentHost.endsWith('.astrework.app') || currentHost === 'localhost' || currentHost === '127.0.0.1';
+  const isStrideApp = currentHost === 'stride.app' || currentHost.endsWith('.stride.app') || currentHost === 'astrework.app' || currentHost.endsWith('.astrework.app') || currentHost === 'localhost' || currentHost === '127.0.0.1';
 
-  if (isAstreWorkApp) {
-    (async function autoSyncAstreWorkSession() {
+  if (isStrideApp) {
+    (async function autoSyncStrideSession() {
       try {
         const res = await fetch('/api/autopilot/token', { credentials: 'include' });
         if (res.ok) {
@@ -6867,9 +6861,13 @@
             } catch (e) {}
 
             const payload = {
+              stridepilot_token: token,
               astrepilot_token: token,
+              stridepilot_origin: window.location.origin,
               astrepilot_origin: window.location.origin,
+              stridepilot_active_context: candidateSlug,
               astrepilot_active_context: candidateSlug,
+              stridepilot_candidate_slug: candidateSlug,
               astrepilot_candidate_slug: candidateSlug
             };
 
@@ -6877,34 +6875,38 @@
             if (chrome.storage.local) {
               await new Promise((resolve) => chrome.storage.local.set(payload, resolve));
             }
-            console.log('[AstrePilot] Zero-Click Token auto-synchronized from active AstreWork web session for ' + candidateSlug);
+            console.log('[StridePilot] Zero-Click Token auto-synchronized from active Stride web session for ' + candidateSlug);
           }
         }
       } catch (err) {
-        console.debug('[AstrePilot] Auto-sync session notice:', err);
+        console.debug('[StridePilot] Auto-sync session notice:', err);
       }
     })();
 
-    // Listen for direct sync messages from AstrePilotCard
+    // Listen for direct sync messages from AstrePilotCard / StridePilotCard
     window.addEventListener('message', async (event) => {
-      if (event.data && event.data.type === 'ASTREPILOT_TOKEN_SYNC' && event.data.token) {
+      if (event.data && (event.data.type === 'STRIDEPILOT_TOKEN_SYNC' || event.data.type === 'ASTREPILOT_TOKEN_SYNC') && event.data.token) {
         const token = event.data.token;
         const candidateSlug = event.data.slug || 'roushan';
         const payload = {
+          stridepilot_token: token,
           astrepilot_token: token,
+          stridepilot_origin: window.location.origin,
           astrepilot_origin: window.location.origin,
+          stridepilot_active_context: candidateSlug,
           astrepilot_active_context: candidateSlug,
+          stridepilot_candidate_slug: candidateSlug,
           astrepilot_candidate_slug: candidateSlug
         };
         await new Promise((resolve) => chrome.storage.sync.set(payload, resolve));
         if (chrome.storage.local) {
           await new Promise((resolve) => chrome.storage.local.set(payload, resolve));
         }
-        console.log('[AstrePilot] Token received via web dashboard postMessage and persisted.');
+        console.log('[StridePilot] Token received via web dashboard postMessage and persisted.');
       }
     });
 
-    // On AstreWork domain, do not auto-mount the job application HUD
+    // On Stride / AstreWork domain, do not auto-mount the job application HUD
     return;
   }
 
@@ -6926,6 +6928,18 @@
   }
 
   // Automated Test & Diagnostics Bridge
+  window.__STRIDEPILOT_RUN_AUTOFILL__ = runAutofill;
+  window.__STRIDEPILOT_TOGGLE_HUD__ = toggleAstrePilotHUD;
+  window.__STRIDEPILOT_SCAN_FIELDS__ = scanFields;
+  window.__STRIDEPILOT_GET_DETECTED_FIELDS__ = () => detectedFields;
+  window.__STRIDEPILOT_GET_HUD__ = () => activeHud;
+  window.__STRIDEPILOT_RESOLVE_VALUE__ = resolveValue;
+  window.__STRIDEPILOT_FILL_COMBOBOX__ = fillUniversalCombobox;
+  window.__STRIDEPILOT_RESOLVE_SCREENING_SELECT__ = resolveScreeningSelect;
+  window.__STRIDEPILOT_GET_LABEL_TEXT__ = getLabelText;
+  window.__STRIDEPILOT_PROFILES__ = STANDALONE_PROFILES;
+
+  // Backward compatibility globals
   window.__ASTREPILOT_RUN_AUTOFILL__ = runAutofill;
   window.__ASTREPILOT_TOGGLE_HUD__ = toggleAstrePilotHUD;
   window.__ASTREPILOT_SCAN_FIELDS__ = scanFields;
@@ -6936,4 +6950,5 @@
   window.__ASTREPILOT_RESOLVE_SCREENING_SELECT__ = resolveScreeningSelect;
   window.__ASTREPILOT_GET_LABEL_TEXT__ = getLabelText;
   window.__ASTREPILOT_PROFILES__ = STANDALONE_PROFILES;
+})();
 })();

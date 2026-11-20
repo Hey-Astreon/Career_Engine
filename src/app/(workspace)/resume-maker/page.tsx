@@ -291,8 +291,8 @@ export default function ResumeMakerPage() {
   // AI & Systems Summary Enhancer
   const enhanceSummaryWithMetrics = () => {
     const systemsTemplates = [
-      `Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure. Built and operate AstreWork on Oracle Cloud (OCI ARM64), where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.`,
-      `Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed AstreWork and the AstrePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.`,
+      `Software Developer focused on backend systems, distributed job pipelines, and cloud infrastructure. Built and operate Stride on Oracle Cloud (OCI ARM64), where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Also shipped an AST code-graph analysis sandbox with sub-200ms execution and a client-side AES-256-GCM password vault.`,
+      `Full-Stack Software Developer building React 19, Next.js, TypeScript, and AI-powered web applications. Co-developed Stride and the StridePilot Chrome Extension (MV3), designing the 6-stage Shadow DOM autofill HUD, real-time ATS resume canvas, and multi-LLM routing layer across Gemini and Groq. Also built the interactive React Flow graph explorer for Astra Vision and the PBKDF2 zero-knowledge vault interface for Alyra Lock.`,
     ];
     const picked = systemsTemplates[Math.floor(Math.random() * systemsTemplates.length)];
     setResumeData((prev) => ({ ...prev, summary: picked }));

@@ -46,6 +46,7 @@ export default function AstrePilotCard() {
         if (active) {
           setToken(data.token);
           if (data.token && typeof window !== "undefined") {
+            window.postMessage({ type: "STRIDEPILOT_TOKEN_SYNC", token: data.token }, "*");
             window.postMessage({ type: "ASTREPILOT_TOKEN_SYNC", token: data.token }, "*");
           }
         }
@@ -118,8 +119,8 @@ export default function AstrePilotCard() {
   const steps = [
     {
       n: "1",
-      title: "Download & Unzip AstrePilot",
-      desc: "Download astrepilot-extension.zip and extract the files to a folder on your computer.",
+      title: "Download & Unzip StridePilot",
+      desc: "Download stridepilot-extension.zip and extract the files to a folder on your computer.",
     },
     {
       n: "2",
@@ -129,12 +130,12 @@ export default function AstrePilotCard() {
     {
       n: "3",
       title: 'Click "Load unpacked"',
-      desc: "Select the extracted extension folder. AstrePilot will appear in your browser extensions bar.",
+      desc: "Select the extracted extension folder. StridePilot will appear in your browser extensions bar.",
     },
     {
       n: "4",
       title: "Autofill with 1 click or Alt+Shift+A",
-      desc: "On any job application (Greenhouse, Lever, Workday, etc.), click the AstrePilot icon or press Alt+Shift+A!",
+      desc: "On any job application (Greenhouse, Lever, Workday, etc.), click the StridePilot icon or press Alt+Shift+A!",
     },
   ];
 
@@ -148,13 +149,13 @@ export default function AstrePilotCard() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[14px] font-bold text-[var(--ink)] tracking-tight">AstrePilot</span>
+              <span className="text-[14px] font-bold text-[var(--ink)] tracking-tight">StridePilot</span>
               <span className="text-[8px] font-bold tracking-widest text-[var(--blue)] bg-[var(--blue-soft)] border border-[var(--blue)]/20 rounded px-1.5 py-0.5 uppercase">
                 Native Chrome Extension (Manifest V3)
               </span>
             </div>
             <p className="text-[12px] text-[var(--muted)] leading-relaxed">
-              Autofill any job application form with your AstreWork profile — in seconds.
+              Autofill any job application form with your Stride profile — in seconds.
             </p>
           </div>
         </div>
@@ -194,7 +195,7 @@ export default function AstrePilotCard() {
         {/* Right — Actions & Tools */}
         <div className="p-6 flex flex-col items-center justify-center gap-5">
           <p className="text-[9px] font-bold tracking-widest text-[var(--muted)] uppercase self-start">
-            Download AstrePilot Extension
+            Download StridePilot Extension
           </p>
 
           {loadingToken ? (
@@ -223,7 +224,7 @@ export default function AstrePilotCard() {
                   </div>
                   <div>
                     <div className="text-[10px] font-bold tracking-widest text-[var(--muted)] uppercase mb-0.5">Brain Empty</div>
-                    <div className="text-[11px] text-[var(--muted)] leading-snug">Use Custom JD Mode to prime AstrePilot for a specific role.</div>
+                    <div className="text-[11px] text-[var(--muted)] leading-snug">Use Custom JD Mode to prime StridePilot for a specific role.</div>
                   </div>
                 </div>
               )}
@@ -231,8 +232,8 @@ export default function AstrePilotCard() {
               {/* Chrome Extension Download & Token UI */}
               <div className="flex flex-col items-center gap-3 w-full">
                 <a
-                  href="/downloads/astrepilot-extension.zip"
-                  download="astrepilot-extension.zip"
+                  href="/downloads/stridepilot-extension.zip"
+                  download="stridepilot-extension.zip"
                   className="flex items-center justify-center gap-2.5 w-full py-3 px-4 bg-[var(--blue)] hover:bg-[var(--blue-light)] text-white font-bold text-[13px] rounded-xl shadow-md hover:shadow-lg transition-all"
                 >
                   <Download className="w-4 h-4" />
@@ -257,14 +258,14 @@ export default function AstrePilotCard() {
                   )}
                 </button>
                 <p className="text-[10px] text-[var(--muted)] text-center leading-relaxed">
-                  Auto-connects automatically when AstreWork is open in any tab.
+                  Auto-connects automatically when Stride is open in any tab.
                 </p>
               </div>
             </>
           ) : (
             <div className="flex items-center gap-2 text-[12px] text-[var(--amber)] bg-[var(--amber-soft)] border border-[var(--amber)]/20 rounded-lg px-3 py-2">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              Complete onboarding to use AstrePilot
+              Complete onboarding to use StridePilot
             </div>
           )}
         </div>
@@ -277,7 +278,7 @@ export default function AstrePilotCard() {
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[12px] font-bold text-[var(--ink)]">AstrePilot Testing Simulation Sandbox</div>
+            <div className="text-[12px] font-bold text-[var(--ink)]">StridePilot Testing Simulation Sandbox</div>
             <div className="text-[11px] text-[var(--muted)]">Test 1-click autofill on a live simulated company internship listing &amp; application form.</div>
           </div>
         </div>
@@ -323,7 +324,7 @@ export default function AstrePilotCard() {
       {showHistory && history.length > 0 && (
         <div className="border-t border-[var(--line)] max-h-72 overflow-y-auto">
           <div className="flex items-center justify-between px-4 py-2 bg-[var(--surface-muted)]/60 border-b border-[var(--line)]">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Recent AstrePilot Autofills</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Recent StridePilot Autofills</span>
             <a
               href="/applications"
               className="text-[10px] font-bold text-[var(--blue)] hover:underline flex items-center gap-1"

@@ -15,26 +15,26 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "AstreWork | Autonomous Remote Career Intelligence & ATS Resume Engine",
-    template: "%s | AstreWork",
+    default: "Stride | Autonomous Remote Career Intelligence & ATS Resume Engine",
+    template: "%s | Stride",
   },
   description: siteConfig.description,
   keywords: siteConfig.keywords,
   authors: [
-    { name: "Roushan Kumar (Astreon)", url: "https://github.com/Hey-Astreon" },
     { name: "Ayushi Raj", url: "https://github.com/Silenttears-cloud" },
+    { name: "Roushan Kumar", url: "https://github.com/Hey-Astreon" },
   ],
-  creator: "Roushan Kumar",
-  publisher: "AstreWork",
+  creator: "Ayushi Raj & Roushan Kumar",
+  publisher: "Stride",
   category: "technology",
   alternates: {
     canonical: siteConfig.url,
   },
   openGraph: {
-    title: "AstreWork | Autonomous Remote Career Intelligence & ATS Resume Engine",
+    title: "Stride | Autonomous Remote Career Intelligence & ATS Resume Engine",
     description: siteConfig.description,
     url: siteConfig.url,
-    siteName: "AstreWork",
+    siteName: "Stride",
     locale: "en_US",
     type: "website",
     images: [
@@ -42,15 +42,15 @@ export const metadata: Metadata = {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: "AstreWork Autonomous Remote Career Engine Dashboard",
+        alt: "Stride Autonomous Remote Career Engine Dashboard",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AstreWork | Autonomous Remote Career Intelligence",
+    title: "Stride | Autonomous Remote Career Intelligence",
     description:
-      "Autonomous 19-provider remote job discovery, deep ATS resume scoring, 1-click tailored application kits, and background job synchronization.",
+      "Autonomous 21-provider remote job discovery, deep ATS resume scoring, 1-click tailored application kits, and background job synchronization.",
     creator: "@Hey_Astreon",
     images: [siteConfig.ogImage],
   },

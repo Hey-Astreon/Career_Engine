@@ -494,14 +494,14 @@ function buildVerdict(rawScore: number, flags: ShieldFlag[]): TrustVerdict {
 
   if (score >= TRUST_THRESHOLDS.GREEN_MIN) {
     tier = "GREEN";
-    headline = "AstreShield: Verified Safe";
+    headline = "StrideShield: Verified Safe";
     detail =
       bonusFlags.length > 0
         ? `This posting passed all integrity checks and shows positive trust signals (${bonusFlags.map((f) => f.label).join("; ")}).`
         : "This posting passed all integrity checks. No suspicious patterns detected.";
   } else if (score >= TRUST_THRESHOLDS.AMBER_MIN) {
     tier = "AMBER";
-    headline = "AstreShield: Verify This Posting";
+    headline = "StrideShield: Verify This Posting";
     const flagSummary = deductionFlags
       .slice(0, 2)
       .map((f) => f.label)
@@ -509,11 +509,11 @@ function buildVerdict(rawScore: number, flags: ShieldFlag[]): TrustVerdict {
     detail = `This posting has ${flagCount} concern${flagCount !== 1 ? "s" : ""}: ${flagSummary}. Review carefully before sharing personal information or applying.`;
   } else {
     tier = "RED";
-    headline = "AstreShield: Likely Fraudulent";
+    headline = "StrideShield: Likely Fraudulent";
     const criticalFlags = deductionFlags
       .sort((a, b) => a.impact - b.impact)
       .slice(0, 3);
-    detail = `This posting raised ${flagCount} red flags: ${criticalFlags.map((f) => f.label).join("; ")}. AstreWork strongly recommends not applying or sharing personal information.`;
+    detail = `This posting raised ${flagCount} red flags: ${criticalFlags.map((f) => f.label).join("; ")}. Stride strongly recommends not applying or sharing personal information.`;
   }
 
   // Determine if AI Layer 4 should be invoked for borderline cases

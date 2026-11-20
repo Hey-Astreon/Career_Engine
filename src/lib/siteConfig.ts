@@ -1,5 +1,5 @@
 /**
- * Centralized Site Configuration & SEO Metadata for AstreWork
+ * Centralized Site Configuration & SEO Metadata for Stride
  * Guarantees correct domain resolution across production, staging, and local environments.
  */
 
@@ -19,21 +19,21 @@ function resolveBaseUrl(): string {
   }
 
   // 3. Default authoritative production domain
-  return "https://astrework.app";
+  return "https://stride.app";
 }
 
 export const SITE_URL = resolveBaseUrl();
 
 export const siteConfig = {
-  name: "AstreWork",
-  shortName: "AstreWork",
-  title: "AstreWork | Autonomous Remote Career Intelligence & ATS Resume Engine",
+  name: "Stride",
+  shortName: "Stride",
+  title: "Stride | Autonomous Remote Career Intelligence & ATS Resume Engine",
   description:
-    "AstreWork is the premier autonomous remote career intelligence platform. Featuring 19-provider automated job scraping, deep ATS resume scoring, 1-click tailored application kits, and background job synchronization.",
+    "Stride is the premier autonomous remote career intelligence platform. Featuring 21-provider automated job scraping, deep ATS resume scoring, 1-click tailored application kits, and background job synchronization.",
   url: SITE_URL,
   ogImage: `${SITE_URL}/landing-dashboard.png`,
-  author: "Roushan Kumar (Astreon)",
-  creator: "Roushan Kumar & Ayushi Raj",
+  author: "Ayushi Raj & Roushan Kumar",
+  creator: "Ayushi Raj & Roushan Kumar",
   links: {
     github: "https://github.com/Hey-Astreon/Career_Engine",
     portfolioRoushan: "https://astreon.me",
@@ -41,19 +41,20 @@ export const siteConfig = {
     twitter: "https://x.com/Hey_Astreon",
   },
   keywords: [
-    "AstreWork",
-    "AstreWork remote jobs",
-    "AstreWork career engine",
+    "Stride",
+    "Stride remote jobs",
+    "Stride career engine",
     "autonomous remote job discovery",
-    "remote software engineer jobs",
+    "remote software developer jobs",
     "ATS resume maker",
     "tailored resume generator",
     "AI career engine",
-    "19-provider job aggregator",
+    "21-provider job aggregator",
     "automated job application pipeline",
     "remote tech careers",
-    "Astreon AstreWork",
-    "Roushan Kumar AstreWork",
-    "Ayushi Raj AstreWork",
+    "StridePilot",
+    "StrideShield",
+    "Roushan Kumar Stride",
+    "Ayushi Raj Stride",
   ],
 };

@@ -364,7 +364,7 @@ function ProfileIdentityCard() {
 
               {/* Context note */}
               <p className="text-[11px] text-gray-400 leading-relaxed border-t border-[var(--line)] pt-3">
-                Changes here update your AstreWork career identity. Your applications pipeline, job history, and resume variants are not affected.
+                Changes here update your Stride career identity. Your applications pipeline, job history, and resume variants are not affected.
               </p>
             </div>
           )}
@@ -601,11 +601,11 @@ export default function SettingsPage() {
 
         </div>
 
-        {/* ── AstrePilot Section ───────────────────────────────────────── */}
+        {/* ── StridePilot Section ───────────────────────────────────────── */}
         <div className="mt-10">
           <p className="ce-page-eyebrow mb-1">Automation</p>
-          <h2 className="text-[18px] font-bold tracking-tight text-[var(--ink)] mb-1">AstrePilot</h2>
-          <p className="text-[12px] text-[var(--muted)] mb-4">Intelligent autofill for job application forms — powered by your AstreWork profile.</p>
+          <h2 className="text-[18px] font-bold tracking-tight text-[var(--ink)] mb-1">StridePilot</h2>
+          <p className="text-[12px] text-[var(--muted)] mb-4">Intelligent autofill for job application forms — powered by your Stride profile.</p>
           <AstrePilotCard />
         </div>
 

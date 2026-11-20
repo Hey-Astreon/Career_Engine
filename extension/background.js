@@ -1,5 +1,5 @@
 /**
- * AstrePilot Background Service Worker (Manifest V3)
+ * StridePilot Background Service Worker (Manifest V3)
  * ----------------------------------------------------
  * - Manages keyboard shortcuts (Alt+Shift+A)
  * - Detects ATS portals on tab navigation and displays an "ATS" badge
@@ -87,7 +87,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       chrome.action.setBadgeText({ text: 'ATS', tabId });
       chrome.action.setBadgeBackgroundColor({ color: '#2563eb', tabId });
       chrome.action.setTitle({
-        title: 'AstrePilot: ATS Job Application detected! Click to autofill.',
+        title: 'StridePilot: ATS Job Application detected! Click to autofill.',
         tabId
       });
     } else {
@@ -98,7 +98,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // 2. Handle keyboard shortcut (Alt+Shift+A)
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command === 'toggle_astrepilot') {
+  if (command === 'toggle_astrepilot' || command === 'toggle_stridepilot') {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (activeTab && activeTab.id) {
       chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }, { frameId: 0 }).catch(() => {
@@ -128,19 +128,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .then(r => r.text())
       .then(css => sendResponse({ css }))
       .catch(err => {
-        console.error('[AstrePilot Background] CSS Fetch Error:', err);
+        console.error('[StridePilot Background] CSS Fetch Error:', err);
         sendResponse({ css: null });
       });
     return true; // Keep message channel open for async response
   }
   
   if (request.type === 'OPEN_OPTIONS') {
-    chrome.tabs.create({ url: 'https://astrework.app/settings' });
+    chrome.tabs.create({ url: 'https://stride.app/settings' });
     return false;
   }
 
   if (request.type === 'OPEN_CUSTOM_JD') {
-    chrome.tabs.create({ url: 'https://astrework.app/resume-builder?mode=custom&loadSession=true' });
+    chrome.tabs.create({ url: 'https://stride.app/resume-builder?mode=custom&loadSession=true' });
     return false;
   }
 
@@ -174,9 +174,9 @@ async function getBundledResumeBinary(activeCtx) {
 }
 
   if (request.type === 'DOWNLOAD_RESUME') {
-    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], async (res) => {
+    chrome.storage.sync.get(['stridepilot_token', 'astrepilot_token', 'stridepilot_active_context', 'astrepilot_active_context'], async (res) => {
       const safeRes = res || {};
-      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
+      const activeCtx = request.activeContext || safeRes.stridepilot_active_context || safeRes.astrepilot_active_context || 'roushan';
       try {
         const bundled = await getBundledResumeBinary(activeCtx);
         const dataUrl = 'data:application/pdf;base64,' + bundled.base64;
@@ -190,18 +190,18 @@ async function getBundledResumeBinary(activeCtx) {
           });
         }
       } catch (e) {
-        console.error('[AstrePilot Background] Download resume error:', e);
+        console.error('[StridePilot Background] Download resume error:', e);
       }
     });
     return false;
   }
 
   if (request.type === 'GET_RESUME_BINARY') {
-    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context', 'astrepilot_origin'], async (res) => {
+    chrome.storage.sync.get(['stridepilot_token', 'astrepilot_token', 'stridepilot_active_context', 'astrepilot_active_context', 'stridepilot_origin', 'astrepilot_origin'], async (res) => {
       const safeRes = res || {};
-      const origin = safeRes.astrepilot_origin || 'https://astrework.app';
-      const activeCtx = request.activeContext || safeRes.astrepilot_active_context || 'roushan';
-      const token = safeRes.astrepilot_token || '';
+      const origin = safeRes.stridepilot_origin || safeRes.astrepilot_origin || 'https://stride.app';
+      const activeCtx = request.activeContext || safeRes.stridepilot_active_context || safeRes.astrepilot_active_context || 'roushan';
+      const token = safeRes.stridepilot_token || safeRes.astrepilot_token || '';
 
       // 1. Try remote tailored resume with 3.5s timeout
       try {
@@ -243,7 +243,7 @@ async function getBundledResumeBinary(activeCtx) {
           });
         }
       } catch (remoteErr) {
-        console.warn('[AstrePilot Background] Remote tailored resume unavailable, using local bundled canonical PDF:', remoteErr.message);
+        console.warn('[StridePilot Background] Remote tailored resume unavailable, using local bundled canonical PDF:', remoteErr.message);
       }
 
       // 2. Infallible Local Bundled Fallback (Zero network requirement, 0ms, guaranteed valid PDF)
@@ -251,7 +251,7 @@ async function getBundledResumeBinary(activeCtx) {
         const bundled = await getBundledResumeBinary(activeCtx);
         return sendResponse(bundled);
       } catch (localErr) {
-        console.error('[AstrePilot Background] Fatal: Failed to load bundled resume:', localErr);
+        console.error('[StridePilot Background] Fatal: Failed to load bundled resume:', localErr);
         sendResponse({ success: false, error: 'Resume unavailable: ' + localErr.message });
       }
     });
@@ -259,12 +259,12 @@ async function getBundledResumeBinary(activeCtx) {
   }
 
   if (request.type === 'GET_COVER_LETTER_BINARY') {
-    chrome.storage.sync.get(['astrepilot_token', 'astrepilot_active_context'], async (res) => {
+    chrome.storage.sync.get(['stridepilot_token', 'astrepilot_token', 'stridepilot_active_context', 'astrepilot_active_context'], async (res) => {
       try {
         const safeRes = res || {};
-        const origin = 'https://astrework.app';
-        const activeCtx = request.activeContext || safeRes.astrepilot_active_context || '';
-        const token = safeRes.astrepilot_token || '';
+        const origin = 'https://stride.app';
+        const activeCtx = request.activeContext || safeRes.stridepilot_active_context || safeRes.astrepilot_active_context || '';
+        const token = safeRes.stridepilot_token || safeRes.astrepilot_token || '';
         const url = origin + '/api/autopilot/cover-letter';
         const headers = { 'Content-Type': 'application/json' };
         if (token) {
@@ -570,11 +570,11 @@ async function getBundledResumeBinary(activeCtx) {
 
 // 4. Initialize default settings on install
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({ astrepilot_origin: 'https://astrework.app' });
+  chrome.storage.sync.set({ stridepilot_origin: 'https://stride.app', astrepilot_origin: 'https://stride.app' });
   if (chrome.storage.local) {
-    chrome.storage.local.set({ astrepilot_origin: 'https://astrework.app' });
+    chrome.storage.local.set({ stridepilot_origin: 'https://stride.app', astrepilot_origin: 'https://stride.app' });
   }
-  console.log('[AstrePilot] Extension installed successfully.');
+  console.log('[StridePilot] Extension installed successfully.');
 });
 
 // 5. CDP Helper Core
@@ -590,7 +590,7 @@ async function ensureCdpAttached(tabId) {
           attachedTabs.add(tabId);
           return resolve({ success: true });
         }
-        console.warn('[AstrePilot CDP] Attach error:', msg);
+        console.warn('[StridePilot CDP] Attach error:', msg);
         return resolve({ success: false, error: msg });
       }
       attachedTabs.add(tabId);

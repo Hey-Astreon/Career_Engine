@@ -136,14 +136,14 @@ export default function CredentialVaultPage() {
               <KeyRound size={20} />
             </div>
             <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--ce-ink, #0f172a)", letterSpacing: "-0.5px", margin: 0 }}>
-              AstrePilot Credential Vault
+              StridePilot Credential Vault
             </h1>
             <span style={{ fontSize: "11px", fontWeight: "700", background: "rgba(16,185,129,0.12)", color: "var(--ce-green, #10b981)", padding: "2px 8px", borderRadius: "12px", border: "1px solid rgba(16,185,129,0.25)" }}>
               PILLAR F · AES-256-GCM
             </span>
           </div>
           <p style={{ fontSize: "14px", color: "var(--ce-ink-soft, #475569)", margin: 0 }}>
-            Encrypted candidate credential storage. AstrePilot senses ATS registration and login portals, automatically queries your Vault, and autofills credentials without human intervention.
+            Encrypted candidate credential storage. StridePilot senses ATS registration and login portals, automatically queries your Vault, and autofills credentials without human intervention.
           </p>
         </div>
 
@@ -269,7 +269,7 @@ export default function CredentialVaultPage() {
             <p style={{ fontSize: "13px", color: "var(--ce-muted, #64748b)", maxWidth: "460px", margin: "0 auto 20px", lineHeight: "1.5" }}>
               {searchQuery
                 ? "Try searching for a different ATS domain or clear your search query."
-                : "AstrePilot autonomously detects registration and login gates on iCIMS, Workday, and Greenhouse. Click 'Add Site Credential' or let AstrePilot save your accounts as you apply."}
+                : "StridePilot autonomously detects registration and login gates on iCIMS, Workday, and Greenhouse. Click 'Add Site Credential' or let StridePilot save your accounts as you apply."}
             </p>
             {!searchQuery && (
               <button
@@ -464,7 +464,7 @@ export default function CredentialVaultPage() {
                   }}
                 />
                 <span style={{ fontSize: "11px", color: "var(--ce-muted, #64748b)", marginTop: "4px", display: "block" }}>
-                  AstrePilot automatically canonicalizes the hostname pattern.
+                  StridePilot automatically canonicalizes the hostname pattern.
                 </span>
               </div>
 

@@ -20,7 +20,7 @@ export function Header() {
   return (
     <header className="ce-header">
       <div className="ce-header-title">
-        <b>AstreWork</b>
+        <b>Stride</b>
         <span>{titles[pathname] || "Candidate workspace"}</span>
       </div>
       <div className="ce-command" aria-label="Search shortcut hint">

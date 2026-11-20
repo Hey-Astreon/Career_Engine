@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About Us | Our Mission & Story",
   description:
-    "We built AstreWork to solve a single, exhausting problem: sending resumes into the void. Learn how our autonomous career engine empowers engineers.",
+    "We built Stride to solve a single, exhausting problem: sending resumes into the void. Learn how our autonomous career engine empowers developers.",
   alternates: {
     canonical: "/about",
   },
@@ -15,7 +15,7 @@ export default function AboutUs() {
   return (
     <LegalPageLayout title="About Us">
       <p className="text-xl font-medium text-[#1d1d1f] mb-8">
-        We built AstreWork to solve a single, exhausting problem: sending resumes into the void.
+        We built Stride to solve a single, exhausting problem: sending resumes into the void.
       </p>
 
       <h2>Our Mission</h2>
@@ -23,7 +23,7 @@ export default function AboutUs() {
         The modern job search is broken. Highly qualified candidates spend hours adjusting margins, tweaking keywords, and manually tracking spreadsheets of applications across dozens of job boards. And despite all that effort, most applications are filtered out by Applicant Tracking Systems (ATS) before a human ever sees them.
       </p>
       <p>
-        AstreWork was born out of frustration with this status quo. We believe that securing a great remote job shouldn't require you to become an expert in reverse-engineering recruiting software. 
+        Stride was born out of frustration with this status quo. We believe that securing a great remote job shouldn't require you to become an expert in reverse-engineering recruiting software. 
       </p>
 
       <h2>What We Do</h2>

@@ -24,7 +24,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(roushan.projects.length).toBe(3);
       const titles = roushan.projects.map((p) => p.title);
       expect(titles.some((t) => t.includes("Astra Vision"))).toBe(true);
-      expect(titles.some((t) => t.includes("AstreWork"))).toBe(true);
+      expect(titles.some((t) => /(?:AstreWork|Stride)/i.test(t))).toBe(true);
       expect(titles.some((t) => t.includes("Alyra Lock"))).toBe(true);
 
       // 3 technical simulations
@@ -54,7 +54,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
 
       expect(ayushi.skills.length).toBe(6);
       expect(ayushi.projects.length).toBe(3);
-      expect(ayushi.projects.map((p) => p.title).some((t) => t.includes("AstreWork"))).toBe(true);
+      expect(ayushi.projects.map((p) => p.title).some((t) => /(?:AstreWork|Stride)/i.test(t))).toBe(true);
       expect(ayushi.simulations.length).toBe(3);
       expect(ayushi.education.degree).toContain("Bachelor of Computer Applications (BCA)");
 
@@ -102,7 +102,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(md).toContain("## TECHNICAL SIMULATIONS & VIRTUAL EXPERIENCES");
       expect(md).toContain("## EDUCATION");
       expect(md).toContain("Astra Vision");
-      expect(md).toContain("AstreWork");
+      expect(md).toMatch(/(?:AstreWork|Stride)/);
       expect(md).toContain("Alyra Lock");
     });
 

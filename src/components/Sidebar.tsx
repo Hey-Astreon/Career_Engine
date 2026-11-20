@@ -60,12 +60,12 @@ export function Sidebar() {
       <Link
         href="/dashboard"
         className="group block transition-all"
-        aria-label="AstreWork - Autonomous Remote Career Intelligence"
+        aria-label="Stride - Autonomous Remote Career Intelligence"
       >
         <div className="flex h-[52px] w-full items-center justify-center rounded-xl border border-[var(--line)] bg-white px-2 py-1 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
           <Image
-            src="/astrework-brand.png"
-            alt="AstreWork - Autonomous Remote Career Intelligence"
+            src="/stride-brand.png"
+            alt="Stride - Autonomous Remote Career Intelligence"
             width={1760}
             height={363}
             className="w-full h-auto max-h-[44px] object-contain"
@@ -74,7 +74,7 @@ export function Sidebar() {
         </div>
       </Link>
       <div className="ce-nav-label !mt-4">Candidate workspace</div>
-      <nav className="ce-nav" aria-label="AstreWork navigation">
+      <nav className="ce-nav" aria-label="Stride navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;

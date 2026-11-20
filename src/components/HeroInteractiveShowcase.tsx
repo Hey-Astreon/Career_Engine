@@ -213,7 +213,7 @@ export default function HeroInteractiveShowcase() {
             <span className="w-3 h-3 rounded-full bg-amber-400/80 inline-block" />
             <span className="w-3 h-3 rounded-full bg-emerald-400/80 inline-block" />
             <span className="ml-3 font-mono text-[11px] text-[#86868b] hidden sm:inline">
-              astrework.app / {activeTab === "jobs" ? "live-radar" : activeTab === "resume" ? "ats-xray" : "fast-apply"}
+              stride.app / {activeTab === "jobs" ? "live-radar" : activeTab === "resume" ? "ats-xray" : "fast-apply"}
             </span>
           </div>
 
@@ -348,7 +348,7 @@ export default function HeroInteractiveShowcase() {
                                 }}
                                 className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 text-[12px]"
                               >
-                                Fast Apply With AstrePilot <ArrowRight className="w-3.5 h-3.5" />
+                                Fast Apply With StridePilot <ArrowRight className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </motion.div>
@@ -453,7 +453,7 @@ export default function HeroInteractiveShowcase() {
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
                         <span className="text-[12px] font-bold text-emerald-600 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4 shrink-0" /> AstreWork Single-Page
+                          <CheckCircle2 className="w-4 h-4 shrink-0" /> Stride Single-Page
                         </span>
                         <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
                           {resumeScore} / 100
@@ -527,7 +527,7 @@ export default function HeroInteractiveShowcase() {
                 <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[13px] font-bold text-[#0f0f11]">AstrePilot In-Browser Assistant</span>
+                    <span className="text-[13px] font-bold text-[#0f0f11]">StridePilot In-Browser Assistant</span>
                   </div>
                   <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200/50 px-2 py-0.5 rounded">
                     Greenhouse ATS Page Detected (stripe.com)
@@ -556,7 +556,7 @@ export default function HeroInteractiveShowcase() {
                     <span className="text-[#71717a]">Attached Resume:</span>
                     <span className="font-semibold text-[#0f0f11] flex items-center gap-1">
                       <FileText className="w-3.5 h-3.5 text-blue-500" />
-                      AstreWork-ATS-A4.pdf
+                      Stride-ATS-A4.pdf
                     </span>
                   </div>
                 </div>

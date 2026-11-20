@@ -65,7 +65,7 @@ export default function ApplicationsPage() {
   const [viewMode, setViewMode] = useState<"table" | "kanban">(() => {
     if (typeof window !== "undefined") {
       try {
-        const savedMode = localStorage.getItem("astrework_applications_view_mode");
+        const savedMode = localStorage.getItem("stride_applications_view_mode") || localStorage.getItem("astrework_applications_view_mode");
         if (savedMode === "kanban" || savedMode === "table") return savedMode;
       } catch {
         /* ignore */
@@ -76,7 +76,7 @@ export default function ApplicationsPage() {
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStage, setFilterStage] = useState<"ALL" | "ASTREPILOT" | "IN_FLIGHT" | "QUIET" | "OFFER">("ALL");
+  const [filterStage, setFilterStage] = useState<"ALL" | "STRIDEPILOT" | "ASTREPILOT" | "IN_FLIGHT" | "QUIET" | "OFFER">("ALL");
 
   // Export Menu Dropdown State
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -104,6 +104,7 @@ export default function ApplicationsPage() {
   const handleSetViewMode = (mode: "table" | "kanban") => {
     setViewMode(mode);
     try {
+      localStorage.setItem("stride_applications_view_mode", mode);
       localStorage.setItem("astrework_applications_view_mode", mode);
     } catch {
       /* ignore */
@@ -152,9 +153,10 @@ export default function ApplicationsPage() {
     if (typeof window === "undefined" || !("BroadcastChannel" in window)) return;
 
     let clearTimer: ReturnType<typeof setTimeout> | null = null;
-    const channel = new BroadcastChannel("astrepilot_application_sync");
+    const channel1 = new BroadcastChannel("stridepilot_application_sync");
+    const channel2 = new BroadcastChannel("astrepilot_application_sync");
 
-    channel.onmessage = (event) => {
+    const onSyncMessage = (event: MessageEvent) => {
       const data = event.data;
       if (!data || !data.type) return;
 
@@ -179,9 +181,13 @@ export default function ApplicationsPage() {
       }
     };
 
+    channel1.onmessage = onSyncMessage;
+    channel2.onmessage = onSyncMessage;
+
     return () => {
+      channel1.close();
+      channel2.close();
       if (clearTimer) clearTimeout(clearTimer);
-      channel.close();
     };
   }, [fetchApplications]);
 
@@ -293,7 +299,7 @@ export default function ApplicationsPage() {
     const query = new URLSearchParams();
     query.set("format", format);
     if (activeProfileSlug) query.set("profileSlug", activeProfileSlug);
-    if (filterStage === "ASTREPILOT") query.set("filter", "astrepilot");
+    if (filterStage === "STRIDEPILOT" || filterStage === "ASTREPILOT") query.set("filter", "stridepilot");
     else if (filterStage === "IN_FLIGHT") query.set("filter", "in_flight");
     else if (filterStage === "QUIET") query.set("filter", "quiet");
     else if (filterStage === "OFFER") query.set("filter", "offer");
@@ -307,7 +313,7 @@ export default function ApplicationsPage() {
       const query = new URLSearchParams();
       query.set("format", "tsv");
       if (activeProfileSlug) query.set("profileSlug", activeProfileSlug);
-      if (filterStage === "ASTREPILOT") query.set("filter", "astrepilot");
+      if (filterStage === "STRIDEPILOT" || filterStage === "ASTREPILOT") query.set("filter", "stridepilot");
       else if (filterStage === "IN_FLIGHT") query.set("filter", "in_flight");
       else if (filterStage === "QUIET") query.set("filter", "quiet");
       else if (filterStage === "OFFER") query.set("filter", "offer");
@@ -327,7 +333,7 @@ export default function ApplicationsPage() {
   // Summary Telemetry
   const stats = useMemo(() => {
     const total = applications.length;
-    const astrepilot = applications.filter((a) => a.source?.includes("AstrePilot")).length;
+    const stridepilot = applications.filter((a) => a.source?.includes("StridePilot") || a.source?.includes("AstrePilot")).length;
     const inFlight = applications.filter((a) =>
       ["SHORTLISTED", "APPLIED", "SCREENING", "TECHNICAL_ROUND"].includes(a.status)
     ).length;
@@ -335,7 +341,7 @@ export default function ApplicationsPage() {
       (a) => a.status === "QUIET" || (a.status === "APPLIED" && a.daysSilent >= 5)
     ).length;
     const offers = applications.filter((a) => a.status === "OFFER").length;
-    return { total, astrepilot, inFlight, quietAlerts, offers };
+    return { total, stridepilot, inFlight, quietAlerts, offers };
   }, [applications]);
 
   // Filtered applications
@@ -353,8 +359,8 @@ export default function ApplicationsPage() {
       }
 
       // Stage filter
-      if (filterStage === "ASTREPILOT") {
-        return app.source?.includes("AstrePilot");
+      if (filterStage === "STRIDEPILOT" || filterStage === "ASTREPILOT") {
+        return app.source?.includes("StridePilot") || app.source?.includes("AstrePilot");
       }
       if (filterStage === "IN_FLIGHT") {
         return ["SHORTLISTED", "APPLIED", "SCREENING", "TECHNICAL_ROUND"].includes(app.status);
@@ -376,11 +382,11 @@ export default function ApplicationsPage() {
       <section className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end pb-1">
         <div>
           <div className="ce-page-eyebrow">
-            Application Intelligence <span className="mx-2 text-[var(--line-strong)]">/</span> AstrePilot Harvester Active
+            Application Intelligence <span className="mx-2 text-[var(--line-strong)]">/</span> StridePilot Harvester Active
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2.5">
             <h1 className="text-[22px] sm:text-[24px] font-bold tracking-[-.045em] text-[var(--ink)]">
-              Application Pipeline &amp; AstrePilot Tracker
+              Application Pipeline &amp; StridePilot Tracker
             </h1>
             <span className="ce-chip ce-chip-blue !min-h-5 !px-2 !text-[8px]">
               LIVE TRACKER
@@ -411,7 +417,7 @@ export default function ApplicationsPage() {
             )}
           </div>
           <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--muted)]">
-            Structured tracking report of every remote opportunity form applied via AstrePilot or tracked manually. Real-time telemetry, stage progression, and export suite.
+            Structured tracking report of every remote opportunity form applied via StridePilot or tracked manually. Real-time telemetry, stage progression, and export suite.
           </p>
         </div>
 
@@ -535,8 +541,8 @@ export default function ApplicationsPage() {
         />
         <TelemetryCell
           icon={<Zap className="w-3.5 h-3.5" />}
-          label="AstrePilot Autofills"
-          value={stats.astrepilot}
+          label="StridePilot Autofills"
+          value={stats.stridepilot}
           note="form automations logged"
           blue
         />
@@ -592,7 +598,7 @@ export default function ApplicationsPage() {
           {(
             [
               { id: "ALL", label: `All (${applications.length})` },
-              { id: "ASTREPILOT", label: `⚡ AstrePilot (${stats.astrepilot})` },
+              { id: "STRIDEPILOT", label: `⚡ StridePilot (${stats.stridepilot})` },
               { id: "IN_FLIGHT", label: `In-Flight (${stats.inFlight})` },
               { id: "QUIET", label: `Quiet (${stats.quietAlerts})` },
               { id: "OFFER", label: `Offers (${stats.offers})` },
@@ -643,7 +649,7 @@ export default function ApplicationsPage() {
               <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)] max-w-sm">
                 {searchTerm || filterStage !== "ALL"
                   ? "No applications matched your active search or filter criteria."
-                  : "Autofill application forms with AstrePilot or track jobs directly from the AstreWork Feed."}
+                  : "Autofill application forms with StridePilot or track jobs directly from the Stride Feed."}
               </p>
             </div>
           ) : (
@@ -666,7 +672,7 @@ export default function ApplicationsPage() {
                   {filteredApps.map((app, idx) => {
                     const isNeedsAttention =
                       app.status === "QUIET" || (app.status === "APPLIED" && app.daysSilent >= 5);
-                    const isAstrePilot = app.source?.includes("AstrePilot");
+                    const isStridePilot = app.source?.includes("StridePilot") || app.source?.includes("AstrePilot");
                     const initials = app.company.slice(0, 2).toUpperCase();
 
                     return (
@@ -735,10 +741,10 @@ export default function ApplicationsPage() {
 
                         {/* Engine / Source */}
                         <td className="py-2.5 px-3">
-                          {isAstrePilot ? (
+                          {isStridePilot ? (
                             <span className="ce-chip ce-chip-blue whitespace-nowrap">
                               <Zap className="w-2.5 h-2.5 fill-[var(--blue)]" />
-                              <span>AstrePilot</span>
+                              <span>StridePilot</span>
                               {app.fieldsFilled != null && (
                                 <span className="font-mono font-bold">
                                   ({app.fieldsFilled}/{app.fieldsTotal || app.fieldsFilled})
@@ -860,7 +866,7 @@ export default function ApplicationsPage() {
                       {colApps.map((app) => {
                         const isNeedsAttention =
                           app.status === "QUIET" || (app.status === "APPLIED" && app.daysSilent >= 5);
-                        const isAstrePilot = app.source?.includes("AstrePilot");
+                        const isStridePilot = app.source?.includes("StridePilot") || app.source?.includes("AstrePilot");
 
                         return (
                           <div
@@ -885,11 +891,11 @@ export default function ApplicationsPage() {
                               </button>
                             </div>
 
-                            {/* AstrePilot Telemetry Badge */}
-                            {isAstrePilot && (
+                            {/* StridePilot Telemetry Badge */}
+                            {isStridePilot && (
                               <div className="ce-chip ce-chip-blue">
                                 <Zap className="w-2.5 h-2.5 fill-[var(--blue)]" />
-                                <span>AstrePilot Filled</span>
+                                <span>StridePilot Filled</span>
                                 {app.fieldsFilled != null && (
                                   <span>
                                     ({app.fieldsFilled}/{app.fieldsTotal || app.fieldsFilled})

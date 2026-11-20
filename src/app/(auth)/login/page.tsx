@@ -179,8 +179,8 @@ export default function LoginPage() {
           <div className="flex justify-center mb-7">
             <Link href="/" className="inline-block transition-all hover:opacity-80 hover:scale-[1.02] active:scale-[0.98]">
               <Image
-                src="/astrework-brand.png"
-                alt="AstreWork"
+                src="/stride-brand.png"
+                alt="Stride"
                 width={1760}
                 height={363}
                 className="h-9 w-auto object-contain"
@@ -265,7 +265,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="mt-6 text-center text-[13px] text-[#86868b]">
-            New to AstreWork?{" "}
+            New to Stride?{" "}
             <Link
               href="/onboard"
               className="text-[#0071e3] font-semibold hover:text-[#0077ED] transition-colors inline-flex items-center gap-0.5"
