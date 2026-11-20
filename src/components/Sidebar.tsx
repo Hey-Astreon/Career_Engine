@@ -62,8 +62,8 @@ export function Sidebar() {
         className="group block transition-all"
         aria-label="Stride - Autonomous Remote Career Intelligence"
       >
-        <div className="flex h-[52px] w-full items-center justify-center rounded-xl border border-[var(--line)] bg-white px-3 py-1 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
-          <StrideLogo variant="light" height={26} />
+        <div className="flex h-[48px] w-full items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 py-1.5 shadow-xs transition-all duration-200 group-hover:border-[var(--blue)] group-hover:shadow-sm">
+          <StrideLogo variant="light" height={34} />
         </div>
       </Link>
       <div className="ce-nav-label !mt-4">Candidate workspace</div>

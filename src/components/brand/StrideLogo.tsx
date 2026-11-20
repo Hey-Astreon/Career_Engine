@@ -43,9 +43,9 @@ export function StrideLogo({
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 360 100"
+      viewBox="0 0 298 100"
       height={height}
-      width={Math.round(height * 3.6)}
+      width={Math.round(height * 2.98)}
       fill="none"
       className={className}
       aria-label="Stride"

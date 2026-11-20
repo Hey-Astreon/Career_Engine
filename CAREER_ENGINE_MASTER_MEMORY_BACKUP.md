@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 20, 2026 (Phase 101: Complete Ecosystem Rebranding from AstreWork to Stride Across Codebase, Software, Landing Page, Chrome Extension, and AI Engines)
+> **LAST COGNITIVE SYNC:** November 20, 2026 (Phase 104: StrideLogo Optical ViewBox Calibration & Sidebar Brand Card Anti-Blank Space Refinement)
 
 ---
 
@@ -4302,3 +4302,28 @@ graph TD
   - **Rule 1 (The Vector-First Brand Law):** Core brand logos in web applications should always be rendered as vector SVGs (`<StrideLogo />`) rather than static raster bitmaps. SVGs render at infinite sharpness across all device pixel ratios, eliminate network roundtrips, and allow dynamic theme adaptations without asset swaps.
   - **Rule 2 (Surface-Aware Contrast Protocol):** Never use a single logo variant across opposing surface brightnesses. Light backgrounds (`bg-white`, `bg-[#fafafa]`) demand the Ink Black (`#09131C`) wordmark for maximum WCAG AAA contrast, while dark backgrounds (`#stridepilot-root`) demand the Pure White (`#FFFFFF`) wordmark.
 - **Status:** Complete, verified (all 64 test suites passing [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.
+
+### Phase 104: StrideLogo Optical ViewBox Calibration & Sidebar Brand Card Anti-Blank Space Refinement (November 20, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In Phase 103, replacing the old wide `1760x363` raster banner in the workspace sidebar (`src/components/Sidebar.tsx`) with `<StrideLogo variant="light" height={26} />` caused the logo to appear shrunken and timid inside a tall `52px` card.
+  - Over 83% of the card area was pure blank white space.
+  - Furthermore, `StrideLogo.tsx` had a wide `viewBox="0 0 360 100"` while the mark and "Stride" typography actually terminated at $x \approx 294$, leaving ~66px of phantom transparent padding on the right side of the SVG itself, optically shifting the visual center to the left.
+- **Deep Root Cause Diagnosis:**
+  - The previous banner occupied $44\text{px} \times 213\text{px}$ (ratio 4.85:1). Setting `height={26}` reduced the logo height by 41% and width to only 94px inside a 208px container, creating a visual vacuum.
+  - Excess card height (`52px`) combined with low logo height (`26px`) caused top/bottom margins of 13px each, making the container resemble an empty button or misaligned placeholder.
+- **The Concrete Surgical Fix:**
+  - **1. Tightened SVG ViewBox (`src/components/brand/StrideLogo.tsx` & `public/brand/`):**
+    - Updated `viewBox` from `0 0 360 100` to `0 0 298 100` with proportional width calculation `Math.round(height * 2.98)`.
+    - Eliminated the 66px phantom right padding, ensuring optical centering and zero dead space.
+    - Updated `public/brand/stride-logo-light.svg`, `public/brand/stride-logo-dark.svg`, and `stride-brand-kit-v3/` SVGs in synchronization.
+  - **2. Calibrated Workspace Sidebar Card (`src/components/Sidebar.tsx`):**
+    - Tightened card container height from `h-[52px]` down to a sleek `h-[48px]`.
+    - Scaled the logo from `height={26}` up to `height={34}` (+31% increase).
+    - Reduced padding from bulky margins to clean, balanced `px-4 py-1.5`.
+    - Result: The logo commands the card with dignity, visual balance, and authority, eliminating the empty void.
+  - **3. Rebuilt Extension Packages (`scripts/package-extension.js`):**
+    - Re-packaged `stridepilot-extension.zip` and `astrepilot-extension.zip` (332.5 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Optical Container Density Law):** A brand logo in a bounded UI card container must occupy between 60% and 75% of the container's vertical height (e.g. 34px logo inside a 48px card). Any logo under 55% of container height produces an unnatural, empty "stamp-in-a-field" defect that signals sloppy frontend design.
+  - **Rule (Tight SVG ViewBox Geometry):** Never allow exported SVGs to include phantom trailing whitespace beyond the typographic bounding box. The `viewBox` width must be pinned directly to the rightmost glyph's edge ($x \approx 298$ for Stride at font-size 64) so CSS flexbox centering aligns the visual centroid accurately.
+- **Status:** Complete, verified (64/64 test suites passing [592/592 tests], `npx tsc --noEmit` code 0), committed and pushed to `origin main`.
