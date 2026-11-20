@@ -30,9 +30,13 @@ jobs:
         run: npx prisma generate
 
       - name: Prepare Test Database
-        run: npx prisma db push --accept-data-loss
+        run: |
+          npx prisma db push --accept-data-loss
+          npx tsx scripts/seed-candidate-profiles.ts
         env:
           DATABASE_URL: file:./prisma/dev.db
+          TURSO_DATABASE_URL: ""
+          TURSO_AUTH_TOKEN: ""
 
       - name: Lint
         run: npm run lint
