@@ -59,7 +59,7 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(shared).toEqual([]);
   });
 
-  it("verifies Roushan_Kumar_Resume.pdf has Style B headline, clean education date, Stride/AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
+  it("verifies Roushan_Kumar_Resume.pdf has Style B headline, clean education date, Stride, 0 'Engineer' titles, and 0 AI slop words", async () => {
     const pdfPath = path.join(roushanDir, "Roushan_Kumar_Resume.pdf");
     const buf = fs.readFileSync(pdfPath);
     const parsed = await extractPdfInfo(buf);
@@ -69,7 +69,8 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(parsed.text).toContain("Software Developer — Backend & Cloud");
     expect(parsed.text).toContain("2025 – 2028");
     expect(parsed.text).not.toContain("Full-Time Remote Available");
-    expect(parsed.text).toMatch(/(?:AstreWork|Stride)/);
+    expect(parsed.text).toContain("Stride");
+    expect(parsed.text).not.toContain("AstreWork");
     expect(parsed.text).toContain("Astra Vision");
     expect(parsed.text).toContain("Alyra Lock");
     expect(parsed.text).not.toContain("IDBI");
@@ -78,7 +79,7 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(parsed.text).not.toMatch(/\b(dynamic|utiliz\w*|passionate|spearhead\w*|leverag\w*)\b/i);
   });
 
-  it("verifies Ayushi_Raj_Resume.pdf has Style B headline, clean education date, Stride/AstreWork, 0 'Engineer' titles, and 0 AI slop words", async () => {
+  it("verifies Ayushi_Raj_Resume.pdf has Style B headline, clean education date, Stride, 0 'Engineer' titles, and 0 AI slop words", async () => {
     const pdfPath = path.join(ayushiDir, "Ayushi_Raj_Resume.pdf");
     const buf = fs.readFileSync(pdfPath);
     const parsed = await extractPdfInfo(buf);
@@ -88,7 +89,8 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
     expect(parsed.text).toContain("Software Developer — Full-Stack & AI");
     expect(parsed.text).toContain("2025 – 2028");
     expect(parsed.text).not.toContain("Full-Time Remote Available");
-    expect(parsed.text).toMatch(/(?:AstreWork|Stride)/);
+    expect(parsed.text).toContain("Stride");
+    expect(parsed.text).not.toContain("AstreWork");
     expect(parsed.text).toContain("Alyra Lock");
     expect(parsed.text).toContain("Astra Vision");
     expect(parsed.text).not.toContain("IDBI");

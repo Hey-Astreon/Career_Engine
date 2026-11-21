@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 21, 2026 (Phase 107: Deep Forensic GitHub Purge — Ayushi507 Handle Migration & Profile Modernization)
+> **LAST COGNITIVE SYNC:** November 21, 2026 (Phase 108: Astra Vision Vercel Production Link Sync & Complete AstreWork-to-Stride Resume Brand Enforcement)
 
 ---
 
@@ -4443,3 +4443,30 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule 1 (The Single-Source Identity Law):** Founder and candidate social identifiers (GitHub, LinkedIn, Portfolio) must be treated as critical system tokens. When an identifier evolves, run an exhaustive multi-file sweep across baseline objects, generated PDFs, browser extensions, and database seeds to prevent stale identity leakage.
 - **Status:** Complete, 100% verified (all affected test suites passing [26/26 tests], PDFs verified, extensions re-packaged), committed and pushed to `origin main`.
+
+### Phase 108: Astra Vision Vercel Production Link Sync & Complete AstreWork-to-Stride Resume Brand Enforcement (November 21, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In both Roushan's and Ayushi's resumes, the "Live Demo" hyperlink for Astra Vision pointed to an obsolete, broken Google Cloud Run endpoint (`https://astra-frontend-mrfinklbba-uc.a.run.app/`).
+  - Furthermore, candidate interview kits and audit tests still contained mentions of `AstreWork` in place of the official brand name `Stride`.
+- **Deep Root Cause Diagnosis:**
+  - Astra Vision was migrated to a high-availability production Vercel frontend (`https://astra-vision-chi.vercel.app/`) with automated SPA catch-all rewrites, but resume generation templates and database profile baselines were still retaining the legacy Cloud Run URL.
+  - Resume audit tests previously allowed regex matches `/(?:AstreWork|Stride)/`, allowing residual `AstreWork` references to slip past automated CI gates.
+- **The Concrete Surgical Fix:**
+  - **1. Astra Vision Production Demo URL Realignment:**
+    - Updated `scripts/generate-all-candidate-resumes.mjs` to point Astra Vision Live Demo links strictly to `https://astra-vision-chi.vercel.app/` across both Roushan's and Ayushi's project sections.
+    - Synchronized `liveDemoUrl` across `src/lib/resumeBaseline.ts`, `prisma/seed.ts`, `scripts/sync-master-profiles.cjs`, and `docs/interview_vaults/roushan/09_project_interview_kits/kit_astra_vision.md`.
+  - **2. Strict AstreWork-to-Stride Resume Brand Elimination:**
+    - Updated project interview kits (`kit_astrework.md` $\rightarrow$ Stride Project Interview Kit) to strictly reflect `Stride — Autonomous Career Intelligence Engine & Distributed Harvester` and `Stride — Autonomous Career Platform & StridePilot Extension`.
+    - Tightened `scripts/generate-all-candidate-resumes.mjs` compliance gates to explicitly throw if `AstreWork` appears in the rendered resume text or if `Stride` is missing.
+    - Hardened `tests/candidate_resumes_audit.test.ts` and `tests/resume_optimizer.test.ts` to strictly assert `.toContain("Stride")` and `.not.toContain("AstreWork")`.
+  - **3. PDF Binary Regeneration & Extension Packaging:**
+    - Executed `scripts/generate-all-candidate-resumes.mjs` via Playwright, regenerating single-page A4 master PDFs for Roushan (`9.81mm` bottom gap) and Ayushi (`13.68mm` bottom gap).
+    - Verified all 4 PDF files (`public/candidates/` and `extension/resumes/`) contain `https://astra-vision-chi.vercel.app/` and 0 occurrences of `AstreWork`.
+    - Re-packaged `stridepilot-extension.zip` and `astrepilot-extension.zip` (568.6 KB).
+  - **4. Local Database Seeding & Verification:**
+    - Re-seeded candidate profiles via `scripts/seed-candidate-profiles.ts`.
+    - Verified all 4 affected test suites pass (22/22 tests).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Production Live Demo Verification Invariant):** Every external URL and portfolio project demo embedded in printable resumes must be pinned to stable, live production endpoints. Broken demo links severely undermine recruiter credibility.
+  - **Rule (Binary Negative Assertion Gates):** When retiring a legacy brand name, always add explicit negative assertions (`expect(text).not.toContain("OldBrand")`) in both PDF generation compiler gates and automated Vitest suites to permanently prevent regression.
+- **Status:** Complete, 100% verified (all 22 tests passing, PDFs verified with live Vercel link and 0 AstreWork, extension re-packaged), committed and pushed to `origin main`.

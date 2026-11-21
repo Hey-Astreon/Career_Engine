@@ -362,7 +362,7 @@ const ROUSHAN_PROJECTS = [
   {
     title: "Astra Vision — AI Code Sandbox & AST Dependency Engine",
     techStack: "FastAPI, Python, Tree-Sitter, ChromaDB",
-    linksHtml: `<a href="https://astra-frontend-mrfinklbba-uc.a.run.app/">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Astra-Vision">GitHub</a>`,
+    linksHtml: `<a href="https://astra-vision-chi.vercel.app/">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Astra-Vision">GitHub</a>`,
     bullets: [
       `<b>Backend Service:</b> Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.`,
       `<b>Sandbox Isolation:</b> Wrote a sandboxed Python subprocess runner with syscall and socket guards to intercept unauthorized file and network access and safely terminate rogue processes.`,
@@ -397,7 +397,7 @@ const AYUSHI_PROJECTS = [
   {
     title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
     techStack: "React, Monaco, FastAPI, ChromaDB",
-    linksHtml: `<a href="https://astra-frontend-mrfinklbba-uc.a.run.app/">Live Demo</a> | <a href="https://github.com/Ayushi507/Astra_vision">GitHub</a>`,
+    linksHtml: `<a href="https://astra-vision-chi.vercel.app/">Live Demo</a> | <a href="https://github.com/Ayushi507/Astra_vision">GitHub</a>`,
     bullets: [
       `<b>In-Browser IDE:</b> Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.`,
       `<b>Live AST Inspection:</b> Connected streaming FastAPI and Tree-Sitter endpoints to highlight syntax nodes, call paths, and sandbox output in under 200ms.`,
@@ -604,6 +604,12 @@ async function main() {
     const slopMatches = textContent.match(/\b(dynamic|utiliz\w*|passionate|spearhead\w*|leverag\w*)\b/gi);
     if (slopMatches) {
       throw new Error(`❌ AI SLOP WORDS found in ${r.file}: ${slopMatches.join(", ")}`);
+    }
+    if (textContent.includes("AstreWork")) {
+      throw new Error(`❌ FORBIDDEN LEGACY NAME 'AstreWork' found in ${r.file}`);
+    }
+    if (!textContent.includes("Stride")) {
+      throw new Error(`❌ MISSING BRAND NAME 'Stride' in ${r.file}`);
     }
 
     console.log(

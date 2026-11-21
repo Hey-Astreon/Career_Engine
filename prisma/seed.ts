@@ -55,7 +55,7 @@ async function main() {
         profileId: roushan.id,
         title: "Astra Vision — AI Code Sandbox & AST Dependency Engine",
         techStack: "FastAPI, Python, Tree-Sitter, ChromaDB",
-        liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
+        liveDemoUrl: "https://astra-vision-chi.vercel.app/",
         githubUrl: "https://github.com/Hey-Astreon/Astra-Vision",
         architecture: "FastAPI microservice backend parsing full-stack dependency graphs via Tree-Sitter AST compilers.",
         bulletPoints: JSON.stringify([
@@ -162,7 +162,7 @@ async function main() {
         profileId: ayushi.id,
         title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
         techStack: "React, Monaco, FastAPI, ChromaDB",
-        liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
+        liveDemoUrl: "https://astra-vision-chi.vercel.app/",
         githubUrl: "https://github.com/Ayushi507/Astra_vision",
         architecture: "Browser-based code analysis studio pairing Monaco Editor with interactive dependency-graph canvas.",
         bulletPoints: JSON.stringify([

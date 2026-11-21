@@ -1,6 +1,6 @@
 # Project Interview Kit: Astra Vision
 **Project:** Astra Vision – AI-Powered Developer Assistance Platform  
-**Live Demo:** [astra-frontend-mrfinklbba-uc.a.run.app](https://astra-frontend-mrfinklbba-uc.a.run.app/)  
+**Live Demo:** [astra-vision-chi.vercel.app](https://astra-vision-chi.vercel.app/)  
 **GitHub:** [github.com/Hey-Astreon/Astra-Vision](https://github.com/Hey-Astreon/Astra-Vision)  
 **Tech Stack:** React.js, FastAPI, Monaco Editor, ChromaDB, Tree-Sitter, Python, Node.js
 

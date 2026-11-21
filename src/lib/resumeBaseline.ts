@@ -138,7 +138,7 @@ export function getMasterResumeBaseline(
         {
           title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
           techStack: "React, Monaco, FastAPI, ChromaDB",
-          liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
+          liveDemoUrl: "https://astra-vision-chi.vercel.app/",
           githubUrl: "https://github.com/Ayushi507/Astra_vision",
           bullets: [
             "In-Browser IDE: Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.",
@@ -255,7 +255,7 @@ export function getMasterResumeBaseline(
         {
           title: "Astra Vision — AI Code Sandbox & AST Dependency Engine",
           techStack: "FastAPI, Python, Tree-Sitter, ChromaDB",
-          liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
+          liveDemoUrl: "https://astra-vision-chi.vercel.app/",
           githubUrl: "https://github.com/Hey-Astreon/Astra-Vision",
           bullets: [
             "Backend Service: Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.",
