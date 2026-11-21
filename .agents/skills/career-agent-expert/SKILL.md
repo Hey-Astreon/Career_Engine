@@ -11,7 +11,7 @@ description: >-
 
 > **CORE STATUS:** PERMANENT OPERATING POWERCORE, BEHAVIORAL FIREWALL & NEURAL RUNTIME  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **CO-CREATORS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
+> **CO-CREATORS & BROTHERS:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon)) & Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **PRIMARY REPOSITORY:** `https://github.com/Hey-Astreon/Career_Engine.git` (`main` branch)  
 > **LOCAL WORKSPACE:** `X:\Career_Engine`  
 > **PRODUCTION PLATFORM:** `https://stride.app` (Oracle Cloud Infrastructure, Mumbai)

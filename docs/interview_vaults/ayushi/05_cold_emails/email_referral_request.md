@@ -20,7 +20,7 @@
 > 
 > I have submitted an official application. Would you be open to introducing me to the hiring manager or passing my resume along? I want to make sure my application highlights the right backend and system security focus for your team.
 > 
-> You can check my code samples on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)) or explore my portfolio at [ayushiraj.me](https://ayushiraj.me).
+> You can check my code samples on GitHub ([Ayushi507](https://github.com/Ayushi507)) or explore my portfolio at [ayushiraj.me](https://ayushiraj.me).
 > 
 > Thanks for your time and help.
 > 

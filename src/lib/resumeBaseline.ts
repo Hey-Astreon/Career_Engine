@@ -92,7 +92,7 @@ export function getMasterResumeBaseline(
         phone: "+91-8709852305",
         email: "ayushi29507@gmail.com",
         portfolioUrl: "https://ayushiraj.me",
-        githubUrl: "https://github.com/Silenttears-cloud",
+        githubUrl: "https://github.com/Ayushi507",
         linkedinUrl: "https://www.linkedin.com/in/alrya404/",
       },
       summary:
@@ -128,7 +128,7 @@ export function getMasterResumeBaseline(
           title: "Stride — AI Career Platform & StridePilot Extension",
           techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
           liveDemoUrl: "https://stride.app",
-          githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
+          githubUrl: "https://github.com/Ayushi507/Career_Engine",
           bullets: [
             "Co-Developer & Lead Frontend Architect: Built Stride's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
             "StridePilot Chrome Extension (MV3): Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.",
@@ -139,7 +139,7 @@ export function getMasterResumeBaseline(
           title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
           techStack: "React, Monaco, FastAPI, ChromaDB",
           liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
-          githubUrl: "https://github.com/Silenttears-cloud/Astra_vision",
+          githubUrl: "https://github.com/Ayushi507/Astra_vision",
           bullets: [
             "In-Browser IDE: Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.",
             "Live AST Inspection: Connected streaming FastAPI and Tree-Sitter endpoints to highlight syntax nodes, call paths, and sandbox output in under 200ms.",
@@ -150,7 +150,7 @@ export function getMasterResumeBaseline(
           title: "Alyra Lock — Client-Side Zero-Knowledge Password Vault",
           techStack: "React, TypeScript, Web Crypto, Express",
           liveDemoUrl: "https://alyra-lock.vercel.app/",
-          githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
+          githubUrl: "https://github.com/Ayushi507/Zero-knowledge-password-manager-",
           bullets: [
             "Client-Side Vault UI: Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.",
             "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",

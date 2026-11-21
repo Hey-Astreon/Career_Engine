@@ -18,7 +18,7 @@
 > 
 > I am in my second year of my BCA at Amity University Noida. Because of my flexible virtual curriculum, I have full availability and am looking for a global remote internship or entry-level software engineering role where I can take complete ownership of features, debug environment blocks, and write clean, verified code.
 > 
-> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)). Are you open to a 10-minute chat this week to see if I’d be a fit for your engineering pipeline?
+> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Ayushi507](https://github.com/Ayushi507)). Are you open to a 10-minute chat this week to see if I’d be a fit for your engineering pipeline?
 > 
 > Best,  
 > Ayushi Raj  

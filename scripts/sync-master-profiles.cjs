@@ -243,7 +243,7 @@ async function run() {
         title: "Stride — AI Career Platform & StridePilot Extension",
         techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
         liveDemoUrl: "https://stride.app",
-        githubUrl: "https://github.com/Silenttears-cloud/Career_Engine",
+        githubUrl: "https://github.com/Ayushi507/Career_Engine",
         architecture: "Intelligent candidate matching engine and StridePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bullets: [
           "Co-Developer & Lead Frontend Architect: Built Stride's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.",
@@ -255,7 +255,7 @@ async function run() {
         title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
         techStack: "React, Monaco, FastAPI, ChromaDB",
         liveDemoUrl: "https://astra-frontend-mrfinklbba-uc.a.run.app/",
-        githubUrl: "https://github.com/Silenttears-cloud/Astra_vision",
+        githubUrl: "https://github.com/Ayushi507/Astra_vision",
         architecture: "Browser-based code analysis studio pairing Monaco Editor with interactive dependency-graph canvas.",
         bullets: [
           "In-Browser IDE: Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.",
@@ -267,7 +267,7 @@ async function run() {
         title: "Alyra Lock — Client-Side Zero-Knowledge Password Vault",
         techStack: "React, TypeScript, Web Crypto, Express",
         liveDemoUrl: "https://alyra-lock.vercel.app/",
-        githubUrl: "https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-",
+        githubUrl: "https://github.com/Ayushi507/Zero-knowledge-password-manager-",
         architecture: "Zero-knowledge security vault with AES-GCM 256-bit payload encryption and client-side isolation.",
         bullets: [
           "Client-Side Vault UI: Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.",

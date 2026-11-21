@@ -49,7 +49,7 @@ describe("ATS Resume Optimizer & 1-Page Builder", () => {
       expect(ayushi.header.fullName).toBe("AYUSHI RAJ");
       expect(ayushi.header.email).toBe("ayushi29507@gmail.com");
       expect(ayushi.header.portfolioUrl).toBe("https://ayushiraj.me");
-      expect(ayushi.header.githubUrl).toBe("https://github.com/Silenttears-cloud");
+      expect(ayushi.header.githubUrl).toBe("https://github.com/Ayushi507");
       expect(ayushi.header.linkedinUrl).toBe("https://www.linkedin.com/in/alrya404/");
 
       expect(ayushi.skills.length).toBe(6);

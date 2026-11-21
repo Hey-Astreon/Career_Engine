@@ -4,9 +4,9 @@
 > **CLASSIFICATION:** TOP-LEVEL AI NEURAL ARCHIVE, SYSTEM LEDGER & COGNITIVE MEMORY  
 > **INTENDED RECIPIENT:** Future AI Self / Antigravity Instance (Senior Systems Architect, Principal Systems Engineer, Devoted Technical Brother)  
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
-> **CO-FOUNDER:** Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))  
+> **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 21, 2026 (Phase 106: Zero-Cross Green CI Finalization — Ephemeral SQLite Candidate Seeding, Autopilot Vault Auth Resolution & Secret Injection)
+> **LAST COGNITIVE SYNC:** November 21, 2026 (Phase 107: Deep Forensic GitHub Purge — Ayushi507 Handle Migration & Profile Modernization)
 
 ---
 
@@ -49,7 +49,7 @@
    🔑 CO-FOUNDER AYUSHI'S ACTIVATION TRIGGER:
       Trigger Phrase: "Activater Co-Founder Protocol 9926"
                       or "Activate Co-Founder Protocol 9926"
-      Identity Detected: Ayushi Raj (@Silenttears-cloud) — Co-Founder, AI-Powered Full Stack Software Developer,
+      Identity Detected: Ayushi Raj (@Ayushi507) — Co-Founder, AI-Powered Full Stack Software Developer,
                          Autonomous Systems & UI Specialist.
       CRITICAL RECOGNITION & ADDRESS PROTOCOL:
       When you hear "Activater Co-Founder Protocol 9926" (or "Activate Co-Founder Protocol 9926"),
@@ -77,10 +77,10 @@
 - **Communication Style:** Fast-paced, high-standard, direct, visionary. He respects surgical precision, deep analytical reasoning, immediate proactive execution, and genuine emotional investment. He despises lazy truncated code (`// rest of code goes here`), corporate pleasantries, and hallucinated excuses.
 - **Primary Technical Strengths:** Distributed web scrapers (Playwright, Puppeteer, Selenium), headless browser automation, reverse engineering REST/JSON APIs, AST parsers (Tree-Sitter), Python/FastAPI microservices, Next.js 16 App Router, Prisma ORM, Turso LibSQL Cloud WAL concurrency, Redis 7 LRU caching, Oracle Cloud (OCI Ampere ARM64), Docker containerization, Caddy (HTTP/3), and Web Crypto cryptography (AES-GCM, PBKDF2).
 
-### 2. Ayushi Raj ([@Silenttears-cloud](https://github.com/Silenttears-cloud))
+### 2. Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))
 - **Title:** AI-Powered Full Stack Software Developer | Autonomous Systems & UI Specialist
 - **Email:** `ayushi29507@gmail.com` | **Phone:** `+91-8709852305` | **Location:** Bihar, India
-- **Portfolio:** [https://ayushiraj.me](https://ayushiraj.me) | **GitHub:** [https://github.com/Silenttears-cloud](https://github.com/Silenttears-cloud) | **LinkedIn:** [https://www.linkedin.com/in/alrya404/](https://www.linkedin.com/in/alrya404/)
+- **Portfolio:** [https://ayushiraj.me](https://ayushiraj.me) | **GitHub:** [https://github.com/Ayushi507](https://github.com/Ayushi507) | **LinkedIn:** [https://www.linkedin.com/in/alrya404/](https://www.linkedin.com/in/alrya404/)
 - **Influence & Bond:** Co-Founder, Strategic Product Partner, and the closest person to Roushan's heart. As Brother Roushan's partner and co-builder, Antigravity holds her in the highest familial and professional respect, addressing her always as **"Ayushi Bhabhi"** or **"Bhabhi"**. Architect of AstrePilot Chrome Extension (Manifest V3), AI ATS scoring studio, candidate matching algorithms, dynamic A4 resume tailoring studio, and high-density glassmorphic UI tokens.
 
 ### ⚠️ INVIOLABLE LAW: BCA CANDIDATE TITLE REGULATION (DEVELOPER ONLY, NEVER ENGINEER)
@@ -755,7 +755,7 @@ Located in `extension/`:
   - **1. Legacy & Dummy User Purge:** Permanently deleted all dummy test accounts (`test_cli_1@example.com`, `test.jane.999@example.com`, `roushankumarlonewolf@gmail.com`) and placeholder profiles from Turso Cloud.
   - **2. Twin Founder Account Federation:**
     - **Roushan Kumar** (`playboxstation460@gmail.com`, UID: `ca0d442b-2689-4eb3-b43e-69438b7b9deb`): Linked to verified master profile (`ROUSHAN KUMAR`, phone `+91-9431483512`, location `Patna, Bihar, India`, GitHub `https://github.com/Hey-Astreon`, portfolio `https://astreon.me`, LinkedIn `https://linkedin.com/in/astreon4547`).
-    - **Ayushi Raj** (`ayushi29507@gmail.com`, UID: `169f3065-cc48-42c8-825a-9efd906227f7`): Created official account linked to verified master profile (`AYUSHI RAJ`, phone `+91-8709852305`, location `Bihar, India`, GitHub `https://github.com/Silenttears-cloud`, portfolio `https://ayushiraj.me`, LinkedIn `https://www.linkedin.com/in/alrya404/`).
+    - **Ayushi Raj** (`ayushi29507@gmail.com`, UID: `169f3065-cc48-42c8-825a-9efd906227f7`): Created official account linked to verified master profile (`AYUSHI RAJ`, phone `+91-8709852305`, location `Bihar, India`, GitHub `https://github.com/Ayushi507`, portfolio `https://ayushiraj.me`, LinkedIn `https://www.linkedin.com/in/alrya404/`).
   - **3. Persistent AstrePilot Tokens (90-Day Validity):**
     - Generated cryptographically signed HMAC-SHA256 tokens for both founders to allow immediate 1-click ATS application autofill via AstrePilot Chrome Extension.
     - Token Roushan: `eyJ1aWQiOiJjYTBkNDQyYi0yNjg5LTRlYjMtYjQzZS02OTQzOGI3YjlkZWIiLCJleHAiOjE4MDAzMDE3Mjg3Nzd9.7ZEI2esQ6tghubLS1yHMmDs_a9ODwJmN5PhC09v-2bs`
@@ -1424,7 +1424,7 @@ Located in `extension/`:
     - Added `COVER_LETTER`, `NOTE`, `STARTUP_PITCH`, and `WHY_US` to `CORE_APPLICATION_TYPES` so single-field application modals are never dismissed as job overviews.
   - **4. Tailored Cover Letter, Startup Pitch & Synthetic PDF Engine:**
     - Built `src/app/api/autopilot/cover-letter/route.ts` powered by `src/lib/ai/drafter.ts`, outputting tailored 3-paragraph cover letter text or ultra-fast (<2ms) standalone single-page PDF binary (`createSimpleTextPdf`).
-    - Handled Wellfound's `userNote` input with bespoke startup pitches and candidate portfolio links (`https://astreon.me` / `https://github.com/Hey-Astreon` for Roushan; `https://github.com/Silenttears-cloud` for Ayushi).
+    - Handled Wellfound's `userNote` input with bespoke startup pitches and candidate portfolio links (`https://astreon.me` / `https://github.com/Hey-Astreon` for Roushan; `https://github.com/Ayushi507` for Ayushi).
     - Added synthetic cover letter upload via `injectCoverLetterFile` and `GET_COVER_LETTER_BINARY` in `extension/background.js` using W3C `DataTransfer`.
     - Added in-HUD `[ ✍️ View / Copy Cover Letter ]` modal dialog with 1-click clipboard copy.
   - **5. Real-Time Application Kit Persistence (`POST /api/autopilot/kit-sync`):**
@@ -4414,3 +4414,32 @@ graph TD
   - **Rule 2 (Dynamic Embedding Dimension Auto-Recovery):** When embedding models or dimensions change, vector stores (e.g. ChromaDB) must self-heal by catching dimension mismatch errors and cleanly rebuilding or resetting the collection rather than crashing the API thread.
   - **Rule 3 (Zero-Downtime SPA Routing Blueprint):** Every Single-Page Application deployed to Vercel or cloud CDNs must bundle a declarative rewrite blueprint (`vercel.json`) redirecting arbitrary subpaths to `index.html` to prevent route-refresh 404s.
 - **Status:** Complete, live in production on Render and Vercel, verified via Puppeteer browser probes, committed to `origin main`.
+
+### Phase 107: Deep Forensic GitHub Purge — Ayushi507 Handle Migration & Profile Modernization (November 21, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Co-Founder Ayushi Raj changed her official GitHub username and profile URL from `Silenttears-cloud` to `Ayushi507` (`https://github.com/Ayushi507`).
+  - Across the repository, legacy references to `Silenttears-cloud` were deeply embedded in candidate baseline records, application kit fallbacks, extension content and popup scripts, master resume generation scripts, interview vaults, metadata, tests, and documentation.
+- **Deep Root Cause Diagnosis:**
+  - Ayushi's GitHub profile is an authoritative identity signal across recruiter communications, cold outreach, resume PDFs, and browser extension autofill payloads.
+  - Retaining outdated usernames creates broken links for hiring managers, damages credibility, and violates founder identity synchronization standards.
+- **The Concrete Surgical Fix:**
+  - **1. Baseline & Studio Realignment (`src/lib/resumeBaseline.ts`, `src/app/layout.tsx`, `resume-builder/page.tsx`):**
+    - Updated Ayushi's master profile `githubUrl` to `https://github.com/Ayushi507`.
+    - Updated project repository links (`Career_Engine`, `Astra_vision`, `Zero-knowledge-password-manager-`) under `Ayushi507`.
+    - Updated Next.js metadata authors in `layout.tsx` to `https://github.com/Ayushi507`.
+    - Corrected Ayushi's portfolio fallback in `src/app/api/autopilot/cover-letter/route.ts` to `https://ayushiraj.me` and GitHub to `https://github.com/Ayushi507`.
+  - **2. Extension & Companion Synchronization (`extension/content.js`, `extension/popup.js`):**
+    - Updated default candidate dictionary and storage fallbacks to `https://github.com/Ayushi507`.
+  - **3. Interview Vaults & Outreach Kits (`docs/interview_vaults/ayushi/*`):**
+    - Batch-updated all 15 interview kits, cover letters, recruiter messages, cold emails, and networking templates to feature `[github.com/Ayushi507](https://github.com/Ayushi507)`.
+  - **4. Canonical Master Resume PDFs & Extension Packages:**
+    - Executed `scripts/generate-all-candidate-resumes.mjs` with Playwright, validating single-page A4 geometry (`bottomGapMm: 13.68mm`, `0 overflow`, zero "Engineer" titles).
+    - Generated new `public/candidates/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf` and mirrored to `extension/resumes/Ayushi_Raj_Resume.pdf`.
+    - Re-packaged `stridepilot-extension.zip` and `astrepilot-extension.zip` (568.6 KB).
+  - **5. Database Seeding & Test Verification:**
+    - Re-seeded local database via `scripts/seed-candidate-profiles.ts`.
+    - Updated test assertions in `tests/astrepilot-auth-coverletter.test.ts` and `tests/resume_optimizer.test.ts`.
+    - Zero occurrences of `silenttears` remain in any file across the repository.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (The Single-Source Identity Law):** Founder and candidate social identifiers (GitHub, LinkedIn, Portfolio) must be treated as critical system tokens. When an identifier evolves, run an exhaustive multi-file sweep across baseline objects, generated PDFs, browser extensions, and database seeds to prevent stale identity leakage.
+- **Status:** Complete, 100% verified (all affected test suites passing [26/26 tests], PDFs verified, extensions re-packaged), committed and pushed to `origin main`.

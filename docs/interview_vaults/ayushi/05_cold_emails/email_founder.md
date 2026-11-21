@@ -23,7 +23,7 @@
 > 
 > I'd love to help you build [Company Name]’s next product iteration.
 > 
-> You can view my portfolio at [ayushiraj.me](https://ayushiraj.me) and code on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)). Do you have 10 minutes for a quick chat next week?
+> You can view my portfolio at [ayushiraj.me](https://ayushiraj.me) and code on GitHub ([Ayushi507](https://github.com/Ayushi507)). Do you have 10 minutes for a quick chat next week?
 > 
 > Best,  
 > Ayushi Raj  

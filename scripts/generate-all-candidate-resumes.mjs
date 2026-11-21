@@ -381,13 +381,13 @@ const ROUSHAN_PROJECTS = [
   },
 ];
 
-const AYUSHI_CONTACT = `Bihar, India (Open to Remote) | +91-8709852305 | <a href="mailto:ayushi29507@gmail.com">ayushi29507@gmail.com</a> | <a href="https://ayushiraj.me">ayushiraj.me</a> | <a href="https://github.com/Silenttears-cloud">github.com/Silenttears-cloud</a> | <a href="https://www.linkedin.com/in/alrya404/">linkedin.com/in/alrya404</a>`;
+const AYUSHI_CONTACT = `Bihar, India (Open to Remote) | +91-8709852305 | <a href="mailto:ayushi29507@gmail.com">ayushi29507@gmail.com</a> | <a href="https://ayushiraj.me">ayushiraj.me</a> | <a href="https://github.com/Ayushi507">github.com/Ayushi507</a> | <a href="https://www.linkedin.com/in/alrya404/">linkedin.com/in/alrya404</a>`;
 
 const AYUSHI_PROJECTS = [
   {
     title: "Stride — AI Career Platform & StridePilot Extension",
     techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
-    linksHtml: `<a href="https://stride.app">Live Demo</a> | <a href="https://github.com/Silenttears-cloud/Career_Engine">GitHub</a>`,
+    linksHtml: `<a href="https://stride.app">Live Demo</a> | <a href="https://github.com/Ayushi507/Career_Engine">GitHub</a>`,
     bullets: [
       `<b>Co-Developer & Lead Frontend Architect:</b> Built Stride's client-side ATS match engine and Gemini-powered scoring studio in Next.js 16, grading live job posts in under a second.`,
       `<b>StridePilot Chrome Extension (MV3):</b> Created an isolated Shadow-DOM HUD with HMAC-SHA256 token auth that autofills Greenhouse, Lever, and Ashby forms in ~15 seconds.`,
@@ -397,7 +397,7 @@ const AYUSHI_PROJECTS = [
   {
     title: "Astra Vision — Interactive Code Sandbox & AST Visualizer",
     techStack: "React, Monaco, FastAPI, ChromaDB",
-    linksHtml: `<a href="https://astra-frontend-mrfinklbba-uc.a.run.app/">Live Demo</a> | <a href="https://github.com/Silenttears-cloud/Astra_vision">GitHub</a>`,
+    linksHtml: `<a href="https://astra-frontend-mrfinklbba-uc.a.run.app/">Live Demo</a> | <a href="https://github.com/Ayushi507/Astra_vision">GitHub</a>`,
     bullets: [
       `<b>In-Browser IDE:</b> Built a browser-based code analysis studio pairing Monaco Editor with an interactive dependency-graph canvas for multi-file repos.`,
       `<b>Live AST Inspection:</b> Connected streaming FastAPI and Tree-Sitter endpoints to highlight syntax nodes, call paths, and sandbox output in under 200ms.`,
@@ -407,7 +407,7 @@ const AYUSHI_PROJECTS = [
   {
     title: "Alyra Lock — Client-Side Zero-Knowledge Password Vault",
     techStack: "React, TypeScript, Web Crypto, Express",
-    linksHtml: `<a href="https://alyra-lock.vercel.app/">Live Demo</a> | <a href="https://github.com/Silenttears-cloud/Zero-knowledge-password-manager-">GitHub</a>`,
+    linksHtml: `<a href="https://alyra-lock.vercel.app/">Live Demo</a> | <a href="https://github.com/Ayushi507/Zero-knowledge-password-manager-">GitHub</a>`,
     bullets: [
       `<b>Client-Side Vault UI:</b> Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.`,
       `<b>Memory-Safe Crypto State:</b> Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.`,
@@ -614,6 +614,12 @@ async function main() {
     const standaloneDir = path.resolve(process.cwd(), ".next", "standalone", "public", "candidates", r.candidateFolder);
     if (fs.existsSync(standaloneDir)) {
       fs.copyFileSync(pdfPath, path.join(standaloneDir, r.file));
+    }
+
+    // Mirror to extension/resumes for offline extension bundler
+    const extResumesDir = path.resolve(process.cwd(), "extension", "resumes");
+    if (fs.existsSync(extResumesDir)) {
+      fs.copyFileSync(pdfPath, path.join(extResumesDir, r.file));
     }
   }
 

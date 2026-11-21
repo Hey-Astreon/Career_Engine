@@ -217,7 +217,7 @@ export default function ResumeBuilderPage() {
   ): ApplicationKitData => {
     const isAyushi = candidateName.toLowerCase().includes("ayushi");
     const portfolio = isAyushi ? "https://ayushiraj.me" : "https://astreon.me";
-    const github = isAyushi ? "https://github.com/Silenttears-cloud" : "https://github.com/Hey-Astreon";
+    const github = isAyushi ? "https://github.com/Ayushi507" : "https://github.com/Hey-Astreon";
     const linkedin = isAyushi ? "https://www.linkedin.com/in/alrya404/" : "https://linkedin.com/in/astreon4547";
 
     const coverLetter = `Dear Hiring Team at ${companyName},

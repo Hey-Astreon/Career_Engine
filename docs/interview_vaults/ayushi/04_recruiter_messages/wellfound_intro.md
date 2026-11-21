@@ -17,7 +17,7 @@
 > 
 > I am in my second year of my BCA at Amity University Noida. Because of my flexible virtual curriculum, I am available to work full-time remote hours.
 > 
-> You can check my code at [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud) or explore my portfolio at [ayushiraj.me](https://ayushiraj.me). Let me know if you have 10 minutes to discuss how my builder mindset can help you ship features.
+> You can check my code at [github.com/Ayushi507](https://github.com/Ayushi507) or explore my portfolio at [ayushiraj.me](https://ayushiraj.me). Let me know if you have 10 minutes to discuss how my builder mindset can help you ship features.
 > 
 > Best,  
 > Ayushi Raj  

@@ -20,7 +20,7 @@
 > 
 > I am in my second year of my BCA at Amity University Noida. Because of my flexible online course structure, I have full availability for remote software engineering roles and internships.
 > 
-> I’ve attached my resume for your review. My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)).
+> I’ve attached my resume for your review. My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Ayushi507](https://github.com/Ayushi507)).
 > 
 > Are you open to a brief call next week to see if I’d be a fit for your engineering pipeline?
 > 

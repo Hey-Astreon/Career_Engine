@@ -44,7 +44,7 @@ When applying to roles on Otta, Wellfound, or YC Jobs, identify contacts in this
 > 
 > Best,  
 > Ayushi Raj  
-> [ayushiraj.me](https://ayushiraj.me) | [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud)
+> [ayushiraj.me](https://ayushiraj.me) | [github.com/Ayushi507](https://github.com/Ayushi507)
 
 ---
 

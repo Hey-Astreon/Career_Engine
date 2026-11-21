@@ -123,7 +123,7 @@ describe("AstrePilot Auth, Tailored Cover Letter & Kit Sync Pipeline", () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.coverLetter).toMatch(/Ayushi Raj/i);
-      expect(data.pitch).toContain("Silenttears-cloud");
+      expect(data.pitch).toContain("Ayushi507");
       expect(data.coverLetter).not.toMatch(/\bSoftware Engineer\b/i);
     });
 

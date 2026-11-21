@@ -20,7 +20,7 @@
 > 
 > I am in my second year of my BCA at Amity University Noida. Because of my flexible virtual curriculum, I am available to work full-time remote hours.
 > 
-> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)). Do you have 10 minutes for a brief chat to see if my background matches your current engineering requirements?
+> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Ayushi507](https://github.com/Ayushi507)). Do you have 10 minutes for a brief chat to see if my background matches your current engineering requirements?
 > 
 > Best,  
 > Ayushi Raj  
@@ -46,7 +46,7 @@
 > 
 > I’ve attached my resume and would be glad to set up a short call to discuss how my backend and systems engineering background aligns with [Company Name]'s standards. 
 > 
-> Portfolio: [ayushiraj.me](https://ayushiraj.me) | GitHub: [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud)
+> Portfolio: [ayushiraj.me](https://ayushiraj.me) | GitHub: [github.com/Ayushi507](https://github.com/Ayushi507)
 > 
 > Best,  
 > Ayushi Raj  

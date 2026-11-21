@@ -20,7 +20,7 @@
 > 
 > I’ve played around with [Company Name]'s product and noticed [one small improvement or nice feature, e.g., how clean the workspace editor feels / a potential API endpoint improvement]. I'd love to help your team ship the next set of features.
 > 
-> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and my GitHub is [Silenttears-cloud](https://github.com/Silenttears-cloud). Are you open to a 10-minute chat this week to see if I’d be a fit for your engineering pipeline?
+> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and my GitHub is [Ayushi507](https://github.com/Ayushi507). Are you open to a 10-minute chat this week to see if I’d be a fit for your engineering pipeline?
 > 
 > Best,  
 > Ayushi Raj  

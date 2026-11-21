@@ -21,7 +21,7 @@
 > 
 > I’d love to learn about current engineering challenges in your team at [Company Name] and see if my technical background could be of help on your roadmap.
 > 
-> You can check my code samples on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)) or explore my portfolio at [ayushiraj.me](https://ayushiraj.me).
+> You can check my code samples on GitHub ([Ayushi507](https://github.com/Ayushi507)) or explore my portfolio at [ayushiraj.me](https://ayushiraj.me).
 > 
 > Do you have 10 minutes for a brief introductory call next week?
 > 

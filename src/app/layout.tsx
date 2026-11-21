@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   keywords: siteConfig.keywords,
   authors: [
-    { name: "Ayushi Raj", url: "https://github.com/Silenttears-cloud" },
+    { name: "Ayushi Raj", url: "https://github.com/Ayushi507" },
     { name: "Roushan Kumar", url: "https://github.com/Hey-Astreon" },
   ],
   creator: "Ayushi Raj & Roushan Kumar",
@@ -150,7 +150,7 @@ const jsonLd = {
         {
           "@type": "Person",
           "name": "Ayushi Raj",
-          "url": "https://github.com/Silenttears-cloud",
+          "url": "https://github.com/Ayushi507",
         },
       ],
     },

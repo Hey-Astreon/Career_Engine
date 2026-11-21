@@ -103,8 +103,8 @@ function generateStartupPitch(
 
   const cleanP1 = p1.title.split(/\s+[—–-]\s+/)[0];
   const cleanP2 = p2.title.split(/\s+[—–-]\s+/)[0];
-  const defaultGithub = slug === "ayushi" ? "https://github.com/Silenttears-cloud" : "https://github.com/Hey-Astreon";
-  const defaultPortfolio = slug === "ayushi" ? "https://github.com/Silenttears-cloud" : "https://astreon.me";
+  const defaultGithub = slug === "ayushi" ? "https://github.com/Ayushi507" : "https://github.com/Hey-Astreon";
+  const defaultPortfolio = slug === "ayushi" ? "https://ayushiraj.me" : "https://astreon.me";
   const portfolioLink = candidate.portfolioUrl || defaultPortfolio;
   const githubLink = candidate.githubUrl || defaultGithub;
 

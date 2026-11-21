@@ -22,7 +22,7 @@
 > 
 > Best,  
 > Ayushi Raj  
-> ayushi29507@gmail.com | [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud)
+> ayushi29507@gmail.com | [github.com/Ayushi507](https://github.com/Ayushi507)
 
 ---
 
@@ -37,7 +37,7 @@
 > 
 > Our conversation about [mention the topic] reminded me of a constraint I solved while building **Axiom AI Gateway**. I had to ensure that telemetry logs streamed under **40ms** using WebSockets, which I accomplished by utilizing a Redis caching wrapper to limit API overhead. I'd love to bring this focus on latency optimization to your team.
 > 
-> I’ve linked my portfolio ([ayushiraj.me](https://ayushiraj.me)) and the code repository for Axiom AI Gateway ([github.com/Silenttears-cloud/axiom-gateway](https://github.com/Silenttears-cloud/axiom-gateway)) in case you or the team would like to review the implementation details.
+> I’ve linked my portfolio ([ayushiraj.me](https://ayushiraj.me)) and the code repository for Axiom AI Gateway ([github.com/Ayushi507/axiom-gateway](https://github.com/Ayushi507/axiom-gateway)) in case you or the team would like to review the implementation details.
 > 
 > I look forward to the next steps. Please let me know if you need any additional information.
 > 

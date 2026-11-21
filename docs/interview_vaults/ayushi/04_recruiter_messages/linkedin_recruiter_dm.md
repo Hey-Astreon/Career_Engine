@@ -16,7 +16,7 @@
 > I've applied through your portal and attached my resume. I'd love to learn if my background in full-stack AI product development matches what your team is looking for.
 > 
 > Portfolio: [ayushiraj.me](https://ayushiraj.me)  
-> GitHub: [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud)
+> GitHub: [github.com/Ayushi507](https://github.com/Ayushi507)
 > 
 > Best,  
 > Ayushi Raj
@@ -35,7 +35,7 @@
 > My application is submitted. I'd love to connect briefly to see if my backend systems and database security background is a fit for your engineering pipeline.
 > 
 > Portfolio: [ayushiraj.me](https://ayushiraj.me)  
-> GitHub: [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud)
+> GitHub: [github.com/Ayushi507](https://github.com/Ayushi507)
 > 
 > Best,  
 > Ayushi Raj

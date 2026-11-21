@@ -151,7 +151,7 @@
       zipCode: '805110',
       addressType: 'Home',
       linkedinUrl: 'https://www.linkedin.com/in/alrya404/',
-      githubUrl: 'https://github.com/Silenttears-cloud',
+      githubUrl: 'https://github.com/Ayushi507',
       portfolioUrl: 'https://ayushiraj.me',
       slug: 'ayushi',
       school: 'Amity University',

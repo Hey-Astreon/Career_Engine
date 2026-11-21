@@ -246,7 +246,7 @@ Career_Engine/
 ## 👨‍💻 Founders & Core Architects
 
 - **Roushan Kumar** ([@Hey-Astreon](https://github.com/Hey-Astreon)) — *Lead Systems Architect & Core Developer*
-- **Ayushi Raj** ([@Silenttears-cloud](https://github.com/Silenttears-cloud)) — *AI Systems & Product Developer*
+- **Ayushi Raj** ([@Ayushi507](https://github.com/Ayushi507)) — *AI Systems & Product Developer*
 
 ---
 

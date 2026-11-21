@@ -19,7 +19,7 @@
 > 
 > Thank you,  
 > Ayushi Raj  
-> ayushi29507@gmail.com | [github.com/Silenttears-cloud](https://github.com/Silenttears-cloud)
+> ayushi29507@gmail.com | [github.com/Ayushi507](https://github.com/Ayushi507)
 
 ---
 

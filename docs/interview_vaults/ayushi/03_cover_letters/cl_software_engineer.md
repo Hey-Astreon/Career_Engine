@@ -19,7 +19,7 @@
 > 
 > I am currently pursuing my Bachelor of Computer Applications (BCA) at Amity University Noida (Expected July 2028). Because of my flexible virtual curriculum, I am available to commit full-time hours to a global remote software engineering role or internship, bringing strong technical ownership, clean coding standards, and rigorous testing practices to your codebase.
 > 
-> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Silenttears-cloud](https://github.com/Silenttears-cloud)). I would appreciate the opportunity to discuss how my background aligns with your engineering pipeline.
+> My portfolio is at [ayushiraj.me](https://ayushiraj.me) and code samples are on GitHub ([Ayushi507](https://github.com/Ayushi507)). I would appreciate the opportunity to discuss how my background aligns with your engineering pipeline.
 > 
 > Sincerely,  
 > Ayushi Raj  
