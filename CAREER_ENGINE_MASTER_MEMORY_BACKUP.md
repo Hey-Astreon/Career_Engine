@@ -4374,3 +4374,43 @@ graph TD
   - **Rule (The Relational Foreign Key Seeding Invariant):** When seeding domain entities (like `Profile`) in test fixtures or migrations, always ensure their required or optional foreign keys (like `userId`) are proactively bound to actual parent records. Never leave foreign keys `null` if downstream security middleware relies on relational joins.
   - **Rule (Dual-Identifier Auth Resolution):** Security resolvers for extension Bearer tokens should support both account IDs (`User.id`) and profile IDs (`Profile.id`) to guarantee backwards compatibility and test reliability across different auth contexts.
 - **Status:** Complete, 100% verified locally (all 64 test suites passing [592/592 tests], zero lint errors, zero TypeScript errors), committed and pushed to `origin main`.
+
+### Phase 107: Astra Vision Multi-Cloud Production Deployment (Render + Vercel), Multi-Model Self-Healing LLM Cascade & Official Brand Kit Integration (November 21, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Astra Vision needed rapid, robust multi-cloud production deployment without manual infrastructure hassle.
+  - The autonomous self-healing sandbox and AI code audit engine hit a hard quota deadlock on Google Gemini (`429 ResourceExhausted: gemini-2.5-flash limit: 20 requests/day`).
+  - ChromaDB vector indexing failed with dimension mismatch (`Collection expecting embedding with dimension of 4096, got 3072`) caused by previous vector cache from alternate embedding models.
+  - Vercel frontend failed API calls upon initial launch due to unconfigured fallback URLs (`REACT_APP_API_BASE=https://YOUR_BACKEND_CLOUD_RUN_URL`).
+  - The frontend UI lacked official branding, relying on generic text labels without cohesive visual identity.
+- **Deep Root Cause Diagnosis:**
+  - Hardcoded API base fallback URLs in Create React App bundles cause network failure (`net::ERR_NAME_NOT_RESOLVED`) when cloud environment variables are unset.
+  - Single-provider LLM pipelines create brittle failure modes when free-tier daily quotas expire.
+  - ChromaDB locks embedding dimensions permanently upon collection creation; changing embedding models without resetting the collection triggers immediate fatal crashes.
+  - Render Docker instances dynamically assign external listening ports (`$PORT`, typically 10000) and require automated root health check probes (`/` and `/api/health`).
+- **The Concrete Surgical Fix:**
+  - **1. Render Backend Blueprint & Deployment (`render.yaml`, `backend/server.py`, `backend/requirements.txt`):**
+    - Authored declarative `render.yaml` blueprint with Docker runtime, dynamic port binding (`int(os.environ.get("PORT", 8001))`), and health probe at `/api/health`.
+    - Implemented root status route `@app.get("/")` returning `200 OK` with JSON service metadata.
+    - Added missing runtime parser wheels (`tree-sitter>=0.22.0`, `tree-sitter-javascript`, `tree-sitter-python`).
+    - Successfully launched backend at `https://astra-vision-backend.onrender.com`.
+  - **2. Vercel Frontend SPA Routing & Build Pipeline (`frontend/vercel.json`, `frontend/src/App.js`):**
+    - Created `frontend/vercel.json` with SPA catch-all rewrites (`/.*` $\rightarrow$ `/index.html`) to prevent 404s on browser reloads.
+    - Sanitized `App.js` fallback logic to ignore non-functional placeholders and default cleanly to the active backend.
+    - Built and deployed frontend to `https://astra-vision-chi.vercel.app`.
+  - **3. Multi-Model LLM Cascade & ChromaDB Self-Healing (`backend/self_heal.py`, `backend/code_indexer.py`):**
+    - Built failover cascade in `SelfHealEngine._call_llm`: catches 429 quota exhaustion, sets `gemini_quota_exhausted = True`, and seamlessly fails over to Nvidia Nemotron 550b (`nvidia/nemotron-3-ultra-550b-a55b`) via OpenAI client.
+    - Added self-healing recovery in ChromaDB indexer: catches `InvalidArgumentError` on dimension mismatches and automatically resets and recreates the collection.
+  - **4. Official Brand Kit v1 Integration (`frontend/public/brand/`, `frontend/src/components/brand/AstraVisionLogo.jsx`):**
+    - Migrated 28 vector and raster brand assets from `astra-vision-brand-kit/` to `frontend/public/` (favicons, marks, webmanifest, OpenGraph cards).
+    - Authored `<AstraVisionLogo />` component supporting dark/light mode, `iconOnly` monogram, and electric indigo ambient glow (`rgba(79,70,229,0.25)`).
+    - Upgraded workspace header with interlocking "AV" monogram in an Obsidian tile, crisp Plus Jakarta Sans typography, `AI DEV BRAIN` subtitle, and `v1.0` badge.
+    - Added floating illuminated Obsidian medallion on the empty Monaco editor canvas with feature capabilities pill.
+  - **5. Production Verification:**
+    - Live Render backend verified healthy (`200 OK` on `/api/health`).
+    - Live Vercel frontend verified healthy (`200 OK`, all assets 200).
+    - Automated Puppeteer browser probe verified clean visual presentation, zero uncaught JavaScript errors, and flawless high-DPI rendering.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule 1 (The Multi-Provider AI Cascade Law):** Production AI applications must never depend on a single LLM provider or free-tier quota. Always implement an automatic failover cascade with stateful failure caching to prevent repeated deadlocks during high-throughput tasks.
+  - **Rule 2 (Dynamic Embedding Dimension Auto-Recovery):** When embedding models or dimensions change, vector stores (e.g. ChromaDB) must self-heal by catching dimension mismatch errors and cleanly rebuilding or resetting the collection rather than crashing the API thread.
+  - **Rule 3 (Zero-Downtime SPA Routing Blueprint):** Every Single-Page Application deployed to Vercel or cloud CDNs must bundle a declarative rewrite blueprint (`vercel.json`) redirecting arbitrary subpaths to `index.html` to prevent route-refresh 404s.
+- **Status:** Complete, live in production on Render and Vercel, verified via Puppeteer browser probes, committed to `origin main`.
