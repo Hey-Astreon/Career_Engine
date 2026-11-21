@@ -62,12 +62,18 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
   it("verifies Roushan_Kumar_Resume.pdf has Style B headline, clean education date, Stride, 0 'Engineer' titles, and 0 AI slop words", async () => {
     const pdfPath = path.join(roushanDir, "Roushan_Kumar_Resume.pdf");
     const buf = fs.readFileSync(pdfPath);
+    const rawPdf = buf.toString("latin1");
     const parsed = await extractPdfInfo(buf);
 
     expect(parsed.numpages).toBe(1);
+    expect(buf.length).toBeLessThan(80000); // Strict recruiter lightweight budget (< 80KB)
+    expect(rawPdf).not.toContain("/Subtype /Type3"); // 100% Anti-Type3 bitmap gate
+    expect(rawPdf).toContain("/CIDFontType2"); // TrueType font embedding gate
+    expect(rawPdf).toContain("https://astrework.app"); // Live working Stride demo link
+    expect(rawPdf).not.toContain("https://stride.app"); // Banned broken domain
     expect(parsed.text).toContain("ROUSHAN KUMAR");
     expect(parsed.text).toContain("Software Developer — Backend & Cloud");
-    expect(parsed.text).toContain("2025 – 2028");
+    expect(parsed.text).toMatch(/2025.*2028/);
     expect(parsed.text).not.toContain("Full-Time Remote Available");
     expect(parsed.text).toContain("Stride");
     expect(parsed.text).not.toContain("AstreWork");
@@ -82,12 +88,18 @@ describe("Candidate Master Resumes — Single-Page A4, Anti-Slop & BCA Complianc
   it("verifies Ayushi_Raj_Resume.pdf has Style B headline, clean education date, Stride, 0 'Engineer' titles, and 0 AI slop words", async () => {
     const pdfPath = path.join(ayushiDir, "Ayushi_Raj_Resume.pdf");
     const buf = fs.readFileSync(pdfPath);
+    const rawPdf = buf.toString("latin1");
     const parsed = await extractPdfInfo(buf);
 
     expect(parsed.numpages).toBe(1);
+    expect(buf.length).toBeLessThan(80000); // Strict recruiter lightweight budget (< 80KB)
+    expect(rawPdf).not.toContain("/Subtype /Type3"); // 100% Anti-Type3 bitmap gate
+    expect(rawPdf).toContain("/CIDFontType2"); // TrueType font embedding gate
+    expect(rawPdf).toContain("https://astrework.app"); // Live working Stride demo link
+    expect(rawPdf).not.toContain("https://stride.app"); // Banned broken domain
     expect(parsed.text).toContain("AYUSHI RAJ");
     expect(parsed.text).toContain("Software Developer — Full-Stack & AI");
-    expect(parsed.text).toContain("2025 – 2028");
+    expect(parsed.text).toMatch(/2025.*2028/);
     expect(parsed.text).not.toContain("Full-Time Remote Available");
     expect(parsed.text).toContain("Stride");
     expect(parsed.text).not.toContain("AstreWork");

@@ -93,7 +93,7 @@ async function run() {
       {
         title: "Stride — Autonomous Career Engine & Distributed Harvester",
         techStack: "Next.js 16, Python, OCI, Docker, Redis",
-        liveDemoUrl: "https://stride.app",
+        liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bullets: [
@@ -242,7 +242,7 @@ async function run() {
       {
         title: "Stride — AI Career Platform & StridePilot Extension",
         techStack: "Next.js 16, React 19, Chrome MV3, Gemini API",
-        liveDemoUrl: "https://stride.app",
+        liveDemoUrl: "https://astrework.app",
         githubUrl: "https://github.com/Ayushi507/Career_Engine",
         architecture: "Intelligent candidate matching engine and StridePilot Chrome Extension (MV3) with isolated Shadow DOM HUD and HMAC-SHA256 authorization.",
         bullets: [

@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 21, 2026 (Phase 108: Astra Vision Vercel Production Link Sync & Complete AstreWork-to-Stride Resume Brand Enforcement)
+> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 109: TrueType Embedded Font Restoration & Live Stride Deployment Demo Link Realignment)
 
 ---
 
@@ -4470,3 +4470,40 @@ graph TD
   - **Rule (The Production Live Demo Verification Invariant):** Every external URL and portfolio project demo embedded in printable resumes must be pinned to stable, live production endpoints. Broken demo links severely undermine recruiter credibility.
   - **Rule (Binary Negative Assertion Gates):** When retiring a legacy brand name, always add explicit negative assertions (`expect(text).not.toContain("OldBrand")`) in both PDF generation compiler gates and automated Vitest suites to permanently prevent regression.
 - **Status:** Complete, 100% verified (all 22 tests passing, PDFs verified with live Vercel link and 0 AstreWork, extension re-packaged), committed and pushed to `origin main`.
+
+### Phase 109: TrueType Embedded Font Restoration (Elimination of Type 3 Faux-Bold Smear) & Live Stride Deployment Demo Link Realignment (November 22, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In both generated candidate PDFs (`Roushan_Kumar_Resume.pdf` and `Ayushi_Raj_Resume.pdf`), the entire document text appeared noticeably bolder, heavier, and visually fatigued compared to the original 52 KB version. Body text, summary, and bullet points looked smeared with synthetic faux-bold. The PDF file size had bloated 5x from ~52 KB to 260 KB.
+  - Furthermore, clicking "Live Demo" on the flagship Stride project failed because the hyperlink pointed to `https://stride.app` (which is not owned / redirects to Trustpilot), and the summary had a broken plain-text `(stride.app)` reference.
+- **Deep Root Cause Diagnosis:**
+  - **1. Font Rasterization into Type 3 Blobs:** `scripts/generate-all-candidate-resumes.mjs` was loading Google Fonts via an external `<link>` pointing to the dynamic variable font `Inter:wght@400;500;600;700;800`. In headless Chromium (Skia m158), variable web fonts failed to expose static weight descriptors before PDF serialization. As a fallback, Skia rasterized all glyphs into `/Subtype /Type3` (bitmap/vector outline shapes with exaggerated stroke widths StemV 109–188) and simulated synthetic faux-bold on bold tokens, smearing the entire 400 regular body font.
+  - **2. Broken Live Demo URL:** During the brand rename in Phase 102/108, `astrework.app` was prematurely swapped to `stride.app` in `linksHtml` and `summaryHtml`. The actual live deployment on Oracle Cloud VM (`137.23.43.128`) is active and healthy at `https://astrework.app` (HTTP 200), whereas `stride.app` does not resolve to Career Engine.
+- **The Concrete Surgical Fix:**
+  - **1. Local High-Precision Static TrueType Font Embedding:**
+    - Downloaded official static Inter TrueType font files (`Inter-400.ttf`, `Inter-500.ttf`, `Inter-600.ttf`, `Inter-700.ttf`, `Inter-800.ttf`) into `scripts/fonts/`.
+    - Embedded each weight directly as base64 in `@font-face` within `scripts/generate-all-candidate-resumes.mjs`, eliminating all external Google Fonts network latency and variable font bugs.
+    - Set explicit `font-weight: 400` on `html, body`, `.summary`, `li`, and `.skill-row`.
+    - Enforced `await page.evaluate(() => document.fonts.ready)` before measuring geometry and calling `page.pdf()`.
+  - **2. Strict Anti-Type3 Compiler & Vitest Gates:**
+    - Added a mandatory compiler gate in `generate-all-candidate-resumes.mjs`:
+      ```javascript
+      if (rawPdf.includes("/Subtype /Type3")) {
+        throw new Error(`❌ FORBIDDEN TYPE 3 BITMAP FONT DETECTED in ${r.file}! Fonts must be true CIDFontType2 / TrueType.`);
+      }
+      ```
+    - Updated `tests/candidate_resumes_audit.test.ts` to assert `buf.length < 80000`, `rawPdf.not.toContain("/Subtype /Type3")`, `rawPdf.toContain("/CIDFontType2")`, `rawPdf.toContain("https://astrework.app")`, and `rawPdf.not.toContain("https://stride.app")`.
+  - **3. Stride Live Demo Realignment:**
+    - Updated `linksHtml` in `generate-all-candidate-resumes.mjs` to `<a href="https://astrework.app">Live Demo</a> | <a href="...">GitHub</a>` (visible text is strictly `Live Demo`, href points to the live HTTP 200 Oracle Cloud instance).
+    - Removed broken plain-text `(stride.app)` from summaries in both resumes and baselines.
+    - Synchronized `liveDemoUrl: "https://astrework.app"` across `src/lib/resumeBaseline.ts`, `prisma/seed.ts`, and `scripts/sync-master-profiles.cjs`.
+  - **4. Execution & Verification:**
+    - Regenerated canonical PDFs:
+      - `Roushan_Kumar_Resume.pdf`: 52.8 KB (down from 260.8 KB, 9.81mm gap, 0 overflow, 100% TrueType `/CIDFontType2`).
+      - `Ayushi_Raj_Resume.pdf`: 53.1 KB (down from 261.2 KB, 13.68mm gap, 0 overflow, 100% TrueType `/CIDFontType2`).
+    - Mirrored to `extension/resumes/` and re-compressed `stridepilot-extension.zip` and `astrepilot-extension.zip`.
+    - Synced profiles, 6 projects, and 6 simulations directly to Turso Cloud LibSQL via `scripts/sync-master-profiles.cjs`.
+    - Ran automated test suite: 22/22 tests passing.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Zero-Type-3 TrueType Invariant):** Never rely on Google Fonts variable font `<link>` tags in headless Chromium PDF generation. Chromium's Skia print engine converts dynamic variable web fonts into bloated, faux-bold Type 3 bitmap/vector outlines. Always embed static TrueType (`.ttf`) files via base64 `@font-face` so Skia generates genuine, lightweight, ultra-crisp `/CIDFontType2` TrueType font streams.
+  - **Rule (The Live Demo Resolution Invariant):** When rebranding a project before a new custom domain is officially registered and DNS-delegated, the resume's `Live Demo` hyperlink target (`href`) MUST point to the actual running production host (e.g. `https://astrework.app`), while the visible anchor text remains `Live Demo` and the project title reflects the new brand (`Stride`). Never point hyperlinks to parked, unpurchased, or speculative domains.
+- **Status:** Complete, 100% verified (all 22 tests passing, PDFs 53KB with genuine TrueType fonts, live Stride demo working, Turso Cloud synced), committed and pushed to `origin main`.
