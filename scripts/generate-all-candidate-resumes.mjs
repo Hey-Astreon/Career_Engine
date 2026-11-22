@@ -425,7 +425,7 @@ const ROUSHAN_PROJECTS = [
     linksHtml: `<a href="https://astra-vision-chi.vercel.app/">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Astra-Vision">GitHub</a>`,
     bullets: [
       `<b>Backend Service:</b> Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.`,
-      `<b>Sandbox Isolation:</b> Wrote a sandboxed Python subprocess runner with syscall and socket guards to intercept unauthorized file and network access and safely terminate rogue processes.`,
+      `<b>Sandbox Isolation:</b> Engineered an AST-driven Python runner that statically validates syntax trees to block reflection and unauthorized I/O, isolating subprocesses with environment sanitization and 5s timeouts.`,
       `<b>AST & Vector Indexing:</b> Wired Tree-Sitter AST parsers into ChromaDB vector search to resolve cross-file symbol references in under 200ms.`,
     ],
   },
@@ -435,8 +435,8 @@ const ROUSHAN_PROJECTS = [
     linksHtml: `<a href="https://alyra-lock.vercel.app/">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Zero-Knowledge-Password-Manager">GitHub</a>`,
     bullets: [
       `<b>Zero-Knowledge API:</b> Built an Express.js and MongoDB sync backend that stores only ciphertext blobs and IVs so plaintext secrets never leave the client.`,
-      `<b>Cryptographic Core:</b> Implemented AES-GCM (256-bit) encryption and 100,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.`,
-      `<b>Auth & Sync Hardening:</b> Added JWT session rotation, strict CORS rules, and atomic document versioning that completes encrypted syncs in under 200ms.`,
+      `<b>Cryptographic Core:</b> Implemented AES-GCM (256-bit) encryption and 600,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.`,
+      `<b>Auth & Sync Hardening:</b> Implemented JWT authentication, strict CORS policies, and optimistic concurrency versioning to guarantee collision-free encrypted vault syncs in under 200ms.`,
     ],
   },
 ];

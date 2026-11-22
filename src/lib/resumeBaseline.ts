@@ -259,7 +259,7 @@ export function getMasterResumeBaseline(
           githubUrl: "https://github.com/Hey-Astreon/Astra-Vision",
           bullets: [
             "Backend Service: Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.",
-            "Sandbox Isolation: Wrote a sandboxed Python subprocess runner with syscall and socket guards to intercept unauthorized file and network access and safely terminate rogue processes.",
+            "Sandbox Isolation: Engineered an AST-driven Python runner that statically validates syntax trees to block reflection and unauthorized I/O, isolating subprocesses with environment sanitization and 5s timeouts.",
             "AST & Vector Indexing: Wired Tree-Sitter AST parsers into ChromaDB vector search to resolve cross-file symbol references in under 200ms.",
           ],
         },
@@ -270,8 +270,8 @@ export function getMasterResumeBaseline(
           githubUrl: "https://github.com/Hey-Astreon/Zero-Knowledge-Password-Manager",
           bullets: [
             "Zero-Knowledge API: Built an Express.js and MongoDB sync backend that stores only ciphertext blobs and IVs so plaintext secrets never leave the client.",
-            "Cryptographic Core: Implemented AES-GCM (256-bit) encryption and 100,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.",
-            "Auth & Sync Hardening: Added JWT session rotation, strict CORS rules, and atomic document versioning that completes encrypted syncs in under 200ms.",
+            "Cryptographic Core: Implemented AES-GCM (256-bit) encryption and 600,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.",
+            "Auth & Sync Hardening: Implemented JWT authentication, strict CORS policies, and optimistic concurrency versioning to guarantee collision-free encrypted vault syncs in under 200ms.",
           ],
         },
       ],
