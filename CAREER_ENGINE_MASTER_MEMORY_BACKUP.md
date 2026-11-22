@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 109: TrueType Embedded Font Restoration & Live Stride Deployment Demo Link Realignment)
+> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 110: Refined Slate Blue #2563eb Link Calibration & Strict ATS ASCII Invariant)
 
 ---
 
@@ -4507,3 +4507,32 @@ graph TD
   - **Rule (The Zero-Type-3 TrueType Invariant):** Never rely on Google Fonts variable font `<link>` tags in headless Chromium PDF generation. Chromium's Skia print engine converts dynamic variable web fonts into bloated, faux-bold Type 3 bitmap/vector outlines. Always embed static TrueType (`.ttf`) files via base64 `@font-face` so Skia generates genuine, lightweight, ultra-crisp `/CIDFontType2` TrueType font streams.
   - **Rule (The Live Demo Resolution Invariant):** When rebranding a project before a new custom domain is officially registered and DNS-delegated, the resume's `Live Demo` hyperlink target (`href`) MUST point to the actual running production host (e.g. `https://astrework.app`), while the visible anchor text remains `Live Demo` and the project title reflects the new brand (`Stride`). Never point hyperlinks to parked, unpurchased, or speculative domains.
 - **Status:** Complete, 100% verified (all 22 tests passing, PDFs 53KB with genuine TrueType fonts, live Stride demo working, Turso Cloud synced), committed and pushed to `origin main`.
+
+### Phase 110: Refined Slate Blue (#2563eb) Link Calibration & Strict ATS ASCII Invariant (November 22, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Candidate master resumes and studio editors previously displayed interactive hyperlinks (`Live Demo | GitHub` and header contact endpoints) in pure monochrome black (`#0f172a`). In human recruiter reviews (6–8 second F-scan), recruiters scanning on high-DPI displays routinely mistook the links for static text labels, failing to click through and view the live production deployments on Oracle Cloud and Vercel.
+  - A proposal was raised to turn links blue, raising immediate critical concerns over whether colored links break enterprise ATS parsers (Workday, Greenhouse, Taleo).
+- **Deep Root Cause & ATS Ingestion Analysis:**
+  - **1. Color Stripping Invariant in PDF Parsing:** Under the PDF Specification (ISO 32000-1), color is defined solely by graphic state operators (`rg` / `RG`). Enterprise ATS engines (Sovren, Textkernel, Daxtra, PDFBox) completely strip graphic state operators and process only character glyph operators (`TJ`) decoded via `/ToUnicode` CMaps into plain text streams. Color has zero impact on ATS ingestion.
+  - **2. The Real ATS Hazard (Unicode Glyphs):** Non-ASCII Unicode symbols (such as arrows `↗` or icons `🔗`) frequently cause CMap encoding failures, replacement characters (`\uFFFD`), or tokenization glitches in legacy ATS regex parsers.
+  - **3. Solution Balance:** Interactive links must adopt a curated, non-distracting Refined Slate Blue (`#2563eb`, semi-bold 600, no underline) while strictly preserving pure ASCII text (`Live Demo | GitHub`).
+- **The Concrete Surgical Fix:**
+  - **1. Canonical Generator Calibration:**
+    - Updated `scripts/generate-all-candidate-resumes.mjs`:
+      - Set `a { color: #2563eb; text-decoration: none !important; font-weight: 600; }`.
+      - Set `.item-links { color: #94a3b8; }` (neutral pipe separator) and `.item-links a { color: #2563eb; }`.
+      - Retained pure ASCII text `Live Demo | GitHub` across all project templates.
+  - **2. Workspace Studios & CSS Sync:**
+    - Updated `src/app/globals.css`: `.ats-a4-sheet a { color: #2563eb; text-decoration: none !important; font-weight: 600; }`.
+    - Updated `src/app/(workspace)/resume-maker/page.tsx` line 1440/1449 to `text-[#2563eb] hover:text-[#1d4ed8] font-semibold`.
+  - **3. Master Domain Skill Formalization:**
+    - Updated `.agents/skills/ats-resume-maker/SKILL.md` Section 4 to enshrine the Refined Slate Blue `#2563eb` link law.
+  - **4. Execution, Regeneration & Verification:**
+    - Recompiled canonical PDFs via Playwright Chromium:
+      - `Roushan_Kumar_Resume.pdf`: 52.9 KB, 9.81mm bottom gap, 0 overflow, 100% TrueType `/CIDFontType2`.
+      - `Ayushi_Raj_Resume.pdf`: 53.2 KB, 13.68mm bottom gap, 0 overflow, 100% TrueType `/CIDFontType2`.
+    - Mirrored PDFs to `extension/resumes/` and re-compressed `stridepilot-extension.zip` and `astrepilot-extension.zip`.
+    - Verified all 22 tests passing across `candidate_resumes_audit.test.ts`, `resume_optimizer.test.ts`, and `astrepilot-auth-coverletter.test.ts`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Safe Affordance & ASCII Invariant):** To maximize recruiter engagement without risking ATS penalties, use a refined, executive accent color (`#2563eb`) with semi-bold weight (`600`) and no underline. Never introduce Unicode arrows (`↗`, `→`) or symbol glyphs into link anchor text; enterprise ATS tokenizers rely on pure ASCII strings.
+- **Status:** Complete, 100% verified (all 22 tests passing, PDFs 53 KB, #2563eb links live, extension re-packaged), committed and pushed to `origin main`.

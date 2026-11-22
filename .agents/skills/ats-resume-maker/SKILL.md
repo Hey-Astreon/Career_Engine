@@ -108,13 +108,14 @@ Wrapped lines in Technical Skills must align underneath the category label (`Col
 
 ## 🔗 4. Link Typography & Header Pinning Law
 
-> **INVIOLABLE FOUNDER DIRECTIVE:** **NO BLUE AND NO UNDERLINE ON RESUME LINKS.**
+> **INVIOLABLE FOUNDER DIRECTIVE:** **REFINED SLATE BLUE (#2563eb), NO UNDERLINE, ZERO UNICODE GLYPHS.**
 
-1. **Dark Ink Semi-Bold Link Affordance:**
-   - All links inside `.ats-a4-sheet a` and `scripts/generate-all-candidate-resumes.mjs` use `color: inherit` (`#0f172a`), `text-decoration: none !important`, and `font-weight: 600`.
-   - Underlines are strictly forbidden because they cut across letter descenders (`g`, `y`, `p`, `q`) and pollute visual scanning.
+1. **Refined Slate Blue Semi-Bold Link Affordance:**
+   - All links inside `.ats-a4-sheet a` and `scripts/generate-all-candidate-resumes.mjs` use `color: #2563eb` (Apple/Tailwind Blue 600), `text-decoration: none !important`, and `font-weight: 600`.
+   - **No Underline Rule:** Underlines are strictly forbidden because they cut across letter descenders (`g`, `y`, `p`, `q`) and pollute visual scanning.
+   - **Strict ASCII Text Rule:** Link text must remain pure ASCII (`Live Demo | GitHub`). Never use Unicode arrows (`↗`, `🔗`), which cause character map encoding failures (`\uFFFD`) in legacy enterprise ATS parsers.
 2. **Single-Line Project Header Pinning (`maxH3Lines === 1`):**
-   - Keep project titles + parenthetical tech stacks concise (`<= 85 characters`) and pin the right-hand `Live Demo | GitHub` container with `whiteSpace: "nowrap"` and `flexShrink: 0` so links never wrap onto two vertical lines.
+   - Keep project titles + parenthetical tech stacks concise (`<= 85 characters`) and pin the right-hand `Live Demo | GitHub` container with `whiteSpace: "nowrap"` and `flexShrink: 0` so links never wrap onto two vertical lines. Separate endpoints with a subtle neutral pipe (`color: #94a3b8`).
 
 ---
 

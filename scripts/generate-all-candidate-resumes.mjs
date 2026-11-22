@@ -134,7 +134,7 @@ function buildResumeHtml({
       line-height: 1.25;
     }
     a {
-      color: #0f172a;
+      color: #2563eb;
       text-decoration: none !important;
       font-weight: 600;
     }
@@ -201,15 +201,23 @@ function buildResumeHtml({
       font-weight: 600;
       color: #334155;
     }
-    .item-links, .item-date {
+    .item-links {
       font-size: 8.2pt;
-      color: #0f172a;
+      color: #94a3b8;
       white-space: nowrap;
       flex-shrink: 0;
       font-weight: 600;
     }
+    .item-links a {
+      color: #2563eb;
+      text-decoration: none !important;
+      font-weight: 600;
+    }
     .item-date {
+      font-size: 8.2pt;
       color: #475569;
+      white-space: nowrap;
+      flex-shrink: 0;
       font-weight: 500;
     }
     ul {

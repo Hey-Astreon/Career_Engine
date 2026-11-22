@@ -180,7 +180,7 @@ code, pre, .font-mono { font-family: var(--font-mono), monospace; }
 }
 
 .ats-a4-sheet a {
-  color: inherit;
+  color: #2563eb;
   text-decoration: none !important;
   font-weight: 600;
 }

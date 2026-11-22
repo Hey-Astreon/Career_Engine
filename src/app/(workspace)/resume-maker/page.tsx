@@ -1437,7 +1437,7 @@ export default function ResumeMakerPage() {
                                 href={proj.liveDemoUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="font-semibold text-slate-900 no-underline hover:text-slate-900"
+                                className="font-semibold text-[#2563eb] no-underline hover:text-[#1d4ed8]"
                               >
                                 Live Demo
                               </a>
@@ -1448,7 +1448,7 @@ export default function ResumeMakerPage() {
                                 href={proj.githubUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="font-semibold text-slate-900 no-underline hover:text-slate-900"
+                                className="font-semibold text-[#2563eb] no-underline hover:text-[#1d4ed8]"
                               >
                                 GitHub
                               </a>
