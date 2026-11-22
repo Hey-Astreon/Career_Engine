@@ -153,7 +153,7 @@ export function getMasterResumeBaseline(
           githubUrl: "https://github.com/Ayushi507/Zero-knowledge-password-manager-",
           bullets: [
             "Client-Side Vault UI: Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.",
-            "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",
+            "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 600,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",
             "Fast Encrypted Sync: Shipped instant client-side vault search, password strength checks, and JWT-authenticated Express sync completing in under 200ms.",
           ],
         },
@@ -247,7 +247,7 @@ export function getMasterResumeBaseline(
           liveDemoUrl: "https://astrework.app",
           githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
           bullets: [
-            "Creator & Lead Backend Developer: Architected distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process and deduplicate high-volume career listings with resilient error recovery across multi-platform sources.",
+            "Creator & Lead Backend Developer: Built and run distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process, normalize, and deduplicate high-volume career listings across 13 active tech platforms.",
             "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
             "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%.",
           ],

@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 117: Balanced Zoom-Out Portrait Geometry Recalibration on astreon.me)
+> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 118: Forensic 3-Repo Readme & Resume Truth Audit, Discrepancy Reconciliation & Canonical Alignment)
 
 ---
 
@@ -4762,3 +4762,32 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Avatar Optical Proportion Law):** In professional circular profile cards, the subject's face should occupy roughly 40%–45% of the circle diameter, not >50%. Pre-padding or expanding the canvas to 1.2x–1.25x the head width ensures natural shoulder fall-off and eliminates claustrophobic close-up distortion.
 - **Status:** Complete. Pushed to remote repository `https://github.com/Hey-Astreon/My-Main-Portfolio.git` (Commit `b389c1d`) and verified live on `https://www.astreon.me/`.
+
+### Phase 118: Forensic 3-Repo Readme & Resume Truth Audit, Discrepancy Reconciliation & Canonical Alignment (November 22, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Candidate Roushan requested a forensic audit across all 3 GitHub repositories (`Hey-Astreon/Career_Engine`, `Hey-Astreon/Astra-Vision`, `Hey-Astreon/Zero-Knowledge-Password-Manager`) and master candidate resumes (`resumeBaseline.ts` & `generate-all-candidate-resumes.mjs`) to verify all claims, metrics, and technical architecture statements for truthfulness, eliminating any lies, exaggerations, or misinformation.
+- **Deep Root Cause Diagnosis:**
+  - **1. Stride Test Count Outdated:** `Career_Engine/README.md` claimed `30 test files / 317 tests`, whereas the actual live Vitest test suite had expanded to **64 test files / 592 tests** (100% passing). The README severely understated the test suite.
+  - **2. Stride Discovery Engine Metrics Mismatch:** `generate-all-candidate-resumes.mjs` claimed "harvest and deduplicate 14,000+ career listings daily across 7 platforms" and README claimed "21-Source Pipeline (100% Operational)", while `src/lib/providers/registry.ts` actually executes **13 active scrapers** on the 3-hour cron schedule and provides 8 direct ATS/platform normalization adapters. Stating 7 platforms in the resume and 21 in the README created a conflicting impression for technical interviewers.
+  - **3. Alyra Lock PBKDF2 Iteration Discrepancy:** The production code (`frontend/src/utils/crypto.ts`), README, and Roushan's resume correctly state `600,000 iterations` (OWASP standard for PBKDF2-HMAC-SHA256). However, Ayushi's resume in `src/lib/resumeBaseline.ts` and `generate-all-candidate-resumes.mjs` mistakenly stated `100,000-iteration PBKDF2`, creating an internal contradiction between co-creators of the same project.
+  - **4. Alyra Lock Clone URL:** `Alyra Lock/README.md` quickstart instructed users to clone `Silenttears-cloud/Zero-knowledge-password-manager-.git` instead of Roushan's canonical repository `Hey-Astreon/Zero-Knowledge-Password-Manager.git`.
+  - **5. Astra Vision Author Attribution Missing:** `Astra-Vision/README.md` lacked any author/founder section, giving zero credit to Roushan Kumar or Ayushi Raj.
+- **The Concrete Surgical Fix:**
+  - **1. Stride Architecture Reconciliation (`Career_Engine/README.md`):**
+    - Clarified Section 1 to: *"13-Provider Active Discovery Pipeline & 21-Platform Ingestion Suite (100% Operational)"*, explicitly delineating the 13 active cron scrapers from the 8 direct ATS resolvers.
+    - Updated Section 6 test count from `30 test files / 317 tests` to `64 test files / 592 tests`.
+  - **2. Resume Metric Alignment (`scripts/generate-all-candidate-resumes.mjs` & `src/lib/resumeBaseline.ts`):**
+    - Updated Roushan's Stride bullet to: *"Creator & Lead Backend Developer: Built and run distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process, normalize, and deduplicate high-volume career listings across 13 active tech platforms."*
+    - Aligned summary to: *"harvest, normalize, and deduplicate high-volume career listings across 13 active tech platforms using Turso LibSQL and Redis 7."*
+    - Fixed Ayushi's Alyra Lock bullet from `100,000-iteration` to `600,000-iteration PBKDF2`.
+    - Regenerated canonical PDFs with `scripts/generate-all-candidate-resumes.mjs`: Roushan ($9.81\text{mm}$ bottom gap) and Ayushi ($13.68\text{mm}$ bottom gap), 0 shared bullets, strictly single-page A4.
+  - **3. Astra Vision Attribution Section (`X:\Astra-Vision\README.md`):**
+    - Added top and bottom attribution sections crediting Roushan Kumar (@Hey-Astreon) as Creator & Backend Systems Developer, and Ayushi Raj (@Ayushi507) as Frontend Studio & Monaco Canvas Developer.
+    - Pushed commit `2fb0977` to `Hey-Astreon/Astra-Vision` (`origin main`).
+  - **4. Alyra Lock Canonical URL & Author Consolidation (`X:\Alyra Lock\README.md`):**
+    - Fixed clone command to `https://github.com/Hey-Astreon/Zero-Knowledge-Password-Manager.git`.
+    - Consolidated author section with verified titles.
+    - Pushed commit `9b20396` to `Hey-Astreon/Zero-Knowledge-Password-Manager` (`astreon main` and `origin main`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Cross-Repository Truth Synchronization Law):** Resumes, READMEs, and production codebases must form a closed, non-contradictory graph of truth. Any specific number (e.g., number of scrapers, cryptographic iterations, test counts, or throughput figures) mentioned in a resume must match the repository's README and be directly defensible from the codebase. Discrepancies between co-creator resumes for the same shared project immediately compromise credibility in hiring loops.
+- **Status:** Complete. All 3 repositories synchronized, tested, committed, and pushed to GitHub. Master memory ledger updated to Phase 118.

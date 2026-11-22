@@ -21,11 +21,10 @@
 
 ## 🌟 Core System Pillars
 
-### 1. 🌐 21-Source Remote Discovery Pipeline (100% Operational)
-A resilient, concurrent scraping engine executing via `Promise.allSettled()` with bounded watchdog timeouts and failure isolation across 21 global tech platforms:
-- **Direct ATS Portals:** Greenhouse, Ashby, Lever, Recruitee, SmartRecruiters, Workable
-- **Developer, Open Source & Student Fellowships:** Linux Foundation LFX Mentorship (CNCF), Simplify (Summer Internships & New Grad), HackerNews Who is Hiring, Arc.dev, BuiltIn, LinkedIn, Micro1
-- **Curated Remote Boards:** NoDesk Remote, Himalayas, WeWorkRemotely, Jobicy, RemoteOK, Remotive, Arbeitnow, HiringCafe
+### 1. 🌐 13-Provider Active Discovery Pipeline & 21-Platform Ingestion Suite (100% Operational)
+A resilient, concurrent scraping engine executing via `Promise.allSettled()` with bounded watchdog timeouts and failure isolation:
+- **Active Automated Cron Scrapers (13 Providers):** LinkedIn, Simplify (Summer Internships & New Grad), Himalayas, Jobicy, BuiltIn, HackerNews (Who is Hiring), Ashby, Linux Foundation LFX Mentorship (CNCF), NoDesk, InternList, Astra, Wellfound, Jobright
+- **Direct ATS Resolvers & Platform Normalizers (8 Adapters):** Greenhouse, Lever, Recruitee, SmartRecruiters, Workable, RemoteOK, Remotive, Arbeitnow, HiringCafe
 
 ### 2. 🎯 Match Studio & 2-Stage AI Scoring
 - **Stage 1 (Deterministic Fast Filter):** Evaluates experience bounds, posting recency, and keyword overlap in **< 10ms** across entire feeds.
@@ -161,7 +160,7 @@ npm run deploy:agent:heroku
 
 ### 6. Production Validation & Testing
 ```bash
-# Run unit & integration test suite (30 test files / 317 tests)
+# Run unit & integration test suite (64 test files / 592 tests)
 npm test
 
 # Typecheck

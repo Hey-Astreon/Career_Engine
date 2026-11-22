@@ -414,7 +414,7 @@ const ROUSHAN_PROJECTS = [
     techStack: "Next.js 16, Python, OCI, Docker, Redis",
     linksHtml: `<a href="https://astrework.app">Live Demo</a> | <a href="https://github.com/Hey-Astreon/Career_Engine">GitHub</a>`,
     bullets: [
-      `<b>Creator & Lead Backend Developer:</b> Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms.`,
+      `<b>Creator & Lead Backend Developer:</b> Built and run distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process, normalize, and deduplicate high-volume career listings across 13 active tech platforms.`,
       `<b>Cloud Infrastructure:</b> Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.`,
       `<b>Storage & Caching:</b> Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%.`,
     ],
@@ -470,7 +470,7 @@ const AYUSHI_PROJECTS = [
     linksHtml: `<a href="https://alyra-lock.vercel.app/">Live Demo</a> | <a href="https://github.com/Ayushi507/Zero-knowledge-password-manager-">GitHub</a>`,
     bullets: [
       `<b>Client-Side Vault UI:</b> Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.`,
-      `<b>Memory-Safe Crypto State:</b> Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.`,
+      `<b>Memory-Safe Crypto State:</b> Wired Web Crypto API (AES-GCM 256-bit, 600,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.`,
       `<b>Fast Encrypted Sync:</b> Shipped instant client-side vault search, password strength checks, and JWT-authenticated Express sync completing in under 200ms.`,
     ],
   },
@@ -483,7 +483,7 @@ const MASTER_RESUMES = [
     name: "ROUSHAN KUMAR",
     headline: "Software Developer — Backend & Cloud",
     contactHtml: ROUSHAN_CONTACT,
-    summaryHtml: `Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs <b>Stride</b> on Oracle Cloud, where Dockerized Playwright and Puppeteer pipelines harvest and deduplicate 14,000+ high-volume career listings daily using Turso SQLite and Redis. Enjoys solving hard concurrency, caching, and infrastructure problems.`,
+    summaryHtml: `Backend and Full-Stack Developer who builds web scrapers, APIs, and cloud services in Python and TypeScript. Created and runs <b>Stride</b> on Oracle Cloud, where Dockerized ingestion pipelines harvest, normalize, and deduplicate high-volume career listings across 13 active tech platforms using Turso LibSQL and Redis 7. Enjoys solving hard concurrency, caching, and infrastructure problems.`,
     skills: [
       ["Languages", "TypeScript, JavaScript, Python, Java, C#, SQL, Bash"],
       ["Backend & APIs", "FastAPI, Node.js, Express.js, .NET Core Web API, REST APIs, Microservices"],
