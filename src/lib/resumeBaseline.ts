@@ -93,7 +93,7 @@ export function getMasterResumeBaseline(
         email: "ayushi29507@gmail.com",
         portfolioUrl: "https://ayushiraj.me",
         githubUrl: "https://github.com/Ayushi507",
-        linkedinUrl: "https://www.linkedin.com/in/alrya404/",
+        linkedinUrl: "https://www.linkedin.com/in/ayushi-raj-299a99388/",
       },
       summary:
         "Full-Stack Developer building web applications, browser extensions, and AI tools with React, Next.js, TypeScript, and Python. Co-built Stride, shipping its live resume-scoring studio and the StridePilot Chrome extension (Manifest V3) for one-click job application autofill. Cares about clean UI, fast page loads, and practical security.",

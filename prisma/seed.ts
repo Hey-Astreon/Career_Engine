@@ -46,7 +46,7 @@ async function main() {
         githubUrl: "https://github.com/Hey-Astreon/Career_Engine",
         architecture: "Distributed multi-provider job harvesting engine on Oracle Cloud running containerized headless scrapers with Redis caching and Turso LibSQL WAL persistence.",
         bulletPoints: JSON.stringify([
-          "Creator & Lead Backend Developer: Built and run distributed scrapers on Oracle Cloud (OCI ARM64) that harvest and deduplicate 14,000+ career listings daily across 7 platforms.",
+          "Creator & Lead Backend Developer: Built and run distributed ingestion pipelines on Oracle Cloud (OCI ARM64) that process, normalize, and deduplicate high-volume career listings across 13 active tech platforms.",
           "Cloud Infrastructure: Deployed multi-stage Docker containers on OCI Ampere ARM64 behind Caddy HTTP/3 and Watchtower CI/CD, holding 99.9% uptime and sub-50ms API latency.",
           "Storage & Caching: Designed the data layer across Turso Cloud LibSQL (SQLite WAL) and Redis 7 LRU cache, cutting repeat query latency by 85%."
         ]),
@@ -60,7 +60,7 @@ async function main() {
         architecture: "FastAPI microservice backend parsing full-stack dependency graphs via Tree-Sitter AST compilers.",
         bulletPoints: JSON.stringify([
           "Backend Service: Built a FastAPI code-analysis backend that parses multi-file repositories into syntax trees and call graphs before running untrusted code.",
-          "Sandbox Isolation: Wrote a sandboxed Python subprocess runner with syscall and socket guards to intercept unauthorized file and network access and safely terminate rogue processes.",
+          "Sandbox Isolation: Engineered an AST-driven Python runner that statically validates syntax trees to block reflection and unauthorized I/O, isolating subprocesses with environment sanitization and 5s timeouts.",
           "AST & Vector Indexing: Wired Tree-Sitter AST parsers into ChromaDB vector search to resolve cross-file symbol references in under 200ms."
         ]),
       },
@@ -73,8 +73,8 @@ async function main() {
         architecture: "Client-side zero-knowledge architecture using AES-GCM 256-bit payload encryption.",
         bulletPoints: JSON.stringify([
           "Zero-Knowledge API: Built an Express.js and MongoDB sync backend that stores only ciphertext blobs and IVs so plaintext secrets never leave the client.",
-          "Cryptographic Core: Implemented AES-GCM (256-bit) encryption and 100,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.",
-          "Auth & Sync Hardening: Added JWT session rotation, strict CORS rules, and atomic document versioning that completes encrypted syncs in under 200ms."
+          "Cryptographic Core: Implemented AES-GCM (256-bit) encryption and 600,000-iteration PBKDF2-SHA256 key derivation using the browser Web Crypto API.",
+          "Auth & Sync Hardening: Implemented JWT authentication, strict CORS policies, and optimistic concurrency versioning to guarantee collision-free encrypted vault syncs in under 200ms."
         ]),
       },
     ],
@@ -124,7 +124,7 @@ async function main() {
       location: "Bihar, India (Open to Remote)",
       portfolioUrl: "https://ayushiraj.me",
       githubUrl: "https://github.com/Ayushi507",
-      linkedinUrl: "https://www.linkedin.com/in/alrya404/",
+      linkedinUrl: "https://www.linkedin.com/in/ayushi-raj-299a99388/",
       masterResumePath: "/candidates/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf",
     },
     create: {
@@ -136,7 +136,7 @@ async function main() {
       location: "Bihar, India (Open to Remote)",
       portfolioUrl: "https://ayushiraj.me",
       githubUrl: "https://github.com/Ayushi507",
-      linkedinUrl: "https://www.linkedin.com/in/alrya404/",
+      linkedinUrl: "https://www.linkedin.com/in/ayushi-raj-299a99388/",
       masterResumePath: "/candidates/2_Ayushi_Raj/Ayushi_Raj_Resume.pdf",
     },
 
@@ -180,7 +180,7 @@ async function main() {
         architecture: "Zero-knowledge security vault with AES-GCM 256-bit payload encryption and client-side isolation.",
         bulletPoints: JSON.stringify([
           "Client-Side Vault UI: Built a zero-knowledge React password manager that derives master keys strictly in browser memory so raw credentials never hit the server.",
-          "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 100,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",
+          "Memory-Safe Crypto State: Wired Web Crypto API (AES-GCM 256-bit, 600,000-iteration PBKDF2) into ephemeral React state that wipes decrypted keys on idle lock.",
           "Fast Encrypted Sync: Shipped instant client-side vault search, password strength checks, and JWT-authenticated Express sync completing in under 200ms."
         ]),
       },

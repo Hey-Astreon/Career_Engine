@@ -441,7 +441,7 @@ const ROUSHAN_PROJECTS = [
   },
 ];
 
-const AYUSHI_CONTACT = `Bihar, India (Open to Remote) | +91-8709852305 | <a href="mailto:ayushi29507@gmail.com">ayushi29507@gmail.com</a> | <a href="https://ayushiraj.me">ayushiraj.me</a> | <a href="https://github.com/Ayushi507">github.com/Ayushi507</a> | <a href="https://www.linkedin.com/in/alrya404/">linkedin.com/in/alrya404</a>`;
+const AYUSHI_CONTACT = `Bihar, India (Open to Remote) | +91-8709852305 | <a href="mailto:ayushi29507@gmail.com">ayushi29507@gmail.com</a> | <a href="https://ayushiraj.me">ayushiraj.me</a> | <a href="https://github.com/Ayushi507">github.com/Ayushi507</a> | <a href="https://www.linkedin.com/in/ayushi-raj-299a99388/">linkedin.com/in/ayushi-raj-299a99388</a>`;
 
 const AYUSHI_PROJECTS = [
   {

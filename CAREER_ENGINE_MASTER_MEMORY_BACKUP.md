@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 118: Forensic 3-Repo Readme & Resume Truth Audit, Discrepancy Reconciliation & Canonical Alignment)
+> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 119: Ayushi Raj Master Resume Forensic Audit, Real LinkedIn Verification & Seed Alignment)
 
 ---
 
@@ -4791,3 +4791,34 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Cross-Repository Truth Synchronization Law):** Resumes, READMEs, and production codebases must form a closed, non-contradictory graph of truth. Any specific number (e.g., number of scrapers, cryptographic iterations, test counts, or throughput figures) mentioned in a resume must match the repository's README and be directly defensible from the codebase. Discrepancies between co-creator resumes for the same shared project immediately compromise credibility in hiring loops.
 - **Status:** Complete. All 3 repositories synchronized, tested, committed, and pushed to GitHub. Master memory ledger updated to Phase 118.
+
+### Phase 119: Ayushi Raj Master Resume Forensic Audit, Real LinkedIn Verification & Seed Alignment (November 22, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Candidate Roushan requested a thorough, line-by-line verification of Co-Founder Ayushi Raj's Master Resume (`Ayushi_Raj_Resume.pdf`, `src/lib/resumeBaseline.ts`, `scripts/generate-all-candidate-resumes.mjs`).
+- **Deep Root Cause Diagnosis:**
+  - **1. Outdated/Broken LinkedIn Slug (`alrya404`):**
+    - Ayushi's contact header linked to `https://www.linkedin.com/in/alrya404/`, which was an early prototype typo/anagram that resulted in a broken page.
+    - Her actual, verified live LinkedIn profile on her official portfolio (`https://www.ayushiraj.me/`) is `https://www.linkedin.com/in/ayushi-raj-299a99388/`.
+  - **2. In-Memory Database Seed Desynchronization (`prisma/seed.ts`):**
+    - While `resumeBaseline.ts` and `generate-all-candidate-resumes.mjs` were updated in Phase 118, `prisma/seed.ts` still had legacy text (`100,000-iteration PBKDF2` and `14,000+ daily across 7 platforms`), meaning a database re-seed would have reverted the records.
+  - **3. Turso Cloud Schema Column Drift:**
+    - The remote Turso database `profiles` table lacked the standard EEOC and availability columns (`availability`, `race`, `disabilityStatus`, `hispanicLatino`, `veteranStatus`) added to local SQLite in earlier phases, causing `sync-to-turso.mjs` to fail on candidate profile, project, and simulation foreign-key insertions.
+- **The Concrete Surgical Fix:**
+  - **1. Synchronized Ayushi's Real LinkedIn Profile Everywhere:**
+    - Updated `src/lib/resumeBaseline.ts` line 96: `https://www.linkedin.com/in/ayushi-raj-299a99388/`.
+    - Updated `scripts/generate-all-candidate-resumes.mjs` line 444: `<a href="https://www.linkedin.com/in/ayushi-raj-299a99388/">linkedin.com/in/ayushi-raj-299a99388</a>`.
+    - Updated `src/app/(workspace)/resume-builder/page.tsx` line 221.
+    - Updated `prisma/seed.ts` lines 127 and 139.
+    - Updated StridePilot Chrome Extension: `extension/content.js` line 153 and `extension/popup.js` line 83.
+  - **2. Synchronized `prisma/seed.ts` Project Bullets:**
+    - Updated Roushan's Stride bullet to 13 active tech platforms.
+    - Updated Roushan's and Ayushi's Alyra Lock bullets to 600,000-iteration PBKDF2.
+  - **3. Migrated Turso Cloud `profiles` Table & Re-synced:**
+    - Added missing columns (`availability`, `race`, `disabilityStatus`, `hispanicLatino`, `veteranStatus`) to Turso Cloud `profiles`.
+    - Executed `scripts/sync-to-turso.mjs`: successfully synced 3/3 profiles, 6/6 projects, and 6/6 virtual experiences with 100% foreign key integrity.
+  - **4. Regenerated Master Resumes & Repackaged StridePilot Extension:**
+    - Ran `node scripts/generate-all-candidate-resumes.mjs`: Ayushi's resume passed all geometry checks (13.68mm bottom gap, max 1 skill line per category, max 2 lines per bullet, zero overflow, 100% single-page A4, 0 shared bullets).
+    - Repackaged `stridepilot-extension.zip` and `astrepilot-extension.zip` (337.1 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Candidate Profile Omnipresence Law):** Any candidate demographic or social identifier (LinkedIn, GitHub, Portfolio URL) must be validated against their live personal web domain before committing to baseline templates, database seeds, and browser extension autofill registries.
+- **Status:** Complete. Verified, tested, and pushed to `Hey-Astreon/Career_Engine` (`origin main`).

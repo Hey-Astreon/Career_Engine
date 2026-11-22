@@ -80,7 +80,7 @@ const STANDALONE_PROFILES = {
     streetAddress: 'Mirzapur, Nawada, Bihar',
     zipCode: '805110',
     addressType: 'Home',
-    linkedinUrl: 'https://www.linkedin.com/in/alrya404/',
+    linkedinUrl: 'https://www.linkedin.com/in/ayushi-raj-299a99388/',
     githubUrl: 'https://github.com/Ayushi507',
     portfolioUrl: 'https://ayushiraj.me',
     slug: 'ayushi',
