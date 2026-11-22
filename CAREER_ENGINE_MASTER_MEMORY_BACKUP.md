@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 115: Vercel CVE Security Firewall Resolution & Full Production Live Deployment on astreon.me)
+> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 116: Portrait Geometry & Optical Headroom Calibration on astreon.me)
 
 ---
 
@@ -4718,3 +4718,27 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (CI/CD Dependency Security Gate Law):** Cloud deployment platforms (Vercel, Cloudflare, AWS Amplify) enforce active CVE blocking on high-profile frameworks (like TanStack Start, Next.js, and Remix). Always audit dependency CVEs and verify Vercel deployment status APIs rather than assuming a successful Git push equates to a live production update.
 - **Status:** Complete, 100% verified LIVE in production on `https://www.astreon.me/`. All changes successfully deployed.
+
+### Phase 116: Portrait Geometry & Optical Headroom Calibration on astreon.me (November 22, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - On the live deployment of `https://www.astreon.me/`, candidate Roushan pointed out that the portrait image framing was awkward and broke the professional impression: the top of his hair and forehead were chopped off by the circular avatar frame.
+- **Deep Root Cause Diagnosis:**
+  - The source studio headshot was vertical/portrait format ($738 \times 1024$ px, aspect ratio ~0.72).
+  - In `src/sections/Identity.tsx`, the avatar was styled with `className="absolute inset-0 h-full w-full object-cover"`.
+  - When a $738 \times 1024$ image is placed inside a 1:1 circular container with default `object-cover` (`object-position: center`), the browser uniformly crops 143 pixels from the top and 143 pixels from the bottom.
+  - Because Roushan's hair began at $y=20$ px in the raw image, cropping 143 pixels sliced right through his hair down to his forehead, truncating his head while unnecessarily showing lower chest area.
+- **The Concrete Surgical Fix:**
+  - **1. Pixel-Level Portrait Extraction (`public/roushan.jpg` & `public/roushan.png`):**
+    - Extracted a canonical 1:1 square crop ($738 \times 738$ px, $y=0$ to $y=738$) from the raw high-res master with `sharp` at 95% quality.
+    - Captures the natural studio headroom ($y=0$ to $y=20$), the complete head of hair ($y=20$ to $y=120$), the eyes and nose at the 43% Golden Ratio optical center ($y=320$), the chin/goatee ($y=600$), and the dark jacket shoulders ($y=738$) anchoring the bottom of the circle.
+  - **2. Avatar Component Alignment (`src/sections/Identity.tsx`):**
+    - Updated image element to `className="absolute inset-0 h-full w-full object-cover object-center"`.
+    - Because the underlying asset is natively 1:1 square, `object-cover` maps 100% of the image into the container without any vertical or horizontal cropping.
+  - **3. Production Deployment & Live Verification:**
+    - Verified `npx tsc --noEmit` (0 errors) and `npm run build` (clean Vite + Nitro build).
+    - Pushed commit `8e7ae7d` to `origin main`.
+    - Monitored Vercel deployment: succeeded in under 15 seconds (`State: success`).
+    - Verified `https://www.astreon.me/roushan.jpg` returning HTTP 200 with new content length `136,888` bytes and updated ETag.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Avatar Square Pre-Crop Law):** Never feed an arbitrary rectangular portrait (3:4 or 4:5) directly to a circular CSS `object-cover` container without pre-cropping to a 1:1 square asset. Pre-cropping ensures the subject's headroom and optical center are permanently locked in, rendering flawlessly across all browsers, mobile screens, and social graph cards.
+- **Status:** Complete. Pushed to remote repository `https://github.com/Hey-Astreon/My-Main-Portfolio.git` (Commit `8e7ae7d`) and deployed live on `https://www.astreon.me/`.
