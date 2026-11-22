@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 116: Portrait Geometry & Optical Headroom Calibration on astreon.me)
+> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 117: Balanced Zoom-Out Portrait Geometry Recalibration on astreon.me)
 
 ---
 
@@ -4742,3 +4742,23 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Avatar Square Pre-Crop Law):** Never feed an arbitrary rectangular portrait (3:4 or 4:5) directly to a circular CSS `object-cover` container without pre-cropping to a 1:1 square asset. Pre-cropping ensures the subject's headroom and optical center are permanently locked in, rendering flawlessly across all browsers, mobile screens, and social graph cards.
 - **Status:** Complete. Pushed to remote repository `https://github.com/Hey-Astreon/My-Main-Portfolio.git` (Commit `8e7ae7d`) and deployed live on `https://www.astreon.me/`.
+
+### Phase 117: Balanced Zoom-Out Portrait Geometry Recalibration on astreon.me (November 22, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - After Phase 116 restored Roushan's hair, candidate Roushan noted that the picture was framed too closely ("far too close and my head is mostly noticeable"). In the 1:1 circular container, his face occupied ~54% of the circle width, creating an overly intense extreme close-up rather than a natural executive portrait.
+- **Deep Root Cause Diagnosis:**
+  - The raw camera asset ($738 \times 1024$) was tight across the shoulders.
+  - A direct 738x738 crop forced the face to span more than half of the circle's horizontal diameter.
+- **The Concrete Surgical Fix:**
+  - **1. Balanced Canvas Expansion & 20% Zoom Out (`scratch/make_balanced_zoom.cjs`):**
+    - Extended the canvas laterally by 85px on each side with `sharp` edge synthesis ($908 \times 908$ px total frame).
+    - Reduced face-to-frame ratio from 54% to a balanced **44%**, allowing his full shoulders, white t-shirt, and dark overshirt to naturally ground the bottom half of the circle.
+    - Preserved full hair and headroom ($y=0$ to $y=20$).
+  - **2. Asset Mirroring & Deployment:**
+    - Saved 908x908 balanced asset into `public/roushan.jpg` and `public/roushan.png`.
+    - Pushed commit `b389c1d` to `origin main`.
+    - Monitored Vercel deployment: completed with `State: success` in 14 seconds.
+    - Verified `https://www.astreon.me/roushan.jpg` HTTP 200 OK (size 77.1 KB, ETag `"ff6d229943f9e16cb3c01b3b9f751d43"`).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Avatar Optical Proportion Law):** In professional circular profile cards, the subject's face should occupy roughly 40%–45% of the circle diameter, not >50%. Pre-padding or expanding the canvas to 1.2x–1.25x the head width ensures natural shoulder fall-off and eliminates claustrophobic close-up distortion.
+- **Status:** Complete. Pushed to remote repository `https://github.com/Hey-Astreon/My-Main-Portfolio.git` (Commit `b389c1d`) and verified live on `https://www.astreon.me/`.
