@@ -249,6 +249,16 @@
     }
   }
 
+  async function attemptQuiz() {
+    const Sentry = window.StudyPilotSentry;
+    if (Sentry) {
+      if (activeHud) {
+        activeHud.setState('submitting', { statusText: 'Launching quiz attempt...' });
+      }
+      await Sentry.clickAttemptQuiz(document);
+    }
+  }
+
   // 6. Message Listener from Background & Popup
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'TOGGLE_HUD') {
@@ -293,4 +303,5 @@
   window.__STUDYPILOT_COMPLETE_VIDEO__ = completeVideoAndNext;
   window.__STUDYPILOT_NAVIGATE_NEXT__ = navigateNext;
   window.__STUDYPILOT_SUBMIT_SUMMARY__ = submitSummary;
+  window.__STUDYPILOT_ATTEMPT_QUIZ__ = attemptQuiz;
 })();

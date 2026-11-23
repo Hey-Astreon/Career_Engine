@@ -489,6 +489,10 @@
         badgeText = 'Quiz Summary';
         badgeClass = 'sp-badge review';
         subtitleText = 'Ready for Final Submission';
+      } else if (this.pageMode === 'quiz-view') {
+        badgeText = 'Quiz Portal';
+        badgeClass = 'sp-badge';
+        subtitleText = 'Click to Launch Quiz Attempt';
       } else if (this.pageMode === 'quiz-review') {
         badgeText = 'Quiz Complete';
         badgeClass = 'sp-badge review';
@@ -560,6 +564,12 @@
         ${this.pageMode === 'quiz-summary' && !isBusy ? `
           <button class="sp-action-btn" id="sp-submit-summary-btn">
             <span>⚡ Submit All & Finish</span>
+          </button>
+        ` : ''}
+
+        ${this.pageMode === 'quiz-view' && !isBusy ? `
+          <button class="sp-action-btn" id="sp-attempt-btn">
+            <span>⚡ Attempt Quiz</span>
           </button>
         ` : ''}
 
@@ -636,6 +646,15 @@
         summaryBtn.onclick = () => {
           if (typeof window.__STUDYPILOT_SUBMIT_SUMMARY__ === 'function') {
             window.__STUDYPILOT_SUBMIT_SUMMARY__();
+          }
+        };
+      }
+
+      const attemptBtn = this.shadow.getElementById('sp-attempt-btn');
+      if (attemptBtn) {
+        attemptBtn.onclick = () => {
+          if (typeof window.__STUDYPILOT_ATTEMPT_QUIZ__ === 'function') {
+            window.__STUDYPILOT_ATTEMPT_QUIZ__();
           }
         };
       }

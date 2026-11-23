@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 122: Stride StudyPilot 2.0 Autonomous 5-Agent Academic Swarm Extension for Amity Online AMIGO & Moodle LMS)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 123: Stride StudyPilot 2.0 Summary "Return to Attempt" Elimination & Autonomous Modal Confirmation Engine)
 
 ---
 
@@ -4948,3 +4948,47 @@ graph TD
   - **Rule (Academic Swarm Dual-Option Audit Law):** Whenever multiple choice questions contain meta-options such as "Both of these", "All of the above", or "None of the above", a single LLM evaluation must never be trusted. The prompt must force truth-table evaluation for every individual option, and an independent Auditor agent must execute a logical consensus check before selecting an answer.
   - **Rule (LMS Synthetic Interaction & Pacing Law):** LMS platforms (Moodle, Blackboard, Canvas) log student activity timestamps and event chains. Automated selection must never dispatch zero-delay batches; it must enforce Gaussian pacing delays ($2.2\text{s} \pm 0.7\text{s}$) and simulate standard browser event bubbling (`focus` $\rightarrow$ `click` on label $\rightarrow$ `input.checked = true` $\rightarrow$ `change` $\rightarrow$ `blur`) to prevent anti-cheating velocity flags and state loss.
 - **Status:** Complete. Tested, verified, packaged, and committed to repository.
+
+### Phase 123: Stride StudyPilot 2.0 Summary "Return to Attempt" Elimination & Autonomous Modal Confirmation Engine (November 24, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - On live Amity Online AMIGO Quiz 1.2.1 (*Green Strategic Points*), StudyPilot successfully solved both questions with 100% accuracy, clicked "Finish attempt ...", navigated to `summary.php`, but instead of clicking "Submit all and finish", it auto-clicked "Return to attempt", causing Moodle to navigate backward to `attempt.php`.
+- **Deep Root Cause Diagnosis:**
+  - In Moodle's `mod/quiz/summary.php`, the template (`mod/quiz/renderer.php`) renders two `.singlebutton` containers in document order:
+    1. `<div class="singlebutton"><form method="post" action="...attempt.php"><button class="btn btn-secondary">Return to attempt</button></form></div>`
+    2. `<div class="singlebutton"><form method="post" action="...processattempt.php"><button class="btn btn-primary">Submit all and finish</button></form></div>`
+  - In `studypilot/agent/sentry.js`, `findSummarySubmitButton(doc)` used the query selector:
+    `'.btn-finishattempt, input[value*="Submit all and finish" i], button[value*="Submit all and finish" i], .singlebutton input[type="submit"], .singlebutton button'`
+  - Because `.singlebutton button` was present in the selector, the browser's DOM engine returned the FIRST matching button in document order: the "Return to attempt" button!
+  - Sentry called `.click()` on it, submitting the form back to `attempt.php` instead of finishing the quiz.
+  - Furthermore, clicking "Submit all and finish" in Moodle does not perform a direct POST; it triggers a Bootstrap or YUI confirmation modal ("Submit all your answers and finish?") requiring an active confirmation click.
+- **The Concrete Surgical Fix:**
+  - **1. Form Action & Negative Keyword Discrimination (`studypilot/agent/sentry.js`):**
+    - Refactored `findSummarySubmitButton(doc)` into a 4-tier hierarchy:
+      - Strategy 1: Target `form[action*="processattempt.php"]` (Moodle's canonical submission action), completely isolating it from the `attempt.php` form.
+      - Strategy 2: Explicit selectors matching "Submit all and finish" with negative filtering.
+      - Strategy 3: Text scanning across all buttons and inputs with strict exclusion of any element containing `'return'`, `'back'`, or `'cancel'`.
+      - Strategy 4: Fallback inside `.singlebutton` prioritizing `.btn-primary` and strictly skipping `'return'`/`'back'`.
+  - **2. Resilient Modal Polling & Confirmation Engine (`studypilot/agent/sentry.js`):**
+    - Built `confirmSubmitAllModal(doc)` with a 5000ms active polling loop (200ms intervals).
+    - Detects modal containers (`.moodle-dialogue-confirm`, `.modal.show`, `div[role="dialog"]`, `.modal-dialog`).
+    - Strictly filters out Cancel, Close, and Dismiss buttons.
+    - Matches primary confirmation elements (`button[data-action="save"]`, `button[data-action="confirm"]`, `button.btn-primary`, or text containing "submit all" or "finish") and dispatches a verified `.click()`.
+  - **3. Specific Finish Review & Attempt Quiz Actuators (`sentry.js`):**
+    - Refactored `clickFinishReview` to target `a.mod_quiz-finish-review` and text "Finish review", eliminating overly broad `view.php?id=` selector matches that risked clicking breadcrumb links.
+    - Added `clickAttemptQuiz(doc)` targeting `input[value*="Attempt quiz"]`, `form[action*="attempt.php"] button`, and "Attempt quiz" / "Re-attempt quiz" links on `mod/quiz/view.php`.
+  - **4. Quiz Portal Mode & Bottom Navigation (`scribe.js`, `navigator.js`, `hud-ui.js`, `content.js`):**
+    - Added `quiz-view` page mode detection in `scribe.js` for `mod/quiz/view.php`.
+    - Enhanced `hud-ui.js` with "Quiz Portal" badge and 1-click `⚡ Attempt Quiz` button wired to `window.__STUDYPILOT_ATTEMPT_QUIZ__`.
+    - Enhanced `navigator.js` to reliably discover AMIGO bottom navigation (`#next-activity-link a`, `.activity-navigation .next a`, and text-scan for "Next Activity >").
+  - **5. Comprehensive Automated Test Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added 3 new unit tests in Section 6:
+      - Tested DOM simulation where "Return to attempt" is deliberately placed FIRST in DOM order; verified `findSummarySubmitButton` ignores it and returns "Submit all and finish".
+      - Tested modal polling loop; verified primary confirmation button is clicked and Cancel button is ignored.
+      - Tested Finish Review and Attempt Quiz button discovery and actuation.
+    - All 14 tests passing 100%. TypeScript typecheck passes with 0 errors.
+  - **6. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Generated fresh `public/downloads/studypilot-extension.zip` (35.3 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Form Action Discrimination Law):** When navigating or submitting multi-step forms that contain both forward and backward actions (e.g. Moodle's `summary.php` with "Return to attempt" and "Submit all and finish"), NEVER use generic container selectors like `.singlebutton button` or `form button`. Always discriminate buttons by their parent form's canonical destination (`action*="processattempt.php"`) and explicitly blacklist reverse keywords (`return`, `back`, `cancel`, `previous`).
+  - **Rule (Asynchronous Modal Polling Law):** Automated submission through UI confirmation modals must never rely on a single delayed check (`setTimeout` once after 1s). Dynamic JavaScript frameworks (Bootstrap, YUI, React) take variable durations ($200\text{ms} - 2000\text{ms}$) to render or animate dialog overlays. Always execute an active polling loop ($200\text{ms}$ ticks up to $5000\text{ms}$) that searches specifically within the active modal container (`.modal.show`, `div[role="dialog"]`) and strictly excludes secondary or dismiss buttons.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.

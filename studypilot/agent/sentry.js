@@ -103,12 +103,20 @@
     const directMatch = doc.querySelector(
       '#mod_quiz-next-nav, input[name="next"], button[name="next"], button.mod_quiz-next-nav, input[value*="Finish attempt" i], button[value*="Finish attempt" i], .submitbtns input, .submitbtns button'
     );
-    if (directMatch) return directMatch;
+    if (directMatch) {
+      const txt = (directMatch.innerText || directMatch.textContent || directMatch.value || '').trim().toLowerCase();
+      if (!txt.includes('previous') && !txt.includes('back')) {
+        return directMatch;
+      }
+    }
 
     // 2. Text-content search across all buttons, inputs, and links
     const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.endtestlink, a.btn'));
     for (const el of candidates) {
       const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt.includes('previous') || txt.includes('back')) {
+        continue;
+      }
       if (txt.includes('finish attempt') || txt.includes('next page') || txt.includes('next >') || txt.includes('next')) {
         return el;
       }
@@ -129,50 +137,101 @@
   }
 
   function findSummarySubmitButton(doc = document) {
-    // 1. Standard summary.php submit buttons
-    const direct = doc.querySelector(
-      '.btn-finishattempt, input[value*="Submit all and finish" i], button[value*="Submit all and finish" i], .singlebutton input[type="submit"], .singlebutton button'
-    );
-    if (direct) return direct;
+    // Strategy 1: Target the canonical form that posts to processattempt.php
+    // In Moodle summary.php, "Return to attempt" points to attempt.php, whereas "Submit all and finish" points to processattempt.php!
+    const processForm = doc.querySelector('form[action*="processattempt.php"]');
+    if (processForm) {
+      const submitBtn = processForm.querySelector('button[type="submit"], input[type="submit"], button, input');
+      if (submitBtn) return submitBtn;
+    }
 
-    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn'));
-    for (const el of candidates) {
+    // Strategy 2: Explicit selectors matching "Submit all and finish"
+    const explicitCandidates = Array.from(
+      doc.querySelectorAll('.btn-finishattempt, input[value*="Submit all and finish" i], button[value*="Submit all and finish" i]')
+    );
+    for (const el of explicitCandidates) {
       const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
-      if (txt.includes('submit all and finish') || txt.includes('submit all')) {
+      if (!txt.includes('return') && !txt.includes('back') && !txt.includes('cancel')) {
         return el;
       }
     }
+
+    // Strategy 3: Text search across all buttons & inputs, STRICTLY filtering out any return/back/cancel buttons
+    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn'));
+    for (const el of candidates) {
+      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt.includes('return') || txt.includes('back') || txt.includes('cancel')) {
+        continue; // REJECT: this avoids the "Return to attempt" trap
+      }
+      if (txt.includes('submit all and finish') || txt.includes('submit all') || txt.includes('finish and submit')) {
+        return el;
+      }
+    }
+
+    // Strategy 4: Fallback inside .singlebutton or .submitbtns, ensuring it is NOT return/back
+    const fallbackBtns = Array.from(
+      doc.querySelectorAll('.singlebutton button, .singlebutton input[type="submit"], .submitbtns button, .submitbtns input')
+    );
+    for (const btn of fallbackBtns) {
+      const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
+      if (txt.includes('return') || txt.includes('back') || txt.includes('cancel')) {
+        continue;
+      }
+      if (btn.classList && (btn.classList.contains('btn-primary') || btn.classList.contains('btn-finishattempt'))) {
+        return btn;
+      }
+      if (txt.includes('submit') || txt.includes('finish')) {
+        return btn;
+      }
+    }
+
     return null;
   }
 
   async function confirmSubmitAllModal(doc = document) {
-    // 1. Check for summary page 'Submit all and finish' button first
+    // 1. If summary submit button is on page, click it to trigger modal dialog
     const summaryBtn = findSummarySubmitButton(doc);
     if (summaryBtn) {
-      await sleep(1000);
+      await sleep(600);
       summaryBtn.click();
-      await sleep(1200);
     }
 
-    // 2. Detect Moodle confirmation modal
-    const modalBtn = doc.querySelector(
-      '.moodle-dialogue-confirm input[value*="Submit all"], .modal-dialog button.btn-primary, button[data-action="save"], .modal-footer button.btn-primary'
-    );
+    // 2. Poll for Moodle confirmation dialog up to 5 seconds (200ms ticks)
+    const startTime = Date.now();
+    const maxWaitMs = 5000;
 
-    if (modalBtn) {
-      await sleep(1000);
-      modalBtn.click();
-      return true;
-    }
+    while (Date.now() - startTime < maxWaitMs) {
+      await sleep(200);
 
-    // Modal text fallback
-    const modalButtons = Array.from(doc.querySelectorAll('.modal button, .moodle-dialogue input, div[role="dialog"] button'));
-    for (const btn of modalButtons) {
-      const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
-      if (txt.includes('submit all and finish') || txt.includes('submit')) {
-        await sleep(800);
-        btn.click();
-        return true;
+      // Check modal containers: Boost modal, YUI dialogue, or generic dialog
+      const modal = doc.querySelector(
+        '.moodle-dialogue-confirm, .modal.show, div[role="dialog"], .moodle-dialogue, .modal-dialog'
+      );
+
+      // Search within modal container if present, otherwise across doc
+      const searchRoot = modal || doc;
+      const modalBtns = Array.from(
+        searchRoot.querySelectorAll(
+          'button.btn-primary, input.btn-primary, button[data-action="save"], button[data-action="confirm"], .confirmation-buttons input, button[type="submit"], input[type="submit"], button'
+        )
+      );
+
+      for (const btn of modalBtns) {
+        const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
+        // Strictly ignore cancel / close / dismiss / secondary buttons
+        if (txt.includes('cancel') || txt.includes('close') || txt.includes('dismiss') || txt.includes('return')) {
+          continue;
+        }
+
+        const isSaveAction = btn.getAttribute('data-action') === 'save' || btn.getAttribute('data-action') === 'confirm';
+        const isPrimary = btn.classList && btn.classList.contains('btn-primary');
+        const hasSubmitText = txt.includes('submit all') || txt.includes('submit') || txt.includes('finish');
+
+        if (isSaveAction || (isPrimary && hasSubmitText) || hasSubmitText) {
+          await sleep(400);
+          btn.click();
+          return true;
+        }
       }
     }
 
@@ -180,18 +239,57 @@
   }
 
   async function clickFinishReview(doc = document) {
-    const finishLink = doc.querySelector('a.mod_quiz-finish-review, .finishreview a, a[href*="view.php?id="]');
+    // 1. Specific Moodle review finish link
+    const finishLink = doc.querySelector('a.mod_quiz-finish-review, .finishreview a, .mod_quiz-next-nav');
     if (finishLink) {
-      await sleep(1000);
-      finishLink.click();
+      const txt = (finishLink.innerText || finishLink.textContent || '').trim().toLowerCase();
+      if (!txt.includes('return') && !txt.includes('back')) {
+        await sleep(1000);
+        finishLink.click();
+        return true;
+      }
+    }
+
+    // 2. Text search for Finish review
+    const links = Array.from(doc.querySelectorAll('a, button, input[type="button"], input[type="submit"]'));
+    for (const el of links) {
+      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt.includes('finish review')) {
+        await sleep(1000);
+        el.click();
+        return true;
+      }
+    }
+
+    // 3. Fallback: Course link
+    for (const el of links) {
+      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt.includes('back to course') || txt.includes('return to course')) {
+        await sleep(1000);
+        el.click();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async function clickAttemptQuiz(doc = document) {
+    // Direct attempt quiz button on mod/quiz/view.php
+    const directBtn = doc.querySelector(
+      'input[value*="Attempt quiz" i], button[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], button[value*="Continue the last attempt" i], input[value*="Re-attempt quiz" i], button[value*="Re-attempt quiz" i], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
+    );
+    if (directBtn) {
+      await sleep(600);
+      directBtn.click();
       return true;
     }
 
-    const links = Array.from(doc.querySelectorAll('a, button'));
-    for (const el of links) {
-      const txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-      if (txt.includes('finish review') || txt.includes('back to course')) {
-        await sleep(1000);
+    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], a.btn'));
+    for (const el of candidates) {
+      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt.includes('attempt quiz') || txt.includes('re-attempt quiz') || txt.includes('continue the last attempt')) {
+        await sleep(600);
         el.click();
         return true;
       }
@@ -226,6 +324,7 @@
     findSummarySubmitButton,
     confirmSubmitAllModal,
     clickFinishReview,
+    clickAttemptQuiz,
     completeLectureVideo,
     sleep
   };

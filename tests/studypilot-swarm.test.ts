@@ -238,6 +238,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(StudyPilotScribe.detectPageMode(doc, "https://amigo.amityonline.com/mod/quiz/summary.php?attempt=105094177&cmid=239078")).toBe("quiz-summary");
       expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/page/view.php?id=194191")).toBe("lecture-page");
       expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/quiz/review.php?attempt=105094177")).toBe("quiz-review");
+      expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/quiz/view.php?id=238965")).toBe("quiz-view");
     });
   });
 
@@ -383,6 +384,173 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const audited = StudyPilotAuditor.auditAnswer(q4 as any, scholarAnswer);
       expect(audited.selectedKey).toBe("a");
       expect(audited.verified).toBe(true);
+    });
+  });
+
+  describe("6. Summary Page Submission & Confirmation Modal Lifecycle", () => {
+    it("strictly avoids 'Return to attempt' button and selects 'Submit all and finish'", () => {
+      let returnBtnClicked = false;
+      let submitBtnClicked = false;
+
+      const returnBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-secondary",
+        innerText: "Return to attempt",
+        textContent: "Return to attempt",
+        value: "Return to attempt",
+        classList: { contains: (cls: string) => cls === "btn-secondary" },
+        click: () => { returnBtnClicked = true; },
+      };
+
+      const submitBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-primary",
+        innerText: "Submit all and finish",
+        textContent: "Submit all and finish",
+        value: "Submit all and finish",
+        classList: { contains: (cls: string) => cls === "btn-primary" },
+        click: () => { submitBtnClicked = true; },
+      };
+
+      const returnForm = {
+        tagName: "FORM",
+        action: "https://amigo.amityonline.com/mod/quiz/attempt.php?attempt=105099180&cmid=238965",
+        querySelector: (sel: string) => sel.includes("button") ? returnBtn : null,
+      };
+
+      const processForm = {
+        tagName: "FORM",
+        action: "https://amigo.amityonline.com/mod/quiz/processattempt.php",
+        querySelector: (sel: string) => sel.includes("button") ? submitBtn : null,
+      };
+
+      const mockSummaryDoc = {
+        querySelector(sel: string) {
+          if (sel.includes('form[action*="processattempt.php"]')) {
+            return processForm;
+          }
+          if (sel.includes("Submit all and finish")) {
+            return submitBtn;
+          }
+          return null;
+        },
+        querySelectorAll(sel: string) {
+          if (sel.includes("singlebutton") || sel.includes("button")) {
+            // Note: returnBtn is deliberately placed FIRST in DOM order to simulate Moodle layout
+            return [returnBtn, submitBtn];
+          }
+          return [];
+        },
+      };
+
+      const selectedBtn = StudyPilotSentry.findSummarySubmitButton(mockSummaryDoc as any);
+      expect(selectedBtn).not.toBeNull();
+      expect((selectedBtn as any).innerText).toBe("Submit all and finish");
+      expect((selectedBtn as any).innerText).not.toContain("Return to attempt");
+
+      (selectedBtn as any).click();
+      expect(submitBtnClicked).toBe(true);
+      expect(returnBtnClicked).toBe(false);
+    });
+
+    it("polls for and confirms the Moodle confirmation modal while ignoring Cancel", async () => {
+      let modalConfirmed = false;
+      let modalCancelled = false;
+
+      const modalCancelBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-secondary",
+        innerText: "Cancel",
+        textContent: "Cancel",
+        getAttribute: (attr: string) => attr === "data-action" ? "cancel" : null,
+        classList: { contains: (cls: string) => cls === "btn-secondary" },
+        click: () => { modalCancelled = true; },
+      };
+
+      const modalSubmitBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-primary",
+        innerText: "Submit all and finish",
+        textContent: "Submit all and finish",
+        getAttribute: (attr: string) => attr === "data-action" ? "save" : null,
+        classList: { contains: (cls: string) => cls === "btn-primary" },
+        click: () => { modalConfirmed = true; },
+      };
+
+      const mockModal = {
+        tagName: "DIV",
+        className: "modal show",
+        querySelectorAll: (sel: string) => [modalCancelBtn, modalSubmitBtn],
+      };
+
+      const mockModalDoc = {
+        querySelector(sel: string) {
+          if (sel.includes('form[action*="processattempt.php"]')) {
+            return null; // summary button already clicked or absent
+          }
+          if (sel.includes("modal") || sel.includes("dialog")) {
+            return mockModal;
+          }
+          return null;
+        },
+        querySelectorAll: (sel: string) => [],
+      };
+
+      const confirmed = await StudyPilotSentry.confirmSubmitAllModal(mockModalDoc as any);
+      expect(confirmed).toBe(true);
+      expect(modalConfirmed).toBe(true);
+      expect(modalCancelled).toBe(false);
+    });
+
+    it("handles Finish Review and Attempt Quiz button actuations properly", async () => {
+      let reviewFinished = false;
+      let quizAttemptStarted = false;
+
+      const finishReviewLink = {
+        tagName: "A",
+        className: "mod_quiz-finish-review",
+        innerText: "Finish review",
+        textContent: "Finish review",
+        href: "https://amigo.amityonline.com/mod/quiz/view.php?id=238965",
+        click: () => { reviewFinished = true; },
+      };
+
+      const mockReviewDoc = {
+        querySelector(sel: string) {
+          if (sel.includes("finish-review") || sel.includes("finishreview")) {
+            return finishReviewLink;
+          }
+          return null;
+        },
+        querySelectorAll: () => [finishReviewLink],
+      };
+
+      const reviewResult = await StudyPilotSentry.clickFinishReview(mockReviewDoc as any);
+      expect(reviewResult).toBe(true);
+      expect(reviewFinished).toBe(true);
+
+      const attemptQuizBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-primary",
+        innerText: "Attempt quiz",
+        textContent: "Attempt quiz",
+        value: "Attempt quiz",
+        click: () => { quizAttemptStarted = true; },
+      };
+
+      const mockViewDoc = {
+        querySelector(sel: string) {
+          if (sel.includes("Attempt quiz")) {
+            return attemptQuizBtn;
+          }
+          return null;
+        },
+        querySelectorAll: () => [attemptQuizBtn],
+      };
+
+      const attemptResult = await StudyPilotSentry.clickAttemptQuiz(mockViewDoc as any);
+      expect(attemptResult).toBe(true);
+      expect(quizAttemptStarted).toBe(true);
     });
   });
 });

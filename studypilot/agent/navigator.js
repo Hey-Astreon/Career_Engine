@@ -35,10 +35,24 @@
     }
 
     // Fallback: check standard Moodle bottom navigation (activity-navigation)
-    const nextActivityLink = doc.querySelector('.activity-navigation .next a, a[title*="Next" i], #next-activity-link, .nav-item-next a');
+    const nextActivityLink = doc.querySelector(
+      '#next-activity-link a, #next-activity-link, .activity-navigation .next a, a[title*="Next" i], .nav-item-next a, .activity-navigation a[title*="Next" i]'
+    );
     if (nextActivityLink) {
-      nextActivityLink.click();
-      return { success: true, target: 'Next Activity', url: nextActivityLink.href };
+      if (typeof nextActivityLink.click === 'function') {
+        nextActivityLink.click();
+        return { success: true, target: 'Next Activity', url: nextActivityLink.href };
+      }
+    }
+
+    // Text search fallback across all links
+    const allLinks = Array.from(doc.querySelectorAll('a.btn, .activity-navigation a, a'));
+    for (const link of allLinks) {
+      const txt = (link.innerText || link.textContent || '').trim().toLowerCase();
+      if (txt.includes('next activity') || txt === 'next >' || txt.includes('next chapter') || txt.includes('next topic')) {
+        link.click();
+        return { success: true, target: link.innerText.trim(), url: link.href };
+      }
     }
 
     return { success: false, reason: 'No next activity found in course curriculum' };

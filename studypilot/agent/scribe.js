@@ -43,6 +43,9 @@
     if (currentUrl.includes('/mod/quiz/attempt.php') || (doc.querySelector && doc.querySelector('.que'))) {
       return 'quiz-attempt';
     }
+    if (currentUrl.includes('/mod/quiz/view.php') || (doc.querySelector && doc.querySelector('.quizinfo, #intro, input[value*="Attempt quiz" i], button[value*="Attempt quiz" i]'))) {
+      return 'quiz-view';
+    }
     if (currentUrl.includes('/mod/page/view.php') || currentUrl.includes('/mod/lesson/') || (doc.querySelector && doc.querySelector('.modtype_page, video, iframe[src*="video"]'))) {
       return 'lecture-page';
     }
