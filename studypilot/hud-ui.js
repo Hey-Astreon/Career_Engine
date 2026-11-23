@@ -14,6 +14,297 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  const SHADOW_CSS = `
+:host {
+  all: initial;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --sp-canvas: #ffffff;
+  --sp-surface: #f8fafc;
+  --sp-ink: #0f172a;
+  --sp-ink-muted: #64748b;
+  --sp-border: rgba(226, 232, 240, 0.8);
+  --sp-blue: #2563eb;
+  --sp-blue-hover: #1d4ed8;
+  --sp-green: #10b981;
+  --sp-amber: #f59e0b;
+  --sp-red: #ef4444;
+  --sp-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+}
+
+.sp-hud-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 360px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--sp-border);
+  border-radius: 16px;
+  box-shadow: var(--sp-shadow);
+  padding: 16px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  transition: box-shadow 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 2147483647;
+}
+
+.sp-hud-container.is-dragging {
+  cursor: grabbing !important;
+  opacity: 0.92;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  transition: none !important;
+}
+
+.sp-hud-container.minimized {
+  width: auto;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 30px;
+}
+
+.sp-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: grab;
+  user-select: none;
+  padding-bottom: 2px;
+}
+
+.sp-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--sp-ink);
+  letter-spacing: -0.01em;
+}
+
+.sp-drag-icon {
+  color: var(--sp-ink-muted);
+  font-size: 14px;
+  opacity: 0.7;
+  margin-right: 2px;
+}
+
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--sp-blue);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.sp-badge.lecture {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--sp-green);
+}
+
+.sp-badge.review {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--sp-amber);
+}
+
+.sp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sp-green);
+}
+
+.sp-status-dot.busy {
+  background: var(--sp-amber);
+  animation: sp-pulse 1s infinite alternate;
+}
+
+@keyframes sp-pulse {
+  from { opacity: 0.4; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.1); }
+}
+
+.sp-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sp-btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--sp-ink-muted);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sp-btn-icon:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--sp-ink);
+}
+
+.sp-course-info {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sp-course-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sp-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-course-subtitle {
+  font-size: 11px;
+  color: var(--sp-ink-muted);
+}
+
+.sp-next-preview {
+  font-size: 11px;
+  color: var(--sp-blue);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 4px;
+  border-top: 1px dashed var(--sp-border);
+}
+
+.sp-action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--sp-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease, transform 0.05s active;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.sp-action-btn:hover {
+  background: var(--sp-blue-hover);
+}
+
+.sp-action-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.sp-action-btn-secondary {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  border: 1px solid var(--sp-border);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.sp-action-btn-secondary:hover {
+  background: #ffffff;
+  border-color: var(--sp-blue);
+  color: var(--sp-blue);
+}
+
+.sp-error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sp-progress-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: rgba(226, 232, 240, 0.8);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.sp-progress-bar-fill {
+  height: 100%;
+  background: var(--sp-green);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.sp-log-container {
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.sp-log-item {
+  font-size: 11px;
+  background: var(--sp-surface);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sp-log-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--sp-ink);
+}
+
+.sp-log-reason {
+  color: var(--sp-ink-muted);
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+`;
+
   class StudyPilotHUD {
     constructor() {
       this.host = null;
@@ -40,40 +331,45 @@
       this._onDragEnd = this._onDragEnd.bind(this);
     }
 
-    async mount() {
-      if (document.getElementById('studypilot-root')) {
-        this.host = document.getElementById('studypilot-root');
-      } else {
-        this.host = document.createElement('div');
-        this.host.id = 'studypilot-root';
-        document.body.appendChild(this.host);
+    mount() {
+      // 1. Remove any previous instance cleanly to guarantee no duplicate ShadowRoot DOMException
+      const existing = document.getElementById('studypilot-root');
+      if (existing) {
+        existing.remove();
       }
+
+      this.host = document.createElement('div');
+      this.host.id = 'studypilot-root';
+      this.host.style.all = 'initial';
+      this.host.style.position = 'fixed';
+      this.host.style.zIndex = '2147483647';
+      document.body.appendChild(this.host);
 
       this.shadow = this.host.attachShadow({ mode: 'closed' });
 
-      // Load Shadow CSS via Background Relayer
-      const css = await new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-          chrome.runtime.sendMessage({ action: 'GET_SHADOW_CSS' }, (res) => {
-            resolve(res && res.css ? res.css : '');
-          });
-        } else {
-          resolve('');
-        }
-      });
-
+      // 2. Synchronous Instant Inlined CSS (Zero network dependency)
       const style = document.createElement('style');
-      style.textContent = css;
+      style.textContent = SHADOW_CSS;
       this.shadow.appendChild(style);
 
       this.container = document.createElement('div');
       this.container.className = 'sp-hud-container';
       this.shadow.appendChild(this.container);
 
-      // Restore previously dragged position if present
+      // 3. Restore previously dragged position if present
       this.restorePosition();
 
       this.render();
+    }
+
+    show() {
+      if (!this.container) return;
+      this.container.style.display = 'flex';
+    }
+
+    hide() {
+      if (!this.container) return;
+      this.container.style.display = 'none';
     }
 
     toggle() {
@@ -296,7 +592,7 @@
 
       const closeBtn = this.shadow.getElementById('sp-close-btn');
       if (closeBtn) {
-        closeBtn.onclick = () => this.toggle();
+        closeBtn.onclick = () => this.hide();
       }
 
       const solveBtn = this.shadow.getElementById('sp-solve-btn');

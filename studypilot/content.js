@@ -19,16 +19,20 @@
   let curriculumPlan = { items: [], currentItem: null, nextItem: null };
 
   // 1. Initialize or Toggle HUD
-  async function toggleStudyPilotHUD() {
-    if (activeHud) {
-      activeHud.toggle();
+  function toggleStudyPilotHUD(forceOpen = false) {
+    if (!activeHud) {
+      if (typeof window.StudyPilotHUD !== 'undefined') {
+        activeHud = new window.StudyPilotHUD();
+        activeHud.mount();
+        scanCurrentPage();
+      }
       return;
     }
 
-    if (typeof window.StudyPilotHUD !== 'undefined') {
-      activeHud = new window.StudyPilotHUD();
-      await activeHud.mount();
-      scanCurrentPage();
+    if (forceOpen) {
+      activeHud.show();
+    } else {
+      activeHud.toggle();
     }
   }
 
@@ -138,7 +142,7 @@
           });
         }
 
-        // Step 1: Scholar solves
+        // Step 1: Scholar solves via background network stack
         const scholarAns = await Scholar.solveQuestion(q, courseContext, config);
 
         // Step 2: Auditor cross-examines & consensus
@@ -197,7 +201,7 @@
     } catch (err) {
       console.error('[StudyPilot] Swarm execution error:', err);
       if (activeHud) {
-        activeHud.setState('error', { error: err.message });
+        activeHud.setState('error', { error: err.message || 'Error occurred while solving' });
       }
     } finally {
       isSolving = false;
@@ -248,8 +252,14 @@
   // 6. Message Listener from Background & Popup
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'TOGGLE_HUD') {
-      toggleStudyPilotHUD();
-      sendResponse({ status: 'toggled' });
+      toggleStudyPilotHUD(request.forceOpen === true);
+      sendResponse({ status: 'ok' });
+      return false;
+    }
+
+    if (request.action === 'SHOW_HUD') {
+      toggleStudyPilotHUD(true);
+      sendResponse({ status: 'shown' });
       return false;
     }
 
@@ -271,10 +281,10 @@
     }
   });
 
-  // Auto-scan and auto-mount on page idle
+  // Auto-scan and auto-mount HUD on page load
   setTimeout(() => {
-    toggleStudyPilotHUD();
-  }, 1000);
+    toggleStudyPilotHUD(true);
+  }, 250);
 
   // Global test bridge
   window.__STUDYPILOT_TOGGLE_HUD__ = toggleStudyPilotHUD;

@@ -33,8 +33,38 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLaunch.onclick = async () => {
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (activeTab && activeTab.id) {
-        chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }, () => {
-          window.close();
+        chrome.tabs.sendMessage(activeTab.id, { action: 'SHOW_HUD', forceOpen: true }, (res) => {
+          if (chrome.runtime.lastError || !res) {
+            // Fallback: programmatic injection if page was opened before extension reload
+            if (chrome.scripting && chrome.scripting.executeScript) {
+              chrome.scripting.executeScript({
+                target: { tabId: activeTab.id },
+                files: [
+                  'hud-ui.js',
+                  'agent/scribe.js',
+                  'agent/scholar.js',
+                  'agent/auditor.js',
+                  'agent/sentry.js',
+                  'agent/navigator.js',
+                  'content.js'
+                ]
+              }).then(() => {
+                if (chrome.scripting.insertCSS) {
+                  chrome.scripting.insertCSS({ target: { tabId: activeTab.id }, files: ['hud.css'] }).catch(() => {});
+                }
+                setTimeout(() => {
+                  chrome.tabs.sendMessage(activeTab.id, { action: 'SHOW_HUD', forceOpen: true }).catch(() => {});
+                  window.close();
+                }, 200);
+              }).catch(() => {
+                window.close();
+              });
+            } else {
+              window.close();
+            }
+          } else {
+            window.close();
+          }
         });
       }
     };
