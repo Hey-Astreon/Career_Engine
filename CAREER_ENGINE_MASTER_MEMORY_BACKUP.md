@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 123: Stride StudyPilot 2.0 Summary "Return to Attempt" Elimination & Autonomous Modal Confirmation Engine)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 124: Stride StudyPilot 2.0 Confirmation Modal Button Isolation & Direct Form Submission Fallback Engine)
 
 ---
 
@@ -4991,4 +4991,37 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Form Action Discrimination Law):** When navigating or submitting multi-step forms that contain both forward and backward actions (e.g. Moodle's `summary.php` with "Return to attempt" and "Submit all and finish"), NEVER use generic container selectors like `.singlebutton button` or `form button`. Always discriminate buttons by their parent form's canonical destination (`action*="processattempt.php"`) and explicitly blacklist reverse keywords (`return`, `back`, `cancel`, `previous`).
   - **Rule (Asynchronous Modal Polling Law):** Automated submission through UI confirmation modals must never rely on a single delayed check (`setTimeout` once after 1s). Dynamic JavaScript frameworks (Bootstrap, YUI, React) take variable durations ($200\text{ms} - 2000\text{ms}$) to render or animate dialog overlays. Always execute an active polling loop ($200\text{ms}$ ticks up to $5000\text{ms}$) that searches specifically within the active modal container (`.modal.show`, `div[role="dialog"]`) and strictly excludes secondary or dismiss buttons.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 124: Stride StudyPilot 2.0 Confirmation Modal Button Isolation & Direct Form Submission Fallback Engine (November 24, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - On live Amity Online AMIGO Quiz 1.2.1 (*Green Strategic Points*), StudyPilot successfully clicked "Submit all and finish" on `summary.php`, triggering Moodle's confirmation modal popup ("Submit all your answers and finish?"). However, StudyPilot remained stuck in `submitting` state ("Auto-Submitting Quiz Summary 0%") without clicking the modal's "Submit all and finish" button, leaving the modal hanging on screen.
+- **Deep Root Cause Diagnosis:**
+  - **1. Premature False-Match on Background Page Button:** In `sentry.js`, `confirmSubmitAllModal` checked for modal containers and defaulted to `const searchRoot = modal || doc`. When Moodle's modal was animating or lacked `.show` during the first 200ms tick, `searchRoot` evaluated to `doc`. `doc.querySelectorAll('button.btn-primary')` re-matched the background page's `summaryBtn` (which has class `.btn-primary` and text "Submit all and finish"). Sentry clicked the page's button a second time and immediately returned `true`, completely exiting the function before the modal buttons were ever checked!
+  - **2. Single-Event Dispatch Flaw:** In Moodle Boost / Bootstrap modals, calling `.click()` alone can be swallowed during CSS transition animations if synthetic `mousedown`/`mouseup` events or focus states are not dispatched.
+  - **3. Missing Form Submission Fallback:** In Moodle, clicking "Submit all and finish" in the modal simply executes `processForm.submit()` on the `form[action*="processattempt.php"]`. Sentry did not have a direct fallback to invoke this form directly.
+  - **4. Locked HUD State:** In `content.js`, if the modal didn't immediately navigate, the HUD stayed locked in `submitting` state (`isBusy = true`), hiding the action button and preventing manual user fallback.
+- **The Concrete Surgical Fix:**
+  - **1. Dedicated Modal Button Locator (`findModalSubmitButton` in `studypilot/agent/sentry.js`):**
+    - Scans visible modal containers (`.modal, .modal-dialog, .modal-content, [role="dialog"], [aria-modal="true"], .moodle-dialogue, .moodle-dialogue-confirm, .moodle-has-zindex`).
+    - Strictly skips `summaryBtn` (`if (summaryBtn && btn === summaryBtn) continue;`), guaranteeing the background button is NEVER re-matched.
+    - Excludes Cancel, Close, and Dismiss.
+    - Identifies the primary confirmation button by `data-action="save"`, `data-action="confirm"`, `.btn-primary`, or text "Submit all and finish".
+  - **2. Modal Pre-Flight Detection & Dual-Layer Actuation:**
+    - If the confirmation modal is ALREADY visible when `confirmSubmitAllModal` is called, Sentry detects it immediately without clicking the background page button.
+    - Dispatches full event chain: `focus` $\rightarrow$ `mousedown` $\rightarrow$ `mouseup` $\rightarrow$ `click`.
+  - **3. Direct Form Submission Fail-Safe (`processattempt.php`):**
+    - As a failsafe, Sentry invokes `processForm.requestSubmit ? processForm.requestSubmit() : processForm.submit()` directly on `form[action*="processattempt.php"]`. This guarantees the quiz submission reaches Moodle even if modal JavaScript fails to propagate events.
+  - **4. HUD State Recovery & Stage C Auto-Advance (`studypilot/content.js`):**
+    - Recovers HUD state to `'idle'` (`Ready for Final Submission`) if submission does not trigger immediate unload, keeping the button interactive.
+    - Added Stage C autonomous progression: when navigating back to `quiz-view` after finishing a quiz, Sentry detects the completed attempt and Navigator automatically advances to the next lecture/quiz.
+  - **5. Comprehensive Automated Test Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added test verifying `findModalSubmitButton` strictly isolates the modal button from the background page button.
+    - Verified that `confirmSubmitAllModal` clicks the modal button and triggers the form submission fallback.
+    - All 14 tests passing 100%. TypeScript typecheck passes with 0 errors.
+  - **6. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Fresh bundle generated: `public/downloads/studypilot-extension.zip` (36.1 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Modal Button Identity Isolation Law):** When automating confirmation dialogs that appear after clicking an action button on a webpage, never search the root document for confirmation buttons using class names (`.btn-primary`) that also exist on the underlying page. Always pass the originating trigger button reference into the modal search and enforce `if (btn === triggerBtn) continue;` to prevent circular re-clicking.
+  - **Rule (Direct Form Submission Fail-Safe Law):** Confirmation modals in web applications (like Moodle) exist purely to guard a backend form submission. Automated workflows should attempt to click the modal's primary confirmation button, but must ALWAYS include a fallback invoking `form.requestSubmit()` on the target action form (`processattempt.php`) to ensure atomic completion regardless of modal animation states.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

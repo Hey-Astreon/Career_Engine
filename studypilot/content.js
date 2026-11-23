@@ -92,8 +92,11 @@
         if (activeHud) {
           activeHud.setState('submitting', { statusText: 'Auto-Submitting Quiz Summary...' });
         }
-        await Sentry.sleep(1200);
-        await Sentry.confirmSubmitAllModal(document);
+        await Sentry.sleep(800);
+        const success = await Sentry.confirmSubmitAllModal(document);
+        if (!success && activeHud) {
+          activeHud.setState('idle', { statusText: 'Ready for Final Submission' });
+        }
       }
 
       // Stage B: On Review Page, Auto-Advance to Next
@@ -101,11 +104,26 @@
         if (activeHud) {
           activeHud.setState('complete', { statusText: 'Quiz Completed! Advancing to next topic...' });
         }
-        await Sentry.sleep(1800);
+        await Sentry.sleep(1500);
         await Sentry.clickFinishReview(document);
         if (Navigator) {
-          await Sentry.sleep(1000);
+          await Sentry.sleep(800);
           Navigator.navigateToNextActivity(document);
+        }
+      }
+
+      // Stage C: On Quiz View Page, Auto-Advance if already completed
+      if (currentPageMode === 'quiz-view' && autoAdvance) {
+        const reattemptBtn = document.querySelector('input[value*="Re-attempt" i], button[value*="Re-attempt" i]');
+        const hasFinishedState = Boolean(document.querySelector('.quizattemptsummary, .generaltable'));
+        if (reattemptBtn || hasFinishedState) {
+          if (activeHud) {
+            activeHud.setState('complete', { statusText: 'Topic Complete! Advancing to next activity...' });
+          }
+          await Sentry.sleep(1500);
+          if (Navigator) {
+            Navigator.navigateToNextActivity(document);
+          }
         }
       }
     });
@@ -245,7 +263,10 @@
       if (activeHud) {
         activeHud.setState('submitting', { statusText: 'Submitting all and finishing...' });
       }
-      await Sentry.confirmSubmitAllModal(document);
+      const success = await Sentry.confirmSubmitAllModal(document);
+      if (!success && activeHud) {
+        activeHud.setState('idle', { statusText: 'Ready for Final Submission' });
+      }
     }
   }
 

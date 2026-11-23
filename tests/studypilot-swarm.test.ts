@@ -456,6 +456,24 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
     it("polls for and confirms the Moodle confirmation modal while ignoring Cancel", async () => {
       let modalConfirmed = false;
       let modalCancelled = false;
+      let formSubmitted = false;
+
+      const pageSummaryBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-primary",
+        innerText: "Submit all and finish",
+        textContent: "Submit all and finish",
+        classList: { contains: (cls: string) => cls === "btn-primary" },
+        click: () => {},
+      };
+
+      const processForm = {
+        tagName: "FORM",
+        action: "https://amigo.amityonline.com/mod/quiz/processattempt.php",
+        querySelector: (sel: string) => sel.includes("button") ? pageSummaryBtn : null,
+        requestSubmit: () => { formSubmitted = true; },
+        submit: () => { formSubmitted = true; },
+      };
 
       const modalCancelBtn = {
         tagName: "BUTTON",
@@ -474,6 +492,8 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
         textContent: "Submit all and finish",
         getAttribute: (attr: string) => attr === "data-action" ? "save" : null,
         classList: { contains: (cls: string) => cls === "btn-primary" },
+        focus: () => {},
+        dispatchEvent: () => true,
         click: () => { modalConfirmed = true; },
       };
 
@@ -486,20 +506,33 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const mockModalDoc = {
         querySelector(sel: string) {
           if (sel.includes('form[action*="processattempt.php"]')) {
-            return null; // summary button already clicked or absent
+            return processForm;
           }
           if (sel.includes("modal") || sel.includes("dialog")) {
             return mockModal;
           }
           return null;
         },
-        querySelectorAll: (sel: string) => [],
+        querySelectorAll(sel: string) {
+          if (sel.includes("modal")) {
+            return [mockModal];
+          }
+          return [];
+        },
       };
 
+      // 1. Verify findModalSubmitButton isolates modal button from page summary button
+      const detectedModalBtn = StudyPilotSentry.findModalSubmitButton(mockModalDoc as any, pageSummaryBtn as any);
+      expect(detectedModalBtn).not.toBeNull();
+      expect(detectedModalBtn).toBe(modalSubmitBtn);
+      expect(detectedModalBtn).not.toBe(pageSummaryBtn);
+
+      // 2. Verify confirmSubmitAllModal clicks modal button and executes form submission fallback
       const confirmed = await StudyPilotSentry.confirmSubmitAllModal(mockModalDoc as any);
       expect(confirmed).toBe(true);
       expect(modalConfirmed).toBe(true);
       expect(modalCancelled).toBe(false);
+      expect(formSubmitted).toBe(true);
     });
 
     it("handles Finish Review and Attempt Quiz button actuations properly", async () => {

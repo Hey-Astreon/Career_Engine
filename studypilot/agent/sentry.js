@@ -140,7 +140,7 @@
     // Strategy 1: Target the canonical form that posts to processattempt.php
     // In Moodle summary.php, "Return to attempt" points to attempt.php, whereas "Submit all and finish" points to processattempt.php!
     const processForm = doc.querySelector('form[action*="processattempt.php"]');
-    if (processForm) {
+    if (processForm && typeof processForm.querySelector === 'function') {
       const submitBtn = processForm.querySelector('button[type="submit"], input[type="submit"], button, input');
       if (submitBtn) return submitBtn;
     }
@@ -188,38 +188,26 @@
     return null;
   }
 
-  async function confirmSubmitAllModal(doc = document) {
-    // 1. If summary submit button is on page, click it to trigger modal dialog
-    const summaryBtn = findSummarySubmitButton(doc);
-    if (summaryBtn) {
-      await sleep(600);
-      summaryBtn.click();
-    }
+  function findModalSubmitButton(doc = document, summaryBtn = null) {
+    // 1. Search inside any modal container first
+    const modalContainers = Array.from(
+      doc.querySelectorAll(
+        '.modal, .modal-dialog, .modal-content, [role="dialog"], [aria-modal="true"], .moodle-dialogue, .moodle-dialogue-confirm, .moodle-has-zindex'
+      )
+    );
 
-    // 2. Poll for Moodle confirmation dialog up to 5 seconds (200ms ticks)
-    const startTime = Date.now();
-    const maxWaitMs = 5000;
-
-    while (Date.now() - startTime < maxWaitMs) {
-      await sleep(200);
-
-      // Check modal containers: Boost modal, YUI dialogue, or generic dialog
-      const modal = doc.querySelector(
-        '.moodle-dialogue-confirm, .modal.show, div[role="dialog"], .moodle-dialogue, .modal-dialog'
-      );
-
-      // Search within modal container if present, otherwise across doc
-      const searchRoot = modal || doc;
+    for (const container of modalContainers) {
       const modalBtns = Array.from(
-        searchRoot.querySelectorAll(
-          'button.btn-primary, input.btn-primary, button[data-action="save"], button[data-action="confirm"], .confirmation-buttons input, button[type="submit"], input[type="submit"], button'
+        container.querySelectorAll(
+          'button, input[type="button"], input[type="submit"], a.btn'
         )
       );
 
       for (const btn of modalBtns) {
+        if (summaryBtn && btn === summaryBtn) continue; // NEVER match the page's summary button
+
         const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
-        // Strictly ignore cancel / close / dismiss / secondary buttons
-        if (txt.includes('cancel') || txt.includes('close') || txt.includes('dismiss') || txt.includes('return')) {
+        if (txt.includes('cancel') || txt.includes('close') || txt.includes('dismiss') || txt === '✕' || txt === 'x') {
           continue;
         }
 
@@ -228,11 +216,116 @@
         const hasSubmitText = txt.includes('submit all') || txt.includes('submit') || txt.includes('finish');
 
         if (isSaveAction || (isPrimary && hasSubmitText) || hasSubmitText) {
-          await sleep(400);
-          btn.click();
-          return true;
+          return btn;
         }
       }
+    }
+
+    // 2. Direct search by data-action or modal button classes
+    const directCandidates = Array.from(
+      doc.querySelectorAll(
+        'button[data-action="save"], button[data-action="confirm"], .modal-footer button.btn-primary, .modal-dialog button.btn-primary, .confirmation-buttons input.btn-primary'
+      )
+    );
+    for (const btn of directCandidates) {
+      if (summaryBtn && btn === summaryBtn) continue;
+      const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
+      if (!txt.includes('cancel') && !txt.includes('close') && !txt.includes('dismiss')) {
+        return btn;
+      }
+    }
+
+    // 3. Fallback: Search all buttons in document that have text "submit all and finish" but are NOT inside the page form
+    const allButtons = Array.from(doc.querySelectorAll('button, input[type="button"], input[type="submit"]'));
+    for (const btn of allButtons) {
+      if (summaryBtn && btn === summaryBtn) continue;
+      if (btn.closest && (btn.closest('form[action*="attempt.php"]') || btn.closest('.submitbtns') || btn.closest('.singlebutton'))) {
+        continue; // Skip buttons belonging to the background page layout
+      }
+      const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
+      if (txt.includes('cancel') || txt.includes('close')) continue;
+      if (txt.includes('submit all and finish') || txt.includes('submit all')) {
+        return btn;
+      }
+    }
+
+    return null;
+  }
+
+  async function confirmSubmitAllModal(doc = document) {
+    // Check if the modal dialog is ALREADY open on screen right now
+    let modalBtn = findModalSubmitButton(doc, null);
+
+    // If modal is NOT already open, find and click the summary page's "Submit all and finish" button
+    const summaryBtn = findSummarySubmitButton(doc);
+    if (!modalBtn && summaryBtn) {
+      await sleep(500);
+      try {
+        summaryBtn.focus();
+        summaryBtn.click();
+      } catch (e) {
+        summaryBtn.click();
+      }
+    }
+
+    // Poll for the confirmation modal button up to 5 seconds (200ms ticks)
+    const startTime = Date.now();
+    const maxWaitMs = 5000;
+
+    while (Date.now() - startTime < maxWaitMs) {
+      modalBtn = findModalSubmitButton(doc, summaryBtn);
+
+      if (modalBtn) {
+        await sleep(350);
+
+        // 1. Synthetic actuation on the modal button
+        try {
+          if (typeof modalBtn.focus === 'function') modalBtn.focus();
+          if (typeof MouseEvent !== 'undefined') {
+            modalBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+            modalBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+          }
+          modalBtn.click();
+        } catch (e) {
+          try { modalBtn.click(); } catch (err) {}
+        }
+
+        // Wait short moment for navigation to trigger
+        await sleep(800);
+
+        // 2. Direct Form Submission Fail-Safe:
+        // In Moodle, clicking the modal button submits form[action*="processattempt.php"].
+        // If the modal animation or event handler was stubborn, submit the form directly!
+        const processForm = doc.querySelector('form[action*="processattempt.php"]');
+        if (processForm) {
+          try {
+            if (typeof processForm.requestSubmit === 'function') {
+              processForm.requestSubmit();
+            } else if (typeof processForm.submit === 'function') {
+              processForm.submit();
+            }
+          } catch (e) {
+            try { processForm.submit(); } catch (err) {}
+          }
+        }
+
+        return true;
+      }
+
+      await sleep(200);
+    }
+
+    // 3. Ultimate Loophole / Fallback: If modal never appeared but processForm exists, submit directly!
+    const processForm = doc.querySelector('form[action*="processattempt.php"]');
+    if (processForm) {
+      try {
+        if (typeof processForm.requestSubmit === 'function') {
+          processForm.requestSubmit();
+        } else {
+          processForm.submit();
+        }
+        return true;
+      } catch (e) {}
     }
 
     return false;
@@ -322,6 +415,7 @@
     findFinishAttemptButton,
     clickNextOrFinish,
     findSummarySubmitButton,
+    findModalSubmitButton,
     confirmSubmitAllModal,
     clickFinishReview,
     clickAttemptQuiz,
