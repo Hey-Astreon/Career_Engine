@@ -1,6 +1,25 @@
 import crypto from "crypto";
 import { NormalizedJob } from "./types";
 
+const TRACKING_PARAMS = new Set([
+  "gh_src",
+  "lk",
+  "srsltid",
+  "gclid",
+  "fbclid",
+  "msclkid",
+  "mc_cid",
+  "mc_eid",
+  "trk",
+  "trackingid",
+  "source",
+  "sub_id",
+  "_hsenc",
+  "_hsmi",
+  "session_id",
+  "candidate_id",
+]);
+
 /**
  * Normalizes job posting URLs and produces a deterministic SHA-256 hash.
  */
@@ -9,7 +28,12 @@ export function generateUrlHash(rawUrl: string): string {
     const parsed = new URL(rawUrl);
     const cleanParams = new URLSearchParams();
     parsed.searchParams.forEach((val, key) => {
-      if (!key.startsWith("utm_") && !key.startsWith("ref") && key !== "gh_src" && key !== "lk") {
+      const lowerKey = key.toLowerCase();
+      if (
+        !lowerKey.startsWith("utm_") &&
+        !lowerKey.startsWith("ref") &&
+        !TRACKING_PARAMS.has(lowerKey)
+      ) {
         cleanParams.append(key, val);
       }
     });

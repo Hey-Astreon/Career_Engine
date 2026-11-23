@@ -161,6 +161,15 @@ describe("computeDeduplicationKey – Tier 2 URL Hash", () => {
     expect(computeDeduplicationKey(job1)).toBe(computeDeduplicationKey(job2));
   });
 
+  it("URL with aggregator tracking params (srsltid, gclid, trk) → same key as clean URL", () => {
+    const job1 = remotiveJob("https://company.com/jobs/123");
+    const job2 = remotiveJob("https://company.com/jobs/123?srsltid=AfmBOor123&gclid=xyz987&trk=public_jobs");
+    expect(computeDeduplicationKey(job1)).toBe(computeDeduplicationKey(job2));
+    expect(generateUrlHash("https://company.com/jobs/123")).toBe(
+      generateUrlHash("https://company.com/jobs/123?srsltid=AfmBOor123&gclid=xyz987&trk=public_jobs")
+    );
+  });
+
   it("different ATS URLs → different Tier 2 keys", () => {
     const job1 = remotiveJob("https://boards.greenhouse.io/company/jobs/111");
     const job2 = remotiveJob("https://boards.greenhouse.io/company/jobs/999");

@@ -33,6 +33,8 @@ export interface DeterministicMatchSignals {
   recencyScore: number;            // 0-100
   sourceQualityScore: number;      // 0-100
   deterministicBaseScore: number; // 0-100
+  candidateSkills?: string[];
+  jobSkills?: string[];
 }
 
 export interface CompositeMatchResult {
@@ -237,6 +239,7 @@ export function calculateDeterministicSignals(
   postedAt?: Date | null,
   providerKey: string = "DIRECT_PORTAL"
 ): DeterministicMatchSignals {
+  const safeDescription = jobDescription || "";
   const candidateFullText = [
     candidate.title,
     ...candidate.masterProjects.map((p) => `${p.title} ${p.techStack} ${p.architecture}`),
@@ -244,9 +247,9 @@ export function calculateDeterministicSignals(
   ].join(" ");
 
   const candidateSkills = extractSkills(candidateFullText);
-  const jobSkills = extractSkills(jobTitle + " " + jobDescription);
+  const jobSkills = extractSkills(jobTitle + " " + safeDescription);
 
-  const careerTier = determineEarlyCareerTier(jobTitle, jobDescription);
+  const careerTier = determineEarlyCareerTier(jobTitle, safeDescription);
   const isEarlyCareer = careerTier === EarlyCareerTier.TIER_1_INTERNSHIP || careerTier === EarlyCareerTier.TIER_2_ZERO_EXPERIENCE;
 
   // 1. Skill Overlap Score (0-100)
@@ -316,6 +319,8 @@ export function calculateDeterministicSignals(
     recencyScore,
     sourceQualityScore,
     deterministicBaseScore: Math.min(100, Math.max(0, deterministicBaseScore)),
+    candidateSkills,
+    jobSkills,
   };
 }
 
@@ -332,11 +337,21 @@ export async function computeCompositeMatchScore(
   providerKey: string = "DIRECT_PORTAL",
   enableAiReasoning: boolean = true
 ): Promise<CompositeMatchResult> {
+  const safeDescription = jobDescription || "";
+
   // LAYER 1: Hard Eligibility Check
-  const hardElig = evaluateHardEligibility(candidate, jobTitle, jobDescription, jobLocation, canonicalAppUrl);
+  const hardElig = evaluateHardEligibility(candidate, jobTitle, safeDescription, jobLocation, canonicalAppUrl);
   
   if (!hardElig.eligible) {
-    const signals = calculateDeterministicSignals(candidate, jobTitle, jobDescription, postedAt, providerKey);
+    const signals: DeterministicMatchSignals = {
+      skillOverlapScore: 0,
+      titleCategoryScore: 0,
+      recencyScore: 0,
+      sourceQualityScore: 0,
+      deterministicBaseScore: 0,
+      candidateSkills: [],
+      jobSkills: [],
+    };
     return {
       finalScore: 0, // Capped at 0 for hard ineligible roles!
       eligible: false,
@@ -351,17 +366,11 @@ export async function computeCompositeMatchScore(
     };
   }
 
-  // LAYER 2: Deterministic Match Signals
-  const signals = calculateDeterministicSignals(candidate, jobTitle, jobDescription, postedAt, providerKey);
+  // LAYER 2: Deterministic Match Signals (Single-pass skill extraction)
+  const signals = calculateDeterministicSignals(candidate, jobTitle, safeDescription, postedAt, providerKey);
 
-  const candidateFullText = [
-    candidate.title,
-    ...candidate.masterProjects.map((p) => `${p.title} ${p.techStack} ${p.architecture}`),
-    ...candidate.virtualExps.map((e) => `${e.company} ${e.roleTitle} ${e.outcome}`),
-  ].join(" ");
-
-  const candidateSkills = extractSkills(candidateFullText);
-  const jobSkills = extractSkills(jobTitle + " " + jobDescription);
+  const candidateSkills = signals.candidateSkills || [];
+  const jobSkills = signals.jobSkills || [];
 
   const hardSkills = jobSkills.filter((skill) =>
     candidateSkills.some((cs) => cs.toLowerCase() === skill.toLowerCase())

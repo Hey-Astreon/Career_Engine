@@ -25,6 +25,10 @@
   let mountPromise = null; // set while the HUD is initialising (prevents double mounts)
   let isFilling = false;  // re-entrancy guard for runAutofill
   let fillHeartbeatTimer = null; // heartbeat timer for active fill locks
+  let frameClickListenerTimer = null; // periodic frame listener timer
+  let urlPollTimer = null; // URL navigation poller timer
+  let formMountObserver = null; // dynamic form mutation observer
+  let domCheckTimer = null; // debounce timer for form observer
   let lastFormFingerprint = null; // AstrePilot V3 Form Fingerprint Cache Key
   let cachedSchemaMappings = null; // AstrePilot V3 Schema Cache Mappings
   let cachedLiveJd = null;
@@ -455,7 +459,7 @@
     }, 400);
   }
 
-  window.__ASTREPILOT_CLEANUP__ = () => {
+  const baseCleanup = () => {
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
       try { chrome.runtime.onMessage.removeListener(messageListener); } catch (e) {}
     }
@@ -468,8 +472,26 @@
       clearInterval(fillHeartbeatTimer);
       fillHeartbeatTimer = null;
     }
+    if (frameClickListenerTimer) {
+      clearInterval(frameClickListenerTimer);
+      frameClickListenerTimer = null;
+    }
+    if (urlPollTimer) {
+      clearInterval(urlPollTimer);
+      urlPollTimer = null;
+    }
+    if (formMountObserver) {
+      try { formMountObserver.disconnect(); } catch (e) {}
+      formMountObserver = null;
+    }
+    if (domCheckTimer) {
+      clearTimeout(domCheckTimer);
+      domCheckTimer = null;
+    }
     if (activeHud) { try { activeHud.destroy(); } catch (e) {} activeHud = null; }
   };
+  window.__ASTREPILOT_CLEANUP__ = baseCleanup;
+  window.__STRIDEPILOT_CLEANUP__ = baseCleanup;
 
   /* -- IN-PAGE KEYBOARD SHORTCUT LISTENER -- */
   // Shortcut: Alt+Shift+A (primary), Alt+A when not in a text field (secondary)
@@ -771,10 +793,10 @@
     } catch (e) {}
   }
   document.addEventListener('click', clickNavListener, true);
-  setInterval(attachFrameClickListeners, 2000);
+  frameClickListenerTimer = setInterval(attachFrameClickListeners, 2000);
 
   const oldCleanup = window.__ASTREPILOT_CLEANUP__;
-  window.__ASTREPILOT_CLEANUP__ = () => {
+  const extendedCleanup = () => {
     if (oldCleanup) try { oldCleanup(); } catch(e) {}
     window.removeEventListener('keydown', keydownListener);
     document.removeEventListener('click', clickNavListener, true);
@@ -783,6 +805,8 @@
       activeStepObserver = null;
     }
   };
+  window.__ASTREPILOT_CLEANUP__ = extendedCleanup;
+  window.__STRIDEPILOT_CLEANUP__ = extendedCleanup;
 
   /* -- HELPERS -- */
   function el(tag, attrs, children) {
@@ -6739,7 +6763,6 @@
 
   /* -- CONTINUOUS SPA NAVIGATION & DYNAMIC DOM TRANSITION WATCHER -- */
   let lastTrackedUrl = window.location.href;
-  let domCheckTimer = null;
 
   function initSpaNavigationWatcher() {
     // 1. Monkey-patch pushState & replaceState to detect SPA client-side navigations
@@ -6763,14 +6786,14 @@
     window.addEventListener('hashchange', () => handleNavigationChange('hashchange'));
 
     // 2. Heartbeat URL check for query/path/hash changes
-    setInterval(() => {
+    urlPollTimer = setInterval(() => {
       if (window.location.href !== lastTrackedUrl) {
         handleNavigationChange('url_poll');
       }
     }, 600);
 
     // 3. Continuous MutationObserver to detect dynamic form mounting (e.g. login -> candidate profile)
-    const observer = new MutationObserver(() => {
+    formMountObserver = new MutationObserver(() => {
       if (isFilling) return;
       if (domCheckTimer) clearTimeout(domCheckTimer);
       domCheckTimer = setTimeout(() => {
@@ -6779,7 +6802,7 @@
     });
 
     try {
-      observer.observe(document.body || document.documentElement, {
+      formMountObserver.observe(document.body || document.documentElement, {
         childList: true,
         subtree: true
       });
@@ -6951,5 +6974,4 @@
   window.__ASTREPILOT_RESOLVE_SCREENING_SELECT__ = resolveScreeningSelect;
   window.__ASTREPILOT_GET_LABEL_TEXT__ = getLabelText;
   window.__ASTREPILOT_PROFILES__ = STANDALONE_PROFILES;
-})();
 })();

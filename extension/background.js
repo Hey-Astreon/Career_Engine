@@ -116,34 +116,6 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-// 3. Message Listener for CSP bypass & HUD Actions
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'NOTIFY_CLICK_APPLY') {
-    lastApplyClickTime = Date.now();
-    return false;
-  }
-
-  if (request.action === 'GET_SHADOW_CSS') {
-    fetch(chrome.runtime.getURL('hud.shadow.css'))
-      .then(r => r.text())
-      .then(css => sendResponse({ css }))
-      .catch(err => {
-        console.error('[StridePilot Background] CSS Fetch Error:', err);
-        sendResponse({ css: null });
-      });
-    return true; // Keep message channel open for async response
-  }
-  
-  if (request.type === 'OPEN_OPTIONS') {
-    chrome.tabs.create({ url: 'https://stride.app/settings' });
-    return false;
-  }
-
-  if (request.type === 'OPEN_CUSTOM_JD') {
-    chrome.tabs.create({ url: 'https://stride.app/resume-builder?mode=custom&loadSession=true' });
-    return false;
-  }
-
 async function getBundledResumeBinary(activeCtx) {
   const isAyushi = String(activeCtx || '').toLowerCase().includes('ayushi');
   const localFileName = isAyushi ? 'Ayushi_Raj_Resume.pdf' : 'Roushan_Kumar_Resume.pdf';
@@ -172,6 +144,40 @@ async function getBundledResumeBinary(activeCtx) {
     isBundled: true
   };
 }
+
+// 3. Message Listener for CSP bypass & HUD Actions
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'NOTIFY_CLICK_APPLY') {
+    lastApplyClickTime = Date.now();
+    return false;
+  }
+
+  if (request.action === 'GET_SHADOW_CSS') {
+    fetch(chrome.runtime.getURL('hud.shadow.css'))
+      .then(r => r.text())
+      .then(css => sendResponse({ css }))
+      .catch(err => {
+        console.error('[StridePilot Background] CSS Fetch Error:', err);
+        sendResponse({ css: null });
+      });
+    return true; // Keep message channel open for async response
+  }
+  
+  if (request.type === 'OPEN_OPTIONS') {
+    chrome.storage.sync.get(['stridepilot_origin', 'astrepilot_origin'], (res) => {
+      const origin = (res && (res.stridepilot_origin || res.astrepilot_origin)) || 'https://stride.app';
+      chrome.tabs.create({ url: `${origin}/settings` });
+    });
+    return false;
+  }
+
+  if (request.type === 'OPEN_CUSTOM_JD') {
+    chrome.storage.sync.get(['stridepilot_origin', 'astrepilot_origin'], (res) => {
+      const origin = (res && (res.stridepilot_origin || res.astrepilot_origin)) || 'https://stride.app';
+      chrome.tabs.create({ url: `${origin}/resume-builder?mode=custom&loadSession=true` });
+    });
+    return false;
+  }
 
   if (request.type === 'DOWNLOAD_RESUME') {
     chrome.storage.sync.get(['stridepilot_token', 'astrepilot_token', 'stridepilot_active_context', 'astrepilot_active_context'], async (res) => {

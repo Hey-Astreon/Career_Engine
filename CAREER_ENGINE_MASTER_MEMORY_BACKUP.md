@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 22, 2026 (Phase 119: Ayushi Raj Master Resume Forensic Audit, Real LinkedIn Verification & Seed Alignment)
+> **LAST COGNITIVE SYNC:** November 23, 2026 (Phase 120: System Pipeline Bug Bounty, Memory Leak Remediation, Deduplication Hardening & Scoring Optimization)
 
 ---
 
@@ -4822,3 +4822,47 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Candidate Profile Omnipresence Law):** Any candidate demographic or social identifier (LinkedIn, GitHub, Portfolio URL) must be validated against their live personal web domain before committing to baseline templates, database seeds, and browser extension autofill registries.
 - **Status:** Complete. Verified, tested, and pushed to `Hey-Astreon/Career_Engine` (`origin main`).
+
+### Phase 120: System Pipeline Bug Bounty, Memory Leak Remediation, Deduplication Hardening & Scoring Optimization (November 23, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Founder Roushan requested a comprehensive system bug bounty across the Career Engine pipeline (`src/lib/providers/`, `src/lib/scheduler.ts`, `src/lib/ai/`, and `extension/`) to eliminate performance bottlenecks, memory leaks, case-sensitivity collation bugs, and redundant CPU hot-loops.
+- **Deep Root Cause Diagnosis:**
+  - **1. Case-Sensitivity & Collation Mismatch in Tuple Locks (`src/lib/providers/registry.ts`):**
+    - `resolveOpportunityId` computed `tupleKey` with `.toLowerCase().trim()`, but queried SQLite/LibSQL with raw `job.title` and `job.location`. Because SQLite string comparison defaults to case-sensitive collation, casing differences (e.g. `"Frontend Developer"` vs `"frontend developer"`) bypassed existing matches and created duplicate opportunities.
+    - Furthermore, rejected promises in `tupleLocks` remained permanently in memory, poisoning subsequent runs matching that tuple.
+  - **2. Aggregator Tracking Query Pollution (`src/lib/providers/dedup.ts`):**
+    - `generateUrlHash` only stripped `utm_`, `ref`, `gh_src`, and `lk`. Modern aggregators (Google, LinkedIn, Himalayas, Indeed) append `srsltid`, `gclid`, `fbclid`, `msclkid`, `trk`, `trackingId`, and `source`, creating different SHA-256 hashes for the exact same job URL and bypassing deduplication.
+  - **3. O(N) Unbounded Memory Load in `pruneStaleJobs` (`src/lib/scheduler.ts`):**
+    - `pruneStaleJobs` pulled ALL active job postings and opportunities into Node.js memory on every 1-hour cron run to test against `SENIOR_OR_NUMBERED_REGEX` in JavaScript, and executed unchunked `updateMany({ where: { id: { in: ids } } })` risking SQLite's `SQLITE_LIMIT_VARIABLE_NUMBER` host parameter ceiling.
+  - **4. 50% Redundant CPU Regex Passes in AI Scorer (`src/lib/ai/scorer.ts`):**
+    - `calculateDeterministicSignals` extracted candidate and job skills via regex. Immediately after it returned, `computeCompositeMatchScore` repeated the exact same extraction passes on candidate and job text. Additionally, when a job failed Layer 1 Hard Eligibility, `scorer.ts` still computed full deterministic signals before discarding the score.
+  - **5. StridePilot Extension Re-injection Teardown & Module Scope (`extension/content.js`, `extension/background.js`):**
+    - `content.js` only defined `window.__ASTREPILOT_CLEANUP__` while checking `window.__STRIDEPILOT_CLEANUP__`, and periodic timers (`attachFrameClickListeners`, URL navigation poller, form mount observer) were not saved in clearable references, causing intervals to duplicate on re-injection.
+    - `getBundledResumeBinary` was nested inside `chrome.runtime.onMessage.addListener`, and navigation options used hardcoded URLs instead of dynamic storage origin.
+  - **6. Obsolete Test Assertion in `tests/resume_optimizer.test.ts`:**
+    - Test expected Ayushi's obsolete slug `alrya404` instead of her canonical live LinkedIn URL `https://www.linkedin.com/in/ayushi-raj-299a99388/`.
+- **The Concrete Surgical Fix:**
+  - **1. Hardened Deduplication Engine (`registry.ts` & `dedup.ts`):**
+    - In `registry.ts`, fetched candidate opportunities by `companySlug` and matched in-memory using `.toLowerCase().trim()`, guaranteeing 100% case-insensitivity without SQLite collation crashes.
+    - Added self-healing `lockPromise.catch(() => tupleLocks.delete(tupleKey))` to prevent permanent tuple lock poisoning.
+    - Expanded `dedup.ts` tracking blacklist to strip `srsltid`, `gclid`, `fbclid`, `msclkid`, `mc_cid`, `mc_eid`, `trk`, `trackingid`, `source`, `sub_id`, `_hsenc`, `_hsmi`, `session_id`, and `candidate_id`. Added comprehensive test cases in `tests/dedup.test.ts`.
+  - **2. Chunked Memory & Parameter Protection in Cron Sweeper (`scheduler.ts`):**
+    - Refactored `pruneStaleJobs` to stream active job postings and opportunities in paginated cursor batches of 1,000 records.
+    - Chunked `updateMany` operations to 500 IDs per batch, fully shielding Turso LibSQL from host parameter overflow.
+  - **3. Single-Pass Skill Extraction & Layer 1 Short-Circuit (`scorer.ts`):**
+    - Returned `candidateSkills` and `jobSkills` directly on `DeterministicMatchSignals`, eliminating duplicate extraction in `computeCompositeMatchScore` and cutting CPU regex passes by 50%.
+    - Short-circuited Layer 1 ineligible roles with zeroed signals, saving compute cycles on non-target postings.
+    - Protected against `"undefined"` string coercion on null/undefined descriptions.
+  - **4. Unified Extension Teardown & Module Architecture (`extension/content.js`, `extension/background.js`):**
+    - Unified cleanup hooks: `window.__STRIDEPILOT_CLEANUP__ = window.__ASTREPILOT_CLEANUP__`.
+    - Captured and cleared all background timers (`frameClickListenerTimer`, `urlPollTimer`, `formMountObserver`, `domCheckTimer`).
+    - Fixed duplicate `})();` syntax error at end of `content.js`.
+    - Hoisted `getBundledResumeBinary` to module scope in `background.js` and wired options to dynamic origin.
+    - Repackaged `stridepilot-extension.zip` and `astrepilot-extension.zip` (337.4 KB).
+  - **5. Test Suite Verification:**
+    - Fixed `tests/resume_optimizer.test.ts` to expect Ayushi's real LinkedIn URL.
+    - Ran `npx tsc --noEmit` and `npx vitest run`: **64 test files / 593 tests passed (100%)**.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Collation-Safe In-Memory Deduplication Law):** In SQLite/LibSQL where casing collation depends on underlying C libraries and column definitions, never rely on raw database string equality for multi-signal deduplication. Filter candidate records by indexed parent partition (e.g. `companySlug`), and execute case-folding and whitespace trimming in application memory.
+  - **Rule (Single-Pass Feature Extraction Law):** Feature extraction pipelines (such as skill parsing or tokenization) must execute exactly once per entity lifecycle and pass forward the extracted feature vectors, never re-running the same regex engine across sequential evaluation layers.
+- **Status:** Complete. Tested, verified, and synchronized across repository and extension bundles.

@@ -340,20 +340,36 @@ export async function ingestNormalizedJobs(
     job: NormalizedJob,
     resolvedRemoteScope: RemoteScope
   ): Promise<string> => {
-    const tupleKey = `${job.companySlug}:::${job.title.toLowerCase().trim()}:::${job.location.toLowerCase().trim()}`;
+    const normalizedTitle = job.title.toLowerCase().trim();
+    const normalizedLocation = (job.location || "").toLowerCase().trim();
+    const tupleKey = `${job.companySlug}:::${normalizedTitle}:::${normalizedLocation}`;
     const existingLock = tupleLocks.get(tupleKey);
     if (existingLock) {
       return existingLock;
     }
 
     const lockPromise = (async () => {
-      const existingOpp = await db.opportunity.findFirst({
+      // Query candidate opportunities for the company and match in memory with case & whitespace insensitivity
+      const candidateOpps = await db.opportunity.findMany({
         where: {
           companySlug: job.companySlug,
-          title: job.title,
-          location: job.location,
+        },
+        select: {
+          id: true,
+          title: true,
+          location: true,
+          canonicalAppUrl: true,
+          hasFullText: true,
+          postedAt: true,
+          remoteScope: true,
         },
       });
+
+      const existingOpp = candidateOpps.find(
+        (opp) =>
+          opp.title.toLowerCase().trim() === normalizedTitle &&
+          (opp.location || "").toLowerCase().trim() === normalizedLocation
+      );
 
       if (existingOpp) {
         const oppId = existingOpp.id;
@@ -406,6 +422,11 @@ export async function ingestNormalizedJobs(
         return newOpp.id;
       }
     })();
+
+    // Self-healing: if lockPromise rejects, clear it from tupleLocks so subsequent tasks can retry
+    lockPromise.catch(() => {
+      tupleLocks.delete(tupleKey);
+    });
 
     tupleLocks.set(tupleKey, lockPromise);
     return lockPromise;

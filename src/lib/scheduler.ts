@@ -36,19 +36,33 @@ export async function pruneStaleJobs(prismaDb = db): Promise<PruneMetrics> {
     data: { isExpired: true },
   });
 
-  // 2. Check active jobs for senior title violations
-  const remainingActiveJobs = await prismaDb.jobPosting.findMany({
-    where: { isExpired: false },
-    select: { id: true, title: true },
-  });
+  // 2. Check active jobs for senior title violations (streaming in chunks of 1000)
+  const seniorJobIds: string[] = [];
+  let lastJobCursor: string | undefined = undefined;
+  while (true) {
+    const batch: { id: string; title: string }[] = await prismaDb.jobPosting.findMany({
+      where: { isExpired: false },
+      select: { id: true, title: true },
+      take: 1000,
+      skip: lastJobCursor ? 1 : 0,
+      cursor: lastJobCursor ? { id: lastJobCursor } : undefined,
+      orderBy: { id: "asc" },
+    });
+    if (!batch || batch.length === 0) break;
+    for (const j of batch) {
+      if (SENIOR_OR_NUMBERED_REGEX.test(j.title)) {
+        seniorJobIds.push(j.id);
+      }
+    }
+    if (batch.length < 1000) break;
+    lastJobCursor = batch[batch.length - 1].id;
+  }
 
-  const seniorJobIds = remainingActiveJobs
-    .filter((j) => SENIOR_OR_NUMBERED_REGEX.test(j.title))
-    .map((j) => j.id);
-
-  if (seniorJobIds.length > 0) {
+  // Update in chunks of 500 to stay well below host parameter limits
+  for (let i = 0; i < seniorJobIds.length; i += 500) {
+    const chunk = seniorJobIds.slice(i, i + 500);
     await prismaDb.jobPosting.updateMany({
-      where: { id: { in: seniorJobIds } },
+      where: { id: { in: chunk } },
       data: { isExpired: true },
     });
   }
@@ -67,19 +81,33 @@ export async function pruneStaleJobs(prismaDb = db): Promise<PruneMetrics> {
     data: { isExpired: true, expiredAt: new Date() },
   });
 
-  // 4. Check active opportunities for senior title violations
-  const remainingActiveOpps = await prismaDb.opportunity.findMany({
-    where: { isExpired: false },
-    select: { id: true, title: true },
-  });
+  // 4. Check active opportunities for senior title violations (streaming in chunks of 1000)
+  const seniorOppIds: string[] = [];
+  let lastOppCursor: string | undefined = undefined;
+  while (true) {
+    const batch: { id: string; title: string }[] = await prismaDb.opportunity.findMany({
+      where: { isExpired: false },
+      select: { id: true, title: true },
+      take: 1000,
+      skip: lastOppCursor ? 1 : 0,
+      cursor: lastOppCursor ? { id: lastOppCursor } : undefined,
+      orderBy: { id: "asc" },
+    });
+    if (!batch || batch.length === 0) break;
+    for (const o of batch) {
+      if (SENIOR_OR_NUMBERED_REGEX.test(o.title)) {
+        seniorOppIds.push(o.id);
+      }
+    }
+    if (batch.length < 1000) break;
+    lastOppCursor = batch[batch.length - 1].id;
+  }
 
-  const seniorOppIds = remainingActiveOpps
-    .filter((o) => SENIOR_OR_NUMBERED_REGEX.test(o.title))
-    .map((o) => o.id);
-
-  if (seniorOppIds.length > 0) {
+  // Update in chunks of 500
+  for (let i = 0; i < seniorOppIds.length; i += 500) {
+    const chunk = seniorOppIds.slice(i, i + 500);
     await prismaDb.opportunity.updateMany({
-      where: { id: { in: seniorOppIds } },
+      where: { id: { in: chunk } },
       data: { isExpired: true, expiredAt: new Date() },
     });
   }
