@@ -2,7 +2,7 @@
  * Stride StudyPilot Glassmorphic Mini-HUD
  * --------------------------------------
  * Closed Shadow DOM UI component providing non-intrusive status,
- * 1-click solve controls, lecture navigation, and live reasoning progress.
+ * free viewport dragging, 1-click solve controls, and live reasoning progress.
  */
 
 (function (root, factory) {
@@ -20,7 +20,9 @@
       this.shadow = null;
       this.container = null;
       this.isMinimized = false;
+      this.isDragging = false;
       this.state = 'idle'; // idle | scanning | solving | submitting | complete | error
+      this.errorMessage = '';
       this.pageMode = 'quiz-attempt'; // quiz-attempt | quiz-summary | quiz-review | lecture-page | course-home
       this.data = {
         courseTitle: 'Amity Online AMIGO',
@@ -33,6 +35,9 @@
         hasVideo: false,
         logs: []
       };
+
+      this._onDragMove = this._onDragMove.bind(this);
+      this._onDragEnd = this._onDragEnd.bind(this);
     }
 
     async mount() {
@@ -65,6 +70,9 @@
       this.container.className = 'sp-hud-container';
       this.shadow.appendChild(this.container);
 
+      // Restore previously dragged position if present
+      this.restorePosition();
+
       this.render();
     }
 
@@ -88,12 +96,83 @@
       this.state = newState;
       if (payload.statusText) this.data.statusText = payload.statusText;
       if (typeof payload.current !== 'undefined') this.data.solvedCount = payload.current;
+      if (payload.error) this.errorMessage = payload.error;
       this.render();
     }
 
     addSolvedLog(logEntry) {
       this.data.logs.push(logEntry);
       this.render();
+    }
+
+    // Draggable Implementation
+    initDrag(headerEl) {
+      if (!headerEl || !this.container) return;
+
+      headerEl.onmousedown = (e) => {
+        // Ignore clicks on control buttons
+        if (e.target.closest('.sp-controls') || e.target.closest('button')) return;
+
+        this.isDragging = true;
+        this.container.classList.add('is-dragging');
+
+        const rect = this.container.getBoundingClientRect();
+        this.dragOffsetX = e.clientX - rect.left;
+        this.dragOffsetY = e.clientY - rect.top;
+
+        document.addEventListener('mousemove', this._onDragMove);
+        document.addEventListener('mouseup', this._onDragEnd);
+        e.preventDefault();
+      };
+    }
+
+    _onDragMove(e) {
+      if (!this.isDragging || !this.container) return;
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const rect = this.container.getBoundingClientRect();
+
+      let newLeft = e.clientX - this.dragOffsetX;
+      let newTop = e.clientY - this.dragOffsetY;
+
+      // Viewport bounds safety
+      newLeft = Math.max(10, Math.min(newLeft, viewportWidth - rect.width - 10));
+      newTop = Math.max(10, Math.min(newTop, viewportHeight - rect.height - 10));
+
+      this.container.style.left = `${newLeft}px`;
+      this.container.style.top = `${newTop}px`;
+      this.container.style.right = 'auto';
+      this.container.style.bottom = 'auto';
+    }
+
+    _onDragEnd() {
+      if (!this.isDragging) return;
+      this.isDragging = false;
+      if (this.container) {
+        this.container.classList.remove('is-dragging');
+        try {
+          sessionStorage.setItem('sp_hud_left', this.container.style.left);
+          sessionStorage.setItem('sp_hud_top', this.container.style.top);
+        } catch (e) {}
+      }
+
+      document.removeEventListener('mousemove', this._onDragMove);
+      document.removeEventListener('mouseup', this._onDragEnd);
+    }
+
+    restorePosition() {
+      if (!this.container) return;
+      try {
+        const savedLeft = sessionStorage.getItem('sp_hud_left');
+        const savedTop = sessionStorage.getItem('sp_hud_top');
+        if (savedLeft && savedTop) {
+          this.container.style.left = savedLeft;
+          this.container.style.top = savedTop;
+          this.container.style.right = 'auto';
+          this.container.style.bottom = 'auto';
+        }
+      } catch (e) {}
     }
 
     render() {
@@ -123,8 +202,9 @@
       }
 
       this.container.innerHTML = `
-        <div class="sp-hud-header">
+        <div class="sp-hud-header" id="sp-hud-header" title="Drag to move StudyPilot anywhere on screen">
           <div class="sp-brand">
+            <span class="sp-drag-icon">⠿</span>
             <span class="sp-status-dot ${isBusy ? 'busy' : ''}"></span>
             <span>StudyPilot</span>
             <span class="${badgeClass}">${badgeText}</span>
@@ -143,6 +223,12 @@
             </div>
           ` : ''}
         </div>
+
+        ${this.state === 'error' ? `
+          <div class="sp-error-banner">
+            <span>⚠️ ${this.escapeHtml(this.errorMessage || 'Error occurred while solving.')}</span>
+          </div>
+        ` : ''}
 
         ${isBusy ? `
           <div>
@@ -203,6 +289,11 @@
       `;
 
       // Wire Event Listeners
+      const headerEl = this.shadow.getElementById('sp-hud-header');
+      if (headerEl) {
+        this.initDrag(headerEl);
+      }
+
       const closeBtn = this.shadow.getElementById('sp-close-btn');
       if (closeBtn) {
         closeBtn.onclick = () => this.toggle();

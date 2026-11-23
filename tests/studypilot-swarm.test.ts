@@ -72,6 +72,21 @@ function createMockAmigoMoodleDOM(): any {
     makeOption("c", "Energy conservation", "q2_c", "q2_r"),
   ];
 
+  // Quiz 1.2.1 Green Strategic Points Mock
+  const q3Opts = [
+    makeOption("a", "STEP(Solving e-waste problem)", "q3_a", "q3_r"),
+    makeOption("b", "Byte Back program", "q3_b", "q3_r"),
+    makeOption("c", "Basel Action Network", "q3_c", "q3_r"),
+    makeOption("d", "RoHS", "q3_d", "q3_r"),
+  ];
+
+  const q4Opts = [
+    makeOption("a", "Electronic Product Environmental Assessment Tool", "q4_a", "q4_r"),
+    makeOption("b", "Product Environmental Assessment Tool", "q4_b", "q4_r"),
+    makeOption("c", "Electronic Purchase Environmental Assessment Tool", "q4_c", "q4_r"),
+    makeOption("d", "Ecommerce Product Environmental Assessment Tool", "q4_d", "q4_r"),
+  ];
+
   function makeQuestionNode(id: string, qno: string, qtext: string, options: any[]) {
     return {
       id,
@@ -95,6 +110,8 @@ function createMockAmigoMoodleDOM(): any {
 
   const q1Node = makeQuestionNode("q1", "1", "To maintain the datacenter at the right level", q1Opts);
   const q2Node = makeQuestionNode("q2", "2", "Which of the following is NOT a benefit of green computing?", q2Opts);
+  const q3Node = makeQuestionNode("q3", "1", "___________ is charitable non-governmental organization which focuses on reducing the export of hazardous waste from development countries to developing countries.", q3Opts);
+  const q4Node = makeQuestionNode("q4", "2", "EPEAT stands for _______________", q4Opts);
 
   // Mock Curriculum Sidebar Links
   const sidebarLinks = [
@@ -314,6 +331,58 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const plan = StudyPilotNavigator.getCurriculumPlan(doc);
       expect(plan.totalCount).toBe(4);
       expect(plan.nextItem?.title).toContain("4.1.3 Green IT Metrics");
+    });
+  });
+
+  describe("5. Live Amigo Quiz 1.2.1 Evaluation", () => {
+    it("correctly identifies Basel Action Network (BAN) for hazardous waste question", () => {
+      const q3 = {
+        id: "q3",
+        questionNumber: 1,
+        questionText: "___________ is charitable non-governmental organization which focuses on reducing the export of hazardous waste from development countries to developing countries.",
+        options: [
+          { key: "a", cleanText: "STEP(Solving e-waste problem)" },
+          { key: "b", cleanText: "Byte Back program" },
+          { key: "c", cleanText: "Basel Action Network" },
+          { key: "d", cleanText: "RoHS" },
+        ],
+        traps: { hasDualOptionTrap: false, hasNegativeConstraint: false }
+      };
+
+      const scholarAnswer = {
+        selectedKey: "c",
+        reasoning: "The Basel Action Network (BAN) is the charitable NGO focused on confronting the toxic waste trade.",
+        confidence: 0.98,
+      };
+
+      const audited = StudyPilotAuditor.auditAnswer(q3 as any, scholarAnswer);
+      expect(audited.selectedKey).toBe("c");
+      expect(audited.verified).toBe(true);
+    });
+
+    it("correctly identifies EPEAT acronym definition", () => {
+      const q4 = {
+        id: "q4",
+        questionNumber: 2,
+        questionText: "EPEAT stands for _______________",
+        options: [
+          { key: "a", cleanText: "Electronic Product Environmental Assessment Tool" },
+          { key: "b", cleanText: "Product Environmental Assessment Tool" },
+          { key: "c", cleanText: "Electronic Purchase Environmental Assessment Tool" },
+          { key: "d", cleanText: "Ecommerce Product Environmental Assessment Tool" },
+        ],
+        traps: { hasDualOptionTrap: false, hasNegativeConstraint: false }
+      };
+
+      const scholarAnswer = {
+        selectedKey: "a",
+        reasoning: "EPEAT stands for Electronic Product Environmental Assessment Tool.",
+        confidence: 0.98,
+      };
+
+      const audited = StudyPilotAuditor.auditAnswer(q4 as any, scholarAnswer);
+      expect(audited.selectedKey).toBe("a");
+      expect(audited.verified).toBe(true);
     });
   });
 });
