@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Stride StudyPilot — Autonomous AI LMS & Quiz Agent",
   "version": "2.0.0",
-  "description": "Next-generation 4-Agent academic copilot for Amity Online (Amigo) and Moodle LMS platforms. Powered by Stride.",
+  "description": "Next-generation 5-Agent academic copilot for Amity Online (Amigo) and Moodle LMS platforms. Powered by Stride.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -16,8 +16,10 @@
   ],
   "host_permissions": [
     "*://amigo.amityonline.com/*",
-    "*://*.moodle.*/*",
-    "*://*/*moodle*/*",
+    "*://*.amityonline.com/*",
+    "*://*.moodle.com/*",
+    "*://*.moodlecloud.com/*",
+    "*://*.moodle.org/*",
     "https://stride.app/*",
     "http://localhost:3000/*"
   ],
@@ -38,8 +40,10 @@
     {
       "matches": [
         "*://amigo.amityonline.com/*",
-        "*://*.moodle.*/*",
-        "*://*/*moodle*/*"
+        "*://*.amityonline.com/*",
+        "*://*.moodle.com/*",
+        "*://*.moodlecloud.com/*",
+        "*://*.moodle.org/*"
       ],
       "js": [
         "hud-ui.js",
