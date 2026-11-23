@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 23, 2026 (Phase 120: System Pipeline Bug Bounty, Memory Leak Remediation, Deduplication Hardening & Scoring Optimization)
+> **LAST COGNITIVE SYNC:** November 23, 2026 (Phase 121: StridePilot Containment Hardening, Unprompted Auto-Open Eradication & Keybinding Quarantine)
 
 ---
 
@@ -4866,3 +4866,36 @@ graph TD
   - **Rule (Collation-Safe In-Memory Deduplication Law):** In SQLite/LibSQL where casing collation depends on underlying C libraries and column definitions, never rely on raw database string equality for multi-signal deduplication. Filter candidate records by indexed parent partition (e.g. `companySlug`), and execute case-folding and whitespace trimming in application memory.
   - **Rule (Single-Pass Feature Extraction Law):** Feature extraction pipelines (such as skill parsing or tokenization) must execute exactly once per entity lifecycle and pass forward the extracted feature vectors, never re-running the same regex engine across sequential evaluation layers.
 - **Status:** Complete. Tested, verified, and synchronized across repository and extension bundles.
+
+### Phase 121: StridePilot Containment Hardening, Unprompted Auto-Open Eradication & Keybinding Quarantine (November 23, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Founder Roushan reported that the StridePilot Chrome extension unexpectedly popped open and mounted on arbitrary, non-job websites (e.g., e-commerce, Google, forums, login portals) during normal web browsing.
+- **Deep Root Cause Diagnosis:**
+  - **1. Overly Broad Multi-Step Click Listener (`extension/content.js`):**
+    - `content.js` runs across `<all_urls>`. It registered a global `clickNavListener` scanning every button click against `NEXT_STEP_REGEX`.
+    - `NEXT_STEP_REGEX` matched common generic words like `"next"`, `"continue"`, `"proceed"`, `"log in"`, `"sign in"`, `"enter"`, and `"get started"`.
+    - Whenever the user clicked pagination or login buttons anywhere on the web, `clickNavListener` unconditionally saved `sessionStorage.setItem('ap_auto_open', 'true')` **even when the StridePilot HUD was completely closed (`activeHud === null`)**.
+    - On the subsequent page load of that domain, line 6941 detected `ap_auto_open === 'true'` and automatically mounted the HUD (`toggleAstrePilotHUD()`) without verifying whether the page was an ATS portal or job application.
+  - **2. Bare `Alt+A` Global Keybinding Collision (`extension/content.js`):**
+    - `content.js` registered an in-page listener for bare `Alt+A` (in addition to the canonical `Alt+Shift+A`).
+    - Whenever the browser focus was outside of an input (e.g. clicking on page background) and `Alt+A` was pressed (or triggered by OS shortcuts, browser navigation, or AltGr diacritic key combinations), StridePilot immediately expanded.
+  - **3. Unconstrained Background Tab Auto-Injection (`extension/background.js`):**
+    - `chrome.tabs.onUpdated` auto-injected and forced `TOGGLE_HUD` within 5 seconds of any detected apply click without checking whether the destination URL `tab.url` was a verified ATS portal (`isAtsUrl(tab.url)`).
+- **The Concrete Surgical Fix:**
+  - **1. Active HUD State Guard (`extension/content.js`):**
+    - Guarded `clickNavListener` with `if (!activeHud) return;`. Clicks on any website now strictly ignore `NEXT_STEP_REGEX` unless StridePilot is already open and in active use on a job application.
+  - **2. ATS Portal & Form Containment on Startup (`extension/content.js`):**
+    - Added `ATS_URL_PATTERNS` and `isAtsUrl()` to `content.js`.
+    - Wrapped startup `sessionStorage.getItem('ap_auto_open')` handling so it only mounts if `isAtsUrl(window.location.href)` is true or if the page contains actual job application fields ($\ge 2$ inputs).
+  - **3. Banned Bare `Alt+A` Keybinding (`extension/content.js`):**
+    - Removed the bare `Alt+A` listener. Restricted keyboard HUD toggling exclusively to the canonical `Alt+Shift+A` hotkey.
+  - **4. Background Tab URL Guard (`extension/background.js`):**
+    - Added `&& isAtsUrl(tab.url)` check to `chrome.tabs.onUpdated` before consuming `lastApplyClickTime` and triggering `TOGGLE_HUD`.
+  - **5. Repackaged Extension Zips:**
+    - Ran `node scripts/package-extension.js`: generated fresh `stridepilot-extension.zip` and `astrepilot-extension.zip` (337.7 KB).
+  - **6. Verification:**
+    - Verified syntax: `node -c extension/content.js` and `node -c extension/background.js` passed with 0 errors.
+    - Verified autopilot/extension tests: `tests/astranis-deep-audit.test.ts`, `tests/astrepilot-auth-coverletter.test.ts`, `tests/astrepilot-v3-e2e-matrix.test.ts` (27/27 passed).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Content Script Passive Containment Law):** Chrome extension content scripts running on `<all_urls>` must remain strictly passive observers until explicitly invoked by user action (`Alt+Shift+A`, popup click, or active HUD session). Heuristic navigation listeners must never write cross-page persistence flags (`sessionStorage`, `localStorage`) unless the extension's UI is already mounted and active.
+- **Status:** Complete. Fixed, verified, repackaged, and pushed to `origin main`.

@@ -65,7 +65,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // 1. Detect ATS on page navigation & set badge
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
-    if (Date.now() - lastApplyClickTime < 5000) {
+    if (Date.now() - lastApplyClickTime < 5000 && isAtsUrl(tab.url)) {
       lastApplyClickTime = 0; // Consume the event
       // Wait slightly to ensure page and content scripts are fully ready
       setTimeout(() => {

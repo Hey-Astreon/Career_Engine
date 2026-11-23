@@ -33,6 +33,31 @@
   let cachedSchemaMappings = null; // AstrePilot V3 Schema Cache Mappings
   let cachedLiveJd = null;
 
+  const ATS_URL_PATTERNS = [
+    'boards.greenhouse.io',
+    'jobs.lever.co',
+    'myworkdayjobs.com',
+    'jobs.ashbyhq.com',
+    'smartrecruiters.com',
+    'bamboohr.com',
+    'jobvite.com',
+    'workable.com',
+    'recruitee.com',
+    'breezy.hr',
+    'linkedin.com/jobs',
+    'indeed.com',
+    'icims.com',
+    'job-apply',
+    '/careers/',
+    '/careers?'
+  ];
+
+  function isAtsUrl(url) {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return ATS_URL_PATTERNS.some(pattern => lower.includes(pattern));
+  }
+
   async function checkFormSchemaCache(fingerprint) {
     if (!fingerprint) return null;
     try {
@@ -494,22 +519,14 @@
   window.__STRIDEPILOT_CLEANUP__ = baseCleanup;
 
   /* -- IN-PAGE KEYBOARD SHORTCUT LISTENER -- */
-  // Shortcut: Alt+Shift+A (primary), Alt+A when not in a text field (secondary)
-  // Note: On Windows, Alt+Shift may be consumed by IME/language switcher.
+  // Shortcut: Alt+Shift+A (canonical across platforms)
+  // Note: Bare Alt+A is intentionally banned to prevent accidental triggers on non-job sites.
   // The extension command in manifest.json also triggers this via background.js -> TOGGLE_HUD message.
   const keydownListener = (e) => {
-    const tag = document.activeElement ? document.activeElement.tagName : '';
-    const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || Boolean(document.activeElement && document.activeElement.isContentEditable);
-    // Alt+Shift+A — works regardless of focus
-    if (e.altKey && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+    // Alt+Shift+A — primary canonical shortcut to toggle StridePilot HUD
+    if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && (e.key === 'a' || e.key === 'A')) {
       e.preventDefault();
       e.stopPropagation();
-      toggleAstrePilotHUD();
-      return;
-    }
-    // Alt+A — only when not focused inside a text field
-    if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && (e.key === 'a' || e.key === 'A') && !isEditable) {
-      e.preventDefault();
       toggleAstrePilotHUD();
       return;
     }
@@ -764,18 +781,20 @@
   }
 
   const clickNavListener = (e) => {
+    // STRICT ISOLATION GUARD: Only track multi-step navigation if the user is ALREADY
+    // actively using StridePilot (activeHud is mounted). Never spy or record on random sites.
+    if (!activeHud) return;
+
     const target = e.target && e.target.closest ? e.target.closest('button, a, input[type="submit"], input[type="button"]') : null;
     if (!target) return;
     if (isNextStepButton(target)) {
       try { sessionStorage.setItem('ap_auto_open', 'true'); } catch (err) {}
-      if (activeHud) {
-        activeHud.setState('transitioning', { step: 'Advancing to next step...' });
-        watchForStepTransition(() => {
-          if (activeHud && !isFilling) {
-            rescanFields();
-          }
-        });
-      }
+      activeHud.setState('transitioning', { step: 'Advancing to next step...' });
+      watchForStepTransition(() => {
+        if (activeHud && !isFilling) {
+          rescanFields();
+        }
+      });
     }
   };
   function attachFrameClickListeners() {
@@ -6937,18 +6956,27 @@
   // Initialize continuous SPA navigation and dynamic DOM observer
   initSpaNavigationWatcher();
 
-  // Auto-launch if we just clicked an apply button or next/continue step and navigated
+  // Auto-launch strictly if we were actively navigating a multi-step ATS application
   if (sessionStorage.getItem('ap_auto_open') === 'true') {
     sessionStorage.removeItem('ap_auto_open');
-    setTimeout(async () => {
-      await toggleAstrePilotHUD();
-      // If dynamic ATS loaded fields with a slight delay, trigger a re-scan
-      setTimeout(() => {
-        if (activeHud && detectedFields.length === 0 && !isFilling) {
-          rescanFields();
-        }
+    // STRICT CONTAINMENT: Only mount if current URL is a verified ATS or has job application fields
+    const isAts = isAtsUrl(window.location.href);
+    const hasApplicationFields = () => {
+      const inputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea');
+      return Boolean(inputs && inputs.length >= 2);
+    };
+
+    if (isAts || hasApplicationFields()) {
+      setTimeout(async () => {
+        await toggleAstrePilotHUD();
+        // If dynamic ATS loaded fields with a slight delay, trigger a re-scan
+        setTimeout(() => {
+          if (activeHud && detectedFields.length === 0 && !isFilling) {
+            rescanFields();
+          }
+        }, 1000);
       }, 1000);
-    }, 1000);
+    }
   }
 
   // Automated Test & Diagnostics Bridge
