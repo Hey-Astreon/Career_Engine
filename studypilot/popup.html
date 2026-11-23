@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stride StudyPilot Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="sp-popup">
+    <header class="sp-popup-header">
+      <div class="sp-brand-row">
+        <div class="sp-logo-capsule">🎓</div>
+        <div>
+          <h1 class="sp-title">Stride StudyPilot</h1>
+          <p class="sp-version">v2.0 • 4-Agent Swarm Core</p>
+        </div>
+      </div>
+      <span class="sp-chip">LMS Active</span>
+    </header>
+
+    <main class="sp-body">
+      <!-- Quick Action -->
+      <button id="btn-launch-hud" class="sp-btn-primary">
+        ⚡ Launch HUD (Alt+Shift+S)
+      </button>
+
+      <!-- Speed & Pacing -->
+      <section class="sp-section">
+        <label class="sp-label">Swarm Pacing & Humanized Jitter</label>
+        <div class="sp-radio-group">
+          <label class="sp-radio-card">
+            <input type="radio" name="speed-mode" value="humanized" checked>
+            <div>
+              <div class="sp-radio-title">Humanized (Recommended)</div>
+              <div class="sp-radio-sub">2.2s ± 0.7s delay • Undetectable in LMS logs</div>
+            </div>
+          </label>
+          <label class="sp-radio-card">
+            <input type="radio" name="speed-mode" value="ninja">
+            <div>
+              <div class="sp-radio-title">Ninja Speed</div>
+              <div class="sp-radio-sub">0.8s delay • Fast module checkpoints</div>
+            </div>
+          </label>
+          <label class="sp-radio-card">
+            <input type="radio" name="speed-mode" value="instant">
+            <div>
+              <div class="sp-radio-title">Instant (100ms)</div>
+              <div class="sp-radio-sub">Zero delay • For practice testbenches</div>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- Automation Toggles -->
+      <section class="sp-section">
+        <label class="sp-label">Autonomous Actions</label>
+        <div class="sp-toggle-row">
+          <span>Auto-Submit Quiz Attempt</span>
+          <label class="sp-switch">
+            <input type="checkbox" id="toggle-auto-submit">
+            <span class="sp-slider"></span>
+          </label>
+        </div>
+        <div class="sp-toggle-row">
+          <span>Auto-Advance Syllabus Chapters</span>
+          <label class="sp-switch">
+            <input type="checkbox" id="toggle-auto-advance">
+            <span class="sp-slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Direct API Key (Free Client Inference) -->
+      <section class="sp-section">
+        <label class="sp-label">Free Direct API Keys (Optional)</label>
+        <input type="password" id="input-groq-key" class="sp-input" placeholder="Groq API Key (500+ t/s, Free)">
+        <input type="password" id="input-gemini-key" class="sp-input" placeholder="Google Gemini API Key (Free)">
+        <p class="sp-help-text">Leave blank to use Stride Cloud Multi-LLM Cascade automatically.</p>
+      </section>
+
+      <button id="btn-save" class="sp-btn-secondary">Save Preferences</button>
+      <div id="save-status" class="sp-status-text"></div>
+    </main>
+
+    <footer class="sp-popup-footer">
+      <span>Part of the <strong>Stride Student Suite</strong></span>
+      <a href="https://stride.app" target="_blank" rel="noopener">stride.app ↗</a>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

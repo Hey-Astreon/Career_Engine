@@ -12,6 +12,7 @@
     "db:sync:turso": "node scripts/sync-to-turso.mjs",
     "scrape:cli": "npx tsx scripts/run-discovery-cli.ts",
     "build:extension": "node scripts/package-extension.js",
+    "build:studypilot": "node scripts/package-studypilot.js",
     "agent:gateway": "python_agents/.venv/Scripts/uvicorn python_agents.main:app --port 8000 --reload",
     "agent:heal": "python_agents/.venv/Scripts/python -m python_agents.services.self_healer",
     "agent:apply": "python_agents/.venv/Scripts/python -m python_agents.services.headless_applier",
