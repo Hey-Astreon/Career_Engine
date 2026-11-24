@@ -543,9 +543,9 @@
             badgeClass = 'sp-badge review';
             subtitleText = `✓ Score: ${this.data.gradeInfo.gradeText} (100% Perfect)`;
           } else if (isHighStakes && isPassing) {
-            badgeText = `High-Stakes Passed (${this.data.gradeInfo.gradeText})`;
+            badgeText = `Score Banked: ${this.data.gradeInfo.gradeText}`;
             badgeClass = 'sp-badge lecture';
-            subtitleText = `✓ Passed: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Score protected, retries locked`;
+            subtitleText = `✓ Highest Grade Banked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Moodle keeps best score • Safe to retry`;
           } else if (this.data.isStagnant) {
             badgeText = 'Stagnant Score';
             badgeClass = 'sp-badge busy';
@@ -664,12 +664,14 @@
             ${(this.data.stakes && this.data.stakes.isHighStakes && this.data.gradeInfo && ((this.data.gradeInfo.total > 0 && this.data.gradeInfo.score / this.data.gradeInfo.total >= 0.5) || (this.data.stakes.gradeToPass && this.data.gradeInfo.score >= this.data.stakes.gradeToPass))) ? `
               ${this.data.nextActivityTitle ? `
                 <button class="sp-action-btn" id="sp-next-btn">
-                  <span>▶ Accept Score & Advance to Next Topic</span>
+                  <span>▶ Accept ${this.data.gradeInfo.gradeText} & Advance to Next Topic</span>
                 </button>
               ` : ''}
-              <button class="sp-action-btn-secondary" id="sp-attempt-btn" style="border-color: #ea580c; color: #ea580c; font-weight: 600;">
-                <span>⚠️ Deliberately Re-Attempt (Burn Remaining Attempt)</span>
-              </button>
+              ${this.data.stakes && (this.data.stakes.attemptsAllowed - this.data.stakes.attemptsUsed > 0) ? `
+                <button class="sp-action-btn-secondary" id="sp-attempt-btn" style="border-color: #2563eb; color: #2563eb; font-weight: 600;">
+                  <span>⚡ Aim for 100% (Attempt ${this.data.stakes.attemptsUsed + 1} of ${this.data.stakes.attemptsAllowed} • Best Score Safe)</span>
+                </button>
+              ` : ''}
             ` : this.data.isStagnant ? `
               ${this.data.nextActivityTitle ? `
                 <button class="sp-action-btn" id="sp-next-btn">

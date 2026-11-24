@@ -247,7 +247,7 @@
           if (isHighStakesPassing) {
             if (activeHud) {
               activeHud.setState('idle', { 
-                statusText: `🛡️ High-Stakes Passed (${gradeInfo.gradeText} • ${Math.round(gradeInfo.percentage)}%)! Auto-retry permanently locked to protect your score.`
+                statusText: `🛡️ Highest Grade Banked (${gradeInfo.gradeText})! Auto-retry paused so you can advance or aim for 100%.`
               });
             }
             return; // STRICTLY STOP: Never auto-click attemptBtn on a passed high-stakes assessment!
