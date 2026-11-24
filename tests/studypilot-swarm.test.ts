@@ -1661,5 +1661,119 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       // Q2 must be permuted away from 'c' (e.g. to 'a' or 'b')
       expect(plan.resolvedAudits[1].selectedKey).not.toBe("c");
     });
+
+    it("4-Tier Frontier AI Cascade: Background solver exports, keys, and 30-question simulation", async () => {
+      // Import CommonJS background module
+      const background = await import("../studypilot/background.js");
+      expect(background.GROQ_MODELS).toEqual([
+        "openai/gpt-oss-120b",
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-20b"
+      ]);
+
+      // Verify unmasking function works as expected
+      const sampleBlob = [77, 89, 65]; // salt = 42
+      const unmasked = background.unmaskKey(sampleBlob);
+      expect(unmasked.length).toBe(3);
+
+      // Verify Academic Knowledge Ground Truth dictionary
+      const qLinux = {
+        id: "q_os",
+        questionText: "Which operating system is the most green?",
+        options: [
+          { key: "a", cleanText: "Windows Vista" },
+          { key: "b", cleanText: "Windows XP" },
+          { key: "c", cleanText: "Linux" },
+          { key: "d", cleanText: "Apple" }
+        ]
+      };
+      const resLinux = background.solveWithAcademicHeuristics(qLinux);
+      expect(resLinux.selectedKey).toBe("c");
+      expect(resLinux.engine).toBe("Academic Knowledge Engine");
+      expect(resLinux.confidence).toBeGreaterThanOrEqual(0.95);
+
+      const qEquity = {
+        id: "q_equity",
+        questionText: "Social, economic and ecological equity is the necessary condition for achieving:",
+        options: [
+          { key: "a", cleanText: "Social development" },
+          { key: "b", cleanText: "Economic development" },
+          { key: "c", cleanText: "Sustainable development" },
+          { key: "d", cleanText: "Ecological development" }
+        ]
+      };
+      const resEquity = background.solveWithAcademicHeuristics(qEquity);
+      expect(resEquity.selectedKey).toBe("c");
+      expect(resEquity.engine).toBe("Academic Knowledge Engine");
+
+      // Mock fetch for multi-engine burst simulation without real network delay
+      const originalFetch = global.fetch;
+      global.fetch = (async (url: any) => {
+        const urlStr = String(url);
+        if (urlStr.includes("generativelanguage.googleapis.com")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              candidates: [
+                { content: { parts: [{ text: JSON.stringify({ selectedKey: "c", alternateKey: "a", reasoning: "Simulated Gemini 3.5 Flash", confidence: 0.98 }) }] } }
+              ]
+            })
+          } as any;
+        }
+        if (urlStr.includes("integrate.api.nvidia.com")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              choices: [
+                { message: { content: JSON.stringify({ selectedKey: "c", alternateKey: "b", reasoning: "Simulated NVIDIA Mistral Large 1T", confidence: 0.98 }) } }
+              ]
+            })
+          } as any;
+        }
+        if (urlStr.includes("api.groq.com")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              choices: [
+                { message: { content: JSON.stringify({ selectedKey: "c", alternateKey: "d", reasoning: "Simulated Groq Rotator", confidence: 0.98 }) } }
+              ]
+            })
+          } as any;
+        }
+        return { ok: false, status: 500 } as any;
+      }) as any;
+
+      try {
+        // Verify 30-question burst simulation through executeBackgroundAiSolve
+        const simulatedQuestions = Array.from({ length: 30 }, (_, i) => ({
+          id: `q_${i + 1}`,
+          questionNumber: i + 1,
+          questionText: i % 2 === 0
+            ? "Which operating system is the most green?"
+            : `Academic green computing principle question ${i + 1}?`,
+          options: [
+            { key: "a", cleanText: "Windows Vista" },
+            { key: "b", cleanText: "Windows XP" },
+            { key: "c", cleanText: "Linux" },
+            { key: "d", cleanText: "Apple" }
+          ]
+        }));
+
+        for (const q of simulatedQuestions) {
+          const result = await background.executeBackgroundAiSolve(q, "Computer Science (Green Computing)", {
+            isHighStakes: true
+          });
+          expect(result).toBeDefined();
+          expect(result.selectedKey).toBeDefined();
+          expect(["a", "b", "c", "d"]).toContain(result.selectedKey);
+          expect(result.reasoning).toBeTruthy();
+        }
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
   });
 });

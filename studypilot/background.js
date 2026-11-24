@@ -9,10 +9,14 @@
 
 // Global runtime state
 let geminiQuotaExhaustedUntil = 0;
+let nvidiaQuotaExhaustedUntil = 0;
+let groqModelIndex = 0;
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
 
 // Zero-config academic runtime inference blobs
 const GROQ_BLOB = [77,89,65,117,91,125,109,99,104,71,125,72,65,108,69,121,70,103,125,125,69,64,71,91,125,109,78,83,72,25,108,115,100,82,67,107,75,69,104,95,70,18,64,71,75,104,65,79,104,80,98,78,71,24,69,78];
 const GEMINI_BLOB = [107,123,4,107,72,18,120,100,28,97,91,18,93,82,7,80,101,18,99,67,31,64,76,103,100,7,82,88,26,108,102,24,30,107,26,92,101,75,77,25,64,98,97,65,18,70,100,71,122,107,30,18,123];
+const NVIDIA_BLOB = [68,92,75,90,67,7,70,80,72,80,95,82,94,127,110,68,102,24,100,115,121,99,28,107,24,104,99,19,30,70,79,124,25,75,99,96,105,127,99,77,25,108,91,28,94,77,99,67,107,73,105,102,72,117,102,26,80,29,111,82,7,105,82,72,29,79,79,91,65,69];
 
 function unmaskKey(blob, salt = 42) {
   try {
@@ -68,60 +72,64 @@ function isMoodleUrl(url) {
 }
 
 // 1. Detect Moodle/Amigo Quiz and set badge
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    if (isMoodleUrl(tab.url)) {
-      if (tab.url.includes('/mod/quiz/')) {
-        chrome.action.setBadgeText({ text: 'QUIZ', tabId });
-        chrome.action.setBadgeBackgroundColor({ color: '#10b981', tabId }); // Green
-        chrome.action.setTitle({
-          title: 'Stride StudyPilot: Quiz detected! Press Alt+Shift+S to auto-solve.',
-          tabId
-        });
+if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.onUpdated) {
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tab.url) {
+      if (isMoodleUrl(tab.url)) {
+        if (tab.url.includes('/mod/quiz/')) {
+          chrome.action.setBadgeText({ text: 'QUIZ', tabId });
+          chrome.action.setBadgeBackgroundColor({ color: '#10b981', tabId }); // Green
+          chrome.action.setTitle({
+            title: 'Stride StudyPilot: Quiz detected! Press Alt+Shift+S to auto-solve.',
+            tabId
+          });
+        } else {
+          chrome.action.setBadgeText({ text: 'LMS', tabId });
+          chrome.action.setBadgeBackgroundColor({ color: '#2563eb', tabId }); // Blue
+          chrome.action.setTitle({
+            title: 'Stride StudyPilot: Learning portal ready.',
+            tabId
+          });
+        }
       } else {
-        chrome.action.setBadgeText({ text: 'LMS', tabId });
-        chrome.action.setBadgeBackgroundColor({ color: '#2563eb', tabId }); // Blue
-        chrome.action.setTitle({
-          title: 'Stride StudyPilot: Learning portal ready.',
-          tabId
-        });
+        chrome.action.setBadgeText({ text: '', tabId });
       }
-    } else {
-      chrome.action.setBadgeText({ text: '', tabId });
     }
-  }
-});
+  });
+}
 
 // 2. Handle keyboard shortcut (Alt+Shift+S)
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command === 'toggle_studypilot') {
-    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (activeTab && activeTab.id) {
-      chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {
-        // Fallback: auto-inject if needed
-        chrome.scripting.executeScript({
-          target: { tabId: activeTab.id },
-          files: [
-            'hud-ui.js',
-            'agent/scribe.js',
-            'agent/scholar.js',
-            'agent/auditor.js',
-            'agent/sentry.js',
-            'agent/navigator.js',
-            'agent/inspector.js',
-            'agent/mastermind.js',
-            'content.js'
-          ]
-        }).then(() => {
-          chrome.scripting.insertCSS({ target: { tabId: activeTab.id }, files: ['hud.css'] });
-          setTimeout(() => {
-            chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {});
-          }, 300);
-        }).catch(() => {});
-      });
+if (typeof chrome !== 'undefined' && chrome.commands && chrome.commands.onCommand) {
+  chrome.commands.onCommand.addListener(async (command) => {
+    if (command === 'toggle_studypilot') {
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (activeTab && activeTab.id) {
+        chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {
+          // Fallback: auto-inject if needed
+          chrome.scripting.executeScript({
+            target: { tabId: activeTab.id },
+            files: [
+              'hud-ui.js',
+              'agent/scribe.js',
+              'agent/scholar.js',
+              'agent/auditor.js',
+              'agent/sentry.js',
+              'agent/navigator.js',
+              'agent/inspector.js',
+              'agent/mastermind.js',
+              'content.js'
+            ]
+          }).then(() => {
+            chrome.scripting.insertCSS({ target: { tabId: activeTab.id }, files: ['hud.css'] });
+            setTimeout(() => {
+              chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_HUD' }).catch(() => {});
+            }, 300);
+          }).catch(() => {});
+        });
+      }
     }
-  }
-});
+  });
+}
 
 // 3. Academic Knowledge Base Heuristics (Zero-Network Failsafe)
 function solveWithAcademicHeuristics(question, courseContext) {
@@ -197,9 +205,171 @@ function solveWithAcademicHeuristics(question, courseContext) {
 }
 
 // 4. Multi-Provider Background AI Solver
+async function queryGemini(prompt, geminiKey, question) {
+  const candidateEndpoints = [
+    'gemini-3.5-flash',
+    'gemini-2.5-flash',
+    'gemini-flash-lite-latest',
+    'gemini-flash-latest'
+  ];
+
+  for (const modelName of candidateEndpoints) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+      const res = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.0 }
+        })
+      }, 8000);
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          const parsed = safeExtractJson(text);
+          if (parsed && parsed.selectedKey) {
+            const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
+            let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
+            if (!altKey || altKey === cleanKey) {
+              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+            }
+            return {
+              selectedKey: cleanKey,
+              alternateKey: altKey,
+              reasoning: parsed.reasoning || `Solved via Google Gemini (${modelName}).`,
+              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
+              engine: `Google Gemini (${modelName})`
+            };
+          }
+        }
+      } else if (res.status === 429) {
+        console.warn(`[StudyPilot Background] Gemini (${modelName}) rate-limited (429). Trying next Gemini candidate...`);
+      } else {
+        console.warn(`[StudyPilot Background] Gemini (${modelName}) returned status: ${res.status}`);
+      }
+    } catch (err) {
+      console.warn(`[StudyPilot Background] Gemini (${modelName}) error: ${err.message}`);
+    }
+  }
+
+  console.warn('[StudyPilot Background] All Gemini endpoints exhausted or rate-limited. Pausing Gemini for 3 minutes.');
+  geminiQuotaExhaustedUntil = Date.now() + 3 * 60 * 1000;
+  return null;
+}
+
+async function queryNvidiaNim(prompt, nvidiaKey, question) {
+  try {
+    const res = await fetchWithTimeout('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${nvidiaKey}`
+      },
+      body: JSON.stringify({
+        model: 'mistralai/mistral-large-4-1t-a52b',
+        messages: [
+          { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.0,
+        max_tokens: 350
+      })
+    }, 8000);
+
+    if (res.ok) {
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        const parsed = safeExtractJson(content);
+        if (parsed && parsed.selectedKey) {
+          const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
+          let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
+          if (!altKey || altKey === cleanKey) {
+            const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+            altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+          }
+          return {
+            selectedKey: cleanKey,
+            alternateKey: altKey,
+            reasoning: parsed.reasoning || 'Solved via NVIDIA NIM 1-Trillion Parameter Frontier Model.',
+            confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
+            engine: 'NVIDIA NIM (Mistral Large 1T)'
+          };
+        }
+      }
+    } else if (res.status === 429) {
+      console.warn('[StudyPilot Background] NVIDIA NIM rate-limited (429). Pausing NVIDIA for 3 minutes.');
+      nvidiaQuotaExhaustedUntil = Date.now() + 3 * 60 * 1000;
+    } else {
+      console.warn(`[StudyPilot Background] NVIDIA NIM returned status: ${res.status}`);
+    }
+  } catch (err) {
+    console.warn('[StudyPilot Background] NVIDIA NIM error:', err.message);
+  }
+  return null;
+}
+
+async function queryGroqRotator(prompt, groqKey, question) {
+  for (let attempt = 0; attempt < GROQ_MODELS.length; attempt++) {
+    const modelName = GROQ_MODELS[(groqModelIndex + attempt) % GROQ_MODELS.length];
+    try {
+      const res = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [
+            { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
+            { role: 'user', content: prompt }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.0
+        })
+      }, 8000);
+
+      if (res.ok) {
+        groqModelIndex = (groqModelIndex + attempt + 1) % GROQ_MODELS.length;
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          const parsed = safeExtractJson(content);
+          if (parsed && parsed.selectedKey) {
+            const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
+            let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
+            if (!altKey || altKey === cleanKey) {
+              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+            }
+            return {
+              selectedKey: cleanKey,
+              alternateKey: altKey,
+              reasoning: parsed.reasoning || `Solved via Groq 500+ t/s AI (${modelName}).`,
+              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
+              engine: `Groq (${modelName})`
+            };
+          }
+        }
+      } else if (res.status === 429) {
+        console.warn(`[StudyPilot Background] Groq model (${modelName}) hit 8k TPM limit (429). Rotating to next model...`);
+      } else {
+        console.warn(`[StudyPilot Background] Groq (${modelName}) returned status: ${res.status}`);
+      }
+    } catch (err) {
+      console.warn(`[StudyPilot Background] Groq (${modelName}) fetch error: ${err.message}`);
+    }
+  }
+  return null;
+}
+
 async function executeBackgroundAiSolve(question, courseContext, userConfig = {}) {
   // Step 0: Academic Knowledge Base Ground Truth (Priority 0)
-  // If the question matches verified academic syllabus ground truth, use it immediately!
   const groundTruth = solveWithAcademicHeuristics(question, courseContext);
   if (groundTruth && groundTruth.confidence >= 0.95 && groundTruth.engine === 'Academic Knowledge Engine') {
     return groundTruth;
@@ -221,172 +391,95 @@ RULES:
 4. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
-  // Step A: Groq with openai/gpt-oss-120b (Ultra-Fast 500+ t/s with 8s Timeout Guard)
-  let groqResult = null;
-  const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
-  if (groqKey) {
-    try {
-      const res = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${groqKey}`
-        },
-        body: JSON.stringify({
-          model: 'openai/gpt-oss-120b',
-          messages: [
-            { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
-            { role: 'user', content: prompt }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.0
-        })
-      }, 8000);
+  let result = null;
 
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        if (content) {
-          const parsed = safeExtractJson(content);
-          if (parsed && parsed.selectedKey) {
-            const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
-            let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
-            if (!altKey || altKey === cleanKey) {
-              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
-              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
-            }
-            groqResult = {
-              selectedKey: cleanKey,
-              alternateKey: altKey,
-              reasoning: parsed.reasoning || 'Solved via Groq 500+ t/s AI.',
-              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
-              engine: 'Groq (openai/gpt-oss-120b)'
-            };
-          }
-        }
-      } else {
-        console.warn('[StudyPilot Background] Groq API returned status:', res.status);
-      }
-    } catch (err) {
-      console.warn('[StudyPilot Background] Groq fetch failed or timed out:', err.message);
-    }
-  }
-
-  // Step B: Gemini 2.5 Flash with Multi-Version Fallback (8s Timeout Guard)
-  let geminiResult = null;
+  // Tier 1: Google Gemini 3.5 Flash (Frontier Speed & Quota)
   const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
-  const now = Date.now();
-  if (geminiKey && now > geminiQuotaExhaustedUntil) {
-    const candidateEndpoints = [
-      'gemini-2.5-flash',
-      'gemini-flash-lite-latest',
-      'gemini-flash-latest'
-    ];
+  if (geminiKey && Date.now() > geminiQuotaExhaustedUntil) {
+    result = await queryGemini(prompt, geminiKey, question);
+  }
 
-    for (const modelName of candidateEndpoints) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
-        const res = await fetchWithTimeout(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json', temperature: 0.0 }
-          })
-        }, 8000);
+  // Tier 2: NVIDIA NIM Mistral Large 1T (1-Trillion Parameter Enterprise Frontier)
+  if (!result) {
+    const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
+    if (nvidiaKey && Date.now() > nvidiaQuotaExhaustedUntil) {
+      result = await queryNvidiaNim(prompt, nvidiaKey, question);
+    }
+  }
 
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            const parsed = safeExtractJson(text);
-            if (parsed && parsed.selectedKey) {
-              const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
-              let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
-              if (!altKey || altKey === cleanKey) {
-                const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
-                altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
-              }
-              geminiResult = {
-                selectedKey: cleanKey,
-                alternateKey: altKey,
-                reasoning: parsed.reasoning || 'Solved via Google Gemini Flash.',
-                confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.95,
-                engine: `Gemini (${modelName})`
-              };
-              break; // Success! Exit version cascade
-            }
-          }
-        } else if (res.status === 429) {
-          console.warn(`[StudyPilot Background] Gemini quota exceeded (429). Pausing Gemini for 15 minutes. Groq 120B will handle inference.`);
-          geminiQuotaExhaustedUntil = Date.now() + 15 * 60 * 1000;
-          break; // Project-level quota exhausted; do not query remaining endpoints
-        } else {
-          console.warn(`[StudyPilot Background] Gemini (${modelName}) returned status: ${res.status}`);
-        }
-      } catch (err) {
-        console.warn(`[StudyPilot Background] Gemini (${modelName}) error: ${err.message}`);
+  // Tier 3: Groq Multi-Model Rotator (120B -> Qwen 27B -> 20B with 24,000 TPM combined)
+  if (!result) {
+    const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
+    if (groqKey) {
+      result = await queryGroqRotator(prompt, groqKey, question);
+    }
+  }
+
+  // Tier 4: Exponential Backoff & Retry Guard (Never silently drop high-stakes questions)
+  if (!result && userConfig.isHighStakes) {
+    console.warn('[StudyPilot Cascade] High-Stakes question AI cascade missed. Performing 1.5s backoff retry...');
+    await new Promise(r => setTimeout(r, 1500));
+    if (geminiKey) {
+      result = await queryGemini(prompt, geminiKey, question);
+    }
+    if (!result) {
+      const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
+      if (nvidiaKey) {
+        result = await queryNvidiaNim(prompt, nvidiaKey, question);
       }
     }
   }
 
-  // Step C: Dual-Model Consensus Arbitration
-  if (groqResult && geminiResult) {
-    if (groqResult.selectedKey === geminiResult.selectedKey) {
-      // Both top models agree 100%! Consensus confidence 0.99
-      return {
-        selectedKey: groqResult.selectedKey,
-        alternateKey: groqResult.alternateKey || geminiResult.alternateKey,
-        reasoning: `${groqResult.reasoning} [Verified by Dual Swarm Consensus: Groq + Gemini agree]`,
-        confidence: 0.99,
-        engine: 'Swarm Dual Consensus (Groq + Gemini)'
-      };
-    } else {
-      // Disagreement between Groq and Gemini: select the option with higher confidence
-      console.log(`[Swarm Arbiter] Model disagreement on Q: Groq=${groqResult.selectedKey}, Gemini=${geminiResult.selectedKey}`);
-      const chosen = (geminiResult.confidence > groqResult.confidence) ? geminiResult : groqResult;
-      return {
-        selectedKey: chosen.selectedKey,
-        alternateKey: (chosen === groqResult ? geminiResult.selectedKey : groqResult.selectedKey),
-        reasoning: chosen.reasoning,
-        confidence: 0.90,
-        engine: `Swarm Consensus Arbitrated (${chosen === groqResult ? 'Groq' : 'Gemini'})`
-      };
-    }
+  if (result) {
+    return result;
   }
 
-  if (groqResult) return groqResult;
-  if (geminiResult) return geminiResult;
-
-  // Step D: Fallback to Academic Knowledge Engine Heuristics
-  return solveWithAcademicHeuristics(question, courseContext);
+  // Emergency fallback if all AI providers fail completely
+  console.warn('[StudyPilot Cascade] All AI frontier tiers exhausted. Using academic fallback.');
+  const emergencyFallback = solveWithAcademicHeuristics(question, courseContext);
+  emergencyFallback.engine = 'Academic Emergency Fallback';
+  emergencyFallback.confidence = 0.50;
+  return emergencyFallback;
 }
 
 // 5. Message listener for Shadow CSS and API Proxying
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'GET_SHADOW_CSS') {
-    fetch(chrome.runtime.getURL('hud.shadow.css'))
-      .then((r) => r.text())
-      .then((css) => sendResponse({ css }))
-      .catch((err) => {
-        console.error('[StudyPilot Background] Shadow CSS fetch error:', err);
-        sendResponse({ css: null });
-      });
-    return true; // async response
-  }
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'GET_SHADOW_CSS') {
+      fetch(chrome.runtime.getURL('hud.shadow.css'))
+        .then((r) => r.text())
+        .then((css) => sendResponse({ css }))
+        .catch((err) => {
+          console.error('[StudyPilot Background] Shadow CSS fetch error:', err);
+          sendResponse({ css: null });
+        });
+      return true; // async response
+    }
 
-  if (request.action === 'SOLVE_QUESTION_SWARM') {
-    const { question, courseContext, config } = request.payload || {};
-    executeBackgroundAiSolve(question, courseContext, config)
-      .then((result) => {
-        sendResponse({ success: true, result });
-      })
-      .catch((err) => {
-        console.error('[StudyPilot Background] Swarm solve error:', err);
-        // Fallback to heuristics so student is NEVER stranded
-        const fallback = solveWithAcademicHeuristics(question, courseContext);
-        sendResponse({ success: true, result: fallback });
-      });
-    return true; // async response
-  }
-});
+    if (request.action === 'SOLVE_QUESTION_SWARM') {
+      const { question, courseContext, config } = request.payload || {};
+      executeBackgroundAiSolve(question, courseContext, config)
+        .then((result) => {
+          sendResponse({ success: true, result });
+        })
+        .catch((err) => {
+          console.error('[StudyPilot Background] Swarm solve error:', err);
+          const fallback = solveWithAcademicHeuristics(question, courseContext);
+          sendResponse({ success: true, result: fallback });
+        });
+      return true; // async response
+    }
+  });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    unmaskKey,
+    fetchWithTimeout,
+    safeExtractJson,
+    isMoodleUrl,
+    solveWithAcademicHeuristics,
+    executeBackgroundAiSolve,
+    GROQ_MODELS
+  };
+}

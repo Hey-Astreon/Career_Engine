@@ -435,6 +435,12 @@
       for (let i = 0; i < currentQuestions.length; i++) {
         const q = currentQuestions[i];
 
+        if (i > 0) {
+          // Token-aware pacing between question AI solving calls to prevent burst rate limits
+          const paceMs = stakes.isHighStakes ? Math.round(1400 + Math.random() * 600) : Math.round(500 + Math.random() * 400);
+          await new Promise(r => setTimeout(r, paceMs));
+        }
+
         if (activeHud) {
           activeHud.setState('solving', {
             total: currentQuestions.length,
@@ -449,7 +455,8 @@
           ...config,
           previousSelection: prevChoice,
           previousSelections: lastAttemptSelections,
-          isRetry: pastAttempts.length > 0
+          isRetry: pastAttempts.length > 0,
+          isHighStakes: stakes.isHighStakes
         });
 
         // Step 2: Auditor cross-examines & consensus
