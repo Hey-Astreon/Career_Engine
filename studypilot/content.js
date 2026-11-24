@@ -18,7 +18,7 @@
   let currentPageMode = 'unknown';
   let curriculumPlan = { items: [], currentItem: null, nextItem: null };
 
-  // Attempt Memory & Stagnation Tracking Vault
+  // Persistent Attempt Memory & Stagnation Tracking Vault (localStorage with sessionStorage fallback)
   function getQuizId(url = window.location.href) {
     try {
       const u = new URL(url);
@@ -30,7 +30,11 @@
 
   function loadQuizMemory(quizId) {
     try {
-      const raw = sessionStorage.getItem(`sp_quiz_memory_${quizId}`);
+      let raw = null;
+      try { raw = localStorage.getItem(`sp_quiz_memory_${quizId}`); } catch (e) {}
+      if (!raw) {
+        try { raw = sessionStorage.getItem(`sp_quiz_memory_${quizId}`); } catch (e) {}
+      }
       return raw ? JSON.parse(raw) : { quizId, attempts: [] };
     } catch (e) {
       return { quizId, attempts: [] };
@@ -41,7 +45,9 @@
     try {
       const mem = loadQuizMemory(quizId);
       mem.pendingSelections = selections;
-      sessionStorage.setItem(`sp_quiz_memory_${quizId}`, JSON.stringify(mem));
+      const str = JSON.stringify(mem);
+      try { localStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
+      try { sessionStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
     } catch (e) {}
   }
 
@@ -58,7 +64,9 @@
           gradeText: gradeInfo.gradeText
         });
         delete mem.pendingSelections;
-        sessionStorage.setItem(`sp_quiz_memory_${quizId}`, JSON.stringify(mem));
+        const str = JSON.stringify(mem);
+        try { localStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
+        try { sessionStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
       }
     } catch (e) {}
   }

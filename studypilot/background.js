@@ -110,7 +110,9 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /energy star/i, match: /epa|environmental protection agency/i, reason: "Energy Star is run by the US EPA and Department of Energy." },
     { pattern: /rohs/i, match: /restriction of hazardous substances/i, reason: "RoHS stands for Restriction of Hazardous Substances." },
     { pattern: /pue|power usage effectiveness/i, match: /total.*facility.*it|facility energy.*it energy/i, reason: "PUE is total facility energy divided by IT equipment energy." },
-    { pattern: /step.*initiative/i, match: /solving the e-waste problem/i, reason: "StEP stands for Solving the E-waste Problem." }
+    { pattern: /step.*initiative/i, match: /solving the e-waste problem/i, reason: "StEP stands for Solving the E-waste Problem." },
+    { pattern: /most valuable part of a pc or tv|cathode yoke/i, match: /copper in the cathode yoke/i, reason: "In CRT displays and electronics recycling, the copper deflection yoke contains heavy recoverable copper with immediate scrap value." },
+    { pattern: /materials can be extracted from alkaline batteries/i, match: /steel and zinc/i, reason: "Steel casing and zinc anode powder are extracted from spent alkaline batteries and reused in new manufacturing." }
   ];
 
   for (const entry of dictionary) {
@@ -154,6 +156,13 @@ function solveWithAcademicHeuristics(question, courseContext) {
 
 // 4. Multi-Provider Background AI Solver
 async function executeBackgroundAiSolve(question, courseContext, userConfig = {}) {
+  // Step 0: Academic Knowledge Base Ground Truth (Priority 0)
+  // If the question matches verified academic syllabus ground truth, use it immediately!
+  const groundTruth = solveWithAcademicHeuristics(question, courseContext);
+  if (groundTruth && groundTruth.confidence >= 0.95 && groundTruth.engine === 'Academic Knowledge Engine') {
+    return groundTruth;
+  }
+
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
 

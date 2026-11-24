@@ -1332,5 +1332,58 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(resolution.resolvedResults[1].selectedKey).toBe("c");
       expect(resolution.resolvedResults[1].auditNotes).toContain("Swarm Vector Collision Resolved");
     });
+
+    it("verifies Ground Truth resolution for Green Solutions Architecture Quiz 3.1.5", async () => {
+      const q1 = {
+        questionText: "Which materials can be extracted from alkaline batteries and used in the creation of new ones?",
+        options: [
+          { key: "a", cleanText: "Steel and cadmium" },
+          { key: "b", cleanText: "Steel and zinc" },
+          { key: "c", cleanText: "Lead and lye" },
+          { key: "d", cleanText: "Lithium and carbon" }
+        ],
+        traps: {}
+      };
+
+      const q2 = {
+        questionText: "The most valuable part of a PC or TV is the ________.",
+        options: [
+          { key: "a", cleanText: "Copper in the cathode yoke" },
+          { key: "b", cleanText: "Circuit boards that contain silver and gold" },
+          { key: "c", cleanText: "Lead in the CRT" },
+          { key: "d", cleanText: "None of the above" }
+        ],
+        traps: {}
+      };
+
+      const ans1 = await (await import("../studypilot/agent/scholar.js")).default.solveQuestion(q1 as any, "Green computing");
+      const ans2 = await (await import("../studypilot/agent/scholar.js")).default.solveQuestion(q2 as any, "Green computing");
+
+      // Q1 resolves to 'b' (Steel and zinc)
+      expect(ans1.selectedKey).toBe("b");
+      // Q2 resolves to 'a' (Copper in the cathode yoke) - Breaking the 5/10 trap!
+      expect(ans2.selectedKey).toBe("a");
+    });
+
+    it("ensures sidebar links named '1st Module Assessment' do not trigger high-stakes guard on practice quizzes", () => {
+      const mockDoc = {
+        querySelectorAll: (sel: string) => {
+          return [
+            {
+              innerText: "Quiz : 3.1.5 Aspects of Green Solutions Architecture",
+              closest: (selector: string) => null
+            },
+            {
+              innerText: "1st Module Assessment", // in sidebar!
+              closest: (selector: string) => selector.includes("#nav-drawer") ? {} : null
+            }
+          ];
+        }
+      };
+
+      const stakes = StudyPilotInspector.getAssessmentStakes(mockDoc as any);
+      expect(stakes.isHighStakes).toBe(false);
+      expect(stakes.attemptsAllowed).toBe(Infinity);
+    });
   });
 });

@@ -78,9 +78,15 @@
    * Analyzes Moodle quiz view page for attempt limits and stakes.
    */
   function getAssessmentStakes(doc = document) {
+    // Only inspect main content / quiz info area, strictly ignoring sidebar nav drawers and breadcrumbs
     const textNodes = Array.from(
       doc.querySelectorAll('.quizinfo, .box, p, div, h2, h3, h4, table, .generaltable')
-    );
+    ).filter(el => {
+      if (typeof el.closest === 'function') {
+        return !el.closest('#nav-drawer, .drawer-content, .courseindex, #course-index, .breadcrumb, header');
+      }
+      return true;
+    });
 
     let attemptsAllowed = Infinity; // default unlimited for small quizzes
     let attemptsUsed = 0;
