@@ -65,6 +65,10 @@
       ? Scribe.extractQuizGrade(document) 
       : { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
     const hasAttemptBtn = Boolean(Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function' && Sentry.findAttemptOrReattemptButton(document));
+    const Inspector = window.StudyPilotInspector;
+    const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
+      ? Inspector.getAssessmentStakes(document)
+      : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
 
     let nextTitle = curriculumPlan.nextItem ? curriculumPlan.nextItem.title : '';
     let nextHref = curriculumPlan.nextItem ? curriculumPlan.nextItem.href : '';
@@ -91,7 +95,8 @@
         hasMarkDoneBtn,
         isViewDone,
         gradeInfo,
-        hasAttemptBtn
+        hasAttemptBtn,
+        stakes
       });
     }
 
@@ -144,11 +149,31 @@
         const attemptBtn = Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function'
           ? Sentry.findAttemptOrReattemptButton(document)
           : null;
+        const Inspector = window.StudyPilotInspector;
+        const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
+          ? Inspector.getAssessmentStakes(document)
+          : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
 
-        // Subcase C1: Imperfect Quiz (e.g. 5.00 / 10.00) -> NEVER skip! Auto-re-attempt to get 10/10!
+        // Subcase C0: High-Stakes Exhaustion Guard (All 3 attempts used)
+        if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
+          if (activeHud) {
+            activeHud.setState('idle', { statusText: '🛡️ Inspector Guard: All 3 attempts used. Advancing to next topic...' });
+          }
+          await Sentry.sleep(1500);
+          if (Navigator) {
+            Navigator.navigateToNextActivity(document);
+          }
+          return;
+        }
+
+        // Subcase C1: Imperfect Quiz (e.g. 5.00 / 10.00) -> NEVER skip!
         if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn) {
           if (activeHud) {
-            activeHud.setState('submitting', { statusText: `Score is ${gradeInfo.gradeText}. Re-Attempting for 10/10...` });
+            activeHud.setState('submitting', { 
+              statusText: stakes.isHighStakes 
+                ? `🛡️ High-Stakes: Score is ${gradeInfo.gradeText}. Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
+                : `Score is ${gradeInfo.gradeText}. Re-Attempting for 10/10...` 
+            });
           }
           await Sentry.sleep(1200);
           await Sentry.clickAttemptQuiz(document);
@@ -168,9 +193,11 @@
         }
 
         // Subcase C3: Fresh Unattempted Quiz -> Auto-Launch Attempt!
-        if (!gradeInfo.hasGrade && attemptBtn) {
+        if (!gradeInfo.hasGrade && attemptBtn && stakes.canSafelyAttempt) {
           if (activeHud) {
-            activeHud.setState('submitting', { statusText: 'Launching Quiz Attempt...' });
+            activeHud.setState('submitting', { 
+              statusText: stakes.isHighStakes ? '🛡️ High-Stakes Assessment: Launching Attempt 1 of 3...' : 'Launching Quiz Attempt...' 
+            });
           }
           await Sentry.sleep(1200);
           await Sentry.clickAttemptQuiz(document);
@@ -290,6 +317,35 @@
             reasoning: consensus.reasoning,
             engine: consensus.engine
           });
+        }
+      }
+
+      // Step 3.5: Agent 6 (The Inspector) Pre-Submission Radio Verification
+      const Inspector = window.StudyPilotInspector;
+      if (Inspector && typeof Inspector.verifyAllQuestionsAttempted === 'function') {
+        const audit = Inspector.verifyAllQuestionsAttempted(document);
+        if (!audit.isAllAttempted) {
+          console.warn(`[Inspector] HALT: ${audit.unattemptedCount} unanswered questions detected!`, audit.unattemptedQuestions);
+          if (activeHud) {
+            activeHud.setState('solving', {
+              statusText: `🚨 Inspector Alert: Q${audit.unattemptedQuestions.map(u => u.questionNumber).join(', ')} missing! Re-solving...`
+            });
+          }
+          for (const missing of audit.unattemptedQuestions) {
+            const parsedQ = currentQuestions.find(cq => cq.questionNumber === missing.questionNumber) || {
+              id: missing.node.id,
+              questionNumber: missing.questionNumber,
+              questionText: (missing.node.innerText || '').trim(),
+              options: []
+            };
+            const scholarAns = await Scholar.solveQuestion(parsedQ, courseContext, config);
+            const consensus = Auditor.auditAnswer(parsedQ, scholarAns);
+            await Sentry.actuateSelection(parsedQ, consensus, speedMode);
+          }
+          const reAudit = Inspector.verifyAllQuestionsAttempted(document);
+          if (!reAudit.isAllAttempted) {
+            throw new Error(`Inspector Security Block: ${reAudit.unattemptedCount} radio buttons unselected. Submission halted.`);
+          }
         }
       }
 

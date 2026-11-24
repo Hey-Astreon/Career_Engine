@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   'agent/auditor.js',
                   'agent/sentry.js',
                   'agent/navigator.js',
+                  'agent/inspector.js',
                   'content.js'
                 ]
               }).then(() => {

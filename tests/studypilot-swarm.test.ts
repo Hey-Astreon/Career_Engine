@@ -12,6 +12,7 @@ import StudyPilotScribe from "../studypilot/agent/scribe.js";
 import StudyPilotAuditor from "../studypilot/agent/auditor.js";
 import StudyPilotSentry from "../studypilot/agent/sentry.js";
 import StudyPilotNavigator from "../studypilot/agent/navigator.js";
+import StudyPilotInspector from "../studypilot/agent/inspector.js";
 
 // Lightweight Mock DOM for Amigo Moodle Quiz & Curriculum Environment
 function createMockAmigoMoodleDOM(): any {
@@ -930,6 +931,90 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(parsed.questions[29].questionNumber).toBe(30);
       expect(parsed.questions[0].options.length).toBe(3);
       expect(parsed.questions[0].traps.hasDualOptionTrap).toBe(true);
+    });
+
+    it("Inspector audits pre-submission radio selections and blocks submission if any question is unattempted", () => {
+      // Create 5 questions where Question 3 has NO checked input
+      const qNodes: any[] = [];
+      for (let i = 1; i <= 5; i++) {
+        const isChecked = i !== 3; // Question 3 is missing radio selection!
+        const input = isChecked ? { tagName: "INPUT", type: "radio", checked: true } : null;
+        qNodes.push({
+          id: `question-${i}`,
+          querySelector(sel: string) {
+            if (sel.includes(".no") || sel.includes(".qno")) return { textContent: `Question ${i}` };
+            if (sel.includes(":checked") || sel.includes(".checked")) return input;
+            return null;
+          },
+        });
+      }
+
+      const mockDoc = {
+        querySelectorAll: () => qNodes,
+      };
+
+      const audit = StudyPilotInspector.verifyAllQuestionsAttempted(mockDoc as any);
+      expect(audit.isAllAttempted).toBe(false);
+      expect(audit.total).toBe(5);
+      expect(audit.attemptedCount).toBe(4);
+      expect(audit.unattemptedCount).toBe(1);
+      expect(audit.unattemptedQuestions[0].questionNumber).toBe(3);
+
+      // Now satisfy Question 3
+      qNodes[2].querySelector = (sel: string) => {
+        if (sel.includes(".no") || sel.includes(".qno")) return { textContent: `Question 3` };
+        return { tagName: "INPUT", type: "radio", checked: true };
+      };
+
+      const cleanAudit = StudyPilotInspector.verifyAllQuestionsAttempted(mockDoc as any);
+      expect(cleanAudit.isAllAttempted).toBe(true);
+      expect(cleanAudit.unattemptedCount).toBe(0);
+      expect(cleanAudit.attemptedCount).toBe(5);
+    });
+
+    it("Inspector detects high-stakes 3-attempt constraints and enforces attempt limits", () => {
+      // High-Stakes Module Assessment with 3 attempts limit and 1 attempt used
+      const mockHighStakesDoc = {
+        querySelectorAll(sel: string) {
+          if (sel.includes("tr")) {
+            return [
+              { innerText: "Attempt 1 Finished" },
+            ];
+          }
+          return [
+            { innerText: "Attempts allowed: 3" },
+            { innerText: "Grading method: Highest grade" },
+            { innerText: "1st Module Assessment" },
+          ];
+        },
+      };
+
+      const stakes = StudyPilotInspector.getAssessmentStakes(mockHighStakesDoc as any);
+      expect(stakes.isHighStakes).toBe(true);
+      expect(stakes.attemptsAllowed).toBe(3);
+      expect(stakes.attemptsUsed).toBe(1);
+      expect(stakes.attemptsRemaining).toBe(2);
+      expect(stakes.canSafelyAttempt).toBe(true);
+
+      // Exhausted 3-attempt assessment
+      const mockExhaustedDoc = {
+        querySelectorAll(sel: string) {
+          if (sel.includes("tr")) {
+            return [
+              { innerText: "Attempt 1 Finished" },
+              { innerText: "Attempt 2 Finished" },
+              { innerText: "Attempt 3 Finished" },
+            ];
+          }
+          return [
+            { innerText: "Attempts allowed: 3" },
+          ];
+        },
+      };
+
+      const exhaustedStakes = StudyPilotInspector.getAssessmentStakes(mockExhaustedDoc as any);
+      expect(exhaustedStakes.attemptsRemaining).toBe(0);
+      expect(exhaustedStakes.canSafelyAttempt).toBe(false);
     });
   });
 });

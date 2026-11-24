@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 129: Scale Calibration for 30-Question Module Assessments & Paged Assessment Traversal)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 130: Stride StudyPilot Agent 6 (The Inspector) — Pre-Submission Radio Verification & High-Stakes 3-Attempt Gatekeeper)
 
 ---
 
@@ -5172,4 +5172,43 @@ graph TD
     - Packaged standalone bundle: `public/downloads/studypilot-extension.zip` (39.4 KB).
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Dynamic Question Batching Law):** Assessment automations must never hardcode question assumptions. Whether an assessment contains 2, 5, 10, or 30 questions—and whether it is single-page or paginated across multiple screens—the state machine must treat question arrays dynamically, auto-scrolling HUD logs and advancing through pagination until the final submission gate.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 130: Stride StudyPilot Agent 6 (The Inspector) — Pre-Submission Radio Verification & High-Stakes 3-Attempt Gatekeeper (November 24, 2026)
+- **The Exact Challenge & Risk Identified:**
+  - In university LMS (AMIGO Moodle), assessment stakes diverge fundamentally:
+    1. **Small Practice Quizzes:** Unlimited attempts allowed. Zero consequences for iterative testing.
+    2. **Module Assessments & Graded Assessments:** **STRICT 3-ATTEMPT CEILING!** Any unverified question, skipped radio button, or automated retry loop could burn through precious attempts ($Attempt_1 \rightarrow Attempt_2 \rightarrow Attempt_3$), with irreversible consequences to the student's cumulative grade.
+  - The founder requested a specialized **Verification & Audit Agent** to:
+    - Inspect every single question container on the page to verify that every radio button has been physically checked prior to submission.
+    - Audit all syllabus sections (Live Classes, Videos, Quizzes) to verify that full marks and completion requirements are secured.
+    - Safeguard the 3-attempt ceiling on high-stakes assessments.
+- **The Concrete Surgical Architecture & Implementation:**
+  - **1. Agent 6: The Inspector (`studypilot/agent/inspector.js`):**
+    - **Pillar 1: Pre-Submission 100% Radio Verification (`verifyAllQuestionsAttempted`):**
+      - Audits every `.que`, `div[id^="question-"]` on the DOM before submission.
+      - Enforces that `input:checked` or `[aria-checked="true"]` is present on 100% of questions.
+      - If even 1 question is unselected (`unattemptedCount > 0`), the Inspector triggers a **HARD STOP**, halts submission, surfaces an alert in the HUD (`🚨 Inspector Alert: QX missing!`), automatically re-dispatches Scholar/Auditor/Sentry to solve and select the missing question, and re-audits before allowing submission.
+    - **Pillar 2: High-Stakes 3-Attempt Gatekeeper (`getAssessmentStakes`):**
+      - Detects finite attempt constraints (`Attempts allowed: 3`).
+      - Tracks `attemptsUsed` vs `attemptsRemaining`.
+      - **Finite Attempt Protection:** Prevents infinite auto-retry loops on 3-attempt quizzes. If all 3 attempts are used, it guards the user and prevents further submission attempts.
+    - **Pillar 3: Course-Wide Syllabus & Grade Audit (`auditCourseCurriculum`):**
+      - Audits sidebar curriculum links, segregating completed (`✓`) from pending (`○`) Live Classes, Quizzes, and Lectures.
+  - **2. Swarm Content Integration (`studypilot/content.js`):**
+    - Integrated `StudyPilotInspector.verifyAllQuestionsAttempted` at Step 3.5 of `executeSwarmAutoSolve()` directly before `Sentry.clickNextOrFinish`.
+    - Integrated `getAssessmentStakes` in Stage C of `checkAutonomousLifecycle()` to guard remaining attempts.
+  - **3. HUD High-Stakes Guard & Attempt Counter (`studypilot/hud-ui.js`):**
+    - Subtitle and badges reflect active stakes: `🛡️ Finite Attempts: 1/3 Used (2 Left)` with `6-Agent Swarm` brand pill.
+  - **4. Manifest & Dynamic Extension Wiring (`manifest.json` & `popup.js`):**
+    - Added `"agent/inspector.js"` to `content_scripts` and programmatic injection fallbacks.
+  - **5. Automated Vitest Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added tests for `verifyAllQuestionsAttempted` verifying detection of missing radio selections, self-healing, and clean audit validation.
+    - Added tests for `getAssessmentStakes` verifying accurate detection of 3-attempt limits and exhaustion states.
+    - All 23 tests passing 100% (4.29s). TypeScript typecheck passes with 0 errors.
+  - **6. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Packaged standalone bundle: `public/downloads/studypilot-extension.zip` (42.8 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Finite Attempt Conservation Law):** On LMS platforms with finite attempt limits ($\le 3$ attempts), an autonomous agent must NEVER treat retries as cheap. The agent must detect attempt constraints from the DOM, lock in pre-submission radio verification to guarantee zero blank questions, and prevent autonomous retry loops from burning remaining attempts.
+  - **Rule (Zero-Missed Radio Pre-Submission Audit Law):** Automated test-taking agents must never rely on loop completion to assume all inputs were checked. Before clicking any submit button, an independent Inspector agent must query the physical DOM for `input:checked` across 100% of question containers, self-healing any missed questions prior to final transmission.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

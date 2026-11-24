@@ -389,6 +389,7 @@
       this.data.isViewDone = Boolean(scanData.isViewDone);
       this.data.gradeInfo = scanData.gradeInfo || { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
       this.data.hasAttemptBtn = Boolean(scanData.hasAttemptBtn);
+      this.data.stakes = scanData.stakes || null;
       this.render();
     }
 
@@ -485,9 +486,14 @@
       const isBusy = this.state === 'solving' || this.state === 'submitting';
       const pct = this.data.questionsCount > 0 ? Math.round((this.data.solvedCount / this.data.questionsCount) * 100) : 0;
 
-      let badgeText = '4-Agent Swarm';
+      let badgeText = '6-Agent Swarm';
       let badgeClass = 'sp-badge';
       let subtitleText = '';
+
+      if (this.data.stakes && this.data.stakes.isHighStakes) {
+        badgeText = 'High-Stakes Guard';
+        badgeClass = 'sp-badge busy';
+      }
 
       if (this.pageMode === 'lecture-page') {
         badgeText = 'Lecture Mode';
@@ -541,6 +547,11 @@
         <div class="sp-course-info">
           <div class="sp-course-title" title="${this.escapeHtml(this.data.courseTitle)}">${this.escapeHtml(this.data.courseTitle)}</div>
           <div class="sp-course-subtitle">${subtitleText}</div>
+          ${this.data.stakes && this.data.stakes.isHighStakes ? `
+            <div style="font-size: 10px; font-weight: 600; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 3px 6px; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <span>🛡️ Finite Attempts: ${this.data.stakes.attemptsUsed}/${this.data.stakes.attemptsAllowed} Used (${this.data.stakes.attemptsRemaining} Left)</span>
+            </div>
+          ` : ''}
           ${this.data.nextActivityTitle ? `
             <div class="sp-next-preview" title="Next: ${this.escapeHtml(this.data.nextActivityTitle)}">
               Next: ${this.escapeHtml(this.data.nextActivityTitle)}
