@@ -674,5 +674,118 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(attemptResult).toBe(true);
       expect(quizAttemptStarted).toBe(true);
     });
+
+    it("finds and actuates 'Mark as done' on manual completion pages without double-toggling completed items", async () => {
+      let markDoneClicked = false;
+
+      const liveClassDoneBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-outline-secondary",
+        innerText: "Mark as done",
+        textContent: "Mark as done",
+        getAttribute: (attr: string) => attr === "data-action" ? "toggle-manual-completion" : null,
+        click: () => { markDoneClicked = true; },
+      };
+
+      const mockLiveClassDoc = {
+        querySelector(sel: string) {
+          if (sel.includes("toggle-manual-completion")) return liveClassDoneBtn;
+          return null;
+        },
+        querySelectorAll: () => [liveClassDoneBtn],
+      };
+
+      // 1. Detects and clicks "Mark as done"
+      const foundBtn = StudyPilotSentry.findMarkAsDoneButton(mockLiveClassDoc as any);
+      expect(foundBtn).not.toBeNull();
+      expect((foundBtn as any).innerText).toBe("Mark as done");
+
+      const success = await StudyPilotSentry.clickMarkAsDone(mockLiveClassDoc as any);
+      expect(success).toBe(true);
+      expect(markDoneClicked).toBe(true);
+
+      // 2. Ignores already completed buttons (e.g. "✓ Done" or "Done") to prevent unmarking
+      const alreadyDoneBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-outline-success",
+        innerText: "✓ Done",
+        textContent: "✓ Done",
+        getAttribute: (attr: string) => {
+          if (attr === "data-action") return "toggle-manual-completion";
+          if (attr === "data-toggled") return "true";
+          return null;
+        },
+        click: () => {},
+      };
+
+      const mockCompletedDoc = {
+        querySelector: () => alreadyDoneBtn,
+        querySelectorAll: () => [alreadyDoneBtn],
+      };
+
+      const completedFound = StudyPilotSentry.findMarkAsDoneButton(mockCompletedDoc as any);
+      expect(completedFound).toBeNull();
+    });
+
+    it("strictly ignores optional non-credit items (Announcement, Discussion Forum, Interactive SLM) and rescues navigation to incomplete academic topics", () => {
+      const announcementNode = {
+        tagName: "A",
+        href: "https://amigo.amityonline.com/mod/forum/view.php?id=176418",
+        innerText: "Announcements",
+        textContent: "Announcements",
+        getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/forum/view.php?id=176418" : null,
+        classList: { contains: () => false },
+      };
+
+      const discussionForumNode = {
+        tagName: "A",
+        href: "https://amigo.amityonline.com/mod/forum/view.php?id=176419",
+        innerText: "Discussion Forum : Green computing",
+        textContent: "Discussion Forum : Green computing",
+        getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/forum/view.php?id=176419" : null,
+        classList: { contains: () => false },
+      };
+
+      const interactiveSlmNode = {
+        tagName: "A",
+        href: "https://amigo.amityonline.com/mod/url/view.php?id=176420",
+        innerText: "Interactive SLM : Green computing",
+        textContent: "Interactive SLM : Green computing",
+        getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/url/view.php?id=176420" : null,
+        classList: { contains: () => false },
+      };
+
+      let nextTopicClicked = false;
+      const nextAcademicTopicNode = {
+        tagName: "A",
+        href: "https://amigo.amityonline.com/mod/page/view.php?id=192359",
+        innerText: "o 1.2.2 Green Value",
+        textContent: "o 1.2.2 Green Value",
+        getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/page/view.php?id=192359" : null,
+        classList: { contains: () => false },
+        click: () => { nextTopicClicked = true; },
+      };
+
+      const mockSidebarDoc = {
+        querySelectorAll(sel: string) {
+          if (sel.includes("a")) {
+            return [announcementNode, discussionForumNode, interactiveSlmNode, nextAcademicTopicNode];
+          }
+          return [];
+        },
+      };
+
+      const curriculum = StudyPilotScribe.parseCurriculum(mockSidebarDoc as any, "https://amigo.amityonline.com/mod/forum/view.php?id=176418");
+      
+      // Announcements, Discussion Forum, and Interactive SLM must NOT appear in the academic curriculum
+      expect(curriculum.items.some(it => it.title.includes("Announcement"))).toBe(false);
+      expect(curriculum.items.some(it => it.title.includes("Discussion Forum"))).toBe(false);
+      expect(curriculum.items.some(it => it.title.includes("Interactive SLM"))).toBe(false);
+
+      // Only true academic curriculum items remain
+      expect(curriculum.items.length).toBe(1);
+      expect(curriculum.items[0].title).toBe("1.2.2 Green Value");
+      expect(curriculum.items[0].isCompleted).toBe(false);
+    });
   });
 });

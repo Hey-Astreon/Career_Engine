@@ -58,6 +58,8 @@
     }
 
     const hasVideo = Boolean(document.querySelector('video, iframe[src*="video"], iframe[src*="youtube"]'));
+    const Sentry = window.StudyPilotSentry;
+    const hasMarkDoneBtn = Boolean(Sentry && typeof Sentry.findMarkAsDoneButton === 'function' && Sentry.findMarkAsDoneButton(document));
 
     let nextTitle = curriculumPlan.nextItem ? curriculumPlan.nextItem.title : '';
     let nextHref = curriculumPlan.nextItem ? curriculumPlan.nextItem.href : '';
@@ -80,7 +82,8 @@
         pageMode: currentPageMode,
         nextActivityTitle: nextTitle,
         nextActivityHref: nextHref,
-        hasVideo
+        hasVideo,
+        hasMarkDoneBtn
       });
     }
 
@@ -134,6 +137,24 @@
             activeHud.setState('complete', { statusText: 'Topic Complete! Advancing to next activity...' });
           }
           await Sentry.sleep(1500);
+          if (Navigator) {
+            Navigator.navigateToNextActivity(document);
+          }
+        }
+      }
+
+      // Stage D: On Manual Completion Page (Live Class / Study Material), Auto-Mark Done & Advance
+      if (Sentry && typeof Sentry.findMarkAsDoneButton === 'function' && autoAdvance && currentPageMode !== 'quiz-attempt' && currentPageMode !== 'quiz-summary') {
+        const markDoneBtn = Sentry.findMarkAsDoneButton(document);
+        if (markDoneBtn) {
+          if (activeHud) {
+            activeHud.setState('solving', { statusText: 'Marking topic as done...' });
+          }
+          await Sentry.clickMarkAsDone(document);
+          if (activeHud) {
+            activeHud.setState('complete', { statusText: 'Topic Done! Advancing to next activity...' });
+          }
+          await Sentry.sleep(1200);
           if (Navigator) {
             Navigator.navigateToNextActivity(document);
           }
@@ -263,6 +284,29 @@
     }
   }
 
+  async function markDoneAndNext() {
+    const Sentry = window.StudyPilotSentry;
+    const Navigator = window.StudyPilotNavigator;
+
+    if (activeHud) {
+      activeHud.setState('solving', { statusText: 'Marking topic as done...' });
+    }
+
+    if (Sentry && typeof Sentry.clickMarkAsDone === 'function') {
+      await Sentry.clickMarkAsDone(document);
+    }
+
+    if (activeHud) {
+      activeHud.setState('complete', { statusText: 'Topic Done! Advancing...' });
+    }
+
+    if (Navigator) {
+      setTimeout(() => {
+        Navigator.navigateToNextActivity(document);
+      }, 800);
+    }
+  }
+
   function navigateNext() {
     const Navigator = window.StudyPilotNavigator;
     if (Navigator) {
@@ -335,6 +379,7 @@
   window.__STUDYPILOT_AUTO_SOLVE__ = executeSwarmAutoSolve;
   window.__STUDYPILOT_SCAN__ = scanCurrentPage;
   window.__STUDYPILOT_COMPLETE_VIDEO__ = completeVideoAndNext;
+  window.__STUDYPILOT_MARK_DONE__ = markDoneAndNext;
   window.__STUDYPILOT_NAVIGATE_NEXT__ = navigateNext;
   window.__STUDYPILOT_SUBMIT_SUMMARY__ = submitSummary;
   window.__STUDYPILOT_ATTEMPT_QUIZ__ = attemptQuiz;

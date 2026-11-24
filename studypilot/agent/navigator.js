@@ -14,6 +14,8 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  const NON_CURRICULUM_REGEX = /\b(glossary|syllabus|live\s*class|announcements?|discussion\s*forum|interactive\s*slm|audio\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
+
   function getCurriculumPlan(doc = document) {
     if (typeof window.StudyPilotScribe !== 'undefined') {
       return window.StudyPilotScribe.parseCurriculum(doc, window.location.href);
@@ -51,27 +53,50 @@
     }
 
     // Strategy 3: Standard Moodle bottom navigation link (activity-navigation)
+    // ONLY follow if it points to an academic curriculum topic (not static non-credit links!)
     const nextActivityLink = doc.querySelector(
       '#next-activity-link a, #next-activity-link, .activity-navigation .next a, a[title*="Next" i], .nav-item-next a, .activity-navigation a[title*="Next" i]'
     );
     if (nextActivityLink) {
-      if (typeof nextActivityLink.click === 'function') {
-        nextActivityLink.click();
-        return { success: true, target: 'Next Activity', url: nextActivityLink.href };
-      }
-      if (nextActivityLink.href) {
-        window.location.href = nextActivityLink.href;
-        return { success: true, target: 'Next Activity', url: nextActivityLink.href };
+      const linkText = (nextActivityLink.innerText || nextActivityLink.textContent || (typeof nextActivityLink.getAttribute === 'function' && nextActivityLink.getAttribute('title')) || '').trim();
+      const linkHref = nextActivityLink.href || (typeof nextActivityLink.getAttribute === 'function' && nextActivityLink.getAttribute('href')) || '';
+      
+      if (!NON_CURRICULUM_REGEX.test(linkText) && !NON_CURRICULUM_REGEX.test(linkHref)) {
+        if (typeof nextActivityLink.click === 'function') {
+          nextActivityLink.click();
+          return { success: true, target: linkText || 'Next Activity', url: linkHref };
+        }
+        if (linkHref) {
+          window.location.href = linkHref;
+          return { success: true, target: linkText || 'Next Activity', url: linkHref };
+        }
       }
     }
 
-    // Strategy 4: Text search across all links
+    // Strategy 4: Text search across all links (strictly ignoring non-curriculum links)
     const allLinks = Array.from(doc.querySelectorAll('a.btn, .activity-navigation a, a'));
     for (const link of allLinks) {
       const txt = (link.innerText || link.textContent || '').trim().toLowerCase();
+      const href = link.href || '';
+      if (NON_CURRICULUM_REGEX.test(txt) || NON_CURRICULUM_REGEX.test(href)) {
+        continue;
+      }
       if (txt.includes('next activity') || txt === 'next >' || txt.includes('next chapter') || txt.includes('next topic')) {
         link.click();
         return { success: true, target: link.innerText.trim(), url: link.href };
+      }
+    }
+
+    // Strategy 5: Ultimate Rescue — find any incomplete academic activity across the whole course!
+    const finalRescue = findNextIncompleteActivity(doc);
+    if (finalRescue) {
+      if (finalRescue.element && typeof finalRescue.element.click === 'function') {
+        finalRescue.element.click();
+        return { success: true, target: finalRescue.title, url: finalRescue.href };
+      }
+      if (finalRescue.href) {
+        window.location.href = finalRescue.href;
+        return { success: true, target: finalRescue.title, url: finalRescue.href };
       }
     }
 

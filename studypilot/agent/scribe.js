@@ -17,7 +17,7 @@
 
   const NEGATIVE_REGEX = /\b(not|except|incorrect|false|never|unlikely|cannot)\b/i;
   const DUAL_OPTION_REGEX = /\b(both of these|both a and b|both b and c|all of the above|all of these|none of these|none of the above|neither)\b/i;
-  const NON_CURRICULUM_REGEX = /\b(glossary|syllabus|live class|announcement|discussion forum|interactive slm|audio slm|virtual lab|student support|planner|beSocial)\b/i;
+  const NON_CURRICULUM_REGEX = /\b(glossary|syllabus|live\s*class|announcements?|discussion\s*forum|interactive\s*slm|audio\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
   const CURRICULUM_TITLE_REGEX = /^\s*[✓o○\s]*(\d+\.\d+|quiz\s*:|.*module.*assessment|\d+[a-z]{2}\s*module)/i;
 
   function extractCourseContext(doc = document) {
@@ -48,7 +48,7 @@
     if (currentUrl.includes('/mod/quiz/view.php') || (doc.querySelector && doc.querySelector('.quizinfo, #intro, input[value*="Attempt quiz" i], button[value*="Attempt quiz" i]'))) {
       return 'quiz-view';
     }
-    if (currentUrl.includes('/mod/page/view.php') || currentUrl.includes('/mod/lesson/') || (doc.querySelector && doc.querySelector('.modtype_page, video, iframe[src*="video"]'))) {
+    if (currentUrl.includes('/mod/page/view.php') || currentUrl.includes('/mod/lesson/') || currentUrl.includes('/mod/resource/') || currentUrl.includes('/mod/googlemeet/') || (doc.querySelector && doc.querySelector('.modtype_page, video, iframe[src*="video"]'))) {
       return 'lecture-page';
     }
     if (currentUrl.includes('/course/view.php') || currentUrl.includes('/my/')) {

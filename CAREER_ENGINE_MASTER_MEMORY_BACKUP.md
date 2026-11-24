@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 125: Stride StudyPilot 2.0 Academic Syllabus Purification & Strict Sequential Module Traversal Engine)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 126: AMIGO Course Structure Calibration — Optional Non-Credit Quarantining & Manual Completion ('Mark as done') Engine)
 
 ---
 
@@ -5052,4 +5052,39 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Query Parameter URL Identity Law):** In LMS platforms like Moodle, Blackboard, and Canvas, almost all activities share identical base script paths (e.g. `/mod/page/view.php`, `/mod/quiz/view.php`). Never match active or current URLs using `url.split('?')[0]` or path-only comparisons. Always parse query parameters (`URLSearchParams`) and enforce exact identity on entity keys (`?id=`, `?cmid=`, `?attempt=`).
   - **Rule (Syllabus Quarantine & Academic Purification Law):** Course navigation drawers always contain non-academic reference links (Glossary, Syllabus, Live Classes, Announcements, Chatrooms). Curriculum traversal engines must strictly whitelist numbered module topics and quizzes (`/^\d+\.\d+/`, `/quiz\s*:/i`) and blacklist static reference patterns to prevent accidental leaps out of the learning pipeline.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 126: AMIGO Course Structure Calibration — Optional Non-Credit Quarantining & Manual Completion ('Mark as done') Engine (November 24, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - During the AMIGO LMS structural walkthrough (Green Computing CSE433, Semester III), the student and system encountered two specific structural requirements across course zones:
+    1. **Optional Non-Credit Activities:** AMIGO course sections contain links like `Announcement`, `Discussion Forum`, and `Interactive SLM` that have no progress radio button/circle, are purely optional, and do not contribute to course completion %. StudyPilot needed to be strictly prevented from visiting, indexing, or auto-navigating to these 3 optional resources.
+    2. **Manual Completion Toggle (`Mark as done`):** On Live Class (`/mod/googlemeet/`) and Study Material PDF (`/mod/resource/`) pages, AMIGO does not use passive completion (`Done: View`); instead, it renders an explicit `<button>Mark as done</button>`. Once clicked, it changes to `✓ Done`. StudyPilot needed the ability to detect and click `Mark as done` without double-toggling already completed activities, and surface a dedicated `⚡ Mark Done & Next` action.
+- **Deep Root Cause Diagnosis:**
+  - **1. Bottom Navigation Overreach:** In `navigator.js`, Moodle's native bottom `#next-activity-link a` ("Next Activity >") was clicked blindly without inspecting if the link target pointed to an announcement, discussion forum, or static resource. This caused navigation to occasionally veer into optional discussion boards when transitioning between modules.
+  - **2. Absence of Manual Completion Actuator:** `sentry.js` had actuators for quiz attempts, review links, summaries, and videos, but lacked a dedicated DOM handler for Moodle's manual completion toggle (`button[data-action="toggle-manual-completion"]`).
+  - **3. Double-Toggle Risk:** Clicking `Mark as done` in Moodle toggles completion on, but clicking it again when it already shows `✓ Done` unmarks the topic as incomplete. Actuation needed strict idempotent guards to never click an already completed button.
+- **The Concrete Surgical Fix:**
+  - **1. Exhaustive Non-Curriculum Quarantine (`scribe.js` & `navigator.js`):**
+    - Expanded `NON_CURRICULUM_REGEX` to cover: `announcements?`, `discussion\s*forum`, `interactive\s*slm`, `audio\s*slm`, `glossary`, `syllabus`, `live\s*class`, `course\s*objectives`, `learning\s*outcomes`, `virtual\s*lab`, `student\s*support`, `planner`, `beSocial`.
+    - Enforced this regex across both `parseCurriculum` in `scribe.js` and Moodle's bottom navigation link search (`#next-activity-link a`, `activity-navigation a`) in `navigator.js`. If Moodle's bottom navigation points to an optional non-credit target, Navigator rejects it and executes Strategy 5 rescue to the first incomplete academic chapter (`findNextIncompleteActivity`).
+  - **2. Page Mode Detection for Learning Resources (`scribe.js`):**
+    - Updated `detectPageMode` to recognize `/mod/resource/` and `/mod/googlemeet/` as `lecture-page`.
+  - **3. Idempotent Manual Completion Actuator (`studypilot/agent/sentry.js`):**
+    - Built `findMarkAsDoneButton(doc)`: targets `button[data-action="toggle-manual-completion"]` and buttons with text "Mark as done".
+    - Enforced idempotence: if the button or container already contains "Done" or `data-toggled="true"`, it returns `null` to prevent accidental unmarking.
+    - Built `clickMarkAsDone(doc)` with humanized pacing delay (600ms pause, click, 800ms settlement).
+  - **4. In-HUD Action & Autonomous Lifecycle (`content.js` & `hud-ui.js`):**
+    - In `content.js`, `scanCurrentPage` scans for `hasMarkDoneBtn` and passes it to the HUD.
+    - In `hud-ui.js`, when on a manual completion page, the HUD surfaces `⚡ Mark Done & Next`.
+    - Wired `sp-mark-done-btn` to `markDoneAndNext()` helper which clicks `Mark as done` and auto-advances.
+    - In `checkAutonomousLifecycle()`, if `autoAdvance` is enabled and the user is on a manual completion page, Sentry marks it done and advances autonomously.
+  - **5. Automated Vitest Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added test verifying `findMarkAsDoneButton` finds and clicks "Mark as done", and ignores already completed "✓ Done" buttons.
+    - Added test verifying `parseCurriculum` strictly excludes `Announcements`, `Discussion Forum`, and `Interactive SLM`.
+    - All 17 tests passing 100% (4.34s). TypeScript typecheck passes with 0 errors.
+  - **6. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Packaged standalone bundle: `public/downloads/studypilot-extension.zip` (38.0 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (LMS Manual Completion Idempotence Law):** In Moodle and AMIGO LMS, manual completion buttons are toggles (`data-action="toggle-manual-completion"`). Never click a completion button without verifying that it does not already display `✓ Done` or `data-toggled="true"`. Blindly clicking toggles turns completed credits back to incomplete!
+  - **Rule (Optional Non-Credit Activity Blacklist Law):** In university LMS platforms, discussion forums, announcements, and interactive flash/HTML5 embeds frequently lack completion radio buttons and do not count toward course progress. Always quarantine them from curriculum trees and navigation fallbacks to prevent the learner/agent from getting trapped in non-credit discussion threads.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

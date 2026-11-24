@@ -385,6 +385,7 @@
       this.data.nextActivityTitle = scanData.nextActivityTitle || '';
       this.data.nextActivityHref = scanData.nextActivityHref || '';
       this.data.hasVideo = Boolean(scanData.hasVideo);
+      this.data.hasMarkDoneBtn = Boolean(scanData.hasMarkDoneBtn);
       this.render();
     }
 
@@ -549,6 +550,11 @@
         ` : ''}
 
         ${this.pageMode === 'lecture-page' && !isBusy ? `
+          ${this.data.hasMarkDoneBtn ? `
+            <button class="sp-action-btn" id="sp-mark-done-btn">
+              <span>⚡ Mark Done & Next</span>
+            </button>
+          ` : ''}
           ${this.data.hasVideo ? `
             <button class="sp-action-btn" id="sp-complete-video-btn">
               <span>⚡ Complete Video & Next</span>
@@ -620,6 +626,15 @@
               window.__STUDYPILOT_AUTO_SOLVE__(config);
             }
           });
+        };
+      }
+
+      const markDoneBtn = this.shadow.getElementById('sp-mark-done-btn');
+      if (markDoneBtn) {
+        markDoneBtn.onclick = () => {
+          if (typeof window.__STUDYPILOT_MARK_DONE__ === 'function') {
+            window.__STUDYPILOT_MARK_DONE__();
+          }
         };
       }
 

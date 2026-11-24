@@ -409,6 +409,40 @@
     return false;
   }
 
+  function findMarkAsDoneButton(doc = document) {
+    // 1. Direct standard Moodle toggle-manual-completion button
+    const directBtn = doc.querySelector('button[data-action="toggle-manual-completion"], [data-action="toggle-manual-completion"]');
+    if (directBtn) {
+      const txt = (directBtn.innerText || directBtn.textContent || directBtn.value || '').trim().toLowerCase();
+      // Only return if it is NOT yet marked as done (does not say "done" or "✓ done")
+      if (txt.includes('mark as done') || (directBtn.getAttribute('data-toggled') !== 'true' && !txt.includes('done'))) {
+        return directBtn;
+      }
+    }
+
+    // 2. Text-content search across candidate buttons
+    const candidates = Array.from(doc.querySelectorAll('button, input[type="button"], a.btn'));
+    for (const el of candidates) {
+      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt === 'mark as done') {
+        return el;
+      }
+    }
+
+    return null;
+  }
+
+  async function clickMarkAsDone(doc = document) {
+    const markDoneBtn = findMarkAsDoneButton(doc);
+    if (markDoneBtn) {
+      await sleep(600);
+      markDoneBtn.click();
+      await sleep(800);
+      return true;
+    }
+    return false;
+  }
+
   return {
     calculatePacingDelay,
     actuateSelection,
@@ -420,6 +454,8 @@
     clickFinishReview,
     clickAttemptQuiz,
     completeLectureVideo,
+    findMarkAsDoneButton,
+    clickMarkAsDone,
     sleep
   };
 });
