@@ -166,16 +166,17 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
 
-  const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA'}
+  const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA (Green Computing)'}
 Question: ${question.questionText}
 Options:
 ${optionsStr}
 
-Solve this multiple-choice question from first principles.
+Solve this academic multiple-choice question from standard university curriculum and textbook definitions.
 RULES:
-1. If multiple statements are true and an option states 'Both of these', 'Both a and b', or 'All of the above', you MUST select that option.
-2. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
-3. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
+1. Academic Syllabus Compliance: Base answers on standard academic university textbooks and curriculum definitions (e.g. Green Computing, CRT e-waste, cathode yoke, standard syllabus terminology).
+2. If multiple statements are true and an option states 'Both of these', 'Both a and b', or 'All of the above', you MUST select that composite option.
+3. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
+4. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
   // Step A: Groq with openai/gpt-oss-120b (Ultra-Fast 500+ t/s)
@@ -229,12 +230,12 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     }
   }
 
-  // Step B: Gemini 1.5/2.5 Flash for Dual-Model Consensus Verification
+  // Step B: Gemini 2.5 Flash for Dual-Model Consensus Verification
   let geminiResult = null;
   const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
   if (geminiKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -259,9 +260,9 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
             geminiResult = {
               selectedKey: cleanKey,
               alternateKey: altKey,
-              reasoning: parsed.reasoning || 'Solved via Google Gemini.',
+              reasoning: parsed.reasoning || 'Solved via Google Gemini 2.5 Flash.',
               confidence: parsed.confidence || 0.95,
-              engine: 'Gemini Flash'
+              engine: 'Gemini 2.5 Flash'
             };
           }
         }
