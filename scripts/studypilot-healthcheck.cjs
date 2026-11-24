@@ -90,7 +90,7 @@ async function runHealthCheck() {
   process.stdout.write('[Sector 2/6] Testing Google Gemini API (with Version Cascade)... ');
   try {
     const key = unmaskKey(GEMINI_BLOB);
-    const candidateEndpoints = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite'];
+    const candidateEndpoints = ['gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-flash-latest'];
     let geminiSuccess = false;
     let geminiModelUsed = '';
     let geminiLatency = 0;

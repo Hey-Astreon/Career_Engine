@@ -237,16 +237,12 @@
           const currentQuizId = getQuizId(window.location.href);
           recordQuizOutcome(currentQuizId, gradeInfo, stakes.isHighStakes);
 
-          // Subcase C0: High-Stakes Exhaustion Guard (All 3 attempts used)
+          // Subcase C0: High-Stakes Exhaustion Guard (All finite attempts used)
           if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
             if (activeHud) {
-              activeHud.setState('idle', { statusText: '🛡️ Inspector Guard: All 3 attempts used. Advancing to next topic...' });
+              activeHud.setState('idle', { statusText: `🛡️ High-Stakes Complete: All ${stakes.attemptsAllowed} attempts used. Click below to advance.` });
             }
-            await Sentry.sleep(1500);
-            if (Navigator) {
-              Navigator.navigateToNextActivity(document);
-            }
-            return;
+            return; // STRICTLY STOP: Never auto-redirect the student off the page!
           }
 
           // Subcase C0.1: HIGH-STAKES PASSING SCORE SHIELD (The 90% / Passing Grade Protection)

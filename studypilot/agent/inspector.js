@@ -78,20 +78,58 @@
    * Analyzes Moodle quiz view page for attempt limits and stakes.
    */
   function getAssessmentStakes(doc = document) {
-    // Only inspect main content / quiz info area, strictly ignoring sidebar nav drawers and breadcrumbs
+    // 1. Practice Quiz Exemption Check:
+    // In Amity Online (AMIGO), practice quizzes explicitly declare:
+    // "This section is only for practice purpose, and its marks will not contribute towards the Internal Assessment."
+    // And their titles strictly start with "Quiz :" or "Quiz:"
+    const pageHeading = (doc && typeof doc.querySelector === 'function')
+      ? doc.querySelector('.page-header-headings h1, .page-header-headings h2, h1, h2')
+      : null;
+    let headingText = pageHeading ? (pageHeading.innerText || pageHeading.textContent || '').trim() : '';
+    if (!headingText && doc && typeof doc.querySelectorAll === 'function') {
+      const hNodes = Array.from(doc.querySelectorAll('h1, h2, h3, .page-header-headings h1'));
+      if (hNodes.length > 0) {
+        headingText = (hNodes[0].innerText || hNodes[0].textContent || '').trim();
+      }
+    }
+    const bodyText = (doc && doc.body ? doc.body.innerText || doc.body.textContent || '' : '').toLowerCase();
+
+    const isPracticeQuiz = /^quiz\s*:/i.test(headingText) ||
+                           bodyText.includes('only for practice purpose') ||
+                           bodyText.includes('practice purpose');
+
+    if (isPracticeQuiz) {
+      return {
+        isHighStakes: false,
+        attemptsAllowed: Infinity,
+        attemptsUsed: 0,
+        attemptsRemaining: Infinity,
+        gradeToPass: null,
+        canSafelyAttempt: true,
+        stakesLabel: '⚡ Standard Practice Quiz (Unlimited Attempts)'
+      };
+    }
+
+    // 2. High-Stakes Inspection (Strictly excluding navigation dropdowns, drawers, and breadcrumbs)
     const textNodes = Array.from(
-      doc.querySelectorAll('.quizinfo, .box, p, div, h2, h3, h4, table, .generaltable')
+      doc.querySelectorAll('.quizinfo, .box, p, h1, h2, h3, h4, table, .generaltable')
     ).filter(el => {
       if (typeof el.closest === 'function') {
-        return !el.closest('#nav-drawer, .drawer-content, .courseindex, #course-index, .breadcrumb, header');
+        return !el.closest('#nav-drawer, .drawer-content, .courseindex, #course-index, .breadcrumb, header, footer, .urlselect, #jump-to-activity, select, .activity-navigation');
       }
       return true;
     });
 
-    let attemptsAllowed = Infinity; // default unlimited for small quizzes
+    let attemptsAllowed = Infinity;
     let attemptsUsed = 0;
     let isHighStakes = false;
     let gradeToPass = null;
+
+    // Check if the page heading itself is a Module Assessment
+    if (/\b(?:\d+(?:st|nd|rd|th)?\s+)?module\s+assessment\b|\bgraded\s+assessment\b|\bend\s+term\s+assessment\b/i.test(headingText)) {
+      isHighStakes = true;
+      attemptsAllowed = 3;
+    }
 
     for (const node of textNodes) {
       const txt = (node.innerText || node.textContent || '').trim();
@@ -102,7 +140,7 @@
         gradeToPass = parseFloat(passMatch[1]);
       }
 
-      // Check for "Attempts allowed: 3"
+      // Check for explicit "Attempts allowed: 3"
       const allowedMatch = txt.match(/attempts\s*allowed[^:\d]*:\s*([0-9]+)/i);
       if (allowedMatch) {
         attemptsAllowed = parseInt(allowedMatch[1], 10);
@@ -110,20 +148,11 @@
           isHighStakes = true;
         }
       }
-
-      // Check for explicit module assessment title or graded assessment indicators (avoiding breadcrumbs)
-      if (/\b(?:\d+(?:st|nd|rd|th)?\s+)?module\s+assessment\b|\bgraded\s+assessment\b|\bend\s+term\s+assessment\b/i.test(txt)) {
-        isHighStakes = true;
-        if (attemptsAllowed === Infinity) {
-          attemptsAllowed = 3; // default 3 attempts for finite module/graded assessments
-        }
-      }
     }
 
     // Check count of finished attempts in attempts table
     const attemptRows = doc.querySelectorAll('.generaltable tbody tr, .quizattemptsummary tbody tr');
     if (attemptRows && attemptRows.length > 0) {
-      // Filter out header rows or summary footer rows
       const validRows = Array.from(attemptRows).filter(tr => {
         const rowText = (tr.innerText || tr.textContent || '').toLowerCase();
         return rowText.includes('attempt') || rowText.includes('finished') || rowText.includes('review');

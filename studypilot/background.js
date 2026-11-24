@@ -271,8 +271,8 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
   if (geminiKey) {
     const candidateEndpoints = [
       'gemini-2.5-flash',
-      'gemini-flash-latest',
-      'gemini-2.5-flash-lite'
+      'gemini-flash-lite-latest',
+      'gemini-flash-latest'
     ];
 
     for (const modelName of candidateEndpoints) {
