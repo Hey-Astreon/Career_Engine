@@ -362,12 +362,94 @@
     return { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
   }
 
+  function extractQuizAttemptsHistory(doc = document) {
+    const rows = Array.from(doc.querySelectorAll('.generaltable tbody tr, .quizattemptsummary tbody tr, table tr'));
+    const attempts = [];
+
+    rows.forEach((tr) => {
+      const text = (tr.innerText || tr.textContent || '').trim();
+      if (!/attempt\s*\d+/i.test(text)) return;
+
+      const marksMatch = text.match(/marks?[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i) ||
+                         text.match(/([0-9\.]+)\s*\/\s*([0-9\.]+)/);
+      const gradeMatch = text.match(/grade[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
+
+      const attemptMatch = text.match(/attempt\s*([0-9]+)/i);
+      const attemptNum = attemptMatch ? parseInt(attemptMatch[1], 10) : attempts.length + 1;
+
+      if (marksMatch || gradeMatch) {
+        const score = marksMatch ? parseFloat(marksMatch[1]) : (gradeMatch ? parseFloat(gradeMatch[1]) : 0);
+        const total = marksMatch ? parseFloat(marksMatch[2]) : (gradeMatch ? parseFloat(gradeMatch[2]) : 0);
+        attempts.push({
+          attemptNumber: attemptNum,
+          score,
+          total,
+          percentage: total > 0 ? (score / total) * 100 : 0,
+          gradeText: gradeMatch ? `${gradeMatch[1]}/${gradeMatch[2]}` : `${score}/${total}`
+        });
+      }
+    });
+
+    // Fallback: Card or Div layout in Moodle Boost
+    if (attempts.length === 0) {
+      const candidateDivs = Array.from(doc.querySelectorAll('div, td, table, section')).filter(el => {
+        const h = el.querySelector('h3, h4, th, strong');
+        return h && /attempt\s*\d+/i.test(h.innerText || '');
+      });
+
+      candidateDivs.forEach((div) => {
+        const txt = div.innerText || div.textContent || '';
+        const attemptMatch = txt.match(/attempt\s*([0-9]+)/i);
+        const marksMatch = txt.match(/marks?[^:\d]*\s*([0-9\.]+)\s*\/\s*([0-9\.]+)/i);
+        const gradeMatch = txt.match(/grade[^:\d]*\s*([0-9\.]+)\s*(?:out of|\/)\s*([0-9\.]+)/i);
+        if (marksMatch || gradeMatch) {
+          attempts.push({
+            attemptNumber: attemptMatch ? parseInt(attemptMatch[1], 10) : attempts.length + 1,
+            score: marksMatch ? parseFloat(marksMatch[1]) : parseFloat(gradeMatch[1]),
+            total: marksMatch ? parseFloat(marksMatch[2]) : parseFloat(gradeMatch[2]),
+            percentage: marksMatch ? (parseFloat(marksMatch[1]) / parseFloat(marksMatch[2])) * 100 : 0,
+            gradeText: gradeMatch ? `${gradeMatch[1]}/${gradeMatch[2]}` : ''
+          });
+        }
+      });
+    }
+
+    // Sort by attempt number ascending
+    attempts.sort((a, b) => a.attemptNumber - b.attemptNumber);
+
+    let isStagnant = false;
+    let consecutiveStagnantCount = 0;
+    if (attempts.length >= 2) {
+      const last = attempts[attempts.length - 1];
+      const prev = attempts[attempts.length - 2];
+      if (Math.abs(last.score - prev.score) < 0.01 && last.percentage < 99) {
+        consecutiveStagnantCount = 1;
+        if (attempts.length >= 3) {
+          const prev2 = attempts[attempts.length - 3];
+          if (Math.abs(prev.score - prev2.score) < 0.01) {
+            consecutiveStagnantCount = 2;
+          }
+        }
+        isStagnant = true;
+      }
+    }
+
+    return {
+      attempts,
+      totalAttempts: attempts.length,
+      isStagnant,
+      consecutiveStagnantCount,
+      lastAttempt: attempts.length > 0 ? attempts[attempts.length - 1] : null
+    };
+  }
+
   return {
     parseMoodleQuestions,
     extractCourseContext,
     detectPageMode,
     parseCurriculum,
     hasPassiveViewCompletion,
-    extractQuizGrade
+    extractQuizGrade,
+    extractQuizAttemptsHistory
   };
 });

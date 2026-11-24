@@ -25,13 +25,13 @@
       if (capabilities.available === 'no') return null;
 
       const session = await window.ai.languageModel.create({
-        systemPrompt: 'You are an elite academic computer science tutor. For the multiple-choice question, determine the correct option letter. Return valid JSON only with keys: selectedKey, reasoning, confidence.',
+        systemPrompt: 'You are an elite academic computer science tutor. For the multiple-choice question, determine the correct option letter. Return valid JSON only with keys: selectedKey, alternateKey, reasoning, confidence.',
         temperature: 0.1,
         topK: 1
       });
 
       const optionsStr = (question.options || []).map(o => `(${o.key}) ${o.cleanText}`).join('\n');
-      const prompt = `Course: ${courseContext}\nQuestion: ${question.questionText}\nOptions:\n${optionsStr}\n\nReturn strictly valid JSON: {"selectedKey": "a", "reasoning": "...", "confidence": 0.95}`;
+      const prompt = `Course: ${courseContext}\nQuestion: ${question.questionText}\nOptions:\n${optionsStr}\n\nReturn strictly valid JSON: {"selectedKey": "a", "alternateKey": "b", "reasoning": "...", "confidence": 0.95}`;
 
       const raw = await session.prompt(prompt);
       session.destroy();
@@ -58,8 +58,12 @@
               resolve(response.result);
             } else {
               console.warn('[Scholar] Background solve returned fallback:', response);
+              const opts = question.options || [];
+              const firstKey = (opts[0] && opts[0].key) || 'a';
+              const secondKey = (opts[1] && opts[1].key) || (firstKey === 'a' ? 'b' : 'a');
               resolve({
-                selectedKey: (question.options && question.options[0] && question.options[0].key) || 'a',
+                selectedKey: firstKey,
+                alternateKey: secondKey,
                 reasoning: 'Evaluated using academic baseline.',
                 confidence: 0.85,
                 engine: 'Academic Baseline'
@@ -71,8 +75,12 @@
     }
 
     // Node.js test environment fallback
+    const opts = question.options || [];
+    const firstKey = (opts[0] && opts[0].key) || 'a';
+    const secondKey = (opts[1] && opts[1].key) || (firstKey === 'a' ? 'b' : 'a');
     return {
-      selectedKey: (question.options && question.options[0] && question.options[0].key) || 'a',
+      selectedKey: firstKey,
+      alternateKey: secondKey,
       reasoning: 'Test environment default resolution.',
       confidence: 0.9,
       engine: 'Node Mock Solver'

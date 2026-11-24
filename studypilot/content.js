@@ -18,6 +18,51 @@
   let currentPageMode = 'unknown';
   let curriculumPlan = { items: [], currentItem: null, nextItem: null };
 
+  // Attempt Memory & Stagnation Tracking Vault
+  function getQuizId(url = window.location.href) {
+    try {
+      const u = new URL(url);
+      return u.searchParams.get('id') || u.searchParams.get('cmid') || 'default_quiz';
+    } catch (e) {
+      return 'default_quiz';
+    }
+  }
+
+  function loadQuizMemory(quizId) {
+    try {
+      const raw = sessionStorage.getItem(`sp_quiz_memory_${quizId}`);
+      return raw ? JSON.parse(raw) : { quizId, attempts: [] };
+    } catch (e) {
+      return { quizId, attempts: [] };
+    }
+  }
+
+  function saveQuizSelections(quizId, selections) {
+    try {
+      const mem = loadQuizMemory(quizId);
+      mem.pendingSelections = selections;
+      sessionStorage.setItem(`sp_quiz_memory_${quizId}`, JSON.stringify(mem));
+    } catch (e) {}
+  }
+
+  function recordQuizOutcome(quizId, gradeInfo) {
+    try {
+      const mem = loadQuizMemory(quizId);
+      if (mem.pendingSelections && gradeInfo && gradeInfo.hasGrade) {
+        mem.attempts.push({
+          attemptIndex: mem.attempts.length + 1,
+          selections: mem.pendingSelections,
+          score: gradeInfo.score,
+          total: gradeInfo.total,
+          percentage: gradeInfo.percentage,
+          gradeText: gradeInfo.gradeText
+        });
+        delete mem.pendingSelections;
+        sessionStorage.setItem(`sp_quiz_memory_${quizId}`, JSON.stringify(mem));
+      }
+    } catch (e) {}
+  }
+
   // 1. Initialize or Toggle HUD
   function toggleStudyPilotHUD(forceOpen = false) {
     if (!activeHud) {
@@ -64,6 +109,9 @@
     const gradeInfo = (Scribe && typeof Scribe.extractQuizGrade === 'function') 
       ? Scribe.extractQuizGrade(document) 
       : { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
+    const attemptsHistory = (Scribe && typeof Scribe.extractQuizAttemptsHistory === 'function')
+      ? Scribe.extractQuizAttemptsHistory(document)
+      : { isStagnant: false, consecutiveStagnantCount: 0, attempts: [] };
     const hasAttemptBtn = Boolean(Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function' && Sentry.findAttemptOrReattemptButton(document));
     const hasModalStartBtn = Boolean(Sentry && typeof Sentry.findModalStartAttemptButton === 'function' && Sentry.findModalStartAttemptButton(document));
     const Inspector = window.StudyPilotInspector;
@@ -98,7 +146,9 @@
         gradeInfo,
         hasAttemptBtn,
         hasModalStartBtn,
-        stakes
+        stakes,
+        isStagnant: attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1,
+        attemptsCount: attemptsHistory.attempts.length
       });
     }
 
@@ -151,12 +201,18 @@
           const gradeInfo = (Scribe && typeof Scribe.extractQuizGrade === 'function')
             ? Scribe.extractQuizGrade(document)
             : { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
+          const attemptsHistory = (Scribe && typeof Scribe.extractQuizAttemptsHistory === 'function')
+            ? Scribe.extractQuizAttemptsHistory(document)
+            : { isStagnant: false, consecutiveStagnantCount: 0, attempts: [] };
           const attemptBtn = Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function'
             ? Sentry.findAttemptOrReattemptButton(document)
             : null;
           const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
             ? Inspector.getAssessmentStakes(document)
             : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
+
+          const currentQuizId = getQuizId(window.location.href);
+          recordQuizOutcome(currentQuizId, gradeInfo);
 
           // Subcase C0: High-Stakes Exhaustion Guard (All 3 attempts used)
           if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
@@ -167,6 +223,18 @@
             if (Navigator) {
               Navigator.navigateToNextActivity(document);
             }
+            return;
+          }
+
+          // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Score does not improve across 2+ attempts)
+          const isStagnantScore = attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1;
+          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && isStagnantScore) {
+            if (activeHud) {
+              activeHud.setState('idle', { 
+                statusText: `⚠️ Stagnant Score (${gradeInfo.gradeText} across ${attemptsHistory.attempts.length || 2}+ attempts). Paused for review.`
+              });
+            }
+            // HALT automatic retry loop! Allow student to choose between advancing or exploring alternative answers.
             return;
           }
 
@@ -304,7 +372,15 @@
     const Sentry = window.StudyPilotSentry;
     const speedMode = config.speedMode || 'humanized';
 
+    const currentQuizId = getQuizId(window.location.href);
+    const quizMemory = loadQuizMemory(currentQuizId);
+    const pastAttempts = quizMemory.attempts || [];
+    const lastAttemptSelections = pastAttempts.length > 0 ? pastAttempts[pastAttempts.length - 1].selections : null;
+
     try {
+      // Phase 1: Scholar solves all questions with context of previous attempts
+      const candidateAudits = [];
+
       for (let i = 0; i < currentQuestions.length; i++) {
         const q = currentQuestions[i];
 
@@ -317,8 +393,13 @@
           });
         }
 
-        // Step 1: Scholar solves via background network stack
-        const scholarAns = await Scholar.solveQuestion(q, courseContext, config);
+        const prevChoice = lastAttemptSelections ? (lastAttemptSelections[q.questionNumber] || lastAttemptSelections[q.id]) : null;
+        const scholarAns = await Scholar.solveQuestion(q, courseContext, {
+          ...config,
+          previousSelection: prevChoice,
+          previousSelections: lastAttemptSelections,
+          isRetry: pastAttempts.length > 0
+        });
 
         // Step 2: Auditor cross-examines & consensus
         if (activeHud) {
@@ -329,9 +410,30 @@
             statusText: `Agent 3 (Auditor) red-teaming Question ${q.questionNumber}...`
           });
         }
-        const consensus = Auditor.auditAnswer(q, scholarAns);
+        const audited = Auditor.auditAnswer(q, scholarAns, {
+          questionNumber: q.questionNumber,
+          previousSelection: prevChoice,
+          isRetry: pastAttempts.length > 0
+        });
 
-        // Step 3: Sentry actuates with pacing
+        candidateAudits.push(audited);
+      }
+
+      // Phase 2: Vector Collision Resolution (Ensures zero repeating of failed answer combinations)
+      let finalAudits = candidateAudits;
+      if (Auditor && typeof Auditor.resolveVectorCollision === 'function' && pastAttempts.length > 0) {
+        const collision = Auditor.resolveVectorCollision(currentQuestions, candidateAudits, pastAttempts);
+        if (collision.collisionDetected) {
+          finalAudits = collision.resolvedResults;
+          console.log('[StudyPilot Swarm] Resolved vector collision against prior attempts:', collision);
+        }
+      }
+
+      // Phase 3: Sentry actuates each question's final selection with pacing
+      for (let i = 0; i < currentQuestions.length; i++) {
+        const q = currentQuestions[i];
+        const consensus = finalAudits[i];
+
         if (activeHud) {
           activeHud.setState('solving', {
             total: currentQuestions.length,
@@ -351,6 +453,14 @@
           });
         }
       }
+
+      // Save current attempt selections to persistent session memory
+      const currentSelections = {};
+      currentQuestions.forEach((q, idx) => {
+        const key = q.questionNumber || q.id || String(idx + 1);
+        currentSelections[key] = finalAudits[idx].selectedKey;
+      });
+      saveQuizSelections(currentQuizId, currentSelections);
 
       // Step 3.5: Agent 6 (The Inspector) Pre-Submission Radio Verification
       const Inspector = window.StudyPilotInspector;

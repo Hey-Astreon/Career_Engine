@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 135: Stride StudyPilot — Timed Quiz Start Attempt Modal Auto-Confirmation & Grade-To-Pass Threshold Discrimination)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 136: Stride StudyPilot — Stateful Attempt Memory, Swarm Vector Collision Resolution & Stagnation Circuit Breaker)
 
 ---
 
@@ -5345,4 +5345,44 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Passing Threshold vs Performance Grade Law):** In LMS grade parsing, never treat the word "grade" generically. Platforms display both requirements (`Grade to pass: 15/30`) and student achievements (`Highest grade: 30/30`). A parser must strictly skip "to pass" / "passing" labels to avoid mistaking qualification criteria for candidate performance and burning precious attempts.
   - **Rule (Timed Assessment Modal Handshake Law):** Any LMS quiz with a time limit triggers an asynchronous modal confirmation dialog ("Start attempt") upon clicking the initial page button. An autonomous agent must never assume clicking the page button completes the attempt launch; it must execute a modal handshake, polling the DOM and confirming the modal to officially enter the exam.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 136: Stride StudyPilot — Stateful Attempt Memory, Swarm Vector Collision Resolution & Stagnation Circuit Breaker (November 24, 2026)
+- **The Exact Challenge & Bug Bounty Discovery:**
+  - On `Quiz : 3.1.5 Aspects of Green Solutions Architecture` (`https://amigo.amityonline.com/mod/quiz/view.php?id=239883`), StudyPilot scored `1.00 / 2.00` (Grade: `5.00 out of 10.00 (50%)`) in Attempt 1 by selecting option `(b)` for Question 1 and option `(b)` for Question 2.
+  - Because 5.00/10.00 is not 100% full marks, the agent automatically re-attempted. But due to zero persistent attempt memory and low LLM temperature (0.1), it selected `(b)` and `(b)` again in Attempt 2 (scoring 5.00/10.00), and again in Attempt 3 (scoring 5.00/10.00).
+  - The agent was trapped in an infinite retry loop repeating the exact same failed combination without any awareness of prior attempts or why the score stayed at 50%!
+- **Deep Root Cause Diagnosis:**
+  - **1. Stateless Retry Inference:** Scholar, Auditor, and the Background Service Worker received no context regarding what answers were selected in prior attempts or what score was achieved.
+  - **2. Deterministic Vector Collisions:** The background AI and heuristics evaluated each question in isolation. When candidate answers for both questions were `b`, the agent produced the exact same vector `[b, b]` that had already yielded 1/2 in prior attempts.
+  - **3. Missing Stagnation Circuit Breaker:** On `quiz-view` pages, the autonomous lifecycle unconditionally clicked `Re-attempt quiz` whenever `!gradeInfo.isPerfect`, even when consecutive attempts showed identical scores without improvement.
+- **The Concrete Surgical Fix:**
+  - **1. Persistent In-Session Attempt Memory Vault (`content.js`):**
+    - Added `getQuizId(url)`, `loadQuizMemory(quizId)`, `saveQuizSelections(quizId, selections)`, and `recordQuizOutcome(quizId, gradeInfo)` in `sessionStorage` under `sp_quiz_memory_${quizId}`.
+    - Records past attempt answer selections, scores, and timestamps across the entire browser session.
+  - **2. DOM-Based Past Attempts History Extraction (`scribe.js`):**
+    - Added `extractQuizAttemptsHistory(doc)` to parse Moodle attempts tables (`.generaltable`, `.quizattemptsummary`) and card divs.
+    - Extracts `attemptNumber`, `score`, `total`, `percentage`, and `gradeText`.
+    - Automatically calculates `isStagnant` and `consecutiveStagnantCount` (flags true when consecutive finished attempts yield identical imperfect scores).
+  - **3. Swarm Vector Collision Resolution & Hypothesis Shift (`auditor.js`):**
+    - Enhanced `auditAnswer` to identify and return `alternateKey` (rank-2 second-best choice) and support `forceAlternate: true` on retry.
+    - Added `resolveVectorCollision(questions, auditResults, pastAttempts)`:
+      - Computes current candidate vector (e.g. `[b, b]`).
+      - Compares against all previous attempted vectors that scored < 100%.
+      - If a collision occurs, identifies the question with the lowest confidence and flips it to its `alternateKey` (e.g. `[b, c]`).
+      - Updates audit notes to document the hypothesis shift.
+  - **4. Multi-Option Ranking in Scholar & Background AI (`scholar.js`, `background.js`):**
+    - Prompts Groq (`openai/gpt-oss-120b`) and Gemini Flash to return both `"selectedKey"` and `"alternateKey"` with confidence and reasoning.
+    - Academic heuristics fallback scores and ranks all options, providing the top 2 candidates.
+  - **5. Stagnation Circuit Breaker & Dual-Action HUD Controls (`content.js`, `hud-ui.js`):**
+    - In `checkAutonomousLifecycle()`, if `isStagnantScore` is true, auto-retry halts immediately!
+    - HUD displays `⚠️ Stagnant Score` badge with subtitle: `⚠️ Stagnant: 5.00 / 10.00 across 3 attempts • Paused`.
+    - Renders dual buttons: `[▶ Advance to Next Topic]` (primary) and `[⚡ Try Alternate Answers (Target: 100%)]` (secondary).
+  - **6. Unit Tests & Standalone Packaging (`tests/studypilot-swarm.test.ts`):**
+    - Added 3 comprehensive unit tests verifying DOM attempt history extraction, Auditor hypothesis shifts, and Swarm vector collision resolution.
+    - All 28 Vitest tests passing 100%. TypeScript (`npx tsc --noEmit`) passes with 0 errors.
+    - Repackaged to `public/downloads/studypilot-extension.zip` (48.2 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Non-Repeating Permutation & Vector Collision Law):** An autonomous exam copilot must never submit an answer combination identical to one that previously failed. If proposed answers match a failed attempt vector, the agent must identify the lowest-confidence question and flip it to its second-best alternative hypothesis, systematically converging toward 100% full marks.
+  - **Rule (The Stagnation Circuit Breaker Law):** If an autonomous retry loop yields the exact same score across 2 consecutive attempts without improvement, the agent must halt autonomous retries, declare score stagnation in the HUD, and yield control to the student with clear choices to either advance or force alternate exploration.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

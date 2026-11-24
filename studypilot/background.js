@@ -91,8 +91,10 @@ function solveWithAcademicHeuristics(question, courseContext) {
   // 1. Dual-option trap priority
   const dualOpt = options.find(o => /\b(both of these|both a and b|all of the above|all of these)\b/i.test(o.cleanText));
   if (dualOpt && question.traps && question.traps.hasDualOptionTrap) {
+    const alternateOpt = options.find(o => o.key.toLowerCase() !== dualOpt.key.toLowerCase()) || options[0];
     return {
       selectedKey: dualOpt.key,
+      alternateKey: alternateOpt ? alternateOpt.key : 'a',
       reasoning: "Selected composite option ('Both of these' / 'All of the above') matching academic syllabus guidelines.",
       confidence: 0.96,
       engine: 'Academic Knowledge Engine'
@@ -115,8 +117,10 @@ function solveWithAcademicHeuristics(question, courseContext) {
     if (entry.pattern.test(qText)) {
       const found = options.find(o => entry.match.test(o.cleanText));
       if (found) {
+        const alternateOpt = options.find(o => o.key.toLowerCase() !== found.key.toLowerCase()) || options[0];
         return {
           selectedKey: found.key,
+          alternateKey: alternateOpt ? alternateOpt.key : 'a',
           reasoning: entry.reason,
           confidence: 0.98,
           engine: 'Academic Knowledge Engine'
@@ -125,25 +129,23 @@ function solveWithAcademicHeuristics(question, courseContext) {
     }
   }
 
-  // 3. Fallback: highest word overlap heuristic
-  let bestOpt = options[0];
-  let maxScore = -1;
+  // 3. Fallback: highest word overlap heuristic with ranking
   const qWords = qText.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-
-  options.forEach(opt => {
+  const scoredOptions = options.map(opt => {
     const optWords = opt.cleanText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/);
     let overlap = 0;
     optWords.forEach(w => {
       if (w.length > 3 && qWords.includes(w)) overlap++;
     });
-    if (overlap > maxScore) {
-      maxScore = overlap;
-      bestOpt = opt;
-    }
-  });
+    return { opt, score: overlap };
+  }).sort((a, b) => b.score - a.score);
+
+  const bestOpt = scoredOptions[0] ? scoredOptions[0].opt : options[0];
+  const alternateOpt = scoredOptions[1] ? scoredOptions[1].opt : (options.find(o => o.key.toLowerCase() !== (bestOpt ? bestOpt.key.toLowerCase() : '')) || options[0]);
 
   return {
     selectedKey: bestOpt ? bestOpt.key : 'a',
+    alternateKey: alternateOpt ? alternateOpt.key : 'b',
     reasoning: "Selected based on academic conceptual alignment.",
     confidence: 0.85,
     engine: 'Academic Heuristics Engine'
@@ -155,16 +157,24 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
 
+  const prevSel = (userConfig.previousSelections && userConfig.previousSelections[question.questionNumber || question.id]) || userConfig.previousSelection;
+  const isRetry = Boolean(userConfig.isRetry || prevSel);
+  const retryNote = (isRetry && prevSel)
+    ? `\nNOTE ON RETRY: In a previous attempt, option '(${prevSel})' was selected, but the quiz score was imperfect. Carefully evaluate all options. Return your primary choice ("selectedKey") and your second-best alternative choice ("alternateKey").`
+    : '';
+
   const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA'}
 Question: ${question.questionText}
 Options:
 ${optionsStr}
+${retryNote}
 
 Solve this multiple-choice question.
 RULES:
 1. If multiple statements are true and an option states 'Both of these', 'Both a and b', or 'All of the above', you MUST select that option.
 2. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
-3. Return strictly valid JSON with keys: "selectedKey", "reasoning", "confidence".`;
+3. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
+Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
   // Step A: Groq with openai/gpt-oss-120b (Ultra-Fast 500+ t/s)
   const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
@@ -179,11 +189,11 @@ RULES:
         body: JSON.stringify({
           model: 'openai/gpt-oss-120b',
           messages: [
-            { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "reasoning": "...", "confidence": 0.98}' },
+            { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
             { role: 'user', content: prompt }
           ],
           response_format: { type: 'json_object' },
-          temperature: 0.1
+          temperature: isRetry ? 0.3 : 0.1
         })
       });
 
@@ -193,8 +203,15 @@ RULES:
         if (content) {
           const parsed = JSON.parse(content);
           if (parsed && parsed.selectedKey) {
+            const cleanKey = parsed.selectedKey.toLowerCase().trim();
+            let altKey = parsed.alternateKey ? parsed.alternateKey.toLowerCase().trim() : '';
+            if (!altKey || altKey === cleanKey) {
+              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+            }
             return {
-              selectedKey: parsed.selectedKey.toLowerCase().trim(),
+              selectedKey: cleanKey,
+              alternateKey: altKey,
               reasoning: parsed.reasoning || 'Solved via Groq 500+ t/s AI.',
               confidence: parsed.confidence || 0.98,
               engine: 'Groq (openai/gpt-oss-120b)'
@@ -229,8 +246,15 @@ RULES:
         if (text) {
           const parsed = JSON.parse(text);
           if (parsed && parsed.selectedKey) {
+            const cleanKey = parsed.selectedKey.toLowerCase().trim();
+            let altKey = parsed.alternateKey ? parsed.alternateKey.toLowerCase().trim() : '';
+            if (!altKey || altKey === cleanKey) {
+              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+            }
             return {
-              selectedKey: parsed.selectedKey.toLowerCase().trim(),
+              selectedKey: cleanKey,
+              alternateKey: altKey,
               reasoning: parsed.reasoning || 'Solved via Google Gemini.',
               confidence: parsed.confidence || 0.95,
               engine: 'Gemini Flash'

@@ -1211,4 +1211,126 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(clickedItem).toBe("Live Class-3_Green computing");
     });
   });
+
+  describe("StudyPilot Phase 136: Stateful Attempt Memory, Vector Collision Resolution & Stagnation Circuit Breaker", () => {
+    it("extracts quiz attempts history and flags score stagnation across consecutive attempts", () => {
+      const mockAttemptsTable = {
+        querySelectorAll: (sel: string) => {
+          if (sel.includes("tr")) {
+            return [
+              {
+                innerText: "Attempt 3 Finished Started Tuesday, 24 November 2026, 7:17 PM Completed Tuesday, 24 November 2026, 7:17 PM Duration 24 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted",
+                textContent: "Attempt 3 Finished Started Tuesday, 24 November 2026, 7:17 PM Completed Tuesday, 24 November 2026, 7:17 PM Duration 24 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted"
+              },
+              {
+                innerText: "Attempt 2 Finished Started Tuesday, 24 November 2026, 7:16 PM Completed Tuesday, 24 November 2026, 7:17 PM Duration 27 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted",
+                textContent: "Attempt 2 Finished Started Tuesday, 24 November 2026, 7:16 PM Completed Tuesday, 24 November 2026, 7:17 PM Duration 27 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted"
+              },
+              {
+                innerText: "Attempt 1 Finished Started Tuesday, 24 November 2026, 7:15 PM Completed Tuesday, 24 November 2026, 7:15 PM Duration 30 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted",
+                textContent: "Attempt 1 Finished Started Tuesday, 24 November 2026, 7:15 PM Completed Tuesday, 24 November 2026, 7:15 PM Duration 30 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted"
+              }
+            ];
+          }
+          return [];
+        }
+      };
+
+      const history = StudyPilotScribe.extractQuizAttemptsHistory(mockAttemptsTable as any);
+      expect(history.totalAttempts).toBe(3);
+      expect(history.isStagnant).toBe(true);
+      expect(history.consecutiveStagnantCount).toBe(2);
+      expect(history.lastAttempt?.score).toBe(1.0);
+      expect(history.lastAttempt?.total).toBe(2.0);
+      expect(history.lastAttempt?.percentage).toBe(50);
+    });
+
+    it("supports Auditor hypothesis shift when forceAlternate is specified on retry", () => {
+      const q = {
+        options: [
+          { key: "a", cleanText: "Option A text" },
+          { key: "b", cleanText: "Option B text" },
+          { key: "c", cleanText: "Option C text" }
+        ],
+        traps: {}
+      };
+
+      const candidate = {
+        selectedKey: "b",
+        alternateKey: "a",
+        confidence: 0.90,
+        reasoning: "Initial candidate reasoning."
+      };
+
+      // Normal audit maintains 'b'
+      const normalAudit = StudyPilotAuditor.auditAnswer(q as any, candidate as any);
+      expect(normalAudit.selectedKey).toBe("b");
+
+      // Retry with forced alternate hypothesis switches to 'a'
+      const alternateAudit = StudyPilotAuditor.auditAnswer(q as any, candidate as any, { forceAlternate: true });
+      expect(alternateAudit.selectedKey).toBe("a");
+      expect(alternateAudit.auditNotes).toContain("Auditor Hypothesis Shift");
+    });
+
+    it("resolves answer vector collisions by flipping the lowest-confidence answer to break loops", () => {
+      const questions = [
+        {
+          id: "q1",
+          questionNumber: 1,
+          questionText: "What is Green Computing Aspect 1?",
+          options: [
+            { key: "a", cleanText: "Asset Architecture" },
+            { key: "b", cleanText: "Green Lifecycle" }
+          ]
+        },
+        {
+          id: "q2",
+          questionNumber: 2,
+          questionText: "What is Green Computing Aspect 2?",
+          options: [
+            { key: "a", cleanText: "Carbon Footprint" },
+            { key: "b", cleanText: "Resource Optimization" },
+            { key: "c", cleanText: "E-Waste Reduction" }
+          ]
+        }
+      ];
+
+      // Swarm initially proposes [b, b], exactly as Scholar did in Attempts 1-3
+      const auditResults = [
+        {
+          selectedKey: "b",
+          alternateKey: "a",
+          confidence: 0.92,
+          reasoning: "High confidence in aspect 1",
+          auditNotes: ""
+        },
+        {
+          selectedKey: "b",
+          alternateKey: "c",
+          confidence: 0.74, // Lower confidence!
+          reasoning: "Moderate confidence in aspect 2",
+          auditNotes: ""
+        }
+      ];
+
+      // Prior attempt scored 5/10 with [b, b]
+      const pastAttempts = [
+        {
+          attemptIndex: 1,
+          selections: { "1": "b", "2": "b" },
+          score: 1.0,
+          total: 2.0
+        }
+      ];
+
+      const resolution = StudyPilotAuditor.resolveVectorCollision(questions as any, auditResults as any, pastAttempts);
+      expect(resolution.collisionDetected).toBe(true);
+      expect(resolution.flippedIndex).toBe(1); // Question 2 was flipped because 0.74 < 0.92!
+
+      // Resulting vector is [b, c] - novel, breaking the [b, b] stagnation loop!
+      expect(resolution.resolvedResults[0].selectedKey).toBe("b");
+      expect(resolution.resolvedResults[1].selectedKey).toBe("c");
+      expect(resolution.resolvedResults[1].auditNotes).toContain("Swarm Vector Collision Resolved");
+    });
+  });
 });
