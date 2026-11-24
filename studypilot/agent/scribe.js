@@ -311,9 +311,15 @@
 
   function extractQuizGrade(doc = document) {
     const textNodes = Array.from(doc.querySelectorAll('h2, h3, h4, p, div.feedback, .quizinfo, .generaltable, .box, div, td, th'));
+
+    // Priority 1: Search specifically for "Highest grade", "Final grade", or "Overall grade"
+    // STRICTLY skip "Grade to pass: 15.00 out of 30.00" threshold text!
     for (const node of textNodes) {
       const txt = (node.innerText || node.textContent || '').trim();
-      const match = txt.match(/(?:highest\s*grade|overall\s*grade|final\s*grade|your\s*grade|grade)[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
+      if (/grade\s*to\s*pass|passing\s*grade/i.test(txt)) {
+        continue;
+      }
+      const match = txt.match(/(?:highest\s*grade|final\s*grade|overall\s*grade)[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
       if (match) {
         const score = parseFloat(match[1]);
         const total = parseFloat(match[2]);
@@ -329,6 +335,30 @@
         };
       }
     }
+
+    // Priority 2: Fallback for other grade labels (strictly ignoring "Grade to pass")
+    for (const node of textNodes) {
+      const txt = (node.innerText || node.textContent || '').trim();
+      if (/grade\s*to\s*pass|passing\s*grade/i.test(txt)) {
+        continue;
+      }
+      const match = txt.match(/(?:your\s*grade|grade)[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
+      if (match) {
+        const score = parseFloat(match[1]);
+        const total = parseFloat(match[2]);
+        const percentage = total > 0 ? (score / total) * 100 : 0;
+        const isPerfect = total > 0 && Math.abs(score - total) < 0.01;
+        return {
+          hasGrade: true,
+          score,
+          total,
+          percentage,
+          isPerfect,
+          gradeText: `${score} / ${total}`
+        };
+      }
+    }
+
     return { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
   }
 

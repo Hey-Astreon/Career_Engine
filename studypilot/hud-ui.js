@@ -389,6 +389,7 @@
       this.data.isViewDone = Boolean(scanData.isViewDone);
       this.data.gradeInfo = scanData.gradeInfo || { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
       this.data.hasAttemptBtn = Boolean(scanData.hasAttemptBtn);
+      this.data.hasModalStartBtn = Boolean(scanData.hasModalStartBtn);
       this.data.stakes = scanData.stakes || null;
       this.render();
     }
@@ -530,18 +531,18 @@
       } else if (this.pageMode === 'quiz-view') {
         if (this.data.gradeInfo && this.data.gradeInfo.hasGrade) {
           if (this.data.gradeInfo.isPerfect) {
-            badgeText = 'Full Marks 10/10';
+            badgeText = `Full Marks (${this.data.gradeInfo.gradeText})`;
             badgeClass = 'sp-badge review';
             subtitleText = `✓ Score: ${this.data.gradeInfo.gradeText} (100% Perfect)`;
           } else {
             badgeText = 'Needs Re-Attempt';
             badgeClass = 'sp-badge busy';
-            subtitleText = `⚠️ Score: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Re-Attempt for 10/10`;
+            subtitleText = `⚠️ Score: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Target: 100%`;
           }
         } else {
-          badgeText = 'Quiz Portal';
+          badgeText = this.data.hasModalStartBtn ? 'Start Timed Attempt' : 'Quiz Portal';
           badgeClass = 'sp-badge';
-          subtitleText = 'Click to Launch Quiz Attempt';
+          subtitleText = this.data.hasModalStartBtn ? 'Timed Assessment Modal Ready' : 'Click to Launch Quiz Attempt';
         }
       } else if (this.pageMode === 'quiz-process-error') {
         badgeText = 'Auto-Recovering';
@@ -645,7 +646,7 @@
         ${this.pageMode === 'quiz-view' && !isBusy ? `
           ${this.data.gradeInfo && this.data.gradeInfo.hasGrade && !this.data.gradeInfo.isPerfect ? `
             <button class="sp-action-btn" id="sp-attempt-btn" style="background: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);">
-              <span>⚡ Re-Attempt Quiz (Target: 10/10)</span>
+              <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Re-Attempt Quiz (Target: 100%)'}</span>
             </button>
             ${this.data.nextActivityTitle ? `
               <button class="sp-action-btn-secondary" id="sp-next-btn">
@@ -659,11 +660,11 @@
               </button>
             ` : ''}
             <button class="sp-action-btn-secondary" id="sp-attempt-btn">
-              <span>⚡ Re-Attempt Quiz</span>
+              <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Re-Attempt Quiz'}</span>
             </button>
           ` : `
             <button class="sp-action-btn" id="sp-attempt-btn">
-              <span>⚡ Attempt Quiz</span>
+              <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Attempt Quiz'}</span>
             </button>
           `}
         ` : ''}

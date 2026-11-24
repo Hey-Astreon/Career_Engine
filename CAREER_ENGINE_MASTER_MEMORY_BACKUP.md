@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 134: Stride StudyPilot — Elimination of Double Submission Race & Self-Healing processattempt.php Error Recovery)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 135: Stride StudyPilot — Timed Quiz Start Attempt Modal Auto-Confirmation & Grade-To-Pass Threshold Discrimination)
 
 ---
 
@@ -5317,4 +5317,32 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Moodle Single-Post Inviolability Law):** In Moodle quiz submission, never execute dual click + form requestSubmit fallbacks with arbitrary delays. Moodle strictly locks quiz attempts upon receiving the first valid POST request; any subsequent submission hitting `processattempt.php` will trigger an `attemptalreadyclosed` exception. Form fallback must strictly execute if and only if modal actuation was impossible.
   - **Rule (Self-Healing CMID Redirect Law):** When navigating external web workflows, an agent must anticipate platform-side 500/error pages. If landed on a processing endpoint (like `processattempt.php?cmid=...`), extract the canonical entity ID (`cmid`) and immediately self-heal by redirecting to the canonical view page (`mod/quiz/view.php?id=${cmid}`).
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 135: Stride StudyPilot — Timed Quiz Start Attempt Modal Auto-Confirmation & Grade-To-Pass Threshold Discrimination (November 24, 2026)
+- **The Exact Challenge & Bug Bounty Discovery:**
+  - On `1st Module Assessment` (`https://amigo.amityonline.com/mod/quiz/view.php?id=176419`), StudyPilot triggered an attempt, which opened a center-screen Moodle confirmation modal dialogue:
+    `Start attempt: Your attempt will have a time limit of 1 hour... Are you sure you wish to start now?` with buttons `[Start attempt]` and `[Cancel]`.
+  - **Issue 1 (Modal Stall):** Sentry did not detect or confirm the timed modal's `Start attempt` button, leaving the agent stalled in front of the modal.
+  - **Issue 2 (Grade-To-Pass False-Positive):** Scribe's `extractQuizGrade` matched the passing threshold string `"Grade to pass: 15.00 out of 30.00"` instead of `"Highest grade: 30.00 / 30.00"`. It falsely deduced that the candidate only had 15/30 (50%), initiating an unnecessary re-attempt on a test where the candidate had ALREADY scored 30.00 / 30.00 (100% full marks)!
+- **Deep Root Cause Diagnosis:**
+  - **1. Sentry Modal Watcher Missing:** `findAttemptOrReattemptButton` only looked for page buttons like `Attempt quiz` or `Re-attempt quiz`. It did not poll for or handle the timed assessment modal that pops up after clicking.
+  - **2. Unordered Regex Match on Passing Threshold:** `extractQuizGrade` matched `grade[^:\d]*:` which caught `Grade to pass: 15.00 out of 30.00` because it appeared in the DOM before `Highest grade: 30.00 / 30.00`.
+- **The Concrete Surgical Fix:**
+  - **1. Timed Modal Watcher & Confirm (`sentry.js`):**
+    - Added `findModalStartAttemptButton` to detect `Start attempt` (`button.btn-primary`, `input[value*="Start attempt" i]`, `button[data-action="save"]`) inside `.modal, .moodle-dialogue, [role="dialog"]`.
+    - If a modal is already open, `clickAttemptQuiz` immediately clicks `Start attempt`.
+    - If clicking a page button, Sentry polls for the modal popup and auto-confirms it!
+  - **2. Passing Threshold Discrimination (`scribe.js`):**
+    - `extractQuizGrade` strictly excludes passing criteria (`/grade\s*to\s*pass|passing\s*grade/i`).
+    - Prioritizes `Highest grade:`, `Final grade:`, and `Overall grade:` first.
+    - Correctly extracts `Highest grade: 30.00 / 30.00` as 100% full marks!
+  - **3. Dynamic HUD Max Score Support (`hud-ui.js`):**
+    - Adaptive badge `Full Marks (${gradeText})` and dynamic target `Target: 100%` supporting 10, 30, or any max score.
+  - **4. Unit Tests & Standalone Packaging (`tests/studypilot-swarm.test.ts`):**
+    - Added tests for `findModalStartAttemptButton` and threshold discrimination. All 25 tests passing 100%.
+    - Repackaged to `public/downloads/studypilot-extension.zip` (44.6 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Passing Threshold vs Performance Grade Law):** In LMS grade parsing, never treat the word "grade" generically. Platforms display both requirements (`Grade to pass: 15/30`) and student achievements (`Highest grade: 30/30`). A parser must strictly skip "to pass" / "passing" labels to avoid mistaking qualification criteria for candidate performance and burning precious attempts.
+  - **Rule (Timed Assessment Modal Handshake Law):** Any LMS quiz with a time limit triggers an asynchronous modal confirmation dialog ("Start attempt") upon clicking the initial page button. An autonomous agent must never assume clicking the page button completes the attempt launch; it must execute a modal handshake, polling the DOM and confirming the modal to officially enter the exam.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

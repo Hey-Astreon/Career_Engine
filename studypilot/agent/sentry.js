@@ -367,16 +367,58 @@
     return false;
   }
 
+  function findModalStartAttemptButton(doc = document) {
+    // 1. Search inside any modal dialogue container (Moodle Timed Quiz Dialog)
+    const modalContainers = Array.from(
+      doc.querySelectorAll('.modal, .modal-dialog, .modal-content, [role="dialog"], [aria-modal="true"], .moodle-dialogue, .moodle-dialogue-confirm')
+    );
+
+    for (const container of modalContainers) {
+      if (!container || typeof container.querySelectorAll !== 'function') continue;
+      const modalBtns = Array.from(
+        container.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn')
+      );
+
+      for (const btn of modalBtns) {
+        const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
+        if (txt.includes('cancel') || txt.includes('close') || txt.includes('dismiss')) {
+          continue;
+        }
+        if (txt.includes('start attempt') || txt.includes('start') || btn.getAttribute('data-action') === 'save') {
+          return btn;
+        }
+      }
+    }
+
+    // 2. Direct search across document for "Start attempt" buttons inside modals or forms
+    const candidates = Array.from(
+      doc.querySelectorAll('button.btn-primary, input.btn-primary, input[value*="Start attempt" i], button[value*="Start attempt" i], input[value="Start attempt"]')
+    );
+    for (const btn of candidates) {
+      const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
+      if (!txt.includes('cancel') && (txt.includes('start attempt') || txt.includes('start'))) {
+        return btn;
+      }
+    }
+
+    return null;
+  }
+
   function findAttemptOrReattemptButton(doc = document) {
+    // 0. Priority: If a "Start attempt" modal is ALREADY OPEN on screen, prioritize it!
+    const modalStartBtn = findModalStartAttemptButton(doc);
+    if (modalStartBtn) return modalStartBtn;
+
     const directBtn = doc.querySelector(
-      'input[value*="Re-attempt" i], button[value*="Re-attempt" i], a[href*="attempt.php"], input[value*="Attempt quiz" i], button[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], button[value*="Continue the last attempt" i], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
+      'input[value*="Re-attempt" i], button[value*="Re-attempt" i], a[href*="attempt.php"], input[value*="Attempt quiz" i], button[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], button[value*="Continue the last attempt" i], input[value*="Start attempt" i], button[value*="Start attempt" i], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
     );
     if (directBtn) return directBtn;
 
     const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn'));
     for (const el of candidates) {
       const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
-      if (txt.includes('re-attempt') || txt.includes('attempt quiz') || txt.includes('continue the last attempt')) {
+      if (txt.includes('cancel') || txt.includes('close')) continue;
+      if (txt.includes('start attempt') || txt.includes('re-attempt') || txt.includes('attempt quiz') || txt.includes('continue the last attempt')) {
         return el;
       }
     }
@@ -384,10 +426,60 @@
   }
 
   async function clickAttemptQuiz(doc = document) {
+    // 1. If "Start attempt" timed modal is already open right now, confirm it immediately!
+    let modalBtn = findModalStartAttemptButton(doc);
+    if (modalBtn) {
+      await sleep(350);
+      try {
+        if (typeof modalBtn.focus === 'function') modalBtn.focus();
+        if (typeof MouseEvent !== 'undefined') {
+          modalBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+          modalBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+        }
+        modalBtn.click();
+      } catch (e) {
+        try { modalBtn.click(); } catch (err) {}
+      }
+      return true;
+    }
+
+    // 2. Otherwise find and click the page attempt/re-attempt button
     const directBtn = findAttemptOrReattemptButton(doc);
     if (directBtn) {
       await sleep(600);
-      directBtn.click();
+      try {
+        directBtn.focus();
+        directBtn.click();
+      } catch (e) {
+        directBtn.click();
+      }
+
+      // 3. Timed Quiz Modal Watcher:
+      // In Moodle timed assessments (e.g. 1st Module Assessment with 1 hour limit),
+      // clicking "Attempt quiz" / "Re-attempt quiz" pops up a "Start attempt" modal!
+      // Poll up to 3.5 seconds (150ms ticks) for the modal to appear and auto-confirm it!
+      const startTime = Date.now();
+      const maxWaitMs = 800;
+
+      while (Date.now() - startTime < maxWaitMs) {
+        await sleep(100);
+        modalBtn = findModalStartAttemptButton(doc);
+        if (modalBtn && modalBtn !== directBtn) {
+          await sleep(250);
+          try {
+            if (typeof modalBtn.focus === 'function') modalBtn.focus();
+            if (typeof MouseEvent !== 'undefined') {
+              modalBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+              modalBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+            }
+            modalBtn.click();
+          } catch (e) {
+            try { modalBtn.click(); } catch (err) {}
+          }
+          return true;
+        }
+      }
+
       return true;
     }
     return false;
@@ -456,6 +548,7 @@
     confirmSubmitAllModal,
     clickFinishReview,
     findAttemptOrReattemptButton,
+    findModalStartAttemptButton,
     clickAttemptQuiz,
     completeLectureVideo,
     findMarkAsDoneButton,

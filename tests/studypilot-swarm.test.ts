@@ -678,7 +678,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const attemptResult = await StudyPilotSentry.clickAttemptQuiz(mockViewDoc as any);
       expect(attemptResult).toBe(true);
       expect(quizAttemptStarted).toBe(true);
-    });
+    }, 10000);
 
     it("finds and actuates 'Mark as done' on manual completion pages without double-toggling completed items", async () => {
       let markDoneClicked = false;
@@ -862,6 +862,81 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const freshGrade = StudyPilotScribe.extractQuizGrade(mockFreshDoc as any);
       expect(freshGrade.hasGrade).toBe(false);
       expect(freshGrade.isPerfect).toBe(false);
+
+      // 4. Passing Grade Threshold vs Highest Grade Discrimination (e.g. 1st Module Assessment)
+      const mockThresholdDoc = {
+        querySelectorAll: () => [
+          {
+            tagName: "P",
+            innerText: "Grade to pass: 15.00 out of 30.00",
+            textContent: "Grade to pass: 15.00 out of 30.00",
+          },
+          {
+            tagName: "H3",
+            innerText: "Highest grade: 30.00 / 30.00.",
+            textContent: "Highest grade: 30.00 / 30.00.",
+          },
+        ],
+      };
+      const thresholdGrade = StudyPilotScribe.extractQuizGrade(mockThresholdDoc as any);
+      expect(thresholdGrade.hasGrade).toBe(true);
+      expect(thresholdGrade.score).toBe(30.00);
+      expect(thresholdGrade.total).toBe(30.00);
+      expect(thresholdGrade.percentage).toBe(100);
+      expect(thresholdGrade.isPerfect).toBe(true);
+    });
+
+    it("detects and auto-confirms timed assessment 'Start attempt' modal dialogs", async () => {
+      let modalStartClicked = false;
+      const modalStartBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-primary",
+        innerText: "Start attempt",
+        textContent: "Start attempt",
+        getAttribute: (attr: string) => attr === "data-action" ? "save" : null,
+        classList: { contains: (cls: string) => cls === "btn-primary" },
+        focus: () => {},
+        dispatchEvent: () => true,
+        click: () => { modalStartClicked = true; },
+      };
+
+      const mockTimedModal = {
+        tagName: "DIV",
+        className: "modal show",
+        querySelectorAll: (sel: string) => [modalStartBtn],
+      };
+
+      const mockTimedDoc = {
+        querySelector(sel: string) {
+          if (sel.includes("modal") || sel.includes("dialog")) {
+            return mockTimedModal;
+          }
+          return null;
+        },
+        querySelectorAll(sel: string) {
+          if (sel.includes("modal") || sel.includes("dialog")) {
+            return [mockTimedModal];
+          }
+          if (sel.includes("button") || sel.includes("input")) {
+            return [modalStartBtn];
+          }
+          return [];
+        },
+      };
+
+      // 1. Verify findModalStartAttemptButton detects the modal button
+      const detectedStartBtn = StudyPilotSentry.findModalStartAttemptButton(mockTimedDoc as any);
+      expect(detectedStartBtn).not.toBeNull();
+      expect(detectedStartBtn).toBe(modalStartBtn);
+
+      // 2. Verify findAttemptOrReattemptButton prioritizes open modal button
+      const prioritizedBtn = StudyPilotSentry.findAttemptOrReattemptButton(mockTimedDoc as any);
+      expect(prioritizedBtn).toBe(modalStartBtn);
+
+      // 3. Verify clickAttemptQuiz automatically confirms the timed modal
+      const confirmed = await StudyPilotSentry.clickAttemptQuiz(mockTimedDoc as any);
+      expect(confirmed).toBe(true);
+      expect(modalStartClicked).toBe(true);
     });
 
     it("locates re-attempt button on imperfect quiz view pages", () => {

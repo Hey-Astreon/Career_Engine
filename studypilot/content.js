@@ -65,6 +65,7 @@
       ? Scribe.extractQuizGrade(document) 
       : { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
     const hasAttemptBtn = Boolean(Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function' && Sentry.findAttemptOrReattemptButton(document));
+    const hasModalStartBtn = Boolean(Sentry && typeof Sentry.findModalStartAttemptButton === 'function' && Sentry.findModalStartAttemptButton(document));
     const Inspector = window.StudyPilotInspector;
     const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
       ? Inspector.getAssessmentStakes(document)
@@ -96,6 +97,7 @@
         isViewDone,
         gradeInfo,
         hasAttemptBtn,
+        hasModalStartBtn,
         stakes
       });
     }
