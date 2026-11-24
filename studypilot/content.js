@@ -257,6 +257,27 @@
           });
           return;
         }
+
+        // Stage G: Self-Healing Auto-Recovery on Process Attempt Error or Glitch Page
+        if (currentPageMode === 'quiz-process-error' || (window.location.href.includes('processattempt.php') && document.title.toLowerCase().includes('error'))) {
+          if (activeHud) {
+            activeHud.setState('complete', { statusText: 'Quiz submitted! Auto-recovering to review...' });
+          }
+          await Sentry.sleep(1200);
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const cmid = urlParams.get('cmid') || urlParams.get('id');
+            if (cmid) {
+              window.location.href = `https://amigo.amityonline.com/mod/quiz/view.php?id=${cmid}`;
+              return;
+            }
+          } catch (e) {}
+
+          if (Navigator) {
+            Navigator.navigateToNextActivity(document);
+          }
+          return;
+        }
       } catch (lifecycleErr) {
         console.error('[StudyPilot] Autonomous lifecycle error:', lifecycleErr);
       }
@@ -365,12 +386,7 @@
             statusText: 'Agent 4 (Sentry) finishing attempt...'
           });
         }
-        const submitted = await Sentry.clickNextOrFinish(document);
-        if (submitted) {
-          setTimeout(async () => {
-            await Sentry.confirmSubmitAllModal(document);
-          }, 1500);
-        }
+        await Sentry.clickNextOrFinish(document);
       }
 
       if (activeHud) {

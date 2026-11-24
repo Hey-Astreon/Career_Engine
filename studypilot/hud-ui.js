@@ -543,6 +543,10 @@
           badgeClass = 'sp-badge';
           subtitleText = 'Click to Launch Quiz Attempt';
         }
+      } else if (this.pageMode === 'quiz-process-error') {
+        badgeText = 'Auto-Recovering';
+        badgeClass = 'sp-badge busy';
+        subtitleText = 'Attempt Received • Recovering to Quiz View...';
       } else if (this.pageMode === 'quiz-review') {
         badgeText = 'Quiz Complete';
         badgeClass = 'sp-badge review';
@@ -624,6 +628,12 @@
               <span>▶ Advance to Next Topic</span>
             </button>
           ` : ''}
+        ` : ''}
+
+        ${this.pageMode === 'quiz-process-error' && !isBusy ? `
+          <button class="sp-action-btn" id="sp-recover-btn">
+            <span>⚡ Recover to Quiz View</span>
+          </button>
         ` : ''}
 
         ${this.pageMode === 'quiz-summary' && !isBusy ? `
@@ -740,6 +750,23 @@
         summaryBtn.onclick = () => {
           if (typeof window.__STUDYPILOT_SUBMIT_SUMMARY__ === 'function') {
             window.__STUDYPILOT_SUBMIT_SUMMARY__();
+          }
+        };
+      }
+
+      const recoverBtn = this.shadow.getElementById('sp-recover-btn');
+      if (recoverBtn) {
+        recoverBtn.onclick = () => {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const cmid = urlParams.get('cmid') || urlParams.get('id');
+            if (cmid) {
+              window.location.href = `https://amigo.amityonline.com/mod/quiz/view.php?id=${cmid}`;
+              return;
+            }
+          } catch (e) {}
+          if (typeof window.__STUDYPILOT_NAVIGATE_NEXT__ === 'function') {
+            window.__STUDYPILOT_NAVIGATE_NEXT__();
           }
         };
       }

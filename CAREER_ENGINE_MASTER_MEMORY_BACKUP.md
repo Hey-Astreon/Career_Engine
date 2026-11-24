@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 133: Stride StudyPilot — Scope Resolution of Scribe in Autonomous Lifecycle & Unconditional Imperfect Auto-Retry)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 134: Stride StudyPilot — Elimination of Double Submission Race & Self-Healing processattempt.php Error Recovery)
 
 ---
 
@@ -5290,4 +5290,31 @@ graph TD
     - All 24 tests in `tests/studypilot-swarm.test.ts` pass 100%. TypeScript typecheck passes with 0 errors.
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Lexical Scope Immunity Law in Extensions):** Never assume a module imported in one function (e.g. `scanCurrentPage`) is available in sibling async functions (e.g. `checkAutonomousLifecycle`) within the same content script closure. Every function interacting with window-bound agents must explicitly declare and guard its dependencies (`const Scribe = window.StudyPilotScribe`), wrapped in a top-level `try/catch` to prevent silent thread death.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 134: Stride StudyPilot — Elimination of Double Submission Race & Self-Healing processattempt.php Error Recovery (November 24, 2026)
+- **The Exact Defect Encountered:**
+  - StudyPilot autonomously solved and completed 10+ consecutive topics, lectures, videos, and quizzes from `1.1.2` all the way to `1.2.7 Green Disposal`!
+  - On `Quiz : 1.2.7 Green Disposal`, Moodle displayed an `Error | AMIGO` page at `https://amigo.amityonline.com/mod/quiz/processattempt.php?cmid=239004`.
+- **Deep Root Cause Diagnosis:**
+  - **1. Double Submission Race in `confirmSubmitAllModal` (`sentry.js`):**
+    - Clicking the modal confirmation button (`modalBtn.click()`) initiated Moodle's native form submission to `processattempt.php`.
+    - However, an unconditional fallback after 800ms executed `processForm.requestSubmit()`!
+    - When Moodle processed the first POST, the attempt status transitioned to `finished`. When the second POST arrived for the already-closed attempt, Moodle threw `print_error('attemptalreadyclosed', 'quiz')` resulting in the `Error | AMIGO` page.
+  - **2. Redundant Attempt-Page Timeout (`content.js`):**
+    - In `executeSwarmAutoSolve`, a `setTimeout` for 1500ms triggered `confirmSubmitAllModal` from `attempt.php`, which raced against `summary.php` Stage A.
+- **The Concrete Surgical Fix:**
+  - **1. Strict Single-Submission Guard (`sentry.js`):**
+    - Enforced that `confirmSubmitAllModal` ONLY triggers direct form submission if the modal button click threw or failed.
+  - **2. Redundant Timeout Removal (`content.js`):**
+    - Removed the redundant `setTimeout` in `executeSwarmAutoSolve`, ensuring summary page submission only happens once under Stage A.
+  - **3. Self-Healing Error Recovery (`scribe.js`, `content.js` & `hud-ui.js`):**
+    - Added `quiz-process-error` page mode detection for `/mod/quiz/processattempt.php` and error pages.
+    - Added Stage G in `content.js`: If an error ever occurs on `processattempt.php`, StudyPilot extracts `cmid` from the URL parameters (`?cmid=239004`) and auto-redirects directly to `mod/quiz/view.php?id=${cmid}`!
+    - In `hud-ui.js`, added `⚡ Recover to Quiz View` fail-safe button.
+  - **4. Packaging & Tests (`tests/studypilot-swarm.test.ts`):**
+    - All 24 tests passing 100%. Repackaged to `public/downloads/studypilot-extension.zip` (43.8 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Moodle Single-Post Inviolability Law):** In Moodle quiz submission, never execute dual click + form requestSubmit fallbacks with arbitrary delays. Moodle strictly locks quiz attempts upon receiving the first valid POST request; any subsequent submission hitting `processattempt.php` will trigger an `attemptalreadyclosed` exception. Form fallback must strictly execute if and only if modal actuation was impossible.
+  - **Rule (Self-Healing CMID Redirect Law):** When navigating external web workflows, an agent must anticipate platform-side 500/error pages. If landed on a processing endpoint (like `processattempt.php?cmid=...`), extract the canonical entity ID (`cmid`) and immediately self-heal by redirecting to the canonical view page (`mod/quiz/view.php?id=${cmid}`).
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

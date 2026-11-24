@@ -38,6 +38,9 @@
   }
 
   function detectPageMode(doc = document, currentUrl = (typeof window !== 'undefined' ? window.location.href : '')) {
+    if (currentUrl.includes('/mod/quiz/processattempt.php') || (doc.title && doc.title.toLowerCase().includes('error'))) {
+      return 'quiz-process-error';
+    }
     if (currentUrl.includes('/mod/quiz/summary.php') || (doc.querySelector && doc.querySelector('.quizsummary'))) {
       return 'quiz-summary';
     }

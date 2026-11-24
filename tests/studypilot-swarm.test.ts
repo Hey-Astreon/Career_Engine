@@ -240,6 +240,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/page/view.php?id=194191")).toBe("lecture-page");
       expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/quiz/review.php?attempt=105094177")).toBe("quiz-review");
       expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/quiz/view.php?id=238965")).toBe("quiz-view");
+      expect(StudyPilotScribe.detectPageMode({ querySelector: () => null } as any, "https://amigo.amityonline.com/mod/quiz/processattempt.php?cmid=239004")).toBe("quiz-process-error");
     });
   });
 
@@ -584,7 +585,10 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
         classList: { contains: (cls: string) => cls === "btn-primary" },
         focus: () => {},
         dispatchEvent: () => true,
-        click: () => { modalConfirmed = true; },
+        click: () => { 
+          modalConfirmed = true; 
+          processForm.submit(); 
+        },
       };
 
       const mockModal = {

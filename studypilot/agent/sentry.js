@@ -278,7 +278,8 @@
       if (modalBtn) {
         await sleep(350);
 
-        // 1. Synthetic actuation on the modal button
+        // 1. Synthetic actuation on the modal button (Strict Single-Submission Guard)
+        let submitted = false;
         try {
           if (typeof modalBtn.focus === 'function') modalBtn.focus();
           if (typeof MouseEvent !== 'undefined') {
@@ -286,26 +287,25 @@
             modalBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
           }
           modalBtn.click();
+          submitted = true;
         } catch (e) {
-          try { modalBtn.click(); } catch (err) {}
+          try { modalBtn.click(); submitted = true; } catch (err) {}
         }
 
-        // Wait short moment for navigation to trigger
-        await sleep(800);
-
-        // 2. Direct Form Submission Fail-Safe:
-        // In Moodle, clicking the modal button submits form[action*="processattempt.php"].
-        // If the modal animation or event handler was stubborn, submit the form directly!
-        const processForm = doc.querySelector('form[action*="processattempt.php"]');
-        if (processForm) {
-          try {
-            if (typeof processForm.requestSubmit === 'function') {
-              processForm.requestSubmit();
-            } else if (typeof processForm.submit === 'function') {
-              processForm.submit();
+        // 2. Direct Form Submission ONLY as fallback if modal click threw or failed
+        // Strictly prevents double-submission into processattempt.php
+        if (!submitted) {
+          const processForm = doc.querySelector('form[action*="processattempt.php"]');
+          if (processForm) {
+            try {
+              if (typeof processForm.requestSubmit === 'function') {
+                processForm.requestSubmit();
+              } else if (typeof processForm.submit === 'function') {
+                processForm.submit();
+              }
+            } catch (e) {
+              try { processForm.submit(); } catch (err) {}
             }
-          } catch (e) {
-            try { processForm.submit(); } catch (err) {}
           }
         }
 
