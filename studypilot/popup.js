@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (r.value === mode) r.checked = true;
       });
 
-      if (toggleAutoSubmit) toggleAutoSubmit.checked = res && res.sp_auto_submit === true;
-      if (toggleAutoAdvance) toggleAutoAdvance.checked = res && res.sp_auto_advance === true;
+      if (toggleAutoSubmit) toggleAutoSubmit.checked = (res && typeof res.sp_auto_submit !== 'undefined') ? res.sp_auto_submit === true : true;
+      if (toggleAutoAdvance) toggleAutoAdvance.checked = (res && typeof res.sp_auto_advance !== 'undefined') ? res.sp_auto_advance === true : true;
       if (inputGroq && res && res.sp_groq_key) inputGroq.value = res.sp_groq_key;
       if (inputGemini && res && res.sp_gemini_key) inputGemini.value = res.sp_gemini_key;
     }

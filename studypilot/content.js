@@ -185,8 +185,8 @@
 
     chrome.storage.sync.get(['sp_auto_submit', 'sp_auto_advance'], async (res) => {
       try {
-        const autoSubmit = res && res.sp_auto_submit === true;
-        const autoAdvance = res && res.sp_auto_advance === true;
+        const autoSubmit = (res && typeof res.sp_auto_submit !== 'undefined') ? res.sp_auto_submit === true : true;
+        const autoAdvance = (res && typeof res.sp_auto_advance !== 'undefined') ? res.sp_auto_advance === true : true;
 
         const Scribe = window.StudyPilotScribe;
         const Sentry = window.StudyPilotSentry;
@@ -270,9 +270,9 @@
             return; // STRICTLY STOP: Never auto-click attemptBtn on a passed high-stakes assessment!
           }
 
-          // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Only applies to high-stakes or after 8+ attempts on practice)
+          // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Only applies to high-stakes or after 16+ attempts on practice)
           const isStagnantScore = attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1;
-          const isExceededPracticeAttempts = !stakes.isHighStakes && (attemptsHistory.attempts.length >= 8);
+          const isExceededPracticeAttempts = !stakes.isHighStakes && (attemptsHistory.attempts.length >= 16);
           if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? isStagnantScore : isExceededPracticeAttempts)) {
             if (activeHud) {
               activeHud.setState('idle', { 
