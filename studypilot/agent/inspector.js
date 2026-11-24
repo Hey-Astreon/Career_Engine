@@ -98,9 +98,12 @@
         }
       }
 
-      // Check for module assessment title or graded assessment indicators
-      if (/module.*assessment|graded\s*assessment|end.*term/i.test(txt)) {
+      // Check for explicit module assessment title or graded assessment indicators (avoiding breadcrumbs)
+      if (/\b(?:\d+(?:st|nd|rd|th)?\s+)?module\s+assessment\b|\bgraded\s+assessment\b|\bend\s+term\s+assessment\b/i.test(txt)) {
         isHighStakes = true;
+        if (attemptsAllowed === Infinity) {
+          attemptsAllowed = 3; // default 3 attempts for finite module/graded assessments
+        }
       }
     }
 

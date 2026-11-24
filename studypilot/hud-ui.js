@@ -567,7 +567,7 @@
         <div class="sp-course-info">
           <div class="sp-course-title" title="${this.escapeHtml(this.data.courseTitle)}">${this.escapeHtml(this.data.courseTitle)}</div>
           <div class="sp-course-subtitle">${subtitleText}</div>
-          ${this.data.stakes && this.data.stakes.isHighStakes ? `
+          ${this.data.stakes && this.data.stakes.isHighStakes && Number.isFinite(this.data.stakes.attemptsAllowed) ? `
             <div style="font-size: 10px; font-weight: 600; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 3px 6px; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
               <span>🛡️ Finite Attempts: ${this.data.stakes.attemptsUsed}/${this.data.stakes.attemptsAllowed} Used (${this.data.stakes.attemptsRemaining} Left)</span>
             </div>
