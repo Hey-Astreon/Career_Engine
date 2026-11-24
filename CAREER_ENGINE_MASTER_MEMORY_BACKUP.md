@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 132: Stride StudyPilot — Full-Marks Deliberate Pause UX, Finite Attempt Breadcrumb Decoupling & Non-Attempted Auto-Progression Pipeline)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 133: Stride StudyPilot — Scope Resolution of Scribe in Autonomous Lifecycle & Unconditional Imperfect Auto-Retry)
 
 ---
 
@@ -5271,4 +5271,23 @@ graph TD
     1. *Fresh Unattempted:* Zero manual clicks; auto-launch, auto-solve, and auto-submit.
     2. *Imperfect Attempt ($< 100\%$):* Auto-retry immediately to secure 100% full marks.
     3. *Perfect Attempt ($100\%$):* Deliberate pause presenting `Proceed to Next Topic` alongside optional `Re-Attempt Quiz`, honoring user agency.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 133: Stride StudyPilot — Scope Resolution of Scribe in Autonomous Lifecycle & Unconditional Imperfect Auto-Retry (November 24, 2026)
+- **The Exact Defect Encountered:**
+  - On `Quiz : 1.1.2 Objectives of Green Computing` (`https://amigo.amityonline.com/mod/quiz/view.php?id=238964`), StudyPilot halted with the orange button `⚡ Re-Attempt Quiz (Target: 10/10)` and waited for manual user interaction on an imperfect score (`5.00 / 10.00`).
+- **Deep Root Cause Diagnosis:**
+  - Inside `checkAutonomousLifecycle()` in `studypilot/content.js`, only `Sentry` and `Navigator` were resolved from `window`. `Scribe` was never imported in that lexical scope.
+  - When Stage C executed line 146: `const gradeInfo = (Scribe && typeof Scribe.extractQuizGrade === 'function')`, JavaScript threw an uncaught `ReferenceError: Scribe is not defined`.
+  - Because Chrome extension background/content async promises reject unhandled, the entire lifecycle function terminated abruptly before reaching Subcase C1 (`await Sentry.clickAttemptQuiz(document)`).
+- **The Concrete Surgical Fix:**
+  - **1. Scope Resolution (`content.js`):**
+    - Injected `const Scribe = window.StudyPilotScribe;` and `const Inspector = window.StudyPilotInspector;` at the entry of `checkAutonomousLifecycle()`.
+    - Added comprehensive `try ... catch (lifecycleErr)` block wrapping the entire autonomous lifecycle handler so runtime exceptions are caught and never crash the extension execution thread.
+  - **2. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Repackaged to `public/downloads/studypilot-extension.zip` (43.4 KB).
+  - **3. Verification:**
+    - All 24 tests in `tests/studypilot-swarm.test.ts` pass 100%. TypeScript typecheck passes with 0 errors.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Lexical Scope Immunity Law in Extensions):** Never assume a module imported in one function (e.g. `scanCurrentPage`) is available in sibling async functions (e.g. `checkAutonomousLifecycle`) within the same content script closure. Every function interacting with window-bound agents must explicitly declare and guard its dependencies (`const Scribe = window.StudyPilotScribe`), wrapped in a top-level `try/catch` to prevent silent thread death.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

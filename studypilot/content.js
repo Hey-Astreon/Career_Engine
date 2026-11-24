@@ -109,55 +109,131 @@
     if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) return;
 
     chrome.storage.sync.get(['sp_auto_submit', 'sp_auto_advance'], async (res) => {
-      const autoSubmit = res && res.sp_auto_submit === true;
-      const autoAdvance = res && res.sp_auto_advance === true;
+      try {
+        const autoSubmit = res && res.sp_auto_submit === true;
+        const autoAdvance = res && res.sp_auto_advance === true;
 
-      const Sentry = window.StudyPilotSentry;
-      const Navigator = window.StudyPilotNavigator;
-      if (!Sentry) return;
-
-      // Stage A: On Summary Page, Auto-Submit
-      if (currentPageMode === 'quiz-summary' && autoSubmit) {
-        if (activeHud) {
-          activeHud.setState('submitting', { statusText: 'Auto-Submitting Quiz Summary...' });
-        }
-        await Sentry.sleep(800);
-        const success = await Sentry.confirmSubmitAllModal(document);
-        if (!success && activeHud) {
-          activeHud.setState('idle', { statusText: 'Ready for Final Submission' });
-        }
-      }
-
-      // Stage B: On Review Page, Auto-Advance to Next
-      if (currentPageMode === 'quiz-review' && autoAdvance) {
-        if (activeHud) {
-          activeHud.setState('complete', { statusText: 'Quiz Completed! Advancing to next topic...' });
-        }
-        await Sentry.sleep(1500);
-        await Sentry.clickFinishReview(document);
-        if (Navigator) {
-          await Sentry.sleep(800);
-          Navigator.navigateToNextActivity(document);
-        }
-      }
-
-      // Stage C: On Quiz View Page (/mod/quiz/view.php)
-      if (currentPageMode === 'quiz-view' && autoAdvance) {
-        const gradeInfo = (Scribe && typeof Scribe.extractQuizGrade === 'function')
-          ? Scribe.extractQuizGrade(document)
-          : { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
-        const attemptBtn = Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function'
-          ? Sentry.findAttemptOrReattemptButton(document)
-          : null;
+        const Scribe = window.StudyPilotScribe;
+        const Sentry = window.StudyPilotSentry;
+        const Navigator = window.StudyPilotNavigator;
         const Inspector = window.StudyPilotInspector;
-        const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
-          ? Inspector.getAssessmentStakes(document)
-          : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
+        if (!Sentry || !Scribe) return;
 
-        // Subcase C0: High-Stakes Exhaustion Guard (All 3 attempts used)
-        if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
+        // Stage A: On Summary Page, Auto-Submit
+        if (currentPageMode === 'quiz-summary' && autoSubmit) {
           if (activeHud) {
-            activeHud.setState('idle', { statusText: '🛡️ Inspector Guard: All 3 attempts used. Advancing to next topic...' });
+            activeHud.setState('submitting', { statusText: 'Auto-Submitting Quiz Summary...' });
+          }
+          await Sentry.sleep(800);
+          const success = await Sentry.confirmSubmitAllModal(document);
+          if (!success && activeHud) {
+            activeHud.setState('idle', { statusText: 'Ready for Final Submission' });
+          }
+        }
+
+        // Stage B: On Review Page, Auto-Advance to Next
+        if (currentPageMode === 'quiz-review' && autoAdvance) {
+          if (activeHud) {
+            activeHud.setState('complete', { statusText: 'Quiz Completed! Advancing to next topic...' });
+          }
+          await Sentry.sleep(1500);
+          await Sentry.clickFinishReview(document);
+          if (Navigator) {
+            await Sentry.sleep(800);
+            Navigator.navigateToNextActivity(document);
+          }
+        }
+
+        // Stage C: On Quiz View Page (/mod/quiz/view.php)
+        if (currentPageMode === 'quiz-view' && autoAdvance) {
+          const gradeInfo = (Scribe && typeof Scribe.extractQuizGrade === 'function')
+            ? Scribe.extractQuizGrade(document)
+            : { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
+          const attemptBtn = Sentry && typeof Sentry.findAttemptOrReattemptButton === 'function'
+            ? Sentry.findAttemptOrReattemptButton(document)
+            : null;
+          const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
+            ? Inspector.getAssessmentStakes(document)
+            : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
+
+          // Subcase C0: High-Stakes Exhaustion Guard (All 3 attempts used)
+          if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
+            if (activeHud) {
+              activeHud.setState('idle', { statusText: '🛡️ Inspector Guard: All 3 attempts used. Advancing to next topic...' });
+            }
+            await Sentry.sleep(1500);
+            if (Navigator) {
+              Navigator.navigateToNextActivity(document);
+            }
+            return;
+          }
+
+          // Subcase C1: Imperfect Quiz (e.g. 5.00 / 10.00) -> Auto Re-attempt for 10/10!
+          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn) {
+            if (activeHud) {
+              activeHud.setState('submitting', { 
+                statusText: stakes.isHighStakes 
+                  ? `🛡️ High-Stakes: Score is ${gradeInfo.gradeText}. Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
+                  : `Score is ${gradeInfo.gradeText}. Re-Attempting for 10/10...` 
+              });
+            }
+            await Sentry.sleep(1200);
+            await Sentry.clickAttemptQuiz(document);
+            return;
+          }
+
+          // Subcase C2: Perfect Quiz (100% full marks) -> Auto-Advance forward!
+          if (gradeInfo.hasGrade && gradeInfo.isPerfect) {
+            if (activeHud) {
+              activeHud.setState('complete', { statusText: `Perfect Score (${gradeInfo.gradeText})! Advancing...` });
+            }
+            await Sentry.sleep(1200);
+            if (Navigator) {
+              Navigator.navigateToNextActivity(document);
+            }
+            return;
+          }
+
+          // Subcase C3: Fresh Unattempted Quiz -> Auto-Launch Attempt!
+          if (!gradeInfo.hasGrade && attemptBtn && stakes.canSafelyAttempt) {
+            if (activeHud) {
+              activeHud.setState('submitting', { 
+                statusText: stakes.isHighStakes ? '🛡️ High-Stakes Assessment: Launching Attempt 1 of 3...' : 'Launching Quiz Attempt...' 
+              });
+            }
+            await Sentry.sleep(1200);
+            await Sentry.clickAttemptQuiz(document);
+            return;
+          }
+        }
+
+        // Stage D: On Manual Completion Page (Live Class / Study Material), Auto-Mark Done & Advance
+        if (Sentry && typeof Sentry.findMarkAsDoneButton === 'function' && autoAdvance && currentPageMode !== 'quiz-attempt' && currentPageMode !== 'quiz-summary') {
+          const markDoneBtn = Sentry.findMarkAsDoneButton(document);
+          if (markDoneBtn) {
+            if (activeHud) {
+              activeHud.setState('solving', { statusText: 'Marking topic as done...' });
+            }
+            await Sentry.clickMarkAsDone(document);
+            if (activeHud) {
+              activeHud.setState('complete', { statusText: 'Topic Done! Advancing to next activity...' });
+            }
+            await Sentry.sleep(1200);
+            if (Navigator) {
+              Navigator.navigateToNextActivity(document);
+            }
+            return;
+          }
+        }
+
+        // Stage E: On Lecture Page (/mod/page/view.php), Live Class (/mod/googlemeet/), or Resource Page (/mod/resource/)
+        if ((currentPageMode === 'lecture-page' || currentPageMode === 'live-class' || currentPageMode === 'resource-page') && autoAdvance) {
+          if (activeHud) {
+            activeHud.setState('complete', { 
+              statusText: currentPageMode === 'live-class' 
+                ? 'Live Class Attendance Recorded! Advancing to next activity...' 
+                : 'Auto-Completed on Visit! Advancing to next activity...' 
+            });
           }
           await Sentry.sleep(1500);
           if (Navigator) {
@@ -166,94 +242,23 @@
           return;
         }
 
-        // Subcase C1: Imperfect Quiz (e.g. 5.00 / 10.00) -> NEVER skip!
-        if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn) {
+        // Stage F: On Quiz Attempt Page (/mod/quiz/attempt.php) -> Auto-Solve Questions!
+        if (currentPageMode === 'quiz-attempt' && autoAdvance && currentQuestions.length > 0 && !isSolving) {
           if (activeHud) {
-            activeHud.setState('submitting', { 
-              statusText: stakes.isHighStakes 
-                ? `🛡️ High-Stakes: Score is ${gradeInfo.gradeText}. Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
-                : `Score is ${gradeInfo.gradeText}. Re-Attempting for 10/10...` 
-            });
+            activeHud.setState('solving', { statusText: `Auto-Solving ${currentQuestions.length} Questions...` });
           }
-          await Sentry.sleep(1200);
-          await Sentry.clickAttemptQuiz(document);
-          return;
-        }
-
-        // Subcase C2: Perfect Quiz (100% full marks) -> Auto-Advance forward!
-        if (gradeInfo.hasGrade && gradeInfo.isPerfect) {
-          if (activeHud) {
-            activeHud.setState('complete', { statusText: `Perfect Score (${gradeInfo.gradeText})! Advancing...` });
-          }
-          await Sentry.sleep(1200);
-          if (Navigator) {
-            Navigator.navigateToNextActivity(document);
-          }
-          return;
-        }
-
-        // Subcase C3: Fresh Unattempted Quiz -> Auto-Launch Attempt!
-        if (!gradeInfo.hasGrade && attemptBtn && stakes.canSafelyAttempt) {
-          if (activeHud) {
-            activeHud.setState('submitting', { 
-              statusText: stakes.isHighStakes ? '🛡️ High-Stakes Assessment: Launching Attempt 1 of 3...' : 'Launching Quiz Attempt...' 
-            });
-          }
-          await Sentry.sleep(1200);
-          await Sentry.clickAttemptQuiz(document);
-          return;
-        }
-      }
-
-      // Stage D: On Manual Completion Page (Live Class / Study Material), Auto-Mark Done & Advance
-      if (Sentry && typeof Sentry.findMarkAsDoneButton === 'function' && autoAdvance && currentPageMode !== 'quiz-attempt' && currentPageMode !== 'quiz-summary') {
-        const markDoneBtn = Sentry.findMarkAsDoneButton(document);
-        if (markDoneBtn) {
-          if (activeHud) {
-            activeHud.setState('solving', { statusText: 'Marking topic as done...' });
-          }
-          await Sentry.clickMarkAsDone(document);
-          if (activeHud) {
-            activeHud.setState('complete', { statusText: 'Topic Done! Advancing to next activity...' });
-          }
-          await Sentry.sleep(1200);
-          if (Navigator) {
-            Navigator.navigateToNextActivity(document);
-          }
-          return;
-        }
-      }
-
-      // Stage E: On Lecture Page (/mod/page/view.php), Live Class (/mod/googlemeet/), or Resource Page (/mod/resource/)
-      if ((currentPageMode === 'lecture-page' || currentPageMode === 'live-class' || currentPageMode === 'resource-page') && autoAdvance) {
-        if (activeHud) {
-          activeHud.setState('complete', { 
-            statusText: currentPageMode === 'live-class' 
-              ? 'Live Class Attendance Recorded! Advancing to next activity...' 
-              : 'Auto-Completed on Visit! Advancing to next activity...' 
+          await Sentry.sleep(800);
+          executeSwarmAutoSolve({
+            speedMode: (res && res.sp_speed_mode) || 'humanized',
+            autoSubmit: autoSubmit,
+            autoAdvance: autoAdvance,
+            groqApiKey: res && res.sp_groq_key,
+            geminiApiKey: res && res.sp_gemini_key
           });
+          return;
         }
-        await Sentry.sleep(1500);
-        if (Navigator) {
-          Navigator.navigateToNextActivity(document);
-        }
-        return;
-      }
-
-      // Stage F: On Quiz Attempt Page (/mod/quiz/attempt.php) -> Auto-Solve Questions!
-      if (currentPageMode === 'quiz-attempt' && autoAdvance && currentQuestions.length > 0 && !isSolving) {
-        if (activeHud) {
-          activeHud.setState('solving', { statusText: `Auto-Solving ${currentQuestions.length} Questions...` });
-        }
-        await Sentry.sleep(800);
-        executeSwarmAutoSolve({
-          speedMode: (res && res.sp_speed_mode) || 'humanized',
-          autoSubmit: autoSubmit,
-          autoAdvance: autoAdvance,
-          groqApiKey: res && res.sp_groq_key,
-          geminiApiKey: res && res.sp_gemini_key
-        });
-        return;
+      } catch (lifecycleErr) {
+        console.error('[StudyPilot] Autonomous lifecycle error:', lifecycleErr);
       }
     });
   }
