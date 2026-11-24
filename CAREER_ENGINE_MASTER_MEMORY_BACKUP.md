@@ -5559,6 +5559,9 @@ graph TD
     - Added unit tests for Mastermind CSP 0%-elimination, single-variable delta deduction, and verified solution restoration.
     - All 35 Vitest tests passing 100%. TypeScript check clean (0 errors).
     - Repackaged extension to `public/downloads/studypilot-extension.zip` (56.5 KB).
+  - **6. Autonomous Practice Ceiling & Default-On Calibration (Phase 141.1):**
+    - Increased practice attempt safety ceiling from 8 to 16 attempts, ensuring quizzes with historical attempts from previous runs are not prematurely paused.
+    - Calibrated `autoSubmit` and `autoAdvance` to default to `true` across `content.js`, `popup.js`, and `popup.html`, making StudyPilot 100% zero-click hands-free by default.
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The Autonomous Mastermind CSP Permutation Law):** Never force a human user to manually debug or guess multiple-choice questions on infinite-attempt practice platforms. An autonomous academic agent must treat imperfect practice quizzes as a Constraint Satisfaction Problem, using single-variable score deltas to mathematically deduce and lock in the 100% answer key in $\le 3$ automated runs.
   - **Rule (The Practice vs. High-Stakes Stagnation Law):** Score stagnation circuit breakers belong strictly to finite-attempt, high-stakes assessments. On practice quizzes where the highest grade is permanently banked and attempts are free, stagnation is an invitation to trigger single-variable permutations, not an excuse to halt.
