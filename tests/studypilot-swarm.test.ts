@@ -787,5 +787,32 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(curriculum.items[0].title).toBe("1.2.2 Green Value");
       expect(curriculum.items[0].isCompleted).toBe(false);
     });
+
+    it("accurately detects passive view completion ('Done: View') on lecture pages", () => {
+      const mockLectureBadge = {
+        tagName: "SPAN",
+        className: "badge badge-success",
+        innerText: "Done: View",
+        textContent: "Done: View",
+      };
+
+      const mockLectureDocWithViewDone = {
+        querySelectorAll(sel: string) {
+          if (sel.includes("badge") || sel.includes("span")) {
+            return [mockLectureBadge];
+          }
+          return [];
+        },
+      };
+
+      const hasView = StudyPilotScribe.hasPassiveViewCompletion(mockLectureDocWithViewDone as any);
+      expect(hasView).toBe(true);
+
+      const mockEmptyDoc = {
+        querySelectorAll: () => [],
+      };
+      const hasViewEmpty = StudyPilotScribe.hasPassiveViewCompletion(mockEmptyDoc as any);
+      expect(hasViewEmpty).toBe(false);
+    });
   });
 });

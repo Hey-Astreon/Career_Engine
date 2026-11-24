@@ -60,6 +60,7 @@
     const hasVideo = Boolean(document.querySelector('video, iframe[src*="video"], iframe[src*="youtube"]'));
     const Sentry = window.StudyPilotSentry;
     const hasMarkDoneBtn = Boolean(Sentry && typeof Sentry.findMarkAsDoneButton === 'function' && Sentry.findMarkAsDoneButton(document));
+    const isViewDone = Boolean(Scribe && typeof Scribe.hasPassiveViewCompletion === 'function' && Scribe.hasPassiveViewCompletion(document));
 
     let nextTitle = curriculumPlan.nextItem ? curriculumPlan.nextItem.title : '';
     let nextHref = curriculumPlan.nextItem ? curriculumPlan.nextItem.href : '';
@@ -83,7 +84,8 @@
         nextActivityTitle: nextTitle,
         nextActivityHref: nextHref,
         hasVideo,
-        hasMarkDoneBtn
+        hasMarkDoneBtn,
+        isViewDone
       });
     }
 
@@ -158,6 +160,17 @@
           if (Navigator) {
             Navigator.navigateToNextActivity(document);
           }
+        }
+      }
+
+      // Stage E: On Passive View Lecture Page (Done: View), Auto-Advance if enabled
+      if (currentPageMode === 'lecture-page' && isViewDone && autoAdvance) {
+        if (activeHud) {
+          activeHud.setState('complete', { statusText: 'Auto-Completed on Visit! Advancing to next topic...' });
+        }
+        await Sentry.sleep(1500);
+        if (Navigator) {
+          Navigator.navigateToNextActivity(document);
         }
       }
     });

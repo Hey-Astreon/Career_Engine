@@ -386,6 +386,7 @@
       this.data.nextActivityHref = scanData.nextActivityHref || '';
       this.data.hasVideo = Boolean(scanData.hasVideo);
       this.data.hasMarkDoneBtn = Boolean(scanData.hasMarkDoneBtn);
+      this.data.isViewDone = Boolean(scanData.isViewDone);
       this.render();
     }
 
@@ -485,7 +486,11 @@
       if (this.pageMode === 'lecture-page') {
         badgeText = 'Lecture Mode';
         badgeClass = 'sp-badge lecture';
-        subtitleText = this.data.hasVideo ? 'E-Tutorial Video Detected' : 'Course Reading Material';
+        if (this.data.isViewDone) {
+          subtitleText = '✓ Auto-Completed on Visit (Done: View)';
+        } else {
+          subtitleText = this.data.hasVideo ? 'E-Tutorial Video Detected' : 'Course Reading Material';
+        }
       } else if (this.pageMode === 'quiz-summary') {
         badgeText = 'Quiz Summary';
         badgeClass = 'sp-badge review';
@@ -555,12 +560,17 @@
               <span>⚡ Mark Done & Next</span>
             </button>
           ` : ''}
-          ${this.data.hasVideo ? `
+          ${this.data.isViewDone && this.data.nextActivityTitle ? `
+            <button class="sp-action-btn" id="sp-next-btn">
+              <span>▶ Next: ${this.escapeHtml(this.data.nextActivityTitle)}</span>
+            </button>
+          ` : ''}
+          ${this.data.hasVideo && !this.data.isViewDone ? `
             <button class="sp-action-btn" id="sp-complete-video-btn">
               <span>⚡ Complete Video & Next</span>
             </button>
           ` : ''}
-          ${this.data.nextActivityTitle ? `
+          ${!this.data.isViewDone && this.data.nextActivityTitle ? `
             <button class="sp-action-btn-secondary" id="sp-next-btn">
               <span>▶ Advance to Next Topic</span>
             </button>

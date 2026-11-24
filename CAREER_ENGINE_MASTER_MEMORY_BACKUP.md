@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 126: AMIGO Course Structure Calibration — Optional Non-Credit Quarantining & Manual Completion ('Mark as done') Engine)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 127: AMIGO Module Lecture Page Auto-Completion ('Done: View') Integration & Fluid Syllabus Traversal)
 
 ---
 
@@ -5087,4 +5087,31 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (LMS Manual Completion Idempotence Law):** In Moodle and AMIGO LMS, manual completion buttons are toggles (`data-action="toggle-manual-completion"`). Never click a completion button without verifying that it does not already display `✓ Done` or `data-toggled="true"`. Blindly clicking toggles turns completed credits back to incomplete!
   - **Rule (Optional Non-Credit Activity Blacklist Law):** In university LMS platforms, discussion forums, announcements, and interactive flash/HTML5 embeds frequently lack completion radio buttons and do not count toward course progress. Always quarantine them from curriculum trees and navigation fallbacks to prevent the learner/agent from getting trapped in non-credit discussion threads.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 127: AMIGO Module Lecture Page Auto-Completion ('Done: View') Integration & Fluid Syllabus Traversal (November 24, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - In AMIGO Moodle, academic module topics (e.g. `1.1.1 Effect of Green Computing on Business, IT and Environment`, `1.1.2 Objectives...`, etc.) require zero manual button clicks or full video watch time to be credited. AMIGO marks the activity completed (`Done: View`) the exact instant the student visits/loads the page.
+  - Previously, StudyPilot treated lecture pages as requiring manual video completion or a secondary advance click, and did not recognize that the activity credit was already secured immediately upon page load.
+- **Deep Root Cause Diagnosis:**
+  - **1. Missing Passive View Sensor:** `scribe.js` lacked a dedicated detector for Moodle's passive completion criteria badge (`Done: View`, `.badge-success`, `.completion-info`).
+  - **2. Inverted Action Hierarchy in HUD:** On lecture pages with `Done: View`, the HUD displayed `Complete Video & Next` as the primary button and `Advance to Next Topic` as a secondary button, creating unnecessary friction when the topic credit was already satisfied.
+  - **3. Dormant Auto-Advance on Lecture Pages:** `checkAutonomousLifecycle()` in `content.js` had autonomous handlers for quiz summary, review, completed quiz view, and manual completion, but had no auto-advance handler for lecture pages that were already credited with `Done: View`.
+- **The Concrete Surgical Fix:**
+  - **1. Passive View Completion Sensor (`hasPassiveViewCompletion` in `scribe.js`):**
+    - Scans `.badge`, `.completion-info`, `[data-region="completion-info"]`, and page headers for text matching `/done:\s*view/i`.
+    - Returns `true` immediately when AMIGO's automatic visit credit is detected.
+  - **2. Mode-Adaptive Subtitle & Primary Direct Action (`hud-ui.js`):**
+    - When `isViewDone` is true, the HUD updates subtitle to `✓ Auto-Completed on Visit (Done: View)`.
+    - Elevates `▶ Next: [Next Activity Title]` (e.g. `▶ Next: Quiz : 1.1.1 Effect of Green Computing`) to the primary blue action button!
+    - Moves `Complete Video & Next` to secondary button if the student still wishes to fast-forward the media.
+  - **3. Autonomous Stage E Traversal (`content.js`):**
+    - Added Stage E to `checkAutonomousLifecycle()`: When on a lecture page with `isViewDone && autoAdvance`, StudyPilot displays `Auto-Completed on Visit! Advancing to next topic...`, waits 1500ms, and calls `Navigator.navigateToNextActivity(document)`, creating a fluid, unbroken flow directly into the next micro-quiz!
+  - **4. Automated Vitest Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added unit test verifying `hasPassiveViewCompletion` detects `Done: View` badges accurately and returns `false` when absent.
+    - All 18 tests passing 100% (4.30s). TypeScript typecheck passes with 0 errors.
+  - **5. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Packaged standalone bundle: `public/downloads/studypilot-extension.zip` (38.3 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Passive LMS Completion Priority Law):** When an LMS activity uses view-based completion (`Done: View`), the educational platform grants progress credit on HTTP request fulfillment. Automation tools must treat view-credited pages as completed upon DOM ready, elevating navigation to the next assessment rather than stalling on embedded video playback.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

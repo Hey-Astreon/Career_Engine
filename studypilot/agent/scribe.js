@@ -279,10 +279,22 @@
     };
   }
 
+  function hasPassiveViewCompletion(doc = document) {
+    const candidates = Array.from(doc.querySelectorAll('.badge, .completion-info, [data-region="completion-info"], span, div'));
+    for (const el of candidates) {
+      const txt = (el.innerText || el.textContent || '').trim();
+      if (/done:\s*view/i.test(txt)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   return {
     parseMoodleQuestions,
     extractCourseContext,
     detectPageMode,
-    parseCurriculum
+    parseCurriculum,
+    hasPassiveViewCompletion
   };
 });
