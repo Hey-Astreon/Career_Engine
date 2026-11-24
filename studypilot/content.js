@@ -240,9 +240,15 @@
           // Subcase C0: High-Stakes Exhaustion Guard (All finite attempts used)
           if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
             if (activeHud) {
-              activeHud.setState('idle', { statusText: `🛡️ High-Stakes Complete: All ${stakes.attemptsAllowed} attempts used. Click below to advance.` });
+              activeHud.setState('complete', { 
+                statusText: `🛡️ Assessment Complete (${gradeInfo.gradeText || 'Final Grade Locked'})! All ${stakes.attemptsAllowed} attempts finished. Advancing...` 
+              });
             }
-            return; // STRICTLY STOP: Never auto-redirect the student off the page!
+            await Sentry.sleep(2200);
+            if (Navigator) {
+              Navigator.navigateToNextActivity(document);
+            }
+            return;
           }
 
           // Subcase C0.1: HIGH-STAKES PASSING SCORE SHIELD (The 90% / Passing Grade Protection)

@@ -160,7 +160,15 @@
       attemptsUsed = validRows.length;
     }
 
-    const attemptsRemaining = Math.max(0, attemptsAllowed - attemptsUsed);
+    // Check if Moodle explicitly declared attempts exhausted
+    const isExhaustedText = (doc && doc.body ? doc.body.innerText || doc.body.textContent || '' : '').toLowerCase().includes('no more attempts are allowed');
+    if (isExhaustedText) {
+      isHighStakes = true;
+      if (attemptsAllowed === Infinity) attemptsAllowed = Math.max(attemptsUsed, 3);
+    }
+
+    const attemptsRemaining = isExhaustedText ? 0 : Math.max(0, attemptsAllowed - attemptsUsed);
+    const canSafelyAttempt = !isExhaustedText && attemptsRemaining > 0;
 
     return {
       isHighStakes,
@@ -168,7 +176,7 @@
       attemptsUsed,
       attemptsRemaining,
       gradeToPass,
-      canSafelyAttempt: attemptsRemaining > 0,
+      canSafelyAttempt,
       stakesLabel: isHighStakes 
         ? `🛡️ High-Stakes Assessment (${attemptsUsed}/${attemptsAllowed} Attempts Used)`
         : '⚡ Standard Practice Quiz (Unlimited Attempts)'
