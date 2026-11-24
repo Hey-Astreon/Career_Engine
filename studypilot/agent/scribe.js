@@ -263,7 +263,22 @@
         (typeof node.querySelector === 'function' && node.querySelector('.fa-circle-o, .fa-circle-thin') !== null) ||
         Boolean(typeof node.getAttribute === 'function' && node.getAttribute('aria-label') && (node.getAttribute('aria-label').includes('Not completed') || node.getAttribute('aria-label').includes('To do')));
 
-      const isCompleted = hasCheckmark && !isExplicitPending;
+      // Check if this is an imperfect practice quiz that student still needs to master (Target: 100%)
+      let hasImperfectPracticeScore = false;
+      const quizId = (href.match(/[?&]id=([0-9]+)/) || [])[1] || '';
+      if (isQuiz && quizId && typeof localStorage !== 'undefined') {
+        try {
+          const outcomeRaw = localStorage.getItem(`sp_quiz_outcome_${quizId}`);
+          if (outcomeRaw) {
+            const outcome = JSON.parse(outcomeRaw);
+            if (!outcome.isPerfect && !outcome.isHighStakes && !outcome.accepted) {
+              hasImperfectPracticeScore = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      const isCompleted = hasCheckmark && !isExplicitPending && !hasImperfectPracticeScore;
 
       const isCurrent = (node.classList && node.classList.contains('active')) || 
                         (typeof node.getAttribute === 'function' && node.getAttribute('aria-current') === 'true') ||

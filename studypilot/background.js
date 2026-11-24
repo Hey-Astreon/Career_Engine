@@ -19,6 +19,41 @@ function unmaskKey(blob, salt = 42) {
   }
 }
 
+// Resilient Network & JSON Extraction Utilities
+async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function safeExtractJson(text) {
+  if (!text || typeof text !== 'string') return null;
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const cleaned = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+    try {
+      return JSON.parse(cleaned);
+    } catch (e2) {
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          return JSON.parse(match[0]);
+        } catch (e3) {}
+      }
+    }
+  }
+  return null;
+}
+
 function isMoodleUrl(url) {
   if (!url) return false;
   const lower = url.toLowerCase();
@@ -179,12 +214,12 @@ RULES:
 4. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
-  // Step A: Groq with openai/gpt-oss-120b (Ultra-Fast 500+ t/s)
+  // Step A: Groq with openai/gpt-oss-120b (Ultra-Fast 500+ t/s with 8s Timeout Guard)
   let groqResult = null;
   const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
   if (groqKey) {
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,16 +234,16 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
           response_format: { type: 'json_object' },
           temperature: 0.0
         })
-      });
+      }, 8000);
 
       if (res.ok) {
         const data = await res.json();
         const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
         if (content) {
-          const parsed = JSON.parse(content);
+          const parsed = safeExtractJson(content);
           if (parsed && parsed.selectedKey) {
-            const cleanKey = parsed.selectedKey.toLowerCase().trim();
-            let altKey = parsed.alternateKey ? parsed.alternateKey.toLowerCase().trim() : '';
+            const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
+            let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
             if (!altKey || altKey === cleanKey) {
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
@@ -217,7 +252,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
               selectedKey: cleanKey,
               alternateKey: altKey,
               reasoning: parsed.reasoning || 'Solved via Groq 500+ t/s AI.',
-              confidence: parsed.confidence || 0.98,
+              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
               engine: 'Groq (openai/gpt-oss-120b)'
             };
           }
@@ -226,49 +261,60 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
         console.warn('[StudyPilot Background] Groq API returned status:', res.status);
       }
     } catch (err) {
-      console.warn('[StudyPilot Background] Groq fetch failed, falling back:', err.message);
+      console.warn('[StudyPilot Background] Groq fetch failed or timed out:', err.message);
     }
   }
 
-  // Step B: Gemini 2.5 Flash for Dual-Model Consensus Verification
+  // Step B: Gemini 2.5 Flash with Multi-Version Fallback (8s Timeout Guard)
   let geminiResult = null;
   const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
   if (geminiKey) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.0 }
-        })
-      });
+    const candidateEndpoints = [
+      'gemini-2.5-flash',
+      'gemini-flash-latest',
+      'gemini-2.5-flash-lite'
+    ];
 
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          const parsed = JSON.parse(text);
-          if (parsed && parsed.selectedKey) {
-            const cleanKey = parsed.selectedKey.toLowerCase().trim();
-            let altKey = parsed.alternateKey ? parsed.alternateKey.toLowerCase().trim() : '';
-            if (!altKey || altKey === cleanKey) {
-              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
-              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+    for (const modelName of candidateEndpoints) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+        const res = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json', temperature: 0.0 }
+          })
+        }, 8000);
+
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            const parsed = safeExtractJson(text);
+            if (parsed && parsed.selectedKey) {
+              const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
+              let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
+              if (!altKey || altKey === cleanKey) {
+                const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+                altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+              }
+              geminiResult = {
+                selectedKey: cleanKey,
+                alternateKey: altKey,
+                reasoning: parsed.reasoning || 'Solved via Google Gemini Flash.',
+                confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.95,
+                engine: `Gemini (${modelName})`
+              };
+              break; // Success! Exit version cascade
             }
-            geminiResult = {
-              selectedKey: cleanKey,
-              alternateKey: altKey,
-              reasoning: parsed.reasoning || 'Solved via Google Gemini 2.5 Flash.',
-              confidence: parsed.confidence || 0.95,
-              engine: 'Gemini 2.5 Flash'
-            };
           }
+        } else {
+          console.warn(`[StudyPilot Background] Gemini (${modelName}) returned status: ${res.status}`);
         }
+      } catch (err) {
+        console.warn(`[StudyPilot Background] Gemini (${modelName}) error: ${err.message}`);
       }
-    } catch (err) {
-      console.warn('[StudyPilot Background] Gemini fetch failed, falling back:', err.message);
     }
   }
 

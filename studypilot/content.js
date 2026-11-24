@@ -51,7 +51,7 @@
     } catch (e) {}
   }
 
-  function recordQuizOutcome(quizId, gradeInfo) {
+  function recordQuizOutcome(quizId, gradeInfo, isHighStakes = false) {
     try {
       const mem = loadQuizMemory(quizId);
       if (mem.pendingSelections && gradeInfo && gradeInfo.hasGrade) {
@@ -67,6 +67,21 @@
         const str = JSON.stringify(mem);
         try { localStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
         try { sessionStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
+      }
+      if (gradeInfo && gradeInfo.hasGrade) {
+        try {
+          const existingRaw = localStorage.getItem(`sp_quiz_outcome_${quizId}`);
+          const existing = existingRaw ? JSON.parse(existingRaw) : {};
+          localStorage.setItem(`sp_quiz_outcome_${quizId}`, JSON.stringify({
+            ...existing,
+            score: gradeInfo.score,
+            total: gradeInfo.total,
+            percentage: gradeInfo.percentage,
+            isPerfect: Boolean(gradeInfo.isPerfect),
+            isHighStakes: Boolean(isHighStakes),
+            timestamp: Date.now()
+          }));
+        } catch (e) {}
       }
     } catch (e) {}
   }
@@ -220,7 +235,7 @@
             : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
 
           const currentQuizId = getQuizId(window.location.href);
-          recordQuizOutcome(currentQuizId, gradeInfo);
+          recordQuizOutcome(currentQuizId, gradeInfo, stakes.isHighStakes);
 
           // Subcase C0: High-Stakes Exhaustion Guard (All 3 attempts used)
           if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
@@ -592,6 +607,19 @@
   }
 
   function navigateNext() {
+    const qid = getQuizId(window.location.href);
+    if (qid && typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(`sp_quiz_outcome_${qid}`);
+        if (raw) {
+          const outcome = JSON.parse(raw);
+          outcome.accepted = true;
+          localStorage.setItem(`sp_quiz_outcome_${qid}`, JSON.stringify(outcome));
+        } else {
+          localStorage.setItem(`sp_quiz_outcome_${qid}`, JSON.stringify({ accepted: true, timestamp: Date.now() }));
+        }
+      } catch (e) {}
+    }
     const Navigator = window.StudyPilotNavigator;
     if (Navigator) {
       Navigator.navigateToNextActivity(document);

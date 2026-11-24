@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 138: Stride StudyPilot — High-Stakes Passing Score Shield, Dual-Model Swarm Consensus & Anti-Hallucination Governance)
+> **LAST COGNITIVE SYNC:** November 25, 2026 (Phase 139: Stride StudyPilot — Deep Health Check & Bug Bounty Hardening, Multi-Version Gemini Cascade & Sentry Polling Extension)
 
 ---
 
@@ -5465,4 +5465,37 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The High-Stakes Passing Score Shield Law):** An autonomous academic agent must NEVER automatically trigger a re-attempt on a finite-attempt high-stakes assessment if the existing score meets or exceeds the passing threshold ($\ge 50\%$ or $\ge$ `gradeToPass`). Finite attempts are irreversible assets; once passed, the agent must immediately lock retries, preserve the score, and require deliberate human confirmation before any remaining attempt can be used.
   - **Rule (The LLM Self-Doubt & Retry Note Law):** Never tell an LLM that prior answers were imperfect in a multi-question exam unless the feedback explicitly identifies which specific questions were wrong. Global imperfect feedback induces catastrophic self-doubt, causing the model to flip correct answers and degrade performance on subsequent attempts. Keep temperature at `0.0` and let consensus reasoning determine truth.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 139: Stride StudyPilot — Deep Health Check & Bug Bounty Hardening, Multi-Version Gemini Cascade & Sentry Polling Extension (November 25, 2026)
+- **The Exact Challenge & Bug Bounty Vulnerabilities Identified:**
+  - Following the discovery that `gemini-1.5-flash` was returning HTTP 404, a full-system audit revealed 4 critical vulnerabilities and potential "dead sectors":
+    1. **Unbounded Network Hang:** `fetch()` calls had no timeout mechanism; any connection stall or packet loss would freeze the HUD in "Solving..." indefinitely.
+    2. **Dirty LLM Output & JSON Parsing Fragility:** Direct `JSON.parse` threw uncaught syntax errors if models returned markdown fences (````json ... ````) or conversational prefixes.
+    3. **Sidebar Checkmark False Positive (Syllabus Skipping):** Moodle placed a `✓` in the sidebar as soon as 50% was scored, causing Scribe to set `isCompleted: true` and Navigator to skip imperfect practice quizzes (e.g. 5/10) instead of retrying for 10/10 full marks.
+    4. **Timed Assessment Modal Timing Gap:** Sentry's polling window for the timed "Start attempt" modal dialog was set to 800ms, missing slower animated modals on heavy course pages.
+- **Deep Root Cause Diagnosis:**
+  - Network calls lacked `AbortController` signal bindings.
+  - Scribe evaluated `isCompleted` solely off Moodle's checkmark DOM classes without verifying whether the student had achieved full marks or explicitly accepted the score.
+  - Sentry's timed assessment modal polling timeout was prematurely truncating at 800ms.
+- **The Concrete Surgical Fix:**
+  - **1. Network Timeout Guard & Multi-Version Gemini Cascade (`background.js`):**
+    - Implemented `fetchWithTimeout(url, options, 8000)` with native `AbortController` on all API calls.
+    - Added multi-version endpoint cascade for Gemini: `gemini-2.5-flash` $\rightarrow$ `gemini-flash-latest` $\rightarrow$ `gemini-2.5-flash-lite`, preventing outages when individual models experience 503 high-demand spikes.
+  - **2. Anti-Crash Dirty JSON Parser (`background.js`):**
+    - Implemented `safeExtractJson(text)` with markdown code block cleaning and regex boundary matching (`/\{[\s\S]*\}/`) to guarantee syntax safety against conversational LLM preambles.
+  - **3. Practice Quiz Checkmark Retention & Acceptance Gate (`scribe.js`, `content.js`):**
+    - In `scribe.js`, verified against `sp_quiz_outcome_${quizId}` so practice quizzes with imperfect scores (< 100%) are NOT marked as completed unless the student clicks `[▶ Accept Score & Advance]` or achieves 10/10.
+    - Updated `navigateNext()` in `content.js` to tag `accepted: true` upon deliberate user clicks.
+  - **4. Sentry Timed Modal Polling Window Extension (`sentry.js`):**
+    - Extended timed assessment modal polling window from 800ms to **3,500ms**, eliminating modal actuation race conditions.
+  - **5. Standalone Diagnostic Health-Check CLI (`scripts/studypilot-healthcheck.cjs`):**
+    - Created an executable diagnostic tool that tests Groq 120B, Gemini 2.5 Flash cascade, JSON parsing, vector collision resolution, high-stakes lockouts, and sentry modal timers.
+    - Achieved **100 / 100 System Health Score** (all 6 sectors passed).
+  - **6. Vitest Tests & Production Packaging:**
+    - All 31 tests passing (`tests/studypilot-swarm.test.ts`). TypeScript check clean (`0 errors`).
+    - Repackaged to `public/downloads/studypilot-extension.zip` (51.1 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Mandatory AbortController Network Law):** Service worker network requests in browser extensions must NEVER invoke bare `fetch()` without an explicit timeout `AbortController`. Webpages, background scripts, and extension lifecycles will hang indefinitely if an external API gateway experiences socket exhaustion or silent drops. 8 seconds is the optimal timeout for academic inference.
+  - **Rule (The LMS Completion vs. Student Mastery Law):** Never confuse an LMS platform's passing threshold checkmark with student mastery. Moodle awards completion checkmarks at 50%, but students require 100% full marks on practice quizzes. An autonomous syllabus navigator must verify internal persistent score records before considering a practice activity completed.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

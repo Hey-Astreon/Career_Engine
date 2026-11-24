@@ -459,7 +459,7 @@
       // clicking "Attempt quiz" / "Re-attempt quiz" pops up a "Start attempt" modal!
       // Poll up to 3.5 seconds (150ms ticks) for the modal to appear and auto-confirm it!
       const startTime = Date.now();
-      const maxWaitMs = 800;
+      const maxWaitMs = 3500;
 
       while (Date.now() - startTime < maxWaitMs) {
         await sleep(100);
