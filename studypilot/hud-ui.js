@@ -403,6 +403,10 @@
     addSolvedLog(logEntry) {
       this.data.logs.push(logEntry);
       this.render();
+      const logContainer = this.shadow && this.shadow.querySelector('.sp-log-container');
+      if (logContainer) {
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
     }
 
     // Draggable Implementation

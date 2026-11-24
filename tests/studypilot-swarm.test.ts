@@ -881,5 +881,55 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(foundBtn).not.toBeNull();
       expect((foundBtn as any).innerText).toBe("Re-attempt quiz");
     });
+
+    it("seamlessly parses and processes a 30-question comprehensive module assessment", () => {
+      // Simulate 30 distinct questions with diverse options and traps
+      const questions30: any[] = [];
+      for (let i = 1; i <= 30; i++) {
+        const inputA = { tagName: "INPUT", id: `q${i}_a`, name: `q${i}`, type: "radio", checked: false, click() { this.checked = true; } };
+        const labelA = { tagName: "LABEL", innerText: "a. Primary Principle", textContent: "a. Primary Principle" };
+        const optA = { querySelector: (sel: string) => sel.includes("input") ? inputA : labelA };
+
+        const inputB = { tagName: "INPUT", id: `q${i}_b`, name: `q${i}`, type: "radio", checked: false, click() { this.checked = true; } };
+        const labelB = { tagName: "LABEL", innerText: "b. Secondary Standard", textContent: "b. Secondary Standard" };
+        const optB = { querySelector: (sel: string) => sel.includes("input") ? inputB : labelB };
+
+        const inputC = { tagName: "INPUT", id: `q${i}_c`, name: `q${i}`, type: "radio", checked: false, click() { this.checked = true; } };
+        const labelC = { tagName: "LABEL", innerText: "c. Both of these", textContent: "c. Both of these" };
+        const optC = { querySelector: (sel: string) => sel.includes("input") ? inputC : labelC };
+
+        const qNode = {
+          id: `question-${i}`,
+          querySelector(sel: string) {
+            if (sel.includes(".no") || sel.includes(".qno")) return { textContent: `Question ${i}` };
+            if (sel.includes(".qtext")) return { innerText: `What is academic fundamental requirement #${i}?` };
+            return null;
+          },
+          querySelectorAll(sel: string) {
+            if (sel.includes(".answer") || sel.includes("label") || sel.includes("div")) return [optA, optB, optC];
+            return [];
+          },
+        };
+        questions30.push(qNode);
+      }
+
+      const mockAssessmentDoc = {
+        querySelector: () => null,
+        querySelectorAll(sel: string) {
+          if (sel.includes(".que") || sel.includes("div[id^=\"question-\"]")) {
+            return questions30;
+          }
+          return [];
+        },
+      };
+
+      const parsed = StudyPilotScribe.parseMoodleQuestions(mockAssessmentDoc as any);
+      expect(parsed.questionsCount).toBe(30);
+      expect(parsed.questions.length).toBe(30);
+      expect(parsed.questions[0].questionNumber).toBe(1);
+      expect(parsed.questions[29].questionNumber).toBe(30);
+      expect(parsed.questions[0].options.length).toBe(3);
+      expect(parsed.questions[0].traps.hasDualOptionTrap).toBe(true);
+    });
   });
 });
