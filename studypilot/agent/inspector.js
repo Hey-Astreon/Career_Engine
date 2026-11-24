@@ -91,9 +91,16 @@
     let attemptsAllowed = Infinity; // default unlimited for small quizzes
     let attemptsUsed = 0;
     let isHighStakes = false;
+    let gradeToPass = null;
 
     for (const node of textNodes) {
       const txt = (node.innerText || node.textContent || '').trim();
+
+      // Check for "Grade to pass: 15.00 out of 30.00"
+      const passMatch = txt.match(/grade\s*to\s*pass[^:\d]*:\s*([0-9\.]+)/i);
+      if (passMatch) {
+        gradeToPass = parseFloat(passMatch[1]);
+      }
 
       // Check for "Attempts allowed: 3"
       const allowedMatch = txt.match(/attempts\s*allowed[^:\d]*:\s*([0-9]+)/i);
@@ -131,6 +138,7 @@
       attemptsAllowed,
       attemptsUsed,
       attemptsRemaining,
+      gradeToPass,
       canSafelyAttempt: attemptsRemaining > 0,
       stakesLabel: isHighStakes 
         ? `🛡️ High-Stakes Assessment (${attemptsUsed}/${attemptsAllowed} Attempts Used)`

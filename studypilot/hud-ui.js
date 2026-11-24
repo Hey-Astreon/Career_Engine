@@ -531,23 +531,33 @@
         badgeClass = 'sp-badge review';
         subtitleText = 'Ready for Final Submission';
       } else if (this.pageMode === 'quiz-view') {
+        const isHighStakes = this.data.stakes && this.data.stakes.isHighStakes;
+        const isPassing = this.data.gradeInfo && this.data.gradeInfo.hasGrade && (
+          (this.data.gradeInfo.total > 0 && (this.data.gradeInfo.score / this.data.gradeInfo.total) >= 0.5) ||
+          (this.data.stakes && this.data.stakes.gradeToPass && this.data.gradeInfo.score >= this.data.stakes.gradeToPass)
+        );
+
         if (this.data.gradeInfo && this.data.gradeInfo.hasGrade) {
           if (this.data.gradeInfo.isPerfect) {
             badgeText = `Full Marks (${this.data.gradeInfo.gradeText})`;
             badgeClass = 'sp-badge review';
             subtitleText = `✓ Score: ${this.data.gradeInfo.gradeText} (100% Perfect)`;
+          } else if (isHighStakes && isPassing) {
+            badgeText = `High-Stakes Passed (${this.data.gradeInfo.gradeText})`;
+            badgeClass = 'sp-badge lecture';
+            subtitleText = `✓ Passed: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Score protected, retries locked`;
           } else if (this.data.isStagnant) {
             badgeText = 'Stagnant Score';
             badgeClass = 'sp-badge busy';
             subtitleText = `⚠️ Stagnant: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Paused`;
           } else {
-            badgeText = 'Needs Re-Attempt';
+            badgeText = isHighStakes ? 'Needs Passing Grade' : 'Needs Re-Attempt';
             badgeClass = 'sp-badge busy';
-            subtitleText = `⚠️ Score: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Target: 100%`;
+            subtitleText = `⚠️ Score: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Target: ${isHighStakes ? (this.data.stakes.gradeToPass ? `${this.data.stakes.gradeToPass} to pass` : '50% to pass') : '100%'}`;
           }
         } else {
-          badgeText = this.data.hasModalStartBtn ? 'Start Timed Attempt' : 'Quiz Portal';
-          badgeClass = 'sp-badge';
+          badgeText = this.data.hasModalStartBtn ? 'Start Timed Attempt' : (isHighStakes ? 'High-Stakes Portal' : 'Quiz Portal');
+          badgeClass = isHighStakes ? 'sp-badge busy' : 'sp-badge';
           subtitleText = this.data.hasModalStartBtn ? 'Timed Assessment Modal Ready' : 'Click to Launch Quiz Attempt';
         }
       } else if (this.pageMode === 'quiz-process-error') {
@@ -651,7 +661,16 @@
 
         ${this.pageMode === 'quiz-view' && !isBusy ? `
           ${this.data.gradeInfo && this.data.gradeInfo.hasGrade && !this.data.gradeInfo.isPerfect ? `
-            ${this.data.isStagnant ? `
+            ${(this.data.stakes && this.data.stakes.isHighStakes && this.data.gradeInfo && ((this.data.gradeInfo.total > 0 && this.data.gradeInfo.score / this.data.gradeInfo.total >= 0.5) || (this.data.stakes.gradeToPass && this.data.gradeInfo.score >= this.data.stakes.gradeToPass))) ? `
+              ${this.data.nextActivityTitle ? `
+                <button class="sp-action-btn" id="sp-next-btn">
+                  <span>▶ Accept Score & Advance to Next Topic</span>
+                </button>
+              ` : ''}
+              <button class="sp-action-btn-secondary" id="sp-attempt-btn" style="border-color: #ea580c; color: #ea580c; font-weight: 600;">
+                <span>⚠️ Deliberately Re-Attempt (Burn Remaining Attempt)</span>
+              </button>
+            ` : this.data.isStagnant ? `
               ${this.data.nextActivityTitle ? `
                 <button class="sp-action-btn" id="sp-next-btn">
                   <span>▶ Advance to Next Topic</span>

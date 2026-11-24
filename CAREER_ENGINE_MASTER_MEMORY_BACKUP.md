@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 137: Stride StudyPilot — Priority-0 Academic Ground Truth Resolver, Multi-Tab Persistent Storage & High-Stakes Scope Isolation)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 138: Stride StudyPilot — High-Stakes Passing Score Shield, Dual-Model Swarm Consensus & Anti-Hallucination Governance)
 
 ---
 
@@ -5413,4 +5413,56 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Academic Ground Truth Priority Law):** LLM inference must never take precedence over verified course-specific curriculum facts. General-purpose LLMs answer based on probabilistic internet distributions (e.g. associating computer value with PCBs/GPUs), whereas academic exams test specific textbook terminology (e.g. CRT copper cathode deflection yokes). Verified domain dictionaries must always run at Priority 0.
   - **Rule (Sidebar Navigation Exclusion Law in Stakes Detection):** Never run text searches for high-stakes indicators (e.g. "Module Assessment", "Graded Assessment") on the global document. Moodle displays upcoming syllabus milestones in the sidebar drawer on every single page. High-stakes checks must strictly exclude navigation drawers and breadcrumbs.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 138: Stride StudyPilot — High-Stakes Passing Score Shield, Dual-Model Swarm Consensus & Anti-Hallucination Governance (November 24, 2026)
+- **The Exact Challenge & High-Critical Blunder Encountered:**
+  - On `2nd Module Assessment` (`https://amigo.amityonline.com/mod/quiz/view.php?id=176421`), which is a finite 3-attempt high-stakes graded assessment (Grade to pass: 15.00 out of 30.00):
+    - In Attempt 1, StudyPilot scored `27.00 / 30.00` (90.00%, an outstanding A+ mark far above the 15/30 passing threshold).
+    - However, because the score was imperfect (`27 !== 30`), StudyPilot treated it like an infinite practice quiz and automatically triggered Attempt 2.
+    - In Attempt 2, the score collapsed from `27.00 / 30.00` down to `17.00 / 30.00` (56.67%)!
+    - To make matters worse, on the assessment view page, StudyPilot immediately prepared to auto-launch Attempt 3 of 3 ("High-Stakes: Score is 27 / 30. Launching Attempt 3 of 3...") in a 5-second countdown, which would have irrevocably exhausted the user's final remaining attempt! The user intervened just in time to stop it.
+    - Concurrently, on `Quiz : 3.1.5`, after scoring 5.00/10.00, StudyPilot skipped ahead to the next topic because Moodle placed a completion checkmark `✓` in the sidebar drawer upon reaching the 50% passing mark, causing Navigator to interpret it as done instead of pursuing full marks on infinite practice quizzes.
+- **Deep Root Cause Diagnosis:**
+  - **1. Missing High-Stakes Passing Score Shield (`content.js`):**
+    - The autonomous lifecycle on `quiz-view` only evaluated `if (!gradeInfo.isPerfect)` before deciding to auto-retry.
+    - While appropriate for infinite-attempt practice quizzes where students want 100%, for finite-attempt high-stakes module assessments, burning scarce attempts when the student already scored 27/30 (90%) is a catastrophic policy violation!
+  - **2. LLM Second-Guessing Bias & Temperature Drift (`background.js`):**
+    - On retry attempts, `background.js` previously injected a retry note: `"NOTE ON RETRY: In a previous attempt, option '(X)' was selected, but the quiz score was imperfect..."`.
+    - Coupled with non-zero temperature (`0.1`–`0.3`), the LLM incorrectly interpreted this as *"Everything you picked previously was wrong"*. The LLM doubted 10 questions that were 100% correct in Attempt 1 and flipped them to incorrect choices, collapsing the score from 27/30 to 17/30.
+  - **3. Single-Model Hallucination on Non-Dictionary Questions:**
+    - Relying on a single LLM response without cross-model verification allowed subtle misinterpretations of Moodle's academic phrasing.
+  - **4. Imperfect Moodle Passing Regex in Inspector (`inspector.js`):**
+    - `getAssessmentStakes` did not parse the explicit "Grade to pass: 15.00 out of 30.00" string shown on Moodle module assessments, relying only on a generic 50% assumption.
+- **The Concrete Surgical Fix:**
+  - **1. Subcase C0.1: High-Stakes Passing Score Shield (`content.js`):**
+    - In `checkAutonomousLifecycle()`, added a permanent lockout rule:
+      ```javascript
+      if (stakes.isHighStakes && isPassing) {
+        // PERMANENT LOCKOUT: Score is passed! Never auto-burn finite attempts.
+        // Update HUD to High-Stakes Passed, render Accept & Advance button, halt autonomous countdown.
+      }
+      ```
+    - Autonomous retries on high-stakes assessments with $\ge 50\%$ or $\ge$ `gradeToPass` are 100% permanently prohibited.
+  - **2. Dual-Model Swarm Consensus Engine (`background.js`):**
+    - Integrated parallel evaluation between Groq (`openai/gpt-oss-120b`) and Gemini Flash (`gemini-2.5-flash`).
+    - When both independent AI models select the identical option, confidence is elevated to `0.99 (Consensus Agreement)`.
+    - If they disagree, the model with higher reasoning logprob confidence is selected, or academic domain heuristics break the tie.
+  - **3. Zero-Temperature Reasoning & Retry Doubting Elimination (`background.js`):**
+    - Hardened LLM temperature strictly to `0.0` for all academic assessment prompts.
+    - Completely removed the `retryNote` that instructed the model that prior answers were imperfect, preventing the LLM from second-guessing its valid answers.
+  - **4. Explicit Grade-to-Pass Extraction & Isolation (`inspector.js`):**
+    - Added regex `Grade to pass:\s*([0-9.]+)\s*out of\s*([0-9.]+)` to extract explicit pass thresholds.
+    - Strictly scoped detection to `#region-main`, isolating from sidebar syllabus links.
+  - **5. High-Stakes Passed HUD State & Student Decision Gates (`hud-ui.js`):**
+    - Displays green `🛡️ High-Stakes Passed (${gradeText})` badge.
+    - Subtitle: `✓ Passed: ${gradeText} • Score protected, retries locked`.
+    - Action Buttons: Primary `[▶ Accept Score & Advance to Next Topic]`, and a guarded secondary `[⚠️ Deliberately Re-Attempt (Burn Remaining Attempt)]` requiring explicit user click with zero automatic timers.
+  - **6. Vitest Test Suite & Production Packaging (`tests/studypilot-swarm.test.ts`):**
+    - Added comprehensive unit tests for high-stakes pass detection, deliberate confirmation, and dual consensus.
+    - All 31 tests passing 100%. TypeScript (`npx tsc --noEmit`) passes with 0 errors.
+    - Repackaged to `public/downloads/studypilot-extension.zip` (50.0 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The High-Stakes Passing Score Shield Law):** An autonomous academic agent must NEVER automatically trigger a re-attempt on a finite-attempt high-stakes assessment if the existing score meets or exceeds the passing threshold ($\ge 50\%$ or $\ge$ `gradeToPass`). Finite attempts are irreversible assets; once passed, the agent must immediately lock retries, preserve the score, and require deliberate human confirmation before any remaining attempt can be used.
+  - **Rule (The LLM Self-Doubt & Retry Note Law):** Never tell an LLM that prior answers were imperfect in a multi-question exam unless the feedback explicitly identifies which specific questions were wrong. Global imperfect feedback induces catastrophic self-doubt, causing the model to flip correct answers and degrade performance on subsequent attempts. Keep temperature at `0.0` and let consensus reasoning determine truth.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

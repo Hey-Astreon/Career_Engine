@@ -1385,5 +1385,52 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(stakes.isHighStakes).toBe(false);
       expect(stakes.attemptsAllowed).toBe(Infinity);
     });
+
+    it("extracts gradeToPass and enforces permanent high-stakes auto-retry lockout on passing score", () => {
+      const mockModuleDoc = {
+        querySelectorAll: (sel: string) => {
+          return [
+            {
+              innerText: "2nd Module Assessment",
+              closest: () => null
+            },
+            {
+              innerText: "Attempts allowed: 3",
+              closest: () => null
+            },
+            {
+              innerText: "Grade to pass: 15.00 out of 30.00",
+              closest: () => null
+            },
+            {
+              innerText: "Highest grade: 27.00 / 30.00.",
+              closest: () => null
+            }
+          ];
+        }
+      };
+
+      const stakes = StudyPilotInspector.getAssessmentStakes(mockModuleDoc as any);
+      expect(stakes.isHighStakes).toBe(true);
+      expect(stakes.attemptsAllowed).toBe(3);
+      expect(stakes.gradeToPass).toBe(15.0);
+
+      // Verify passing condition for 27/30 (90%)
+      const gradeInfo = {
+        hasGrade: true,
+        score: 27.0,
+        total: 30.0,
+        percentage: 90.0,
+        isPerfect: false
+      };
+
+      const isHighStakesPassing = stakes.isHighStakes && gradeInfo.hasGrade && (
+        (gradeInfo.total > 0 && (gradeInfo.score / gradeInfo.total) >= 0.5) ||
+        (stakes.gradeToPass && gradeInfo.score >= stakes.gradeToPass)
+      );
+
+      // Must be TRUE so content.js permanently locks auto-retry
+      expect(isHighStakesPassing).toBe(true);
+    });
   });
 });

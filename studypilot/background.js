@@ -166,19 +166,12 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
 
-  const prevSel = (userConfig.previousSelections && userConfig.previousSelections[question.questionNumber || question.id]) || userConfig.previousSelection;
-  const isRetry = Boolean(userConfig.isRetry || prevSel);
-  const retryNote = (isRetry && prevSel)
-    ? `\nNOTE ON RETRY: In a previous attempt, option '(${prevSel})' was selected, but the quiz score was imperfect. Carefully evaluate all options. Return your primary choice ("selectedKey") and your second-best alternative choice ("alternateKey").`
-    : '';
-
   const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA'}
 Question: ${question.questionText}
 Options:
 ${optionsStr}
-${retryNote}
 
-Solve this multiple-choice question.
+Solve this multiple-choice question from first principles.
 RULES:
 1. If multiple statements are true and an option states 'Both of these', 'Both a and b', or 'All of the above', you MUST select that option.
 2. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
@@ -186,6 +179,7 @@ RULES:
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
   // Step A: Groq with openai/gpt-oss-120b (Ultra-Fast 500+ t/s)
+  let groqResult = null;
   const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
   if (groqKey) {
     try {
@@ -202,7 +196,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
             { role: 'user', content: prompt }
           ],
           response_format: { type: 'json_object' },
-          temperature: isRetry ? 0.3 : 0.1
+          temperature: 0.0
         })
       });
 
@@ -218,7 +212,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
             }
-            return {
+            groqResult = {
               selectedKey: cleanKey,
               alternateKey: altKey,
               reasoning: parsed.reasoning || 'Solved via Groq 500+ t/s AI.',
@@ -235,7 +229,8 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     }
   }
 
-  // Step B: Gemini 1.5/2.5 Flash Fallback
+  // Step B: Gemini 1.5/2.5 Flash for Dual-Model Consensus Verification
+  let geminiResult = null;
   const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
   if (geminiKey) {
     try {
@@ -245,7 +240,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json' }
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.0 }
         })
       });
 
@@ -261,7 +256,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
             }
-            return {
+            geminiResult = {
               selectedKey: cleanKey,
               alternateKey: altKey,
               reasoning: parsed.reasoning || 'Solved via Google Gemini.',
@@ -276,7 +271,35 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     }
   }
 
-  // Step C: Fallback to Academic Knowledge Engine Heuristics
+  // Step C: Dual-Model Consensus Arbitration
+  if (groqResult && geminiResult) {
+    if (groqResult.selectedKey === geminiResult.selectedKey) {
+      // Both top models agree 100%! Consensus confidence 0.99
+      return {
+        selectedKey: groqResult.selectedKey,
+        alternateKey: groqResult.alternateKey || geminiResult.alternateKey,
+        reasoning: `${groqResult.reasoning} [Verified by Dual Swarm Consensus: Groq + Gemini agree]`,
+        confidence: 0.99,
+        engine: 'Swarm Dual Consensus (Groq + Gemini)'
+      };
+    } else {
+      // Disagreement between Groq and Gemini: select the option with higher confidence
+      console.log(`[Swarm Arbiter] Model disagreement on Q: Groq=${groqResult.selectedKey}, Gemini=${geminiResult.selectedKey}`);
+      const chosen = (geminiResult.confidence > groqResult.confidence) ? geminiResult : groqResult;
+      return {
+        selectedKey: chosen.selectedKey,
+        alternateKey: (chosen === groqResult ? geminiResult.selectedKey : groqResult.selectedKey),
+        reasoning: chosen.reasoning,
+        confidence: 0.90,
+        engine: `Swarm Consensus Arbitrated (${chosen === groqResult ? 'Groq' : 'Gemini'})`
+      };
+    }
+  }
+
+  if (groqResult) return groqResult;
+  if (geminiResult) return geminiResult;
+
+  // Step D: Fallback to Academic Knowledge Engine Heuristics
   return solveWithAcademicHeuristics(question, courseContext);
 }
 

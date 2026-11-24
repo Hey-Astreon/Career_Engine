@@ -234,6 +234,25 @@
             return;
           }
 
+          // Subcase C0.1: HIGH-STAKES PASSING SCORE SHIELD (The 90% / Passing Grade Protection)
+          // INVIOLABLE LAW: If an exam has finite attempts (<= 3, e.g. Module Assessment or Graded Assessment),
+          // and the score is already PASSING (score >= 50% or >= gradeToPass, such as 27/30),
+          // AUTONOMOUS RE-ATTEMPTS ARE 100% PROHIBITED!
+          // We must protect the student's passing score and remaining attempts at all costs!
+          const isHighStakesPassing = stakes.isHighStakes && gradeInfo.hasGrade && (
+            (gradeInfo.total > 0 && (gradeInfo.score / gradeInfo.total) >= 0.5) ||
+            (stakes.gradeToPass && gradeInfo.score >= stakes.gradeToPass)
+          );
+
+          if (isHighStakesPassing) {
+            if (activeHud) {
+              activeHud.setState('idle', { 
+                statusText: `🛡️ High-Stakes Passed (${gradeInfo.gradeText} • ${Math.round(gradeInfo.percentage)}%)! Auto-retry permanently locked to protect your score.`
+              });
+            }
+            return; // STRICTLY STOP: Never auto-click attemptBtn on a passed high-stakes assessment!
+          }
+
           // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Score does not improve across 2+ attempts)
           const isStagnantScore = attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1;
           if (gradeInfo.hasGrade && !gradeInfo.isPerfect && isStagnantScore) {
@@ -246,12 +265,12 @@
             return;
           }
 
-          // Subcase C1: Imperfect Quiz (e.g. 5.00 / 10.00) -> Auto Re-attempt for 10/10!
-          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn) {
+          // Subcase C1: Imperfect Practice Quiz OR Failed High-Stakes Assessment -> Auto Re-attempt!
+          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn && stakes.canSafelyAttempt) {
             if (activeHud) {
               activeHud.setState('submitting', { 
                 statusText: stakes.isHighStakes 
-                  ? `🛡️ High-Stakes: Score is ${gradeInfo.gradeText}. Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
+                  ? `🛡️ High-Stakes Score is ${gradeInfo.gradeText} (< Passing). Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
                   : `Score is ${gradeInfo.gradeText}. Re-Attempting for 10/10...` 
               });
             }
