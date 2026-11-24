@@ -688,7 +688,7 @@
             ` : this.data.isStagnant ? `
               ${this.data.hasAttemptBtn ? `
                 <button class="sp-action-btn" id="sp-attempt-btn" style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);">
-                  <span>⚡ Re-Attempt with Verified Answers (Target: 10/10)</span>
+                  <span>⚡ Mastermind Auto-Permute (Target: 10/10)</span>
                 </button>
               ` : ''}
               ${this.data.nextActivityTitle ? `

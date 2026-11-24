@@ -270,9 +270,10 @@
             return; // STRICTLY STOP: Never auto-click attemptBtn on a passed high-stakes assessment!
           }
 
-          // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Score does not improve across 2+ attempts)
+          // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Only applies to high-stakes or after 8+ attempts on practice)
           const isStagnantScore = attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1;
-          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && isStagnantScore) {
+          const isExceededPracticeAttempts = !stakes.isHighStakes && (attemptsHistory.attempts.length >= 8);
+          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? isStagnantScore : isExceededPracticeAttempts)) {
             if (activeHud) {
               activeHud.setState('idle', { 
                 statusText: `⚠️ Stagnant Score (${gradeInfo.gradeText} across ${attemptsHistory.attempts.length || 2}+ attempts). Paused for review.`
@@ -282,13 +283,13 @@
             return;
           }
 
-          // Subcase C1: Imperfect Practice Quiz OR Failed High-Stakes Assessment -> Auto Re-attempt!
+          // Subcase C1: Imperfect Practice Quiz (Autonomous Mastermind Delta Solving) OR Failed High-Stakes Assessment -> Auto Re-attempt!
           if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn && stakes.canSafelyAttempt) {
             if (activeHud) {
               activeHud.setState('submitting', { 
                 statusText: stakes.isHighStakes 
                   ? `🛡️ High-Stakes Score is ${gradeInfo.gradeText} (< Passing). Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
-                  : `Score is ${gradeInfo.gradeText}. Re-Attempting for 10/10...` 
+                  : `🧠 Mastermind AI: Score is ${gradeInfo.gradeText}. Auto-Permuting Attempt ${attemptsHistory.attempts.length + 1} for 10/10...` 
               });
             }
             await Sentry.sleep(1200);
@@ -414,7 +415,13 @@
     const Scholar = window.StudyPilotScholar;
     const Auditor = window.StudyPilotAuditor;
     const Sentry = window.StudyPilotSentry;
+    const Inspector = window.StudyPilotInspector;
+    const Mastermind = window.StudyPilotMastermind;
     const speedMode = config.speedMode || 'humanized';
+
+    const stakes = (Inspector && typeof Inspector.getAssessmentStakes === 'function')
+      ? Inspector.getAssessmentStakes(document)
+      : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
 
     const currentQuizId = getQuizId(window.location.href);
     const quizMemory = loadQuizMemory(currentQuizId);
@@ -463,9 +470,20 @@
         candidateAudits.push(audited);
       }
 
-      // Phase 2: Vector Collision Resolution (Ensures zero repeating of failed answer combinations)
+      // Phase 2: Autonomous Mastermind CSP Permutation Engine (Practice Quizzes)
       let finalAudits = candidateAudits;
-      if (Auditor && typeof Auditor.resolveVectorCollision === 'function' && pastAttempts.length > 0) {
+      if (Mastermind && typeof Mastermind.deduceNextVector === 'function' && pastAttempts.length > 0 && !stakes.isHighStakes) {
+        const mastermindPlan = Mastermind.deduceNextVector(currentQuestions, candidateAudits, pastAttempts);
+        if (mastermindPlan && mastermindPlan.applied) {
+          finalAudits = mastermindPlan.resolvedAudits;
+          console.log('[StudyPilot Mastermind] Applied CSP Delta Vector:', mastermindPlan);
+          if (activeHud) {
+            activeHud.setState('solving', {
+              statusText: `🧠 Mastermind AI: ${mastermindPlan.notes || 'Applied optimal CSP delta vector'}`
+            });
+          }
+        }
+      } else if (Auditor && typeof Auditor.resolveVectorCollision === 'function' && pastAttempts.length > 0) {
         const collision = Auditor.resolveVectorCollision(currentQuestions, candidateAudits, pastAttempts);
         if (collision.collisionDetected) {
           finalAudits = collision.resolvedResults;

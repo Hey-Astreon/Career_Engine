@@ -108,6 +108,8 @@ chrome.commands.onCommand.addListener(async (command) => {
             'agent/auditor.js',
             'agent/sentry.js',
             'agent/navigator.js',
+            'agent/inspector.js',
+            'agent/mastermind.js',
             'content.js'
           ]
         }).then(() => {

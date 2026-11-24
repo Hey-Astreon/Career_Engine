@@ -13,6 +13,7 @@ import StudyPilotAuditor from "../studypilot/agent/auditor.js";
 import StudyPilotSentry from "../studypilot/agent/sentry.js";
 import StudyPilotNavigator from "../studypilot/agent/navigator.js";
 import StudyPilotInspector from "../studypilot/agent/inspector.js";
+import StudyPilotMastermind from "../studypilot/agent/mastermind.js";
 
 // Lightweight Mock DOM for Amigo Moodle Quiz & Curriculum Environment
 function createMockAmigoMoodleDOM(): any {
@@ -1524,6 +1525,141 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
 
       // Must be TRUE so content.js permanently locks auto-retry
       expect(isHighStakesPassing).toBe(true);
+    });
+
+    it("Mastermind CSP: eliminates options from 0% attempts and calculates optimal single-variable delta permutation", () => {
+      const questions = [
+        {
+          id: "q1",
+          questionNumber: 1,
+          questionText: "Which operating system is the most green?",
+          options: [
+            { key: "a", cleanText: "Windows Vista" },
+            { key: "b", cleanText: "Windows XP" },
+            { key: "c", cleanText: "Linux" },
+            { key: "d", cleanText: "Apple" }
+          ]
+        },
+        {
+          id: "q2",
+          questionNumber: 2,
+          questionText: "Social, economic and ecological equity is the necessary condition for achieving:",
+          options: [
+            { key: "a", cleanText: "Social development" },
+            { key: "b", cleanText: "Economic development" },
+            { key: "c", cleanText: "Sustainable development" },
+            { key: "d", cleanText: "Ecological development" }
+          ]
+        }
+      ];
+
+      const candidateAudits = [
+        { selectedKey: "c", confidence: 0.95, reasoning: "Linux analysis", engine: "Groq 120B" },
+        { selectedKey: "c", confidence: 0.99, reasoning: "Sustainable development analysis", engine: "Groq 120B" }
+      ];
+
+      // History of attempts:
+      // Attempt 1: [b, a] -> 0/10 (Eliminates b for Q1 and a for Q2!)
+      // Attempt 2: [c, c] -> 5/10 (Baseline: exactly one of Q1=c or Q2=c is correct!)
+      const pastAttempts = [
+        {
+          attemptIndex: 1,
+          selections: { "1": "b", "2": "a" },
+          score: 0.0,
+          total: 10.0,
+          percentage: 0.0
+        },
+        {
+          attemptIndex: 2,
+          selections: { "1": "c", "2": "c" },
+          score: 5.0,
+          total: 10.0,
+          percentage: 50.0
+        }
+      ];
+
+      const plan: any = StudyPilotMastermind.deduceNextVector(questions as any, candidateAudits as any, pastAttempts);
+      expect(plan.applied).toBe(true);
+      expect(plan.strategy).toBe("single-variable-delta");
+
+      // Mastermind must permute ONE question while holding the other at the 5/10 baseline!
+      // It must NOT select 'b' for Q1 or 'a' for Q2 because both were eliminated by Attempt 1 (0/10)!
+      const selQ1 = plan.resolvedAudits[0].selectedKey;
+      const selQ2 = plan.resolvedAudits[1].selectedKey;
+
+      expect(selQ1).not.toBe("b"); // 'b' is eliminated
+      expect(selQ2).not.toBe("a"); // 'a' is eliminated
+
+      // The new vector must differ from [c, c] and [b, a]
+      const newVecStr = `${selQ1},${selQ2}`;
+      expect(newVecStr).not.toBe("c,c");
+      expect(newVecStr).not.toBe("b,a");
+
+      // Verify that Q1 is permuted to either 'd' or 'a', holding Q2 at 'c'
+      if (selQ2 === "c") {
+        expect(["d", "a"]).toContain(selQ1);
+      }
+    });
+
+    it("Mastermind CSP: deduces confirmed correct answer when delta drops from 5/10 to 0/10", () => {
+      const questions = [
+        {
+          id: "q1",
+          questionNumber: 1,
+          questionText: "Question 1",
+          options: [
+            { key: "a", cleanText: "Opt A" },
+            { key: "b", cleanText: "Opt B" },
+            { key: "c", cleanText: "Opt C" }
+          ]
+        },
+        {
+          id: "q2",
+          questionNumber: 2,
+          questionText: "Question 2",
+          options: [
+            { key: "a", cleanText: "Opt A" },
+            { key: "b", cleanText: "Opt B" },
+            { key: "c", cleanText: "Opt C" }
+          ]
+        }
+      ];
+
+      const candidateAudits = [
+        { selectedKey: "c", confidence: 0.9, reasoning: "", engine: "" },
+        { selectedKey: "c", confidence: 0.9, reasoning: "", engine: "" }
+      ];
+
+      // Attempt 1: [c, c] scored 5/10
+      // Attempt 2: [a, c] scored 0/10 (differed ONLY on Q1: switching from c to a LOST 5 marks!)
+      // Mathematical deduction: Q1=c MUST BE CORRECT (it was the 5-mark answer)!
+      // And Q2=c is WRONG!
+      const pastAttempts = [
+        {
+          attemptIndex: 1,
+          selections: { "1": "c", "2": "c" },
+          score: 5.0,
+          total: 10.0,
+          percentage: 50.0
+        },
+        {
+          attemptIndex: 2,
+          selections: { "1": "a", "2": "c" },
+          score: 0.0,
+          total: 10.0,
+          percentage: 0.0
+        }
+      ];
+
+      const plan: any = StudyPilotMastermind.deduceNextVector(questions as any, candidateAudits as any, pastAttempts);
+      expect(plan.applied).toBe(true);
+
+      // Q1 MUST be locked in as 'c' (the confirmed correct answer)!
+      expect(plan.resolvedAudits[0].selectedKey).toBe("c");
+      expect(plan.resolvedAudits[0].reasoning).toContain("Confirmed 100% correct");
+
+      // Q2 must be permuted away from 'c' (e.g. to 'a' or 'b')
+      expect(plan.resolvedAudits[1].selectedKey).not.toBe("c");
     });
   });
 });
