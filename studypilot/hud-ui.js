@@ -543,9 +543,12 @@
             badgeClass = 'sp-badge review';
             subtitleText = `✓ Score: ${this.data.gradeInfo.gradeText} (100% Perfect)`;
           } else if (isHighStakes && isPassing) {
-            badgeText = `Score Banked: ${this.data.gradeInfo.gradeText}`;
+            const allUsed = this.data.stakes && this.data.stakes.attemptsRemaining <= 0;
+            badgeText = allUsed ? `Final Grade: ${this.data.gradeInfo.gradeText}` : `Score Banked: ${this.data.gradeInfo.gradeText}`;
             badgeClass = 'sp-badge lecture';
-            subtitleText = `✓ Highest Grade Banked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Moodle keeps best score • Safe to retry`;
+            subtitleText = allUsed
+              ? `✓ Final Grade Locked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Assessment Complete`
+              : `✓ Highest Grade Banked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Moodle keeps best score • Safe to retry`;
           } else if (this.data.isStagnant) {
             badgeText = 'Stagnant Score';
             badgeClass = 'sp-badge busy';

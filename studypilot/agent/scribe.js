@@ -327,14 +327,14 @@
   function extractQuizGrade(doc = document) {
     const textNodes = Array.from(doc.querySelectorAll('h2, h3, h4, p, div.feedback, .quizinfo, .generaltable, .box, div, td, th'));
 
-    // Priority 1: Search specifically for "Highest grade", "Final grade", or "Overall grade"
+    // Priority 1: Search specifically for "Highest grade", "Final grade", "Your final grade for this quiz is", or "Overall grade"
     // STRICTLY skip "Grade to pass: 15.00 out of 30.00" threshold text!
     for (const node of textNodes) {
       const txt = (node.innerText || node.textContent || '').trim();
       if (/grade\s*to\s*pass|passing\s*grade/i.test(txt)) {
         continue;
       }
-      const match = txt.match(/(?:highest\s*grade|final\s*grade|overall\s*grade)[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
+      const match = txt.match(/(?:highest\s*grade|final\s*grade|overall\s*grade|your\s*final\s*grade[^0-9]*)[^0-9]*(?:is|:)?\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
       if (match) {
         const score = parseFloat(match[1]);
         const total = parseFloat(match[2]);
@@ -357,7 +357,7 @@
       if (/grade\s*to\s*pass|passing\s*grade/i.test(txt)) {
         continue;
       }
-      const match = txt.match(/(?:your\s*grade|grade)[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
+      const match = txt.match(/(?:your\s*grade|grade)[^0-9]*(?:is|:)?\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
       if (match) {
         const score = parseFloat(match[1]);
         const total = parseFloat(match[2]);
