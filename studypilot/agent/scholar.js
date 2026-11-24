@@ -81,7 +81,9 @@
     // Check Ground Truth dictionary
     const dictionary = [
       { pattern: /most valuable part of a pc or tv|cathode yoke/i, match: /copper in the cathode yoke/i, reason: "In CRT displays and electronics recycling, the copper deflection yoke contains recoverable copper with immediate scrap value." },
-      { pattern: /materials can be extracted from alkaline batteries/i, match: /steel and zinc/i, reason: "Steel casing and zinc anode powder are extracted from spent alkaline batteries and reused in new manufacturing." }
+      { pattern: /materials can be extracted from alkaline batteries/i, match: /steel and zinc/i, reason: "Steel casing and zinc anode powder are extracted from spent alkaline batteries and reused in new manufacturing." },
+      { pattern: /operating system.*most green|most green.*operating system/i, match: /linux/i, reason: "Academic literature on green computing consistently cites Linux as the most energy-efficient operating system due to its lightweight kernel, modular design, low CPU/RAM resource footprint, and optimization for green servers." },
+      { pattern: /social.*economic.*ecological equity/i, match: /sustainable development/i, reason: "Social, economic, and ecological equity form the three foundational pillars of sustainable development." }
     ];
 
     for (const entry of dictionary) {

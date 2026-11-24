@@ -7,6 +7,9 @@
  * - Serves shadow CSS for isolated glassmorphic HUD
  */
 
+// Global runtime state
+let geminiQuotaExhaustedUntil = 0;
+
 // Zero-config academic runtime inference blobs
 const GROQ_BLOB = [77,89,65,117,91,125,109,99,104,71,125,72,65,108,69,121,70,103,125,125,69,64,71,91,125,109,78,83,72,25,108,115,100,82,67,107,75,69,104,95,70,18,64,71,75,104,65,79,104,80,98,78,71,24,69,78];
 const GEMINI_BLOB = [107,123,4,107,72,18,120,100,28,97,91,18,93,82,7,80,101,18,99,67,31,64,76,103,100,7,82,88,26,108,102,24,30,107,26,92,101,75,77,25,64,98,97,65,18,70,100,71,122,107,30,18,123];
@@ -147,7 +150,9 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /pue|power usage effectiveness/i, match: /total.*facility.*it|facility energy.*it energy/i, reason: "PUE is total facility energy divided by IT equipment energy." },
     { pattern: /step.*initiative/i, match: /solving the e-waste problem/i, reason: "StEP stands for Solving the E-waste Problem." },
     { pattern: /most valuable part of a pc or tv|cathode yoke/i, match: /copper in the cathode yoke/i, reason: "In CRT displays and electronics recycling, the copper deflection yoke contains heavy recoverable copper with immediate scrap value." },
-    { pattern: /materials can be extracted from alkaline batteries/i, match: /steel and zinc/i, reason: "Steel casing and zinc anode powder are extracted from spent alkaline batteries and reused in new manufacturing." }
+    { pattern: /materials can be extracted from alkaline batteries/i, match: /steel and zinc/i, reason: "Steel casing and zinc anode powder are extracted from spent alkaline batteries and reused in new manufacturing." },
+    { pattern: /operating system.*most green|most green.*operating system/i, match: /linux/i, reason: "Academic literature on green computing consistently cites Linux as the most energy-efficient operating system due to its lightweight kernel, modular design, low CPU/RAM resource footprint, and optimization for green servers." },
+    { pattern: /social.*economic.*ecological equity/i, match: /sustainable development/i, reason: "Social, economic, and ecological equity form the three foundational pillars of sustainable development." }
   ];
 
   for (const entry of dictionary) {
@@ -268,7 +273,8 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
   // Step B: Gemini 2.5 Flash with Multi-Version Fallback (8s Timeout Guard)
   let geminiResult = null;
   const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
-  if (geminiKey) {
+  const now = Date.now();
+  if (geminiKey && now > geminiQuotaExhaustedUntil) {
     const candidateEndpoints = [
       'gemini-2.5-flash',
       'gemini-flash-lite-latest',
@@ -309,6 +315,10 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
               break; // Success! Exit version cascade
             }
           }
+        } else if (res.status === 429) {
+          console.warn(`[StudyPilot Background] Gemini quota exceeded (429). Pausing Gemini for 15 minutes. Groq 120B will handle inference.`);
+          geminiQuotaExhaustedUntil = Date.now() + 15 * 60 * 1000;
+          break; // Project-level quota exhausted; do not query remaining endpoints
         } else {
           console.warn(`[StudyPilot Background] Gemini (${modelName}) returned status: ${res.status}`);
         }

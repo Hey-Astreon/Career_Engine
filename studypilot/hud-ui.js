@@ -663,33 +663,47 @@
         ` : ''}
 
         ${this.pageMode === 'quiz-view' && !isBusy ? `
-          ${this.data.gradeInfo && this.data.gradeInfo.hasGrade && !this.data.gradeInfo.isPerfect ? `
+          ${(this.data.stakes && (this.data.stakes.attemptsRemaining <= 0 || !this.data.stakes.canSafelyAttempt)) || (!this.data.hasAttemptBtn && this.data.gradeInfo && this.data.gradeInfo.hasGrade) ? `
+            ${this.data.nextActivityTitle ? `
+              <button class="sp-action-btn" id="sp-next-btn">
+                <span>▶ Assessment Finished (${this.data.gradeInfo && this.data.gradeInfo.hasGrade ? this.data.gradeInfo.gradeText : 'All Attempts Used'}) • Proceed to Next Topic</span>
+              </button>
+            ` : `
+              <div class="sp-status-card" style="margin-bottom: 8px;">
+                <span>🛡️ Assessment Completed: All attempts finished.</span>
+              </div>
+            `}
+          ` : this.data.gradeInfo && this.data.gradeInfo.hasGrade && !this.data.gradeInfo.isPerfect ? `
             ${(this.data.stakes && this.data.stakes.isHighStakes && this.data.gradeInfo && ((this.data.gradeInfo.total > 0 && this.data.gradeInfo.score / this.data.gradeInfo.total >= 0.5) || (this.data.stakes.gradeToPass && this.data.gradeInfo.score >= this.data.stakes.gradeToPass))) ? `
               ${this.data.nextActivityTitle ? `
                 <button class="sp-action-btn" id="sp-next-btn">
                   <span>▶ Accept ${this.data.gradeInfo.gradeText} & Advance to Next Topic</span>
                 </button>
               ` : ''}
-              ${this.data.stakes && (this.data.stakes.attemptsAllowed - this.data.stakes.attemptsUsed > 0) ? `
+              ${this.data.hasAttemptBtn && this.data.stakes && (this.data.stakes.attemptsAllowed - this.data.stakes.attemptsUsed > 0) ? `
                 <button class="sp-action-btn-secondary" id="sp-attempt-btn" style="border-color: #2563eb; color: #2563eb; font-weight: 600;">
                   <span>⚡ Aim for 100% (Attempt ${this.data.stakes.attemptsUsed + 1} of ${this.data.stakes.attemptsAllowed} • Best Score Safe)</span>
                 </button>
               ` : ''}
             ` : this.data.isStagnant ? `
-              <button class="sp-action-btn" id="sp-attempt-btn" style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);">
-                <span>⚡ Re-Attempt with Verified Answers (Target: 10/10)</span>
-              </button>
+              ${this.data.hasAttemptBtn ? `
+                <button class="sp-action-btn" id="sp-attempt-btn" style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);">
+                  <span>⚡ Re-Attempt with Verified Answers (Target: 10/10)</span>
+                </button>
+              ` : ''}
               ${this.data.nextActivityTitle ? `
-                <button class="sp-action-btn-secondary" id="sp-next-btn">
+                <button class="${this.data.hasAttemptBtn ? 'sp-action-btn-secondary' : 'sp-action-btn'}" id="sp-next-btn">
                   <span>▶ Skip to Next Topic</span>
                 </button>
               ` : ''}
             ` : `
-              <button class="sp-action-btn" id="sp-attempt-btn" style="background: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);">
-                <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Re-Attempt Quiz (Target: 100%)'}</span>
-              </button>
+              ${this.data.hasAttemptBtn ? `
+                <button class="sp-action-btn" id="sp-attempt-btn" style="background: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);">
+                  <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Re-Attempt Quiz (Target: 100%)'}</span>
+                </button>
+              ` : ''}
               ${this.data.nextActivityTitle ? `
-                <button class="sp-action-btn-secondary" id="sp-next-btn">
+                <button class="${this.data.hasAttemptBtn ? 'sp-action-btn-secondary' : 'sp-action-btn'}" id="sp-next-btn">
                   <span>▶ Skip to Next Topic</span>
                 </button>
               ` : ''}
@@ -700,13 +714,21 @@
                 <span>▶ Proceed to Next Topic</span>
               </button>
             ` : ''}
-            <button class="sp-action-btn-secondary" id="sp-attempt-btn">
-              <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Re-Attempt Quiz'}</span>
-            </button>
+            ${this.data.hasAttemptBtn ? `
+              <button class="sp-action-btn-secondary" id="sp-attempt-btn">
+                <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Re-Attempt Quiz'}</span>
+              </button>
+            ` : ''}
           ` : `
-            <button class="sp-action-btn" id="sp-attempt-btn">
-              <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Attempt Quiz'}</span>
-            </button>
+            ${this.data.hasAttemptBtn ? `
+              <button class="sp-action-btn" id="sp-attempt-btn">
+                <span>⚡ ${this.data.hasModalStartBtn ? 'Start Attempt' : 'Attempt Quiz'}</span>
+              </button>
+            ` : this.data.nextActivityTitle ? `
+              <button class="sp-action-btn" id="sp-next-btn">
+                <span>▶ Proceed to Next Topic</span>
+              </button>
+            ` : ''}
           `}
         ` : ''}
 

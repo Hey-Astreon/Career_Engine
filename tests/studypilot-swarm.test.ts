@@ -1365,6 +1365,99 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(ans2.selectedKey).toBe("a");
     });
 
+    it("verifies Ground Truth resolution for Module 3 Quiz 1.1.1 (Linux & Sustainable Development)", async () => {
+      const q1 = {
+        questionText: "Which operating system is the most green?",
+        options: [
+          { key: "a", cleanText: "Windows Vista" },
+          { key: "b", cleanText: "Windows XP" },
+          { key: "c", cleanText: "Linux" },
+          { key: "d", cleanText: "Apple" }
+        ],
+        traps: {}
+      };
+
+      const q2 = {
+        questionText: "Social, economic and ecological equity is the necessary condition for achieving:",
+        options: [
+          { key: "a", cleanText: "Social development" },
+          { key: "b", cleanText: "Economic development" },
+          { key: "c", cleanText: "Sustainable development" },
+          { key: "d", cleanText: "Ecological development" }
+        ],
+        traps: {}
+      };
+
+      const ans1 = await (await import("../studypilot/agent/scholar.js")).default.solveQuestion(q1 as any, "Green computing");
+      const ans2 = await (await import("../studypilot/agent/scholar.js")).default.solveQuestion(q2 as any, "Green computing");
+
+      expect(ans1.selectedKey).toBe("c"); // Linux
+      expect(ans1.engine).toBe("Academic Knowledge Engine");
+      expect(ans2.selectedKey).toBe("c"); // Sustainable development
+      expect(ans2.engine).toBe("Academic Knowledge Engine");
+    });
+
+    it("protects Ground Truth and high-confidence answers (>= 0.95) from collision flipping", () => {
+      const questions = [
+        {
+          id: "q1",
+          questionNumber: 1,
+          questionText: "Which operating system is the most green?",
+          options: [
+            { key: "a", cleanText: "Windows Vista" },
+            { key: "b", cleanText: "Windows XP" },
+            { key: "c", cleanText: "Linux" },
+            { key: "d", cleanText: "Apple" }
+          ]
+        },
+        {
+          id: "q2",
+          questionNumber: 2,
+          questionText: "Social, economic and ecological equity is the necessary condition for achieving:",
+          options: [
+            { key: "a", cleanText: "Social development" },
+            { key: "b", cleanText: "Economic development" },
+            { key: "c", cleanText: "Sustainable development" },
+            { key: "d", cleanText: "Ecological development" }
+          ]
+        }
+      ];
+
+      const candidateAudits = [
+        {
+          selectedKey: "c",
+          alternateKey: "b",
+          confidence: 0.99,
+          reasoning: "Linux is open-source and energy-efficient.",
+          engine: "Academic Knowledge Engine"
+        },
+        {
+          selectedKey: "c",
+          alternateKey: "a",
+          confidence: 0.98,
+          reasoning: "Sustainable development encompasses all three dimensions.",
+          engine: "Academic Knowledge Engine"
+        }
+      ];
+
+      // A prior attempt had [c, c] (e.g. from an aborted session or prior run)
+      const pastAttempts = [
+        {
+          attemptIndex: 1,
+          selections: { "1": "c", "2": "c" },
+          score: 0.0,
+          total: 2.0
+        }
+      ];
+
+      const resolution = StudyPilotAuditor.resolveVectorCollision(questions as any, candidateAudits as any, pastAttempts);
+      // Because both are Ground Truth / >=0.95, collision flipping is SUPPRESSED!
+      expect(resolution.collisionDetected).toBe(false);
+      expect(resolution.flippedIndex).toBe(-1);
+      expect(resolution.resolvedResults[0].selectedKey).toBe("c"); // Kept Linux!
+      expect(resolution.resolvedResults[1].selectedKey).toBe("c"); // Kept Sustainable development!
+    });
+
     it("ensures sidebar links named '1st Module Assessment' do not trigger high-stakes guard on practice quizzes", () => {
       const mockDoc = {
         querySelectorAll: (sel: string) => {

@@ -160,23 +160,44 @@
       return { resolvedResults: auditResults, collisionDetected: false, flippedIndex: -1 };
     }
 
-    // Collision detected! Find the question with the lowest confidence to flip to its alternateKey
-    let minConfIdx = 0;
-    let minConf = Infinity;
+    // Collision detected! Check if any candidate has lower confidence or is not ground truth.
+    // INVIOLABLE LAW: Ground Truth (Academic Knowledge Engine) and high-confidence answers (>= 0.95)
+    // are IMMUNE to collision flipping! We must never flip verified answers (like Linux or Sustainable Development)
+    // into absurd decoys (like Windows XP).
+    let minConfIdx = -1;
+    let minConf = 0.94; // Must be strictly less than 0.95 to be eligible for hypothesis flipping
 
     auditResults.forEach((res, idx) => {
-      const conf = typeof res.confidence === 'number' ? res.confidence : 0.9;
+      // Immunity check: Ground Truth or high-confidence answer
+      if (res.engine === 'Academic Knowledge Engine' || (typeof res.confidence === 'number' && res.confidence >= 0.95)) {
+        return;
+      }
+      const conf = typeof res.confidence === 'number' ? res.confidence : 0.85;
       if (conf < minConf && res.alternateKey && res.alternateKey !== res.selectedKey) {
         minConf = conf;
         minConfIdx = idx;
       }
     });
 
+    if (minConfIdx === -1) {
+      // All answers are verified Ground Truth or high confidence (>= 0.95)!
+      // Retain proposed vector intact and prevent hallucinated flips.
+      return {
+        resolvedResults: auditResults,
+        collisionDetected: false,
+        flippedIndex: -1,
+        retainedNotes: 'All answers verified with high confidence (>=0.95) or Academic Knowledge Engine. Collision flipping suppressed.'
+      };
+    }
+
     // Flip lowest confidence question
     const target = auditResults[minConfIdx];
     const prevKey = target.selectedKey;
     target.selectedKey = target.alternateKey;
+    target.engine = 'Auditor Hypothesis Shift';
+    target.reasoning = `[Auditor Alternative Exploration: Shifted candidate from (${prevKey.toUpperCase()}) to alternate (${target.alternateKey.toUpperCase()}) to test alternative permutation against past collision]`;
     target.auditNotes += ` [Swarm Vector Collision Resolved: Flipped Q${minConfIdx + 1} from '${prevKey}' to alternate '${target.alternateKey}' (conf: ${target.confidence}) to prevent repeating failed vector [${currentVectorStr}]]`;
+    target.confidence = Math.max(0.65, (target.confidence || 0.85) - 0.15);
 
     return {
       resolvedResults: auditResults,
