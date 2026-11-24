@@ -224,10 +224,14 @@
         }
       }
 
-      // Stage E: On Lecture Page (/mod/page/view.php) -> Auto-Advance to quiz!
-      if (currentPageMode === 'lecture-page' && autoAdvance) {
+      // Stage E: On Lecture Page (/mod/page/view.php), Live Class (/mod/googlemeet/), or Resource Page (/mod/resource/)
+      if ((currentPageMode === 'lecture-page' || currentPageMode === 'live-class' || currentPageMode === 'resource-page') && autoAdvance) {
         if (activeHud) {
-          activeHud.setState('complete', { statusText: 'Auto-Completed on Visit! Advancing to quiz...' });
+          activeHud.setState('complete', { 
+            statusText: currentPageMode === 'live-class' 
+              ? 'Live Class Attendance Recorded! Advancing to next activity...' 
+              : 'Auto-Completed on Visit! Advancing to next activity...' 
+          });
         }
         await Sentry.sleep(1500);
         if (Navigator) {

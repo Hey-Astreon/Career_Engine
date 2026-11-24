@@ -495,7 +495,27 @@
         badgeClass = 'sp-badge busy';
       }
 
-      if (this.pageMode === 'lecture-page') {
+      if (this.pageMode === 'live-class') {
+        badgeText = 'Live Class';
+        badgeClass = 'sp-badge lecture';
+        if (this.data.isViewDone) {
+          subtitleText = '✓ Completed (Done: View / Attendance)';
+        } else if (this.data.hasMarkDoneBtn) {
+          subtitleText = 'Manual Completion Required';
+        } else {
+          subtitleText = 'Live Session & Recording Portal';
+        }
+      } else if (this.pageMode === 'resource-page') {
+        badgeText = 'Study Material';
+        badgeClass = 'sp-badge lecture';
+        if (this.data.isViewDone) {
+          subtitleText = '✓ Completed (Done: View)';
+        } else if (this.data.hasMarkDoneBtn) {
+          subtitleText = 'Manual Completion Required';
+        } else {
+          subtitleText = 'Course Resource Document';
+        }
+      } else if (this.pageMode === 'lecture-page') {
         badgeText = 'Lecture Mode';
         badgeClass = 'sp-badge lecture';
         if (this.data.isViewDone) {
@@ -583,13 +603,13 @@
           </button>
         ` : ''}
 
-        ${this.pageMode === 'lecture-page' && !isBusy ? `
+        ${(this.pageMode === 'lecture-page' || this.pageMode === 'live-class' || this.pageMode === 'resource-page') && !isBusy ? `
           ${this.data.hasMarkDoneBtn ? `
             <button class="sp-action-btn" id="sp-mark-done-btn">
               <span>⚡ Mark Done & Next</span>
             </button>
           ` : ''}
-          ${this.data.isViewDone && this.data.nextActivityTitle ? `
+          ${(this.data.isViewDone || this.pageMode === 'live-class' || this.pageMode === 'resource-page') && this.data.nextActivityTitle ? `
             <button class="sp-action-btn" id="sp-next-btn">
               <span>▶ Next: ${this.escapeHtml(this.data.nextActivityTitle)}</span>
             </button>
@@ -599,7 +619,7 @@
               <span>⚡ Complete Video & Next</span>
             </button>
           ` : ''}
-          ${!this.data.isViewDone && this.data.nextActivityTitle ? `
+          ${!this.data.isViewDone && this.pageMode !== 'live-class' && this.pageMode !== 'resource-page' && this.data.nextActivityTitle ? `
             <button class="sp-action-btn-secondary" id="sp-next-btn">
               <span>▶ Advance to Next Topic</span>
             </button>

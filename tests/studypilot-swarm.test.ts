@@ -335,29 +335,29 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(plan.nextItem?.title).toContain("4.1.3 Green IT Metrics");
     });
 
-    it("filters out static non-curriculum links like Glossary/Syllabus and recovers from lost page", () => {
+    it("filters out optional non-credit links (Announcement, Discussion Forum, Interactive SLM) and recovers from lost page", () => {
       let navigatedTarget = "";
 
       const staticLinks = [
         {
-          innerText: "Live Class 1 Green computing",
-          textContent: "Live Class 1 Green computing",
-          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176415",
+          innerText: "Announcement",
+          textContent: "Announcement",
+          getAttribute: () => "https://amigo.amityonline.com/mod/forum/view.php?id=176410",
           classList: { contains: () => false },
           querySelector: () => null,
         },
         {
-          innerText: "Syllabus",
-          textContent: "Syllabus",
-          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176416",
+          innerText: "Discussion Forum",
+          textContent: "Discussion Forum",
+          getAttribute: () => "https://amigo.amityonline.com/mod/forum/view.php?id=176411",
           classList: { contains: () => false },
           querySelector: () => null,
         },
         {
-          innerText: "✓ Glossary",
-          textContent: "✓ Glossary",
-          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176417",
-          classList: { contains: (cls: string) => cls === "active" }, // Currently on Glossary!
+          innerText: "Interactive SLM",
+          textContent: "Interactive SLM",
+          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176412",
+          classList: { contains: (cls: string) => cls === "active" }, // Currently on Interactive SLM!
           querySelector: () => null,
         },
         {
@@ -392,33 +392,33 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
         },
       ];
 
-      const mockGlossaryDoc = {
+      const mockLostDoc = {
         querySelectorAll: (sel: string) => sel.includes("courseindex") || sel.includes("drawer") || sel.includes("a") ? staticLinks : [],
         querySelector: () => null,
       };
 
       (globalThis as any).window = {
         StudyPilotScribe,
-        location: { href: "https://amigo.amityonline.com/mod/page/view.php?id=176417" },
+        location: { href: "https://amigo.amityonline.com/mod/page/view.php?id=176412" },
       };
 
-      const plan = StudyPilotScribe.parseCurriculum(mockGlossaryDoc as any, "https://amigo.amityonline.com/mod/page/view.php?id=176417");
+      const plan = StudyPilotScribe.parseCurriculum(mockLostDoc as any, "https://amigo.amityonline.com/mod/page/view.php?id=176412");
 
-      // Verify that Glossary, Syllabus, and Live Class are completely excluded from items!
-      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("glossary"))).toBe(false);
-      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("syllabus"))).toBe(false);
-      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("live class"))).toBe(false);
+      // Verify that Announcement, Discussion Forum, and Interactive SLM are completely excluded from items!
+      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("announcement"))).toBe(false);
+      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("discussion forum"))).toBe(false);
+      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("interactive slm"))).toBe(false);
 
       // Verify that the plan contains only the 4 academic curriculum items
       expect(plan.totalCount).toBe(4);
 
       // Verify findNextIncompleteActivity returns "1.2.2 Green Value"
-      const nextIncomplete = StudyPilotNavigator.findNextIncompleteActivity(mockGlossaryDoc as any);
+      const nextIncomplete = StudyPilotNavigator.findNextIncompleteActivity(mockLostDoc as any);
       expect(nextIncomplete).not.toBeNull();
       expect(nextIncomplete?.title).toContain("1.2.2 Green Value");
 
-      // Verify navigateToNextActivity recovers from Glossary and clicks "1.2.2 Green Value"
-      const navResult = StudyPilotNavigator.navigateToNextActivity(mockGlossaryDoc as any);
+      // Verify navigateToNextActivity recovers from Interactive SLM and clicks "1.2.2 Green Value"
+      const navResult = StudyPilotNavigator.navigateToNextActivity(mockLostDoc as any);
       expect(navResult.success).toBe(true);
       expect(navResult.target).toContain("1.2.2 Green Value");
       expect(navigatedTarget).toBe("1.2.2 Green Value");
@@ -1015,6 +1015,121 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const exhaustedStakes = StudyPilotInspector.getAssessmentStakes(mockExhaustedDoc as any);
       expect(exhaustedStakes.attemptsRemaining).toBe(0);
       expect(exhaustedStakes.canSafelyAttempt).toBe(false);
+    });
+
+    it("verifies strict chronological navigation on Live Class 2 and advances to Live Class 3", () => {
+      let clickedItem = "";
+      const currentUrl = "https://amigo.amityonline.com/mod/googlemeet/view.php?id=375981";
+
+      const liveClassLinks = [
+        {
+          innerText: "✓ Live Class 1 Green computing",
+          textContent: "✓ Live Class 1 Green computing",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/googlemeet/view.php?id=375980" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "✓ Live Class-2_Green computing",
+          textContent: "✓ Live Class-2_Green computing",
+          getAttribute: (attr: string) => attr === "href" ? currentUrl : null,
+          classList: { contains: (cls: string) => cls === "active" }, // CURRENT
+          querySelector: () => null,
+        },
+        {
+          innerText: "○ Live Class-3_Green computing",
+          textContent: "○ Live Class-3_Green computing",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/googlemeet/view.php?id=375982" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+          click: () => { clickedItem = "Live Class-3_Green computing"; },
+        },
+        {
+          innerText: "○ Live Class-4_Green computing",
+          textContent: "○ Live Class-4_Green computing",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/googlemeet/view.php?id=375983" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "✓ Syllabus",
+          textContent: "✓ Syllabus",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/page/view.php?id=176416" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "Announcements",
+          textContent: "Announcements",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/forum/view.php?id=176410" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "Discussion Forum : Green computing",
+          textContent: "Discussion Forum : Green computing",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/forum/view.php?id=176411" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "Interactive SLM : Green computing",
+          textContent: "Interactive SLM : Green computing",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/page/view.php?id=176412" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "○ 1.1.3 Information Technology",
+          textContent: "○ 1.1.3 Information Technology",
+          getAttribute: (attr: string) => attr === "href" ? "https://amigo.amityonline.com/mod/page/view.php?id=194205" : null,
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+      ];
+
+      const mockLiveClassDoc = {
+        querySelectorAll: (sel: string) => sel.includes("a") ? liveClassLinks : [],
+        querySelector: (sel: string) => null,
+      };
+
+      (globalThis as any).window = {
+        StudyPilotScribe,
+        location: { href: currentUrl },
+      };
+
+      // 1. Verify Page Mode is 'live-class' (NOT 'quiz-view'!)
+      const pageMode = StudyPilotScribe.detectPageMode(mockLiveClassDoc as any, currentUrl);
+      expect(pageMode).toBe("live-class");
+
+      // 2. Parse curriculum
+      const plan = StudyPilotScribe.parseCurriculum(mockLiveClassDoc as any, currentUrl);
+
+      // Verify Announcements, Discussion Forum, and Interactive SLM are strictly ignored
+      expect(plan.items.some(it => it.title.includes("Announcements"))).toBe(false);
+      expect(plan.items.some(it => it.title.includes("Discussion Forum"))).toBe(false);
+      expect(plan.items.some(it => it.title.includes("Interactive SLM"))).toBe(false);
+
+      // Verify current item is Live Class-2
+      expect(plan.currentItem).not.toBeNull();
+      expect(plan.currentItem?.title).toContain("Live Class-2_Green computing");
+      expect(plan.currentItem?.isCompleted).toBe(true);
+
+      // Verify next item is Live Class-3 in chronological sequence
+      expect(plan.nextItem).not.toBeNull();
+      expect(plan.nextItem?.title).toContain("Live Class-3_Green computing");
+      expect(plan.nextItem?.isCompleted).toBe(false);
+
+      // Verify 1.1.3 is preserved as incomplete
+      const item113 = plan.items.find(it => it.title.includes("1.1.3"));
+      expect(item113).toBeDefined();
+      expect(item113?.isCompleted).toBe(false);
+
+      // 3. Verify Navigator strictly advances to Live Class-3
+      const navResult = StudyPilotNavigator.navigateToNextActivity(mockLiveClassDoc as any);
+      expect(navResult.success).toBe(true);
+      expect(navResult.target).toContain("Live Class-3_Green computing");
+      expect(clickedItem).toBe("Live Class-3_Green computing");
     });
   });
 });

@@ -17,8 +17,10 @@
 
   const NEGATIVE_REGEX = /\b(not|except|incorrect|false|never|unlikely|cannot)\b/i;
   const DUAL_OPTION_REGEX = /\b(both of these|both a and b|both b and c|all of the above|all of these|none of these|none of the above|neither)\b/i;
-  const NON_CURRICULUM_REGEX = /\b(glossary|syllabus|live\s*class|announcements?|discussion\s*forum|interactive\s*slm|audio\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
-  const CURRICULUM_TITLE_REGEX = /^\s*[✓o○\s]*(\d+\.\d+|quiz\s*:|.*module.*assessment|\d+[a-z]{2}\s*module)/i;
+  // Strictly filter only non-credit items that have NO radio button / completion tracking in AMIGO
+  const NON_CREDIT_REGEX = /\b(announcements?|discussion\s*forum|interactive\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
+  const NON_CURRICULUM_REGEX = NON_CREDIT_REGEX;
+  const CURRICULUM_TITLE_REGEX = /^\s*[✓o○\s]*(live\s*class|\d+\.\d+|quiz\s*:|syllabus|glossary|study\s*material|audio\s*slm|.*module.*assessment|\d+[a-z]{2}\s*module)/i;
 
   function extractCourseContext(doc = document) {
     // 1. Check page title or breadcrumbs
@@ -45,10 +47,16 @@
     if (currentUrl.includes('/mod/quiz/attempt.php') || (doc.querySelector && doc.querySelector('.que'))) {
       return 'quiz-attempt';
     }
-    if (currentUrl.includes('/mod/quiz/view.php') || (doc.querySelector && doc.querySelector('.quizinfo, #intro, input[value*="Attempt quiz" i], button[value*="Attempt quiz" i]'))) {
+    if (currentUrl.includes('/mod/quiz/view.php')) {
       return 'quiz-view';
     }
-    if (currentUrl.includes('/mod/page/view.php') || currentUrl.includes('/mod/lesson/') || currentUrl.includes('/mod/resource/') || currentUrl.includes('/mod/googlemeet/') || (doc.querySelector && doc.querySelector('.modtype_page, video, iframe[src*="video"]'))) {
+    if (currentUrl.includes('/mod/googlemeet/')) {
+      return 'live-class';
+    }
+    if (currentUrl.includes('/mod/resource/')) {
+      return 'resource-page';
+    }
+    if (currentUrl.includes('/mod/page/view.php') || currentUrl.includes('/mod/lesson/') || (doc.querySelector && doc.querySelector('.modtype_page, video, iframe[src*="video"]'))) {
       return 'lecture-page';
     }
     if (currentUrl.includes('/course/view.php') || currentUrl.includes('/my/')) {
@@ -225,26 +233,34 @@
       const rawText = (node.innerText || node.textContent || '').trim();
       if (!rawText) return;
 
-      // Strictly skip non-curriculum links like glossary, syllabus, live classes, forums
-      if (NON_CURRICULUM_REGEX.test(rawText) || NON_CURRICULUM_REGEX.test(href)) {
+      // Strictly skip non-credit links like announcements, discussion forums, interactive slm
+      if (NON_CREDIT_REGEX.test(rawText) || NON_CREDIT_REGEX.test(href)) {
         return;
       }
 
-      // Ensure it is an academic topic (numbered chapter, quiz, or module assessment)
+      // Check if it's a credit item: numbered topic, quiz, lecture, live class, or study material
       const isNumbered = CURRICULUM_TITLE_REGEX.test(rawText);
       const isQuiz = rawText.toLowerCase().includes('quiz') || href.includes('/mod/quiz/');
       const isLecture = href.includes('/mod/page/') || href.includes('/mod/lesson/');
+      const isLiveClass = href.includes('/mod/googlemeet/') || /live\s*class/i.test(rawText);
+      const isResource = href.includes('/mod/resource/') || /study\s*material|syllabus|glossary|audio\s*slm/i.test(rawText);
 
-      if (!isNumbered && !isQuiz && !href.includes('/mod/quiz/')) {
+      if (!isNumbered && !isQuiz && !isLecture && !isLiveClass && !isResource) {
         return;
       }
 
       if (seenHrefs.has(href)) return;
       seenHrefs.add(href);
 
-      const isCompleted = rawText.includes('✓') || 
-                          (typeof node.querySelector === 'function' && node.querySelector('.fa-check, .completion-info, .autocompletion') !== null) ||
-                          Boolean(typeof node.getAttribute === 'function' && node.getAttribute('aria-label') && node.getAttribute('aria-label').includes('Completed'));
+      const hasCheckmark = rawText.includes('✓') || rawText.includes('\u2713') || rawText.includes('\u2714') ||
+        (typeof node.querySelector === 'function' && node.querySelector('.fa-check, .completion-check, .activity-completed') !== null) ||
+        Boolean(typeof node.getAttribute === 'function' && node.getAttribute('aria-label') && (node.getAttribute('aria-label').includes('Completed') || node.getAttribute('aria-label').includes('Done')));
+
+      const isExplicitPending = rawText.startsWith('○') || rawText.startsWith('o ') || rawText.startsWith('O ') || rawText.includes('\u25CB') ||
+        (typeof node.querySelector === 'function' && node.querySelector('.fa-circle-o, .fa-circle-thin') !== null) ||
+        Boolean(typeof node.getAttribute === 'function' && node.getAttribute('aria-label') && (node.getAttribute('aria-label').includes('Not completed') || node.getAttribute('aria-label').includes('To do')));
+
+      const isCompleted = hasCheckmark && !isExplicitPending;
 
       const isCurrent = (node.classList && node.classList.contains('active')) || 
                         (typeof node.getAttribute === 'function' && node.getAttribute('aria-current') === 'true') ||

@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 130: Stride StudyPilot Agent 6 (The Inspector) — Pre-Submission Radio Verification & High-Stakes 3-Attempt Gatekeeper)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 131: Stride StudyPilot — Strict Chronological Progression, Live Class Attendance & Non-Credit Discrimination)
 
 ---
 
@@ -5211,4 +5211,38 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Finite Attempt Conservation Law):** On LMS platforms with finite attempt limits ($\le 3$ attempts), an autonomous agent must NEVER treat retries as cheap. The agent must detect attempt constraints from the DOM, lock in pre-submission radio verification to guarantee zero blank questions, and prevent autonomous retry loops from burning remaining attempts.
   - **Rule (Zero-Missed Radio Pre-Submission Audit Law):** Automated test-taking agents must never rely on loop completion to assume all inputs were checked. Before clicking any submit button, an independent Inspector agent must query the physical DOM for `input:checked` across 100% of question containers, self-healing any missed questions prior to final transmission.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 131: Stride StudyPilot — Strict Chronological Progression, Live Class Attendance & Non-Credit Discrimination (November 24, 2026)
+- **The Exact Challenge & Context Identified:**
+  - The founder tested StudyPilot on `Live Class-2_Green computing` (`https://amigo.amityonline.com/mod/googlemeet/view.php?id=375981`).
+  - **Issue 1 (Wrong Page Mode / Action):** StudyPilot falsely displayed `QUIZ PORTAL` and `⚡ Attempt Quiz` on a Google Meet Live Class page instead of a Live Class recording/attendance view.
+  - **Issue 2 (Chronological Skipping to 1.2.2):** StudyPilot skipped right past unfinished credit items (`Live Class 3`, `Live Class 4`, `Live Class 5`, `Study Material Green Computing`, `1.1.3 Information Technology...`) and previewed `Next: 1.2.2 Green Value`.
+  - **Issue 3 (Non-Credit Discrimination):** The founder clarified the exact AMIGO LMS rule: every section in the sidebar with a tracking radio circle (`✓` or `○`) is credit-bearing and must be traversed in strict chronological sequence; only the 3 specific items without radio buttons (`Announcements`, `Discussion Forum`, `Interactive SLM`) must be ignored.
+- **Deep Root Cause Diagnosis:**
+  - **1. Loose `#intro` selector in `detectPageMode`:** `doc.querySelector('.quizinfo, #intro, ...')` matched the Google Meet topic description container `#intro`, returning `'quiz-view'` on Google Meet URLs.
+  - **2. Incomplete Items Skipped by Generic `.completion-info`:** In `parseCurriculum`, `isCompleted` checked `node.querySelector('.completion-info') !== null`. Since Moodle 4.x wraps ALL tracked items (even incomplete ones) in `.completion-info`, items like `1.1.3` and `1.2.1` were falsely perceived as completed.
+  - **3. Overbroad Non-Curriculum Regex:** `NON_CURRICULUM_REGEX` previously blacklisted `live class` and `study material`, filtering them out completely.
+- **The Concrete Surgical Fix:**
+  - **1. URL-First Mode Routing (`scribe.js`):**
+    - Directly routes `/mod/googlemeet/` $\rightarrow$ `'live-class'`, `/mod/resource/` $\rightarrow$ `'resource-page'`, `/mod/quiz/view.php` $\rightarrow$ `'quiz-view'`, and `/mod/page/view.php` $\rightarrow$ `'lecture-page'`. Removed the problematic `#intro` selector.
+  - **2. Precise State Machine for Completion (`scribe.js`):**
+    - `hasCheckmark`: checks `✓` (`\u2713`, `\u2714`), `.fa-check`, `.completion-check`, `.activity-completed`, `aria-label*="Completed"`.
+    - `isExplicitPending`: checks `○` (`\u25CB`), `o `, `O `, `.fa-circle-o`, `.fa-circle-thin`, `aria-label*="Not completed"`.
+    - `isCompleted = hasCheckmark && !isExplicitPending`.
+  - **3. Focused Non-Credit Exclusion (`scribe.js` & `navigator.js`):**
+    - `NON_CREDIT_REGEX`: strictly targets only non-radio items: `announcements?`, `discussion\s*forum`, `interactive\s*slm`, `virtual\s*lab`, `student\s*support`, `planner`, `beSocial`, etc.
+    - Preserves all Live Classes (`Live Class 1..5`), Study Materials (`Syllabus`, `Glossary`, `Audio SLM`), and numbered modules.
+  - **4. Live Class HUD UI & Auto-Advance (`hud-ui.js` & `content.js`):**
+    - Badges: `Live Class` / `Study Material`.
+    - Actions: If `hasMarkDoneBtn`, renders `⚡ Mark Done & Next`. If already done, renders `▶ Next: ${nextActivityTitle}`.
+    - Content script: on `'live-class'` and `'resource-page'`, records attendance/visit and auto-advances chronologically after 1500ms to the next activity (`Live Class 3`, `Live Class 4`, etc.).
+  - **5. Automated Vitest Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added 24th test validating Live Class 2 DOM, strict chronological advancement to Live Class 3, and exclusion of non-credit items.
+    - All 24 tests passing 100% (4.30s). TypeScript typecheck passes with 0 errors.
+  - **6. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Packaged standalone bundle: `public/downloads/studypilot-extension.zip` (43.2 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Radio-Button Credit Discrimination Law):** In LMS navigation, never infer curriculum structure from arbitrary keyword lists. Look for the physical tracking indicator (`✓` vs `○`). Any activity bearing a tracking circle is credit-bearing and must be visited in strict top-to-bottom chronological sequence. Only items with neither a checkmark nor a circle are non-credit optional links to be skipped.
+  - **Rule (Explicit Circle Negative Check Law):** In Moodle 4.x, container classes like `.completion-info` exist on both completed and incomplete elements. Completion detection must always require an explicit checkmark (`✓`, `.fa-check`) AND the absence of an incomplete circle (`○`, `.fa-circle-o`), preventing unattempted items from being skipped.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

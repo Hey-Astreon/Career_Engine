@@ -14,7 +14,9 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const NON_CURRICULUM_REGEX = /\b(glossary|syllabus|live\s*class|announcements?|discussion\s*forum|interactive\s*slm|audio\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
+  // Strictly filter only non-credit items that have NO radio button / completion tracking in AMIGO
+  const NON_CREDIT_REGEX = /\b(announcements?|discussion\s*forum|interactive\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
+  const NON_CURRICULUM_REGEX = NON_CREDIT_REGEX;
 
   function getCurriculumPlan(doc = document) {
     if (typeof window.StudyPilotScribe !== 'undefined') {
