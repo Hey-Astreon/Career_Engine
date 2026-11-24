@@ -59,14 +59,27 @@
 
     const hasVideo = Boolean(document.querySelector('video, iframe[src*="video"], iframe[src*="youtube"]'));
 
+    let nextTitle = curriculumPlan.nextItem ? curriculumPlan.nextItem.title : '';
+    let nextHref = curriculumPlan.nextItem ? curriculumPlan.nextItem.href : '';
+
+    // If on a static page (e.g. Glossary, Syllabus) where nextItem is not in the curriculum,
+    // display the next incomplete activity in the academic syllabus!
+    if (!nextTitle && Navigator) {
+      const nextIncomplete = Navigator.findNextIncompleteActivity(document);
+      if (nextIncomplete) {
+        nextTitle = nextIncomplete.title;
+        nextHref = nextIncomplete.href;
+      }
+    }
+
     if (activeHud) {
       activeHud.updateScanResult({
         courseTitle: courseContext,
         questionsCount: currentQuestions.length,
         isQuiz: currentQuestions.length > 0,
         pageMode: currentPageMode,
-        nextActivityTitle: curriculumPlan.nextItem ? curriculumPlan.nextItem.title : '',
-        nextActivityHref: curriculumPlan.nextItem ? curriculumPlan.nextItem.href : '',
+        nextActivityTitle: nextTitle,
+        nextActivityHref: nextHref,
         hasVideo
       });
     }

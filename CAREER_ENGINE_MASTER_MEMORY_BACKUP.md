@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 124: Stride StudyPilot 2.0 Confirmation Modal Button Isolation & Direct Form Submission Fallback Engine)
+> **LAST COGNITIVE SYNC:** November 24, 2026 (Phase 125: Stride StudyPilot 2.0 Academic Syllabus Purification & Strict Sequential Module Traversal Engine)
 
 ---
 
@@ -5024,4 +5024,32 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (Modal Button Identity Isolation Law):** When automating confirmation dialogs that appear after clicking an action button on a webpage, never search the root document for confirmation buttons using class names (`.btn-primary`) that also exist on the underlying page. Always pass the originating trigger button reference into the modal search and enforce `if (btn === triggerBtn) continue;` to prevent circular re-clicking.
   - **Rule (Direct Form Submission Fail-Safe Law):** Confirmation modals in web applications (like Moodle) exist purely to guard a backend form submission. Automated workflows should attempt to click the modal's primary confirmation button, but must ALWAYS include a fallback invoking `form.requestSubmit()` on the target action form (`processattempt.php`) to ensure atomic completion regardless of modal animation states.
+- **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+### Phase 125: Stride StudyPilot 2.0 Academic Syllabus Purification & Strict Sequential Module Traversal Engine (November 24, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - After completing `Quiz : 1.2.1 Green Strategic Points` and auto-submitting successfully, clicking "Complete Video & Next" on `1.1.2 Objectives` jumped the student to the static `Glossary` reference page ("COMING SOON") instead of following the sequential module order (to `1.2.2 Green Value`).
+- **Deep Root Cause Diagnosis:**
+  - **1. Non-Curriculum Reference Link Ingestion:** In `scribe.js`, `parseCurriculum` grabbed all links matching `a[href*="/mod/"]` across the page. In Moodle AMIGO, glossary autolinks and static header/study-material links (`/mod/page/view.php?id=176417` for Glossary, `Syllabus`, `Live Class`) were added into `items`.
+  - **2. Base-URL Path Collapsing:** `isCurrent` checked `href.includes(currentUrl.split('?')[0])`. Because all Moodle lecture pages share the identical base path (`/mod/page/view.php`) and only differ by `?id=...`, checking the base path caused EVERY page on the site to falsely match the first lecture in the list (`1.2.1`), and its next item was mistakenly thought to be the adjacent link (Glossary)!
+  - **3. Inverted Navigator Hierarchy:** `navigateToNextActivity` prioritized `plan.nextItem` before checking Moodle's canonical bottom `Next Activity >` button, causing it to navigate to the misclassified Glossary link.
+- **The Concrete Surgical Fix:**
+  - **1. URL Parameter Normalization (`isUrlActive` in `studypilot/agent/scribe.js`):**
+    - Built `isUrlActive(itemHref, currentHref)` to parse and compare exact query parameters (`id`, `attempt`, `cmid`). Eliminates base-path collisions across identical Moodle `/mod/page/view.php` endpoints.
+  - **2. Academic Syllabus Filter & RegEx Classification (`scribe.js`):**
+    - Applied `NON_CURRICULUM_REGEX` (`glossary`, `syllabus`, `live class`, `announcement`, `forum`, `audio slm`, `beSocial`).
+    - Applied `CURRICULUM_TITLE_REGEX` ensuring only numbered chapters (`1.1.1`, `1.2.2`), Quizzes, and Module Assessments are treated as course curriculum.
+  - **3. Course Recovery & Next Incomplete Finder (`studypilot/agent/navigator.js`):**
+    - Built `findNextIncompleteActivity(doc)`: Scans the purified curriculum for the first activity not marked completed (`!it.isCompleted`).
+    - Enhanced `navigateToNextActivity`: When current page is a non-curriculum static page (e.g. `Glossary`), it immediately triggers `findNextIncompleteActivity` to rescue the student and jump straight to the true next incomplete topic (`1.2.2 Green Value`)!
+  - **4. HUD Dynamic Course Continuation (`studypilot/content.js`):**
+    - In `scanCurrentPage()`, if `nextItem` is null because the student is on a static page, the HUD automatically queries `findNextIncompleteActivity` and displays: `Next: [Next Incomplete Topic]` (e.g. `Next: 1.2.2 Green Value`), giving the student a 1-click continuation button.
+  - **5. Comprehensive Automated Test Suite (`tests/studypilot-swarm.test.ts`):**
+    - Added unit test simulating AMIGO drawer with static links (`Glossary`, `Syllabus`, `Live Class 1`). Verified that `parseCurriculum` rejects them 100%, `findNextIncompleteActivity` returns `1.2.2 Green Value`, and `navigateToNextActivity` recovers from Glossary to `1.2.2 Green Value`.
+    - 15/15 Vitest tests passing 100%. TypeScript typecheck passes with 0 errors.
+  - **6. Extension Packaging (`scripts/package-studypilot.js`):**
+    - Repackaged `public/downloads/studypilot-extension.zip` (37.0 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (Query Parameter URL Identity Law):** In LMS platforms like Moodle, Blackboard, and Canvas, almost all activities share identical base script paths (e.g. `/mod/page/view.php`, `/mod/quiz/view.php`). Never match active or current URLs using `url.split('?')[0]` or path-only comparisons. Always parse query parameters (`URLSearchParams`) and enforce exact identity on entity keys (`?id=`, `?cmid=`, `?attempt=`).
+  - **Rule (Syllabus Quarantine & Academic Purification Law):** Course navigation drawers always contain non-academic reference links (Glossary, Syllabus, Live Classes, Announcements, Chatrooms). Curriculum traversal engines must strictly whitelist numbered module topics and quizzes (`/^\d+\.\d+/`, `/quiz\s*:/i`) and blacklist static reference patterns to prevent accidental leaps out of the learning pipeline.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.

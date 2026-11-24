@@ -17,6 +17,8 @@
 
   const NEGATIVE_REGEX = /\b(not|except|incorrect|false|never|unlikely|cannot)\b/i;
   const DUAL_OPTION_REGEX = /\b(both of these|both a and b|both b and c|all of the above|all of these|none of these|none of the above|neither)\b/i;
+  const NON_CURRICULUM_REGEX = /\b(glossary|syllabus|live class|announcement|discussion forum|interactive slm|audio slm|virtual lab|student support|planner|beSocial)\b/i;
+  const CURRICULUM_TITLE_REGEX = /^\s*[✓o○\s]*(\d+\.\d+|quiz\s*:|.*module.*assessment|\d+[a-z]{2}\s*module)/i;
 
   function extractCourseContext(doc = document) {
     // 1. Check page title or breadcrumbs
@@ -171,11 +173,47 @@
     };
   }
 
+  function isUrlActive(itemHref, currentHref) {
+    if (!itemHref || !currentHref) return false;
+    try {
+      const uItem = new URL(itemHref, 'https://amigo.amityonline.com');
+      const uCurr = new URL(currentHref, 'https://amigo.amityonline.com');
+      if (uItem.pathname !== uCurr.pathname) return false;
+
+      const idItem = uItem.searchParams.get('id');
+      const idCurr = uCurr.searchParams.get('id');
+      if (idItem && idCurr) {
+        return idItem === idCurr;
+      }
+
+      const attItem = uItem.searchParams.get('attempt');
+      const attCurr = uCurr.searchParams.get('attempt');
+      if (attItem && attCurr) {
+        return attItem === attCurr;
+      }
+
+      const cmidItem = uItem.searchParams.get('cmid');
+      const cmidCurr = uCurr.searchParams.get('cmid');
+      if (cmidItem && cmidCurr) {
+        return cmidItem === cmidCurr;
+      }
+
+      return uItem.search === uCurr.search;
+    } catch (e) {
+      return itemHref === currentHref;
+    }
+  }
+
   function parseCurriculum(doc = document, currentUrl = (typeof window !== 'undefined' ? window.location.href : '')) {
     // Queries sidebar drawer curriculum items from AMIGO / Moodle
-    const linkNodes = doc.querySelectorAll(
-      '#nav-drawer a, .courseindex a, .drawer-content a, .list-group a, a.aalink, a[href*="/mod/"]'
-    );
+    let linkNodes = Array.from(doc.querySelectorAll(
+      '#nav-drawer a, .courseindex a, .drawer-content a, .list-group a, #course-index a, .course-index a, .courseindex-section a, .activity-item a'
+    ));
+
+    // Fallback only if no sidebar drawer items were found
+    if (linkNodes.length === 0) {
+      linkNodes = Array.from(doc.querySelectorAll('a[href*="/mod/page/"], a[href*="/mod/quiz/"], a[href*="/mod/lesson/"]'));
+    }
 
     const items = [];
     const seenHrefs = new Set();
@@ -183,25 +221,37 @@
     linkNodes.forEach((node) => {
       const href = node.getAttribute('href') || '';
       if (!href || href === '#' || href.startsWith('javascript:')) return;
-      if (seenHrefs.has(href)) return;
-      seenHrefs.add(href);
 
       const rawText = (node.innerText || node.textContent || '').trim();
       if (!rawText) return;
 
-      const isCompleted = rawText.includes('✓') || 
-                          node.querySelector('.fa-check, .completion-info, .autocompletion') !== null ||
-                          Boolean(node.getAttribute('aria-label') && node.getAttribute('aria-label').includes('Completed'));
+      // Strictly skip non-curriculum links like glossary, syllabus, live classes, forums
+      if (NON_CURRICULUM_REGEX.test(rawText) || NON_CURRICULUM_REGEX.test(href)) {
+        return;
+      }
 
+      // Ensure it is an academic topic (numbered chapter, quiz, or module assessment)
+      const isNumbered = CURRICULUM_TITLE_REGEX.test(rawText);
       const isQuiz = rawText.toLowerCase().includes('quiz') || href.includes('/mod/quiz/');
-      const isLecture = href.includes('/mod/page/') || href.includes('/mod/lesson/') || href.includes('/mod/resource/');
+      const isLecture = href.includes('/mod/page/') || href.includes('/mod/lesson/');
 
-      const isCurrent = node.classList.contains('active') || 
-                        node.getAttribute('aria-current') === 'true' ||
-                        (currentUrl && href && (currentUrl.includes(href) || href.includes(currentUrl.split('?')[0])));
+      if (!isNumbered && !isQuiz && !href.includes('/mod/quiz/')) {
+        return;
+      }
+
+      if (seenHrefs.has(href)) return;
+      seenHrefs.add(href);
+
+      const isCompleted = rawText.includes('✓') || 
+                          (typeof node.querySelector === 'function' && node.querySelector('.fa-check, .completion-info, .autocompletion') !== null) ||
+                          Boolean(typeof node.getAttribute === 'function' && node.getAttribute('aria-label') && node.getAttribute('aria-label').includes('Completed'));
+
+      const isCurrent = (node.classList && node.classList.contains('active')) || 
+                        (typeof node.getAttribute === 'function' && node.getAttribute('aria-current') === 'true') ||
+                        isUrlActive(href, currentUrl);
 
       items.push({
-        title: rawText.replace(/^[✓○\s]+/, '').trim(),
+        title: rawText.replace(/^[✓○o\s]+/, '').trim(),
         rawTitle: rawText,
         href,
         isQuiz,
@@ -215,8 +265,7 @@
     // Determine current & next activity
     let currentIndex = items.findIndex(it => it.isCurrent);
     if (currentIndex === -1 && currentUrl) {
-      const baseCurrent = currentUrl.split('?')[0];
-      currentIndex = items.findIndex(it => it.href.split('?')[0] === baseCurrent);
+      currentIndex = items.findIndex(it => isUrlActive(it.href, currentUrl));
     }
 
     const currentItem = currentIndex >= 0 ? items[currentIndex] : null;

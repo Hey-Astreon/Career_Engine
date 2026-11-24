@@ -23,7 +23,9 @@
 
   function navigateToNextActivity(doc = document) {
     const plan = getCurriculumPlan(doc);
-    if (plan.nextItem) {
+
+    // Strategy 1: If current page is in the academic curriculum, follow the strict serial order
+    if (plan.currentItem && plan.nextItem) {
       if (plan.nextItem.element && typeof plan.nextItem.element.click === 'function') {
         plan.nextItem.element.click();
         return { success: true, target: plan.nextItem.title, url: plan.nextItem.href };
@@ -34,7 +36,21 @@
       }
     }
 
-    // Fallback: check standard Moodle bottom navigation (activity-navigation)
+    // Strategy 2: If current page is a non-curriculum static page (e.g. Glossary, Syllabus),
+    // immediately find the next incomplete chapter in the course curriculum!
+    const nextIncomplete = findNextIncompleteActivity(doc);
+    if (nextIncomplete) {
+      if (nextIncomplete.element && typeof nextIncomplete.element.click === 'function') {
+        nextIncomplete.element.click();
+        return { success: true, target: nextIncomplete.title, url: nextIncomplete.href };
+      }
+      if (nextIncomplete.href) {
+        window.location.href = nextIncomplete.href;
+        return { success: true, target: nextIncomplete.title, url: nextIncomplete.href };
+      }
+    }
+
+    // Strategy 3: Standard Moodle bottom navigation link (activity-navigation)
     const nextActivityLink = doc.querySelector(
       '#next-activity-link a, #next-activity-link, .activity-navigation .next a, a[title*="Next" i], .nav-item-next a, .activity-navigation a[title*="Next" i]'
     );
@@ -43,9 +59,13 @@
         nextActivityLink.click();
         return { success: true, target: 'Next Activity', url: nextActivityLink.href };
       }
+      if (nextActivityLink.href) {
+        window.location.href = nextActivityLink.href;
+        return { success: true, target: 'Next Activity', url: nextActivityLink.href };
+      }
     }
 
-    // Text search fallback across all links
+    // Strategy 4: Text search across all links
     const allLinks = Array.from(doc.querySelectorAll('a.btn, .activity-navigation a, a'));
     for (const link of allLinks) {
       const txt = (link.innerText || link.textContent || '').trim().toLowerCase();
@@ -58,6 +78,12 @@
     return { success: false, reason: 'No next activity found in course curriculum' };
   }
 
+  function findNextIncompleteActivity(doc = document) {
+    const plan = getCurriculumPlan(doc);
+    const incomplete = plan.items.filter(it => !it.isCompleted);
+    return incomplete[0] || null;
+  }
+
   function findNextIncompleteQuiz(doc = document) {
     const plan = getCurriculumPlan(doc);
     const incompleteQuizzes = plan.items.filter(it => it.isQuiz && !it.isCompleted);
@@ -67,6 +93,7 @@
   return {
     getCurriculumPlan,
     navigateToNextActivity,
+    findNextIncompleteActivity,
     findNextIncompleteQuiz
   };
 });

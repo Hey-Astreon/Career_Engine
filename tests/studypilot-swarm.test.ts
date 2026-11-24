@@ -333,6 +333,95 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(plan.totalCount).toBe(4);
       expect(plan.nextItem?.title).toContain("4.1.3 Green IT Metrics");
     });
+
+    it("filters out static non-curriculum links like Glossary/Syllabus and recovers from lost page", () => {
+      let navigatedTarget = "";
+
+      const staticLinks = [
+        {
+          innerText: "Live Class 1 Green computing",
+          textContent: "Live Class 1 Green computing",
+          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176415",
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "Syllabus",
+          textContent: "Syllabus",
+          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176416",
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "✓ Glossary",
+          textContent: "✓ Glossary",
+          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=176417",
+          classList: { contains: (cls: string) => cls === "active" }, // Currently on Glossary!
+          querySelector: () => null,
+        },
+        {
+          innerText: "✓ 1.2.1 Green Strategic Points",
+          textContent: "✓ 1.2.1 Green Strategic Points",
+          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=194200",
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "✓ Quiz : 1.2.1 Green Strategic Points",
+          textContent: "✓ Quiz : 1.2.1 Green Strategic Points",
+          getAttribute: () => "https://amigo.amityonline.com/mod/quiz/view.php?id=238965",
+          classList: { contains: () => false },
+          querySelector: () => null,
+        },
+        {
+          innerText: "1.2.2 Green Value",
+          textContent: "1.2.2 Green Value",
+          getAttribute: () => "https://amigo.amityonline.com/mod/page/view.php?id=194201",
+          classList: { contains: () => false },
+          querySelector: () => null,
+          click: () => { navigatedTarget = "1.2.2 Green Value"; },
+        },
+        {
+          innerText: "Quiz : 1.2.2 Green Value",
+          textContent: "Quiz : 1.2.2 Green Value",
+          getAttribute: () => "https://amigo.amityonline.com/mod/quiz/view.php?id=238966",
+          classList: { contains: () => false },
+          querySelector: () => null,
+          click: () => { navigatedTarget = "Quiz : 1.2.2 Green Value"; },
+        },
+      ];
+
+      const mockGlossaryDoc = {
+        querySelectorAll: (sel: string) => sel.includes("courseindex") || sel.includes("drawer") || sel.includes("a") ? staticLinks : [],
+        querySelector: () => null,
+      };
+
+      (globalThis as any).window = {
+        StudyPilotScribe,
+        location: { href: "https://amigo.amityonline.com/mod/page/view.php?id=176417" },
+      };
+
+      const plan = StudyPilotScribe.parseCurriculum(mockGlossaryDoc as any, "https://amigo.amityonline.com/mod/page/view.php?id=176417");
+
+      // Verify that Glossary, Syllabus, and Live Class are completely excluded from items!
+      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("glossary"))).toBe(false);
+      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("syllabus"))).toBe(false);
+      expect(plan.items.some((it: any) => it.title.toLowerCase().includes("live class"))).toBe(false);
+
+      // Verify that the plan contains only the 4 academic curriculum items
+      expect(plan.totalCount).toBe(4);
+
+      // Verify findNextIncompleteActivity returns "1.2.2 Green Value"
+      const nextIncomplete = StudyPilotNavigator.findNextIncompleteActivity(mockGlossaryDoc as any);
+      expect(nextIncomplete).not.toBeNull();
+      expect(nextIncomplete?.title).toContain("1.2.2 Green Value");
+
+      // Verify navigateToNextActivity recovers from Glossary and clicks "1.2.2 Green Value"
+      const navResult = StudyPilotNavigator.navigateToNextActivity(mockGlossaryDoc as any);
+      expect(navResult.success).toBe(true);
+      expect(navResult.target).toContain("1.2.2 Green Value");
+      expect(navigatedTarget).toBe("1.2.2 Green Value");
+    });
   });
 
   describe("5. Live Amigo Quiz 1.2.1 Evaluation", () => {
