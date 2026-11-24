@@ -290,11 +290,35 @@
     return false;
   }
 
+  function extractQuizGrade(doc = document) {
+    const textNodes = Array.from(doc.querySelectorAll('h2, h3, h4, p, div.feedback, .quizinfo, .generaltable, .box, div, td, th'));
+    for (const node of textNodes) {
+      const txt = (node.innerText || node.textContent || '').trim();
+      const match = txt.match(/(?:highest\s*grade|overall\s*grade|final\s*grade|your\s*grade|grade)[^:\d]*:\s*([0-9\.]+)\s*(?:\/|\s*out of\s*)\s*([0-9\.]+)/i);
+      if (match) {
+        const score = parseFloat(match[1]);
+        const total = parseFloat(match[2]);
+        const percentage = total > 0 ? (score / total) * 100 : 0;
+        const isPerfect = total > 0 && Math.abs(score - total) < 0.01;
+        return {
+          hasGrade: true,
+          score,
+          total,
+          percentage,
+          isPerfect,
+          gradeText: `${score} / ${total}`
+        };
+      }
+    }
+    return { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
+  }
+
   return {
     parseMoodleQuestions,
     extractCourseContext,
     detectPageMode,
     parseCurriculum,
-    hasPassiveViewCompletion
+    hasPassiveViewCompletion,
+    extractQuizGrade
   };
 });

@@ -387,6 +387,8 @@
       this.data.hasVideo = Boolean(scanData.hasVideo);
       this.data.hasMarkDoneBtn = Boolean(scanData.hasMarkDoneBtn);
       this.data.isViewDone = Boolean(scanData.isViewDone);
+      this.data.gradeInfo = scanData.gradeInfo || { hasGrade: false, score: 0, total: 0, percentage: 0, isPerfect: false, gradeText: '' };
+      this.data.hasAttemptBtn = Boolean(scanData.hasAttemptBtn);
       this.render();
     }
 
@@ -496,9 +498,21 @@
         badgeClass = 'sp-badge review';
         subtitleText = 'Ready for Final Submission';
       } else if (this.pageMode === 'quiz-view') {
-        badgeText = 'Quiz Portal';
-        badgeClass = 'sp-badge';
-        subtitleText = 'Click to Launch Quiz Attempt';
+        if (this.data.gradeInfo && this.data.gradeInfo.hasGrade) {
+          if (this.data.gradeInfo.isPerfect) {
+            badgeText = 'Full Marks 10/10';
+            badgeClass = 'sp-badge review';
+            subtitleText = `✓ Score: ${this.data.gradeInfo.gradeText} (100% Perfect)`;
+          } else {
+            badgeText = 'Needs Re-Attempt';
+            badgeClass = 'sp-badge busy';
+            subtitleText = `⚠️ Score: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Re-Attempt for 10/10`;
+          }
+        } else {
+          badgeText = 'Quiz Portal';
+          badgeClass = 'sp-badge';
+          subtitleText = 'Click to Launch Quiz Attempt';
+        }
       } else if (this.pageMode === 'quiz-review') {
         badgeText = 'Quiz Complete';
         badgeClass = 'sp-badge review';
@@ -584,9 +598,29 @@
         ` : ''}
 
         ${this.pageMode === 'quiz-view' && !isBusy ? `
-          <button class="sp-action-btn" id="sp-attempt-btn">
-            <span>⚡ Attempt Quiz</span>
-          </button>
+          ${this.data.gradeInfo && this.data.gradeInfo.hasGrade && !this.data.gradeInfo.isPerfect ? `
+            <button class="sp-action-btn" id="sp-attempt-btn" style="background: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);">
+              <span>⚡ Re-Attempt Quiz (Target: 10/10)</span>
+            </button>
+            ${this.data.nextActivityTitle ? `
+              <button class="sp-action-btn-secondary" id="sp-next-btn">
+                <span>▶ Skip to Next Topic</span>
+              </button>
+            ` : ''}
+          ` : this.data.gradeInfo && this.data.gradeInfo.hasGrade && this.data.gradeInfo.isPerfect ? `
+            ${this.data.nextActivityTitle ? `
+              <button class="sp-action-btn" id="sp-next-btn">
+                <span>▶ Proceed to Next Topic</span>
+              </button>
+            ` : ''}
+            <button class="sp-action-btn-secondary" id="sp-attempt-btn">
+              <span>⚡ Re-Attempt Quiz</span>
+            </button>
+          ` : `
+            <button class="sp-action-btn" id="sp-attempt-btn">
+              <span>⚡ Attempt Quiz</span>
+            </button>
+          `}
         ` : ''}
 
         ${this.pageMode === 'quiz-review' && !isBusy ? `

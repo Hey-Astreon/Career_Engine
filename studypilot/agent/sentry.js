@@ -367,25 +367,28 @@
     return false;
   }
 
-  async function clickAttemptQuiz(doc = document) {
-    // Direct attempt quiz button on mod/quiz/view.php
+  function findAttemptOrReattemptButton(doc = document) {
     const directBtn = doc.querySelector(
-      'input[value*="Attempt quiz" i], button[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], button[value*="Continue the last attempt" i], input[value*="Re-attempt quiz" i], button[value*="Re-attempt quiz" i], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
+      'input[value*="Re-attempt" i], button[value*="Re-attempt" i], a[href*="attempt.php"], input[value*="Attempt quiz" i], button[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], button[value*="Continue the last attempt" i], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
     );
+    if (directBtn) return directBtn;
+
+    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn'));
+    for (const el of candidates) {
+      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
+      if (txt.includes('re-attempt') || txt.includes('attempt quiz') || txt.includes('continue the last attempt')) {
+        return el;
+      }
+    }
+    return null;
+  }
+
+  async function clickAttemptQuiz(doc = document) {
+    const directBtn = findAttemptOrReattemptButton(doc);
     if (directBtn) {
       await sleep(600);
       directBtn.click();
       return true;
-    }
-
-    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], a.btn'));
-    for (const el of candidates) {
-      const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
-      if (txt.includes('attempt quiz') || txt.includes('re-attempt quiz') || txt.includes('continue the last attempt')) {
-        await sleep(600);
-        el.click();
-        return true;
-      }
     }
     return false;
   }
@@ -452,6 +455,7 @@
     findModalSubmitButton,
     confirmSubmitAllModal,
     clickFinishReview,
+    findAttemptOrReattemptButton,
     clickAttemptQuiz,
     completeLectureVideo,
     findMarkAsDoneButton,

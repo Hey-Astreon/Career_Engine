@@ -814,5 +814,72 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const hasViewEmpty = StudyPilotScribe.hasPassiveViewCompletion(mockEmptyDoc as any);
       expect(hasViewEmpty).toBe(false);
     });
+
+    it("extracts quiz highest grade and determines perfection vs re-attempt requirement", () => {
+      // 1. Imperfect Grade (5.00 / 10.00)
+      const mockImperfectDoc = {
+        querySelectorAll: () => [
+          {
+            tagName: "H3",
+            innerText: "Highest grade: 5.00 / 10.00.",
+            textContent: "Highest grade: 5.00 / 10.00.",
+          },
+        ],
+      };
+      const imperfectGrade = StudyPilotScribe.extractQuizGrade(mockImperfectDoc as any);
+      expect(imperfectGrade.hasGrade).toBe(true);
+      expect(imperfectGrade.score).toBe(5.00);
+      expect(imperfectGrade.total).toBe(10.00);
+      expect(imperfectGrade.percentage).toBe(50);
+      expect(imperfectGrade.isPerfect).toBe(false);
+
+      // 2. Perfect Grade (10.00 / 10.00)
+      const mockPerfectDoc = {
+        querySelectorAll: () => [
+          {
+            tagName: "H3",
+            innerText: "Highest grade: 10.00 / 10.00.",
+            textContent: "Highest grade: 10.00 / 10.00.",
+          },
+        ],
+      };
+      const perfectGrade = StudyPilotScribe.extractQuizGrade(mockPerfectDoc as any);
+      expect(perfectGrade.hasGrade).toBe(true);
+      expect(perfectGrade.score).toBe(10.00);
+      expect(perfectGrade.total).toBe(10.00);
+      expect(perfectGrade.percentage).toBe(100);
+      expect(perfectGrade.isPerfect).toBe(true);
+
+      // 3. No Attempts / Fresh Quiz
+      const mockFreshDoc = {
+        querySelectorAll: () => [],
+      };
+      const freshGrade = StudyPilotScribe.extractQuizGrade(mockFreshDoc as any);
+      expect(freshGrade.hasGrade).toBe(false);
+      expect(freshGrade.isPerfect).toBe(false);
+    });
+
+    it("locates re-attempt button on imperfect quiz view pages", () => {
+      const reattemptBtn = {
+        tagName: "BUTTON",
+        className: "btn btn-primary",
+        innerText: "Re-attempt quiz",
+        textContent: "Re-attempt quiz",
+        value: "Re-attempt quiz",
+        click: () => {},
+      };
+
+      const mockReattemptDoc = {
+        querySelector(sel: string) {
+          if (sel.includes("Re-attempt")) return reattemptBtn;
+          return null;
+        },
+        querySelectorAll: () => [reattemptBtn],
+      };
+
+      const foundBtn = StudyPilotSentry.findAttemptOrReattemptButton(mockReattemptDoc as any);
+      expect(foundBtn).not.toBeNull();
+      expect((foundBtn as any).innerText).toBe("Re-attempt quiz");
+    });
   });
 });
