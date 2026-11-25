@@ -293,13 +293,23 @@
             return;
           }
 
-          // Subcase C1: Imperfect Practice Quiz (Autonomous Mastermind Delta Solving) OR Failed High-Stakes Assessment -> Auto Re-attempt!
-          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn && stakes.canSafelyAttempt) {
+          // Subcase C0.6: HIGH-STAKES ZERO AUTONOMOUS RE-ATTEMPT LOCKOUT
+          // INVIOLABLE LAW: On finite-attempt exams (<= 3 attempts), the AI is STRICTLY FORBIDDEN from ever
+          // auto-clicking 'Re-attempt quiz' on its own, regardless of score. The student MUST have 100% manual control!
+          if (stakes.isHighStakes && gradeInfo.hasGrade && !gradeInfo.isPerfect) {
+            if (activeHud) {
+              activeHud.setState('idle', { 
+                statusText: `🛡️ Assessment Score: ${gradeInfo.gradeText}. Auto-retry strictly disabled to protect finite attempts. You are in full control.`
+              });
+            }
+            return; // STRICTLY STOP: Never auto-click attemptBtn on high-stakes assessments!
+          }
+
+          // Subcase C1: Imperfect Practice Quiz (Autonomous Mastermind Delta Solving on UNLIMITED practice attempts only)
+          if (!stakes.isHighStakes && gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn && stakes.canSafelyAttempt) {
             if (activeHud) {
               activeHud.setState('submitting', { 
-                statusText: stakes.isHighStakes 
-                  ? `🛡️ High-Stakes Score is ${gradeInfo.gradeText} (< Passing). Launching Attempt ${stakes.attemptsUsed + 1} of ${stakes.attemptsAllowed}...`
-                  : `🧠 Mastermind AI: Score is ${gradeInfo.gradeText}. Auto-Permuting Attempt ${attemptsHistory.attempts.length + 1} for 10/10...` 
+                statusText: `🧠 Mastermind AI: Score is ${gradeInfo.gradeText}. Auto-Permuting Attempt ${attemptsHistory.attempts.length + 1} for 10/10...` 
               });
             }
             await Sentry.sleep(1200);

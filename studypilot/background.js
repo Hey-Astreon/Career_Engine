@@ -392,9 +392,10 @@ Solve this academic multiple-choice question from standard university curriculum
 RULES:
 1. Academic Syllabus Compliance: Base answers on standard academic university textbooks and curriculum definitions (e.g. Green Computing, CRT e-waste, cathode yoke, standard syllabus terminology, and specific case studies).
 2. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
-3. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
-4. For case studies, company names, or methodologies, select the exact academic entity referenced in university curriculum.
-5. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
+3. Anti-Echo Distractor Law: Do NOT select an option merely because it echoes or repeats keywords from the question stem (e.g. if the question mentions 'four groups of systems', do NOT lazily select 'green system' if 'data repository' is the true technical definition). University exam setters intentionally plant question keywords into incorrect distractors.
+4. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
+5. For case studies, company names, or methodologies, select the exact academic entity referenced in university curriculum.
+6. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
   let result = null;
