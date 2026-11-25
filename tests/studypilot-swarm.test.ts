@@ -2045,7 +2045,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
 
       const mastermindAny = StudyPilotMastermind as any;
       expect(mastermindAny.getPerfectSolution("239964")).toEqual({
-        "1": { key: "b", text: "one third" },
+        "1": { key: "c", text: "half" },
         "2": { key: "d", text: "ipcc" }
       });
     });
@@ -2088,7 +2088,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const mastermindAny = StudyPilotMastermind as any;
       const plan = mastermindAny.deduceNextVector(shuffledQuestions, draftAudits, [], "239964");
       expect(plan.applied).toBe(true);
-      expect(plan.resolvedAudits[0].selectedKey).toBe("c"); // Resolved "one third" even when shuffled to 'c'
+      expect(plan.resolvedAudits[0].selectedKey).toBe("b"); // Resolved "half" even when shuffled to 'b'
       expect(plan.resolvedAudits[1].selectedKey).toBe("a"); // Resolved "IPCC" even when shuffled to 'a'
 
       // 3. Manifest & Popup completeness

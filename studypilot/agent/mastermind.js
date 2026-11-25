@@ -31,7 +31,7 @@
       '2': { key: 'a', text: 'carbon reduction' }
     }, // Quiz 4.1.2 Green ICT and Technology Trends
     '239964': {
-      '1': { key: 'b', text: 'one third' },
+      '1': { key: 'c', text: 'half' },
       '2': { key: 'd', text: 'ipcc' }
     }, // Quiz 4.1.5 Green ICT—Business and Economic Trends
   };
