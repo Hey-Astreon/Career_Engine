@@ -1893,6 +1893,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(preseededKey).toEqual({ "1": "b", "2": "a" });
       expect(mastermindAny.getPerfectSolution("239914")).toEqual({ "1": "b", "2": "b" });
       expect(mastermindAny.getPerfectSolution("239946")).toEqual({ "1": "b", "2": "c" });
+      expect(mastermindAny.getPerfectSolution("239961")).toEqual({ "1": "b", "2": "a" }); // Phase 144: Quiz 4.1.2 Green ICT pre-seed
 
       const mockCandidateAudits = [
         { selectedKey: "a", confidence: 0.8, reasoning: "Draft" },
@@ -1914,6 +1915,91 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       // 6. Mastermind Dynamic Store & Retrieval Test
       mastermindAny.storePerfectSolution("999999", { "1": "d", "2": "c" });
       expect(mastermindAny.getPerfectSolution("999999")).toEqual({ "1": "d", "2": "c" });
+    });
+  });
+
+  describe("StudyPilot Phase 144: Score Regression & Consecutive-Zero Circuit Breaker", () => {
+    it("detects score regression when latest score drops >50% below best historical score", () => {
+      // Simulates Quiz 4.1.2: Attempt 1 = 5/10 (50%), Attempt 2 = 0/10 (0%)
+      const mockRegressionTable = {
+        querySelectorAll: (sel: string) => {
+          if (sel.includes("tr")) {
+            return [
+              {
+                innerText: "Attempt 2 Finished Started Wednesday, 25 November 2026, 5:32 PM Completed Wednesday, 25 November 2026, 5:32 PM Duration 27 secs Marks 0.00/2.00 Grade 0.00 out of 10.00 (0%) Review not permitted",
+                textContent: "Attempt 2 Finished Started Wednesday, 25 November 2026, 5:32 PM Completed Wednesday, 25 November 2026, 5:32 PM Duration 27 secs Marks 0.00/2.00 Grade 0.00 out of 10.00 (0%) Review not permitted"
+              },
+              {
+                innerText: "Attempt 1 Finished Started Wednesday, 25 November 2026, 5:31 PM Completed Wednesday, 25 November 2026, 5:31 PM Duration 36 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted",
+                textContent: "Attempt 1 Finished Started Wednesday, 25 November 2026, 5:31 PM Completed Wednesday, 25 November 2026, 5:31 PM Duration 36 secs Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted"
+              }
+            ];
+          }
+          return [];
+        }
+      };
+
+      const history = StudyPilotScribe.extractQuizAttemptsHistory(mockRegressionTable as any);
+      expect(history.totalAttempts).toBe(2);
+      expect(history.isStagnant).toBe(false); // Scores are different (1 vs 0), NOT stagnant by old definition
+      expect(history.scoreRegressed).toBe(true); // 0 < 0.5 * 1 = TRUE — regression detected!
+      expect(history.consecutiveZeroCount).toBe(1); // Latest attempt is 0%
+      expect(history.bestScore).toBe(1.0); // Best was Attempt 1
+      expect(history.lastAttempt?.score).toBe(0.0);
+    });
+
+    it("detects consecutive zero attempts when multiple attempts score 0%", () => {
+      const mockZeroTable = {
+        querySelectorAll: (sel: string) => {
+          if (sel.includes("tr")) {
+            return [
+              {
+                innerText: "Attempt 3 Finished Marks 0.00/2.00 Grade 0.00 out of 10.00 (0%) Review not permitted",
+                textContent: "Attempt 3 Finished Marks 0.00/2.00 Grade 0.00 out of 10.00 (0%) Review not permitted"
+              },
+              {
+                innerText: "Attempt 2 Finished Marks 0.00/2.00 Grade 0.00 out of 10.00 (0%) Review not permitted",
+                textContent: "Attempt 2 Finished Marks 0.00/2.00 Grade 0.00 out of 10.00 (0%) Review not permitted"
+              },
+              {
+                innerText: "Attempt 1 Finished Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted",
+                textContent: "Attempt 1 Finished Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted"
+              }
+            ];
+          }
+          return [];
+        }
+      };
+
+      const history = StudyPilotScribe.extractQuizAttemptsHistory(mockZeroTable as any);
+      expect(history.consecutiveZeroCount).toBe(2); // Attempts 2 and 3 are both 0%
+      expect(history.scoreRegressed).toBe(true); // Regressed from 1.0 to 0.0
+      expect(history.bestScore).toBe(1.0);
+    });
+
+    it("does NOT flag regression when score improves across attempts", () => {
+      const mockImprovingTable = {
+        querySelectorAll: (sel: string) => {
+          if (sel.includes("tr")) {
+            return [
+              {
+                innerText: "Attempt 2 Finished Marks 2.00/2.00 Grade 10.00 out of 10.00 (100%) Review not permitted",
+                textContent: "Attempt 2 Finished Marks 2.00/2.00 Grade 10.00 out of 10.00 (100%) Review not permitted"
+              },
+              {
+                innerText: "Attempt 1 Finished Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted",
+                textContent: "Attempt 1 Finished Marks 1.00/2.00 Grade 5.00 out of 10.00 (50%) Review not permitted"
+              }
+            ];
+          }
+          return [];
+        }
+      };
+
+      const history = StudyPilotScribe.extractQuizAttemptsHistory(mockImprovingTable as any);
+      expect(history.scoreRegressed).toBe(false); // 2.0 > 0.5 * 1.0, NO regression
+      expect(history.consecutiveZeroCount).toBe(0); // 100% latest, no zeros
+      expect(history.bestScore).toBe(2.0);
     });
   });
 });

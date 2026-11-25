@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 25, 2026 (Phase 143: Stride StudyPilot — Attempt 1 Accuracy Elevation, Dual-Option Anti-Decoy Rigor, Deep Breadcrumb Parsing & Mastermind 10/10 Knowledge Vault)
+> **LAST COGNITIVE SYNC:** November 25, 2026 (Phase 144: Stride StudyPilot — Practice Stagnation & Score Regression Circuit Breaker, Consecutive-Zero Lockout & Quiz 4.1.2 Ground Truth Pre-Seed)
 
 ---
 
@@ -5664,3 +5664,25 @@ graph TD
   - **Rule (The Breadcrumb Grounding Law):** Never feed an AI solver bare course titles when the DOM contains hierarchical navigation breadcrumbs. Deep chapter and subtopic breadcrumbs (`Course > Module > Subtopic > Unit`) provide critical syllabus grounding that turns 50% ambiguous guesses into 100% textbook precision.
   - **Rule (The Persistent Solution Vault Law):** When an autonomous agent cracks a quiz or assessment to 100% full marks, that victory must be permanently cached into persistent storage indexed by canonical activity ID. On any subsequent encounter, retake, or review, the agent must restore the 10/10 key in 0ms.
 - **Status:** Complete. Tested, verified, repackaged, and committed to repository.
+
+
+### Phase 144: Stride StudyPilot — Practice Stagnation & Score Regression Circuit Breaker, Consecutive-Zero Lockout & Quiz 4.1.2 Ground Truth Pre-Seed (November 25, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan reported via `/plan` that on **Quiz : 4.1.2 Green ICT and Technology Trends** (`amigo.amityonline.com/mod/quiz/view.php?id=239961`), StudyPilot autonomously re-attempted the quiz even as the score **regressed** from Attempt 1 (`5/10`) to Attempt 2 (`0/10`), and fired Attempt 3 (choosing `(c) Dispose` and `(d) carbon footprint`, both wrong).
+- **Deep Root Cause Diagnosis:**
+  1. **Practice Stagnation Circuit Breaker Blind Spot (`studypilot/content.js#L283-L294`):** For practice quizzes (`!stakes.isHighStakes`), Subcase C0.5 ignored `isStagnantScore` completely and ONLY halted when `attemptsHistory.attempts.length >= 16`.
+  2. **Missing Regression & Consecutive-Zero Telemetry (`studypilot/agent/scribe.js#L454-L478`):** `extractQuizAttemptsHistory()` only flagged `isStagnant` when two consecutive scores were equal (`Math.abs(last.score - prev.score) < 0.01`). When a quiz regressed from `5/10` to `0/10`, `0 != 5`, so `isStagnant` stayed `false` and Mastermind kept permuting downward.
+- **The Concrete Surgical Fix:**
+  - **1. Scribe Regression & Zero-Score Telemetry (`studypilot/agent/scribe.js`):**
+    - Added `bestScore`, `consecutiveZeroCount` (trailing 0% attempts from newest backward), and `scoreRegressed` (`bestScore > 0 && last.score < bestScore * 0.5 && last.percentage < 99`) to `extractQuizAttemptsHistory()`.
+  - **2. Multi-Condition Practice Circuit Breaker (`studypilot/content.js`):**
+    - Replaced the lenient 16-attempt gate with `shouldPausePractice`: halts autonomous practice re-attempts immediately on ANY of: (1) `isStagnantScore`, (2) `scoreRegressed` (e.g. `5/10 -> 0/10`), (3) `consecutiveZeroCount >= 1`, or (4) `attempts.length >= 6`.
+    - Surfaces clear pause reason in HUD (`⚠️ Auto-Solve Paused: <reason> (<gradeText>). Manual review required — answers need correction.`).
+  - **3. Quiz 4.1.2 Ground Truth Pre-Seed (`studypilot/agent/mastermind.js`):**
+    - Verified and pre-seeded `'239961': { '1': 'b', '2': 'a' }` (`Q1: Establish`, `Q2: carbon reduction`) into `PRESEEDED_PERFECT_SOLUTIONS`.
+  - **4. Vitest Regression Tests & Packaging (`tests/studypilot-swarm.test.ts`):**
+    - Added 3 new tests in `StudyPilot Phase 144: Score Regression & Consecutive-Zero Circuit Breaker` plus Quiz `239961` vault assertion.
+    - Verified **40/40 tests passing** (`npx vitest run --pool=vmForks tests/studypilot-swarm.test.ts`), `npx tsc --noEmit` **0 errors**, and repackaged `public/downloads/studypilot-extension.zip` (60.4 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Score Regression & Zero-Attempt Circuit Breaker Law):** Never allow an autonomous retry loop to continue when a score regresses (`< 50%` of best score) or hits `0%`. Equal-score stagnation checks alone miss downward spirals (`5/10 -> 0/10`); regression and zero-score detection must immediately halt autonomous retries and surface manual review.
+- **Status:** Complete. 40/40 Vitest tests passing, TypeScript clean, extension repackaged, and committed to `origin main`.

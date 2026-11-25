@@ -280,16 +280,40 @@
             return; // STRICTLY STOP: Never auto-click attemptBtn on a passed high-stakes assessment!
           }
 
-          // Subcase C0.5: STAGNATION CIRCUIT BREAKER (Only applies to high-stakes or after 16+ attempts on practice)
+          // Subcase C0.5: STAGNATION / REGRESSION / CONSECUTIVE-ZERO CIRCUIT BREAKER
+          // For HIGH-STAKES: halt if any stagnation detected (scores not improving).
+          // For PRACTICE: halt on ANY of these safety conditions —
+          //   (1) Classic stagnation: two equal consecutive scores
+          //   (2) Score REGRESSION: latest score dropped >50% vs best historical score (e.g. 5→0)
+          //   (3) Consecutive Zeros: 1 or more consecutive 0% attempts (zero means wrong answers compounding)
+          //   (4) Exceeded 6 practice attempts without perfection (soft cap; avoids long loops)
           const isStagnantScore = attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1;
-          const isExceededPracticeAttempts = !stakes.isHighStakes && (attemptsHistory.attempts.length >= 16);
-          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? isStagnantScore : isExceededPracticeAttempts)) {
+          const hasScoreRegressed = !!attemptsHistory.scoreRegressed;
+          const hasConsecutiveZeros = (attemptsHistory.consecutiveZeroCount || 0) >= 1;
+          const isExceededPracticeAttempts = attemptsHistory.attempts.length >= 6;
+
+          // Combined safety gate for practice quizzes
+          const shouldPausePractice = !stakes.isHighStakes && (
+            isStagnantScore ||
+            hasScoreRegressed ||
+            hasConsecutiveZeros ||
+            isExceededPracticeAttempts
+          );
+
+          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? isStagnantScore : shouldPausePractice)) {
+            const reason = stakes.isHighStakes
+              ? `Stagnant Score`
+              : hasScoreRegressed
+                ? `Score Regressed (${attemptsHistory.bestScore}→${gradeInfo.score})`
+                : hasConsecutiveZeros
+                  ? `${attemptsHistory.consecutiveZeroCount} consecutive 0% attempt(s)`
+                  : `${attemptsHistory.attempts.length} attempts reached`;
             if (activeHud) {
               activeHud.setState('idle', { 
-                statusText: `⚠️ Stagnant Score (${gradeInfo.gradeText} across ${attemptsHistory.attempts.length || 2}+ attempts). Paused for review.`
+                statusText: `⚠️ Auto-Solve Paused: ${reason} (${gradeInfo.gradeText}). Manual review required — answers need correction.`
               });
             }
-            // HALT automatic retry loop! Allow student to choose between advancing or exploring alternative answers.
+            // HALT automatic retry loop! Answers need manual review before retrying.
             return;
           }
 

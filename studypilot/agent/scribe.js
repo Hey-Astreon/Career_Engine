@@ -451,11 +451,31 @@
     // Sort by attempt number ascending
     attempts.sort((a, b) => a.attemptNumber - b.attemptNumber);
 
+    // --- Phase 144: Enhanced Stagnation & Regression Detection ---
     let isStagnant = false;
     let consecutiveStagnantCount = 0;
+    let consecutiveZeroCount = 0;
+    let scoreRegressed = false;
+    let bestScore = 0;
+
+    // Compute best historical score and consecutive-zero trailing count
+    for (const a of attempts) {
+      if (a.score > bestScore) bestScore = a.score;
+    }
+    // Count trailing zero-score attempts (from newest backward)
+    for (let i = attempts.length - 1; i >= 0; i--) {
+      if (attempts[i].percentage < 0.01) {
+        consecutiveZeroCount++;
+      } else {
+        break;
+      }
+    }
+
     if (attempts.length >= 2) {
       const last = attempts[attempts.length - 1];
       const prev = attempts[attempts.length - 2];
+
+      // Classic stagnation: two equal consecutive scores (not perfect)
       if (Math.abs(last.score - prev.score) < 0.01 && last.percentage < 99) {
         consecutiveStagnantCount = 1;
         if (attempts.length >= 3) {
@@ -466,6 +486,12 @@
         }
         isStagnant = true;
       }
+
+      // Score regression: latest score is less than 50% of the best historical score
+      // e.g. 5/10 on Attempt 1 → 0/10 on Attempt 2 = regression (0 < 0.5 * 5)
+      if (bestScore > 0 && last.score < bestScore * 0.5 && last.percentage < 99) {
+        scoreRegressed = true;
+      }
     }
 
     return {
@@ -473,6 +499,9 @@
       totalAttempts: attempts.length,
       isStagnant,
       consecutiveStagnantCount,
+      consecutiveZeroCount,
+      scoreRegressed,
+      bestScore,
       lastAttempt: attempts.length > 0 ? attempts[attempts.length - 1] : null
     };
   }
