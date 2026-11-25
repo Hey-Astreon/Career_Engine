@@ -61,6 +61,13 @@ function safeExtractJson(text) {
   return null;
 }
 
+function extractOptionLetter(val) {
+  if (!val) return 'a';
+  const str = String(val).trim().toLowerCase();
+  const m = str.match(/^(?:option\s*)?[(\[]?([a-d])[)\]\.\s:]?/i) || str.match(/\b([a-d])\b/i);
+  return m ? m[1].toLowerCase() : (['a', 'b', 'c', 'd'].includes(str[0]) ? str[0] : 'a');
+}
+
 function isMoodleUrl(url) {
   if (!url) return false;
   const lower = url.toLowerCase();
@@ -231,8 +238,8 @@ async function queryGemini(prompt, geminiKey, question) {
         if (text) {
           const parsed = safeExtractJson(text);
           if (parsed && parsed.selectedKey) {
-            const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
-            let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
+            const cleanKey = extractOptionLetter(parsed.selectedKey);
+            let altKey = extractOptionLetter(parsed.alternateKey);
             if (!altKey || altKey === cleanKey) {
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
@@ -262,54 +269,61 @@ async function queryGemini(prompt, geminiKey, question) {
 }
 
 async function queryNvidiaNim(prompt, nvidiaKey, question) {
-  try {
-    const res = await fetchWithTimeout('https://integrate.api.nvidia.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${nvidiaKey}`
-      },
-      body: JSON.stringify({
-        model: 'mistralai/mistral-large-4-1t-a52b',
-        messages: [
-          { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.0,
-        max_tokens: 350
-      })
-    }, 8000);
+  const candidateNvidiaModels = [
+    'minimaxai/minimax-m3.1-flash',
+    'nvidia/nemotron-3.5-lightning-30b-a3b'
+  ];
 
-    if (res.ok) {
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content;
-      if (content) {
-        const parsed = safeExtractJson(content);
-        if (parsed && parsed.selectedKey) {
-          const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
-          let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
-          if (!altKey || altKey === cleanKey) {
-            const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
-            altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+  for (const modelName of candidateNvidiaModels) {
+    try {
+      const res = await fetchWithTimeout('https://integrate.api.nvidia.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${nvidiaKey}`
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [
+            { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.0,
+          max_tokens: 350
+        })
+      }, 10000);
+
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content;
+        if (content) {
+          const parsed = safeExtractJson(content);
+          if (parsed && parsed.selectedKey) {
+            const cleanKey = extractOptionLetter(parsed.selectedKey);
+            let altKey = extractOptionLetter(parsed.alternateKey);
+            if (!altKey || altKey === cleanKey) {
+              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+            }
+            return {
+              selectedKey: cleanKey,
+              alternateKey: altKey,
+              reasoning: parsed.reasoning || `Solved via NVIDIA NIM (${modelName}).`,
+              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
+              engine: `NVIDIA NIM (${modelName})`
+            };
           }
-          return {
-            selectedKey: cleanKey,
-            alternateKey: altKey,
-            reasoning: parsed.reasoning || 'Solved via NVIDIA NIM 1-Trillion Parameter Frontier Model.',
-            confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
-            engine: 'NVIDIA NIM (Mistral Large 1T)'
-          };
         }
+      } else if (res.status === 429) {
+        console.warn(`[StudyPilot Background] NVIDIA NIM (${modelName}) rate-limited (429).`);
+      } else {
+        console.warn(`[StudyPilot Background] NVIDIA NIM (${modelName}) returned status: ${res.status}`);
       }
-    } else if (res.status === 429) {
-      console.warn('[StudyPilot Background] NVIDIA NIM rate-limited (429). Pausing NVIDIA for 3 minutes.');
-      nvidiaQuotaExhaustedUntil = Date.now() + 3 * 60 * 1000;
-    } else {
-      console.warn(`[StudyPilot Background] NVIDIA NIM returned status: ${res.status}`);
+    } catch (err) {
+      console.warn(`[StudyPilot Background] NVIDIA NIM (${modelName}) error:`, err.message);
     }
-  } catch (err) {
-    console.warn('[StudyPilot Background] NVIDIA NIM error:', err.message);
   }
+
   return null;
 }
 
@@ -341,8 +355,8 @@ async function queryGroqRotator(prompt, groqKey, question) {
         if (content) {
           const parsed = safeExtractJson(content);
           if (parsed && parsed.selectedKey) {
-            const cleanKey = String(parsed.selectedKey).toLowerCase().trim();
-            let altKey = parsed.alternateKey ? String(parsed.alternateKey).toLowerCase().trim() : '';
+            const cleanKey = extractOptionLetter(parsed.selectedKey);
+            let altKey = extractOptionLetter(parsed.alternateKey);
             if (!altKey || altKey === cleanKey) {
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
@@ -477,6 +491,7 @@ if (typeof module !== 'undefined' && module.exports) {
     unmaskKey,
     fetchWithTimeout,
     safeExtractJson,
+    extractOptionLetter,
     isMoodleUrl,
     solveWithAcademicHeuristics,
     executeBackgroundAiSolve,
