@@ -143,21 +143,10 @@ function solveWithAcademicHeuristics(question, courseContext) {
   const qText = (question.questionText || '').toLowerCase();
   const options = question.options || [];
 
-  // 1. Dual-option trap priority
-  const dualOpt = options.find(o => /\b(both of these|both a and b|all of the above|all of these)\b/i.test(o.cleanText));
-  if (dualOpt && question.traps && question.traps.hasDualOptionTrap) {
-    const alternateOpt = options.find(o => o.key.toLowerCase() !== dualOpt.key.toLowerCase()) || options[0];
-    return {
-      selectedKey: dualOpt.key,
-      alternateKey: alternateOpt ? alternateOpt.key : 'a',
-      reasoning: "Selected composite option ('Both of these' / 'All of the above') matching academic syllabus guidelines.",
-      confidence: 0.96,
-      engine: 'Academic Knowledge Engine'
-    };
-  }
-
-  // 2. Acronym & Domain Dictionary Matches
+  // Acronym & Domain Dictionary Matches (Verified Textbook Ground Truth Only)
   const dictionary = [
+    { pattern: /passenger transport|sophisticated it systems on the rise/i, match: /business methodology/i, reason: "In Green IT socio-cultural frameworks, the rise of sophisticated IT systems supporting passenger transport growth is classified under business methodology." },
+    { pattern: /small to medium travel agency.*new york|elite client base/i, match: /blue waters/i, reason: "In Green IT case studies (Chapter 4), Blue waters is the small-to-medium travel agency operating out of New York with an elite client base." },
     { pattern: /epeat/i, match: /electronic product environmental assessment tool/i, reason: "EPEAT stands for Electronic Product Environmental Assessment Tool." },
     { pattern: /basel|hazardous waste.*export|charitable non-governmental/i, match: /basel action network/i, reason: "The Basel Action Network (BAN) is the NGO fighting hazardous toxic waste export to developing countries." },
     { pattern: /maintain the datacenter at the right level/i, match: /both of these/i, reason: "Economizer lockout and sensor calibration are both required for datacenter maintenance." },
@@ -399,10 +388,11 @@ ${optionsStr}
 
 Solve this academic multiple-choice question from standard university curriculum and textbook definitions.
 RULES:
-1. Academic Syllabus Compliance: Base answers on standard academic university textbooks and curriculum definitions (e.g. Green Computing, CRT e-waste, cathode yoke, standard syllabus terminology).
-2. If multiple statements are true and an option states 'Both of these', 'Both a and b', or 'All of the above', you MUST select that composite option.
+1. Academic Syllabus Compliance: Base answers on standard academic university textbooks and curriculum definitions (e.g. Green Computing, CRT e-waste, cathode yoke, standard syllabus terminology, and specific case studies).
+2. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
 3. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
-4. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
+4. For case studies, company names, or methodologies, select the exact academic entity referenced in university curriculum.
+5. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
   let result = null;

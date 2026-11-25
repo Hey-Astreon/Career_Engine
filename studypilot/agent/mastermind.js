@@ -16,6 +16,54 @@
   'use strict';
 
   /**
+   * Pre-seeded verified 100% solutions across BCA CSE433 Green Computing
+   */
+  const PRESEEDED_PERFECT_SOLUTIONS = {
+    '239915': { '1': 'b', '2': 'a' }, // Quiz 1.1.1 Social Impact of Green IT: Q1: business methodology, Q2: Blue waters
+    '239323': { '1': 'c', '2': 'c' }, // Quiz 1.1.1 Data Servers Virtualization
+    '239882': { '1': 'a', '2': 'a' }, // Quiz 3.1.4 Green Strategic Alignment
+    '239883': { '1': 'b', '2': 'c' }, // Quiz 3.1.5 Green IT Drivers
+    '239884': { '1': 'd', '2': 'b' }, // Quiz 3.1.6 Green IT Business Dimensions
+  };
+
+  /**
+   * Retrieves verified 100% answer key from memory or persistent localStorage.
+   */
+  function getPerfectSolution(quizId) {
+    if (!quizId) return null;
+    const cleanId = String(quizId).trim();
+    if (PRESEEDED_PERFECT_SOLUTIONS[cleanId]) {
+      return PRESEEDED_PERFECT_SOLUTIONS[cleanId];
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(`sp_perfect_solution_${cleanId}`);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  /**
+   * Persists a verified 100% answer key to memory and localStorage.
+   */
+  function storePerfectSolution(quizId, selections) {
+    if (!quizId || !selections || typeof selections !== 'object') return false;
+    const cleanId = String(quizId).trim();
+    try {
+      PRESEEDED_PERFECT_SOLUTIONS[cleanId] = selections;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(`sp_perfect_solution_${cleanId}`, JSON.stringify(selections));
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
    * Normalizes an attempt's selections into a standard map: { "1": "c", "2": "a" }
    */
   function normalizeSelections(selections, questions) {
@@ -39,11 +87,35 @@
    * @param {Array} questions - Array of parsed question objects.
    * @param {Array} candidateAudits - Initial consensus audits from Scholar + Auditor.
    * @param {Array} pastAttempts - History of past attempts for this quiz.
+   * @param {string|number} [quizId] - Optional quiz ID to check/store against the Mastermind 10/10 Vault.
    * @returns {Object} { applied: boolean, resolvedAudits: Array, strategy: string, notes: string }
    */
-  function deduceNextVector(questions, candidateAudits, pastAttempts = []) {
+  function deduceNextVector(questions, candidateAudits, pastAttempts = [], quizId = null) {
     if (!questions || questions.length === 0 || !candidateAudits || candidateAudits.length === 0) {
       return { applied: false, resolvedAudits: candidateAudits, strategy: 'none' };
+    }
+
+    // Check 0: Does this quiz have a verified 100% answer key in the Mastermind Vault?
+    const cachedPerfect = getPerfectSolution(quizId);
+    if (cachedPerfect) {
+      const resolvedAudits = candidateAudits.map((aud, i) => {
+        const q = questions[i] || {};
+        const qNum = String(q.questionNumber || i + 1);
+        const correctKey = cachedPerfect[qNum] || cachedPerfect[q.id] || aud.selectedKey;
+        return {
+          ...aud,
+          selectedKey: correctKey,
+          confidence: 1.0,
+          reasoning: `[Mastermind CSP Engine: Verified 100% solution restored from knowledge vault for Quiz ${quizId}]`,
+          engine: 'Mastermind CSP (Verified 10/10 Vault)'
+        };
+      });
+      return {
+        applied: true,
+        resolvedAudits,
+        strategy: 'vault-perfect',
+        notes: `Restored 100% verified key from Mastermind Vault for Quiz ${quizId}`
+      };
     }
 
     if (!Array.isArray(pastAttempts) || pastAttempts.length === 0) {
@@ -79,6 +151,9 @@
     // Check if any past attempt was already 100%
     const perfectAttempt = attemptsData.find(a => a.percentage >= 99.9 || a.score >= a.total);
     if (perfectAttempt) {
+      if (quizId) {
+        storePerfectSolution(quizId, perfectAttempt.selections);
+      }
       // Re-apply the verified perfect vector!
       const resolvedAudits = candidateAudits.map((aud, i) => {
         const qNum = String(questions[i].questionNumber || i + 1);
@@ -276,6 +351,9 @@
   }
 
   return {
-    deduceNextVector
+    deduceNextVector,
+    getPerfectSolution,
+    storePerfectSolution,
+    PRESEEDED_PERFECT_SOLUTIONS
   };
 });

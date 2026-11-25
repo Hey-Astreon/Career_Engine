@@ -73,18 +73,20 @@
     if (question.traps && question.traps.hasDualOptionTrap) {
       const dualOption = question.options.find(o => DUAL_OPTION_REGEX.test(o.cleanText));
       if (dualOption && dualOption.key.toLowerCase() !== cleanCandidateKey) {
-        // If Scholar picked single option (e.g. A), but reasoning mentions multiple valid facets:
+        // Only override if Scholar reasoning explicitly confirms both statements are true (not just casual transition words)
         const lowerReason = finalReasoning.toLowerCase();
-        const mentionsMultiple = 
-          lowerReason.includes('also') ||
-          lowerReason.includes('both') ||
-          lowerReason.includes('as well as') ||
-          lowerReason.includes('in addition');
+        const explicitlySelectsDual = 
+          lowerReason.includes('both options') ||
+          lowerReason.includes('both statements') ||
+          lowerReason.includes('both a and b') ||
+          lowerReason.includes('all of the above') ||
+          (lowerReason.includes('both') && (lowerReason.includes('valid') || lowerReason.includes('true') || lowerReason.includes('correct') || lowerReason.includes('required'))) ||
+          (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')));
 
-        if (mentionsMultiple) {
+        if (explicitlySelectsDual) {
           finalKey = dualOption.key.toLowerCase();
-          auditNotes = `Overrode single option '${cleanCandidateKey}' in favor of dual option '${dualOption.key}' ('${dualOption.cleanText}').`;
-          finalReasoning = `Auditor verified that multiple options hold true. Selecting '${dualOption.cleanText}'.`;
+          auditNotes = `Overrode single option '${cleanCandidateKey}' in favor of dual option '${dualOption.key}' ('${dualOption.cleanText}') based on explicit dual validation.`;
+          finalReasoning = `Auditor verified that both statements were explicitly validated as true. Selecting '${dualOption.cleanText}'.`;
           confidence = 0.98;
         }
       }

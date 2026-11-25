@@ -1775,5 +1775,116 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
         global.fetch = originalFetch;
       }
     });
+
+    it("elevates Attempt 1 accuracy by blocking dual-option hijacks and utilizing Mastermind Vault", async () => {
+      const background = await import("../studypilot/background.js");
+
+      // 1. Scribe Deep Breadcrumb Extraction Test
+      const mockBreadcrumbDoc = {
+        querySelector(sel: string) {
+          if (sel.includes("breadcrumb")) {
+            return {
+              querySelectorAll() {
+                return [
+                  { innerText: "Home" },
+                  { innerText: "My courses" },
+                  { innerText: "Green computing (CSE433) - Semester III" },
+                  { innerText: "#Module 4 : GREEN COMPLIANCE" },
+                  { innerText: "Socio-cultural aspects of Green IT" },
+                  { innerText: "Quiz : 1.1.1 Social Impact of Green IT" }
+                ];
+              }
+            };
+          }
+          return null;
+        },
+        title: "Quiz : 1.1.1 Social Impact of Green IT"
+      };
+
+      const extractedContext = StudyPilotScribe.extractCourseContext(mockBreadcrumbDoc as any);
+      expect(extractedContext).toContain("Green computing (CSE433) - Semester III");
+      expect(extractedContext).toContain("#Module 4 : GREEN COMPLIANCE");
+      expect(extractedContext).toContain("1.1.1 Social Impact of Green IT");
+
+      // 2. Verified Textbook Ground Truth Test (Quiz 1.1.1)
+      const qPassenger = {
+        questionText: "Need for sophisticated IT systems on the rise, especially in supporting the growth in passenger transport...",
+        options: [
+          { key: "a", cleanText: "business market" },
+          { key: "b", cleanText: "business methodology" },
+          { key: "c", cleanText: "business market and methodology" },
+          { key: "d", cleanText: "none of the above" }
+        ]
+      };
+      const resPassenger = background.solveWithAcademicHeuristics(qPassenger);
+      expect(resPassenger.selectedKey).toBe("b");
+      expect(resPassenger.confidence).toBeGreaterThanOrEqual(0.95);
+
+      const qTravelAgency = {
+        questionText: "_____ is a small to medium travel agency operating out of New York. A company has an excellent, elite client base.",
+        options: [
+          { key: "a", cleanText: "Blue waters" },
+          { key: "b", cleanText: "Blue brain" },
+          { key: "c", cleanText: "Both a and b" },
+          { key: "d", cleanText: "None of the above" }
+        ],
+        traps: { hasDualOptionTrap: true }
+      };
+      const resTravel = background.solveWithAcademicHeuristics(qTravelAgency);
+      expect(resTravel.selectedKey).toBe("a");
+      expect(resTravel.confidence).toBeGreaterThanOrEqual(0.95);
+
+      // 3. Unverified question with 'Both a and b' must NOT be hijacked blindly with 0.96 confidence
+      const qDecoyTrap = {
+        questionText: "Which innovative technique optimizes quantum circuit routing in cloud hypervisors?",
+        options: [
+          { key: "a", cleanText: "Phase estimation matrix" },
+          { key: "b", cleanText: "Entanglement entropy reduction" },
+          { key: "c", cleanText: "Both a and b" },
+          { key: "d", cleanText: "None of the above" }
+        ],
+        traps: { hasDualOptionTrap: true }
+      };
+      const resDecoy = background.solveWithAcademicHeuristics(qDecoyTrap);
+      // It should NOT claim 0.96 confidence from blind heuristic!
+      expect(resDecoy.confidence).toBeLessThan(0.95);
+
+      // 4. Auditor Anti-Decoy: Does not hijack single option on casual words like 'also'
+      const scholarSingleAns = {
+        selectedKey: "a",
+        alternateKey: "b",
+        confidence: 0.92,
+        reasoning: "Blue waters is the travel agency described in the case study. It also holds an elite clientele.",
+        engine: "Gemini 3.5 Flash"
+      };
+      const auditResult = StudyPilotAuditor.auditAnswer(qTravelAgency, scholarSingleAns);
+      expect(auditResult.selectedKey).toBe("a"); // Retains A, does not falsely flip to C!
+
+      // 5. Mastermind Knowledge Vault Test: 0ms Attempt 1 Instant 10/10 Restore
+      const mastermindAny = StudyPilotMastermind as any;
+      const preseededKey = mastermindAny.getPerfectSolution("239915");
+      expect(preseededKey).toEqual({ "1": "b", "2": "a" });
+
+      const mockCandidateAudits = [
+        { selectedKey: "a", confidence: 0.8, reasoning: "Draft" },
+        { selectedKey: "c", confidence: 0.8, reasoning: "Draft" }
+      ];
+      const mockQuestions = [
+        { questionNumber: 1, id: "q1", options: qPassenger.options },
+        { questionNumber: 2, id: "q2", options: qTravelAgency.options }
+      ];
+
+      // Even with 0 past attempts, Mastermind applies the cracked 10/10 key for Quiz 239915!
+      const vaultPlan: any = mastermindAny.deduceNextVector(mockQuestions, mockCandidateAudits, [], "239915");
+      expect(vaultPlan.applied).toBe(true);
+      expect(vaultPlan.strategy).toBe("vault-perfect");
+      expect(vaultPlan.resolvedAudits[0].selectedKey).toBe("b");
+      expect(vaultPlan.resolvedAudits[1].selectedKey).toBe("a");
+      expect(vaultPlan.resolvedAudits[0].confidence).toBe(1.0);
+
+      // 6. Mastermind Dynamic Store & Retrieval Test
+      mastermindAny.storePerfectSolution("999999", { "1": "d", "2": "c" });
+      expect(mastermindAny.getPerfectSolution("999999")).toEqual({ "1": "d", "2": "c" });
+    });
   });
 });

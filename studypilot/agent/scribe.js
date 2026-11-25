@@ -23,16 +23,35 @@
   const CURRICULUM_TITLE_REGEX = /^\s*[✓o○\s]*(live\s*class|\d+\.\d+|quiz\s*:|syllabus|glossary|study\s*material|audio\s*slm|.*module.*assessment|\d+[a-z]{2}\s*module)/i;
 
   function extractCourseContext(doc = document) {
-    // 1. Check page title or breadcrumbs
-    const titleEl = doc.querySelector('.page-header-headings h1, .breadcrumb, h1, .course-header');
+    const parts = [];
+
+    // 1. Extract full breadcrumb hierarchy if present (e.g. Course > Module > Topic)
+    const breadcrumbContainer = doc.querySelector('nav.breadcrumb, .breadcrumb, ol.breadcrumb, nav[aria-label*="breadcrumb" i]');
+    if (breadcrumbContainer) {
+      const items = Array.from(breadcrumbContainer.querySelectorAll('li, a, span'))
+        .map(el => (el.innerText || el.textContent || '').trim())
+        .filter(t => t.length > 1 && !['home', 'my courses', 'courses', 'amigo dashboard', '/', '»', '>', '·'].includes(t.toLowerCase()));
+      
+      const uniqueItems = Array.from(new Set(items));
+      if (uniqueItems.length > 0) {
+        parts.push(uniqueItems.join(' > '));
+      }
+    }
+
+    // 2. Check page title or headings
+    const titleEl = doc.querySelector('.page-header-headings h1, h1, .course-header');
     const titleText = titleEl ? (titleEl.innerText || titleEl.textContent || '').trim() : '';
 
-    // 2. Check sidebar course name or AMIGO title
+    // 3. Check sidebar course name or AMIGO title
     const courseEl = doc.querySelector('.course-title, #course-index, .course-header, .header-title');
     const courseText = courseEl ? (courseEl.innerText || courseEl.textContent || '').trim() : '';
 
-    // 3. Document Title fallback (e.g. "Quiz : 4.1.2 Green Values in Practice" or "2_Sem 3_CSE433")
+    // 4. Document Title fallback (e.g. "Quiz : 4.1.2 Green Values in Practice" or "2_Sem 3_CSE433")
     const docTitle = doc.title ? doc.title.split('|')[0].trim() : '';
+
+    if (parts.length > 0) {
+      return parts.join(' | ');
+    }
 
     return titleText || courseText || docTitle || 'Amity University BCA Course';
   }

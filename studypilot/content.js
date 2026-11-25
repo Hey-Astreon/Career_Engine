@@ -69,6 +69,16 @@
         try { sessionStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
       }
       if (gradeInfo && gradeInfo.hasGrade) {
+        // Mastermind 10/10 Knowledge Vault Synchronization: persist cracked 100% solutions
+        if (gradeInfo.isPerfect && window.StudyPilotMastermind && typeof window.StudyPilotMastermind.storePerfectSolution === 'function') {
+          const perfectSels = (mem.attempts.length > 0)
+            ? mem.attempts[mem.attempts.length - 1].selections
+            : null;
+          if (perfectSels) {
+            window.StudyPilotMastermind.storePerfectSolution(quizId, perfectSels);
+          }
+        }
+
         try {
           const existingRaw = localStorage.getItem(`sp_quiz_outcome_${quizId}`);
           const existing = existingRaw ? JSON.parse(existingRaw) : {};
@@ -479,8 +489,8 @@
 
       // Phase 2: Autonomous Mastermind CSP Permutation Engine (Practice Quizzes)
       let finalAudits = candidateAudits;
-      if (Mastermind && typeof Mastermind.deduceNextVector === 'function' && pastAttempts.length > 0 && !stakes.isHighStakes) {
-        const mastermindPlan = Mastermind.deduceNextVector(currentQuestions, candidateAudits, pastAttempts);
+      if (Mastermind && typeof Mastermind.deduceNextVector === 'function' && !stakes.isHighStakes) {
+        const mastermindPlan = Mastermind.deduceNextVector(currentQuestions, candidateAudits, pastAttempts, currentQuizId);
         if (mastermindPlan && mastermindPlan.applied) {
           finalAudits = mastermindPlan.resolvedAudits;
           console.log('[StudyPilot Mastermind] Applied CSP Delta Vector:', mastermindPlan);
