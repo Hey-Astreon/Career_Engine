@@ -281,7 +281,7 @@ async function queryNvidiaNim(prompt, nvidiaKey, question) {
           temperature: 0.0,
           max_tokens: 350
         })
-      }, 10000);
+      }, 5000);
 
       if (res.ok) {
         const data = await res.json();
@@ -405,19 +405,17 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, true);
   }
 
-  // Tier 2: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B)
+  // Tier 2: Groq LPU Multi-Model Rotator (<0.5s latency: 120B -> Qwen 3.8 27B -> 20B)
+  const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
+  if (!result && groqKey) {
+    result = await queryGroqRotator(prompt, groqKey, question);
+  }
+
+  // Tier 3: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B, 5s timeout)
   if (!result) {
     const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
     if (nvidiaKey && Date.now() > nvidiaQuotaExhaustedUntil) {
       result = await queryNvidiaNim(prompt, nvidiaKey, question);
-    }
-  }
-
-  // Tier 3: Groq LPU Multi-Model Rotator (120B -> Qwen 3.8 27B -> 20B)
-  if (!result) {
-    const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
-    if (groqKey) {
-      result = await queryGroqRotator(prompt, groqKey, question);
     }
   }
 
@@ -427,6 +425,9 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     await new Promise(r => setTimeout(r, 1500));
     if (geminiKey) {
       result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, false);
+    }
+    if (!result && groqKey) {
+      result = await queryGroqRotator(prompt, groqKey, question);
     }
     if (!result) {
       const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);

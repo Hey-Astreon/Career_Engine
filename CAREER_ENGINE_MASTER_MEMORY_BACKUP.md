@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 144.2: Stride StudyPilot — Frontier AI Cascade Re-Ordering, Removing Lite Short-Circuit, Cloud-First Scholar & Quiz 4.1.5 Pre-Seed)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 144.3: Stride StudyPilot — Groq LPU Promoted to Tier 2 Ahead of NVIDIA NIM & 5s Timeout Guard)
 
 ---
 
@@ -5719,4 +5719,15 @@ graph TD
   - Added cascade regression test in `tests/studypilot-swarm.test.ts` (**42/42 Vitest tests passing**, `npx tsc --noEmit` **0 errors**).
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The No-Lite-In-Frontier-Tier Law):** Never place `flash-lite` or small fallback models inside Tier 1 of a multi-provider AI cascade. A `200 OK` from a weak Lite model will silently short-circuit and starve far stronger Tier 2/3 frontier providers (NVIDIA NIM, Groq 120B).
+- **Status:** Complete. 42/42 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 144.3: Groq LPU Promoted to Tier 2 Ahead of NVIDIA NIM (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Live probe of `minimaxai/minimax-m3.1-flash` on NVIDIA NIM timed out at 10 seconds, meaning every question when Gemini was rate-limited (`429`/`503`) would stall 10+ seconds before reaching Groq (`openai/gpt-oss-120b` / `qwen/qwen3.8-27b`, which responds in `< 0.5s`).
+- **The Concrete Surgical Fix:**
+  - Promoted **Groq LPU Multi-Model Rotator** (`openai/gpt-oss-120b` $\rightarrow$ `qwen/qwen3.8-27b` $\rightarrow$ `openai/gpt-oss-20b`) to **Tier 2** ahead of NVIDIA NIM in `studypilot/background.js`, and tightened `queryNvidiaNim()`'s timeout from `10000ms` to `5000ms` at **Tier 3**.
+  - Verified **42/42 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, and repackaged `public/downloads/studypilot-extension.zip`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Sub-Second LPU Priority Law):** Always place sub-second LPU inference (`Groq 120B / Qwen 27B`) ahead of slower or timeout-prone inference endpoints (`NVIDIA NIM`) in interactive browser extension cascades.
 - **Status:** Complete. 42/42 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
