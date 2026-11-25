@@ -12,6 +12,15 @@ let geminiQuotaExhaustedUntil = 0;
 let nvidiaQuotaExhaustedUntil = 0;
 let groqModelIndex = 0;
 const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
+const FRONTIER_GEMINI_MODELS = [
+  'gemini-4-hydrogen',
+  'gemini-4-argon',
+  'gemini-3.8-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash'
+];
+const LITE_GEMINI_MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+const NVIDIA_MODELS = ['minimaxai/minimax-m3.1-flash', 'nvidia/nemotron-3.5-lightning-30b-a3b'];
 
 // Zero-config academic runtime inference blobs
 const GROQ_BLOB = [77,89,65,117,91,125,109,99,104,71,125,72,65,108,69,121,70,103,125,125,69,64,71,91,125,109,78,83,72,25,108,115,100,82,67,107,75,69,104,95,70,18,64,71,75,104,65,79,104,80,98,78,71,24,69,78];
@@ -203,14 +212,7 @@ function solveWithAcademicHeuristics(question, courseContext) {
 }
 
 // 4. Multi-Provider Background AI Solver
-async function queryGemini(prompt, geminiKey, question) {
-  const candidateEndpoints = [
-    'gemini-3.5-flash',
-    'gemini-2.5-flash',
-    'gemini-flash-lite-latest',
-    'gemini-flash-latest'
-  ];
-
+async function queryGemini(prompt, geminiKey, question, candidateEndpoints = FRONTIER_GEMINI_MODELS, markExhaustedOnFail = true) {
   for (const modelName of candidateEndpoints) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
@@ -254,18 +256,15 @@ async function queryGemini(prompt, geminiKey, question) {
     }
   }
 
-  console.warn('[StudyPilot Background] All Gemini endpoints exhausted or rate-limited. Pausing Gemini for 3 minutes.');
-  geminiQuotaExhaustedUntil = Date.now() + 3 * 60 * 1000;
+  if (markExhaustedOnFail) {
+    console.warn('[StudyPilot Background] All Frontier Gemini endpoints exhausted or rate-limited. Pausing Frontier Gemini for 2 minutes.');
+    geminiQuotaExhaustedUntil = Date.now() + 2 * 60 * 1000;
+  }
   return null;
 }
 
 async function queryNvidiaNim(prompt, nvidiaKey, question) {
-  const candidateNvidiaModels = [
-    'minimaxai/minimax-m3.1-flash',
-    'nvidia/nemotron-3.5-lightning-30b-a3b'
-  ];
-
-  for (const modelName of candidateNvidiaModels) {
+  for (const modelName of NVIDIA_MODELS) {
     try {
       const res = await fetchWithTimeout('https://integrate.api.nvidia.com/v1/chat/completions', {
         method: 'POST',
@@ -400,13 +399,13 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
 
   let result = null;
 
-  // Tier 1: Google Gemini 3.5 Flash (Frontier Speed & Quota)
+  // Tier 1: Frontier Google Gemini (Gemini 4 Hydrogen / Argon, 3.8 / 3.6 / 3.5 Flash — NO Lite!)
   const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
   if (geminiKey && Date.now() > geminiQuotaExhaustedUntil) {
-    result = await queryGemini(prompt, geminiKey, question);
+    result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, true);
   }
 
-  // Tier 2: NVIDIA NIM Mistral Large 1T (1-Trillion Parameter Enterprise Frontier)
+  // Tier 2: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B)
   if (!result) {
     const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
     if (nvidiaKey && Date.now() > nvidiaQuotaExhaustedUntil) {
@@ -414,7 +413,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     }
   }
 
-  // Tier 3: Groq Multi-Model Rotator (120B -> Qwen 27B -> 20B with 24,000 TPM combined)
+  // Tier 3: Groq LPU Multi-Model Rotator (120B -> Qwen 3.8 27B -> 20B)
   if (!result) {
     const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
     if (groqKey) {
@@ -422,12 +421,12 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
     }
   }
 
-  // Tier 4: Exponential Backoff & Retry Guard (Never silently drop high-stakes questions)
+  // Tier 4: Exponential Backoff on High-Stakes OR Lite Gemini Last-Resort Fallback
   if (!result && userConfig.isHighStakes) {
     console.warn('[StudyPilot Cascade] High-Stakes question AI cascade missed. Performing 1.5s backoff retry...');
     await new Promise(r => setTimeout(r, 1500));
     if (geminiKey) {
-      result = await queryGemini(prompt, geminiKey, question);
+      result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, false);
     }
     if (!result) {
       const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
@@ -435,6 +434,10 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
         result = await queryNvidiaNim(prompt, nvidiaKey, question);
       }
     }
+  }
+
+  if (!result && geminiKey) {
+    result = await queryGemini(prompt, geminiKey, question, LITE_GEMINI_MODELS, false);
   }
 
   if (result) {
@@ -488,6 +491,9 @@ if (typeof module !== 'undefined' && module.exports) {
     isMoodleUrl,
     solveWithAcademicHeuristics,
     executeBackgroundAiSolve,
-    GROQ_MODELS
+    GROQ_MODELS,
+    FRONTIER_GEMINI_MODELS,
+    LITE_GEMINI_MODELS,
+    NVIDIA_MODELS
   };
 }

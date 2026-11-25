@@ -115,17 +115,22 @@
 
   // Master Scholar Solver
   async function solveQuestion(question, courseContext, config = {}) {
-    // 1. Try On-Device Chrome Built-in AI Nano first
+    // 1. Background Cloud AI Cascade FIRST (Frontier Gemini 4/3.8 -> NVIDIA NIM -> Groq 120B -> Lite)
+    const cloudResult = await solveWithBackgroundRelay(question, courseContext, config);
+    if (cloudResult && cloudResult.engine !== 'Academic Baseline') {
+      return cloudResult;
+    }
+
+    // 2. On-Device Chrome Built-in AI Nano as offline fallback only
     const nanoResult = await solveWithLocalGeminiNano(question, courseContext);
     if (nanoResult && nanoResult.selectedKey) {
       return {
         ...nanoResult,
-        engine: 'Gemini Nano (On-Device)'
+        engine: 'Gemini Nano (On-Device Fallback)'
       };
     }
 
-    // 2. Background AI Relayer (Groq 500+ t/s -> Gemini -> Knowledge Engine)
-    return await solveWithBackgroundRelay(question, courseContext, config);
+    return cloudResult;
   }
 
   return {

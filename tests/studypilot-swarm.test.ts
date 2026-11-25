@@ -2030,5 +2030,18 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(stakes.attemptsAllowed).toBe(3);
       expect(stakes.gradeToPass).toBe(15);
     });
+
+    it("enforces Frontier-first AI cascade order (no Lite model in Tier 1) and pre-seeds Quiz 4.1.5", async () => {
+      const bg: any = await import("../studypilot/background.js");
+      expect(bg.FRONTIER_GEMINI_MODELS).toContain("gemini-4-hydrogen");
+      expect(bg.FRONTIER_GEMINI_MODELS).toContain("gemini-3.8-flash");
+      expect(bg.FRONTIER_GEMINI_MODELS).not.toContain("gemini-flash-lite-latest");
+      expect(bg.LITE_GEMINI_MODELS).toContain("gemini-flash-lite-latest");
+      expect(bg.NVIDIA_MODELS).toContain("minimaxai/minimax-m3.1-flash");
+      expect(bg.GROQ_MODELS).toContain("openai/gpt-oss-120b");
+
+      const mastermindAny = StudyPilotMastermind as any;
+      expect(mastermindAny.getPerfectSolution("239964")).toEqual({ "1": "b", "2": "d" });
+    });
   });
 });

@@ -27,6 +27,7 @@
     '239914': { '1': 'b', '2': 'b' }, // Quiz 1.1.6 Green Virtual Communities: Q1: shared service center, Q2: RoHS
     '239946': { '1': 'b', '2': 'c' }, // Quiz 2.1.5 Configuring a GET Road Map: Q1: data repository, Q2: green technical
     '239961': { '1': 'b', '2': 'a' }, // Quiz 4.1.2 Green ICT and Technology Trends: Q1: Establish, Q2: carbon reduction
+    '239964': { '1': 'b', '2': 'd' }, // Quiz 4.1.5 Green ICT—Business and Economic Trends: Q1: one third, Q2: IPCC
   };
 
   /**

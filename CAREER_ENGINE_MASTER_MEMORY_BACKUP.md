@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 25, 2026 (Phase 144.1: Stride StudyPilot — Red-Team Audit: Per-Attempt Grade Isolation for Mastermind CSP & Hardened High-Stakes Inspector Precedence)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 144.2: Stride StudyPilot — Frontier AI Cascade Re-Ordering, Removing Lite Short-Circuit, Cloud-First Scholar & Quiz 4.1.5 Pre-Seed)
 
 ---
 
@@ -5705,3 +5705,18 @@ graph TD
   - **Rule (The Per-Attempt Score Isolation Law):** Never feed Moodle's aggregate `"Highest grade"` banner into a stateful CSP solver's attempt history. Always extract and record the individual finished attempt's row score (`attemptsHistory.lastAttempt`) so negative deltas are preserved accurately.
   - **Rule (The High-Stakes Precedence Law):** High-stakes indicators (`Attempts allowed <= 3`, `Module/Graded/Internal/Final Assessment`, or persisted `isHighStakes` state) must always be evaluated BEFORE practice-quiz exemptions, and practice notices must never be matched against raw `document.body.innerText`.
 - **Status:** Complete. 41/41 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 144.2: Frontier AI Cascade Re-Ordering — Removing Lite Short-Circuit & Cloud-First Scholar (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - On **Quiz : 4.1.5 Green ICT—Business and Economic Trends** (`id=239964`), StudyPilot scored `5/10` on Attempt 1 and `5/10` on Attempt 2 (stagnating and pausing via Phase 144's circuit breaker). Screenshot telemetry showed `Google Gemini (gemini-flash-lite-latest)` answering Q2.
+- **Deep Root Cause Diagnosis:**
+  - Live API probing proved `gemini-3.5-flash` and legacy `gemini-2.5-flash` were returning `429`, causing Tier 1 `queryGemini()` to fall down to `gemini-flash-lite-latest` (`200 OK`) and **short-circuit** the entire cascade — blocking healthy Tier 2 **NVIDIA NIM** (`minimaxai/minimax-m3.1-flash`, `nvidia/nemotron-3.5-lightning-30b-a3b`, both `200 OK`) and Tier 3 **Groq** (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, both live) from ever running. Meanwhile, `gemini-4-hydrogen`, `gemini-4-argon`, `gemini-3.8-flash`, and `gemini-3.6-flash` were missing from Tier 1.
+- **The Concrete Surgical Fix:**
+  - Separated `FRONTIER_GEMINI_MODELS` (`['gemini-4-hydrogen', 'gemini-4-argon', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash']`) from `LITE_GEMINI_MODELS` (`['gemini-flash-latest', 'gemini-flash-lite-latest']`) in `studypilot/background.js`, placing Lite models strictly at **Tier 4** (after NVIDIA NIM and Groq 120B).
+  - Updated `Scholar.solveQuestion()` in `studypilot/agent/scholar.js` to run the cloud cascade first and reserve local Gemini Nano for offline fallback.
+  - Pre-seeded Quiz 4.1.5 (`'239964': { '1': 'b', '2': 'd' }`) in `studypilot/agent/mastermind.js`.
+  - Added cascade regression test in `tests/studypilot-swarm.test.ts` (**42/42 Vitest tests passing**, `npx tsc --noEmit` **0 errors**).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The No-Lite-In-Frontier-Tier Law):** Never place `flash-lite` or small fallback models inside Tier 1 of a multi-provider AI cascade. A `200 OK` from a weak Lite model will silently short-circuit and starve far stronger Tier 2/3 frontier providers (NVIDIA NIM, Groq 120B).
+- **Status:** Complete. 42/42 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
