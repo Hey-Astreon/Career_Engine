@@ -145,6 +145,8 @@ function solveWithAcademicHeuristics(question, courseContext) {
 
   // Acronym & Domain Dictionary Matches (Verified Textbook Ground Truth Only)
   const dictionary = [
+    { pattern: /made up of data that belong to each of the four groups of systems/i, match: /data repository/i, reason: "In Green Enterprise Transformation (GET) architecture, a data repository is defined as being made up of data that belong to each of the four groups of systems." },
+    { pattern: /specifying the technologies that are needed to handle the green it initiative/i, match: /green technical/i, reason: "Green technical requirements specifically define the technologies and architectural standards needed to handle the Green IT initiative." },
     { pattern: /passenger transport|sophisticated it systems on the rise/i, match: /business methodology/i, reason: "In Green IT socio-cultural frameworks, the rise of sophisticated IT systems supporting passenger transport growth is classified under business methodology." },
     { pattern: /small to medium travel agency.*new york|elite client base/i, match: /blue waters/i, reason: "In Green IT case studies (Chapter 4), Blue waters is the small-to-medium travel agency operating out of New York with an elite client base." },
     { pattern: /epeat/i, match: /electronic product environmental assessment tool/i, reason: "EPEAT stands for Electronic Product Environmental Assessment Tool." },

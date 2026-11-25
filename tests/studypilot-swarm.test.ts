@@ -1834,6 +1834,33 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(resTravel.selectedKey).toBe("a");
       expect(resTravel.confidence).toBeGreaterThanOrEqual(0.95);
 
+      // Quiz 2.1.5 Configuring a GET Road Map Ground Truth
+      const qDataRepo = {
+        questionText: "_____ is made up of data that belong to each of the four groups of systems.",
+        options: [
+          { key: "a", cleanText: "green network" },
+          { key: "b", cleanText: "data repository" },
+          { key: "c", cleanText: "green system" },
+          { key: "d", cleanText: "green data center" }
+        ]
+      };
+      const resDataRepo = background.solveWithAcademicHeuristics(qDataRepo);
+      expect(resDataRepo.selectedKey).toBe("b");
+      expect(resDataRepo.confidence).toBeGreaterThanOrEqual(0.95);
+
+      const qGreenTech = {
+        questionText: "_____ requirements that are specifying the technologies that are needed to handle the Green IT initiative.",
+        options: [
+          { key: "a", cleanText: "green network" },
+          { key: "b", cleanText: "data repository" },
+          { key: "c", cleanText: "green technical" },
+          { key: "d", cleanText: "green data center" }
+        ]
+      };
+      const resGreenTech = background.solveWithAcademicHeuristics(qGreenTech);
+      expect(resGreenTech.selectedKey).toBe("c");
+      expect(resGreenTech.confidence).toBeGreaterThanOrEqual(0.95);
+
       // 3. Unverified question with 'Both a and b' must NOT be hijacked blindly with 0.96 confidence
       const qDecoyTrap = {
         questionText: "Which innovative technique optimizes quantum circuit routing in cloud hypervisors?",
@@ -1864,6 +1891,8 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const mastermindAny = StudyPilotMastermind as any;
       const preseededKey = mastermindAny.getPerfectSolution("239915");
       expect(preseededKey).toEqual({ "1": "b", "2": "a" });
+      expect(mastermindAny.getPerfectSolution("239914")).toEqual({ "1": "b", "2": "b" });
+      expect(mastermindAny.getPerfectSolution("239946")).toEqual({ "1": "b", "2": "c" });
 
       const mockCandidateAudits = [
         { selectedKey: "a", confidence: 0.8, reasoning: "Draft" },

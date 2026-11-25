@@ -448,10 +448,28 @@
     if (directBtn) {
       await sleep(600);
       try {
-        directBtn.focus();
+        if (typeof directBtn.focus === 'function') directBtn.focus();
+        if (typeof MouseEvent !== 'undefined') {
+          directBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+          directBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+        }
         directBtn.click();
+
+        // 2b. Form Submission Fallback:
+        // In Moodle, 'Re-attempt quiz' is a submit button inside a form pointing to startattempt.php.
+        // If programmatic .click() is ignored by the browser, invoke requestSubmit() or submit() directly!
+        const form = directBtn.form || (typeof directBtn.closest === 'function' ? directBtn.closest('form') : null);
+        if (form) {
+          if (typeof form.requestSubmit === 'function') {
+            try { form.requestSubmit(directBtn); } catch (e) { form.submit(); }
+          } else if (typeof form.submit === 'function') {
+            form.submit();
+          }
+        } else if (directBtn.tagName === 'A' && directBtn.href && typeof window !== 'undefined') {
+          window.location.href = directBtn.href;
+        }
       } catch (e) {
-        directBtn.click();
+        try { directBtn.click(); } catch (err) {}
       }
 
       // 3. Timed Quiz Modal Watcher:

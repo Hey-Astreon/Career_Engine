@@ -550,9 +550,15 @@
               ? `✓ Final Grade Locked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Assessment Complete`
               : `✓ Highest Grade Banked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Moodle keeps best score • Safe to retry`;
           } else if (this.data.isStagnant) {
-            badgeText = 'Stagnant Score';
-            badgeClass = 'sp-badge busy';
-            subtitleText = `⚠️ Stagnant: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Paused`;
+            if (isHighStakes) {
+              badgeText = 'Stagnant Score';
+              badgeClass = 'sp-badge busy';
+              subtitleText = `⚠️ Stagnant: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Paused for Review`;
+            } else {
+              badgeText = 'Mastermind Permuting';
+              badgeClass = 'sp-badge review';
+              subtitleText = `🧠 Mastermind CSP: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Auto-Permuting Attempt ${(this.data.attemptsCount || 2) + 1} for 10/10...`;
+            }
           } else {
             badgeText = isHighStakes ? 'Needs Passing Grade' : 'Needs Re-Attempt';
             badgeClass = 'sp-badge busy';
