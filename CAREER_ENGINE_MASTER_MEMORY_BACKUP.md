@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 25, 2026 (Phase 144: Stride StudyPilot — Practice Stagnation & Score Regression Circuit Breaker, Consecutive-Zero Lockout & Quiz 4.1.2 Ground Truth Pre-Seed)
+> **LAST COGNITIVE SYNC:** November 25, 2026 (Phase 144.1: Stride StudyPilot — Red-Team Audit: Per-Attempt Grade Isolation for Mastermind CSP & Hardened High-Stakes Inspector Precedence)
 
 ---
 
@@ -5686,3 +5686,22 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The Score Regression & Zero-Attempt Circuit Breaker Law):** Never allow an autonomous retry loop to continue when a score regresses (`< 50%` of best score) or hits `0%`. Equal-score stagnation checks alone miss downward spirals (`5/10 -> 0/10`); regression and zero-score detection must immediately halt autonomous retries and surface manual review.
 - **Status:** Complete. 40/40 Vitest tests passing, TypeScript clean, extension repackaged, and committed to `origin main`.
+
+
+### Phase 144.1: Red-Team Audit — Per-Attempt Grade Isolation for Mastermind CSP & Hardened High-Stakes Inspector Precedence (November 25, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - During an adversarial red-team audit of the full autonomous quiz pipeline after Brother Roushan expressed low confidence in live testing, 4 additional silent bugs were uncovered that would have poisoned Mastermind CSP deltas and risked high-stakes misclassification:
+    1. **Highest-Grade Poisoning in `recordQuizOutcome()` (`studypilot/content.js`):** `recordQuizOutcome()` recorded `gradeInfo.score` (Moodle's `"Highest grade: 5.00 / 10.00"` banner) instead of `attemptsHistory.lastAttempt.score` (`0.00 / 2.00`). Whenever an attempt scored lower than the highest attempt, Mastermind CSP received poisoned equal scores (`5, 5`) instead of the actual regression (`5 -> 0`), causing it to eliminate the wrong option and mutate the wrong question on Attempt 3.
+    2. **Sidebar `bodyText` Misclassification in `Inspector.getAssessmentStakes()` (`studypilot/agent/inspector.js`):** `isPracticeQuiz` scanned `document.body.innerText` (including the course sidebar) and returned `true` BEFORE checking `Attempts allowed: 3` or `Module Assessment` headings.
+    3. **Stagnation HUD Desync (`studypilot/content.js`):** `scanCurrentPage()` only passed `isStagnant || consecutiveStagnantCount >= 1` to `activeHud.updateScanResult()`, omitting `scoreRegressed`, `consecutiveZeroCount >= 1`, and `attempts.length >= 6`.
+    4. **Regression HUD Text Bug (`studypilot/content.js`):** Subcase C0.5 printed `gradeInfo.score` (Highest grade) instead of `attemptsHistory.lastAttempt.score` (latest score) in the regression alert.
+- **The Concrete Surgical Fix:**
+  - Updated `recordQuizOutcome(quizId, gradeInfo, isHighStakes, lastAttempt)` in `studypilot/content.js` to prioritize `lastAttempt.score` (from Moodle's actual attempt row) over the `"Highest grade"` summary banner.
+  - Hardened `Inspector.getAssessmentStakes()` in `studypilot/agent/inspector.js` so explicit high-stakes headings (`Module Assessment`, `Graded Assessment`, `End Term`, `Internal`, `Final`, `Mid-Term`), `Attempts allowed <= 3`, and persisted `sp_quiz_outcome_${qid}.isHighStakes` flags ALWAYS take precedence before any practice-quiz check, and scoped `"only for practice purpose"` strictly to main content nodes.
+  - Synced `scanCurrentPage()` stagnant telemetry and Subcase C0.5 `latestScoreDisplay` in `studypilot/content.js`.
+  - Added regression test in `tests/studypilot-swarm.test.ts` verifying high-stakes precedence even when `"practice purpose"` appears in `bodyText`.
+  - Verified **41/41 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, and repackaged `studypilot-extension.zip` (60.9 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Per-Attempt Score Isolation Law):** Never feed Moodle's aggregate `"Highest grade"` banner into a stateful CSP solver's attempt history. Always extract and record the individual finished attempt's row score (`attemptsHistory.lastAttempt`) so negative deltas are preserved accurately.
+  - **Rule (The High-Stakes Precedence Law):** High-stakes indicators (`Attempts allowed <= 3`, `Module/Graded/Internal/Final Assessment`, or persisted `isHighStakes` state) must always be evaluated BEFORE practice-quiz exemptions, and practice notices must never be matched against raw `document.body.innerText`.
+- **Status:** Complete. 41/41 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.

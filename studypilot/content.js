@@ -51,17 +51,22 @@
     } catch (e) {}
   }
 
-  function recordQuizOutcome(quizId, gradeInfo, isHighStakes = false) {
+  function recordQuizOutcome(quizId, gradeInfo, isHighStakes = false, lastAttempt = null) {
     try {
       const mem = loadQuizMemory(quizId);
-      if (mem.pendingSelections && gradeInfo && gradeInfo.hasGrade) {
+      // Use the actual latest attempt score from Moodle's attempts table (not the "Highest grade" banner!)
+      // so Mastermind CSP receives accurate per-attempt deltas even when an attempt scores lower than best.
+      const actualAttemptGrade = (lastAttempt && typeof lastAttempt.score === 'number')
+        ? lastAttempt
+        : gradeInfo;
+      if (mem.pendingSelections && actualAttemptGrade && (actualAttemptGrade.hasGrade || typeof actualAttemptGrade.score === 'number')) {
         mem.attempts.push({
           attemptIndex: mem.attempts.length + 1,
           selections: mem.pendingSelections,
-          score: gradeInfo.score,
-          total: gradeInfo.total,
-          percentage: gradeInfo.percentage,
-          gradeText: gradeInfo.gradeText
+          score: actualAttemptGrade.score,
+          total: actualAttemptGrade.total,
+          percentage: actualAttemptGrade.percentage,
+          gradeText: actualAttemptGrade.gradeText || (gradeInfo ? gradeInfo.gradeText : '')
         });
         delete mem.pendingSelections;
         const str = JSON.stringify(mem);
@@ -180,7 +185,7 @@
         hasAttemptBtn,
         hasModalStartBtn,
         stakes,
-        isStagnant: attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1,
+        isStagnant: attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1 || Boolean(attemptsHistory.scoreRegressed) || (attemptsHistory.consecutiveZeroCount || 0) >= 1 || attemptsHistory.attempts.length >= 6,
         attemptsCount: attemptsHistory.attempts.length
       });
     }
@@ -245,7 +250,7 @@
             : { isHighStakes: false, attemptsAllowed: Infinity, attemptsUsed: 0, attemptsRemaining: Infinity, canSafelyAttempt: true };
 
           const currentQuizId = getQuizId(window.location.href);
-          recordQuizOutcome(currentQuizId, gradeInfo, stakes.isHighStakes);
+          recordQuizOutcome(currentQuizId, gradeInfo, stakes.isHighStakes, attemptsHistory.lastAttempt);
 
           // Subcase C0: High-Stakes Exhaustion Guard (All finite attempts used)
           if (stakes.isHighStakes && stakes.attemptsRemaining <= 0) {
@@ -301,10 +306,11 @@
           );
 
           if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? isStagnantScore : shouldPausePractice)) {
+            const latestScoreDisplay = attemptsHistory.lastAttempt ? attemptsHistory.lastAttempt.score : gradeInfo.score;
             const reason = stakes.isHighStakes
               ? `Stagnant Score`
               : hasScoreRegressed
-                ? `Score Regressed (${attemptsHistory.bestScore}→${gradeInfo.score})`
+                ? `Score Regressed (${attemptsHistory.bestScore}→${latestScoreDisplay})`
                 : hasConsecutiveZeros
                   ? `${attemptsHistory.consecutiveZeroCount} consecutive 0% attempt(s)`
                   : `${attemptsHistory.attempts.length} attempts reached`;

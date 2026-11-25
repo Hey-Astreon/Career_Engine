@@ -2001,5 +2001,34 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(history.consecutiveZeroCount).toBe(0); // 100% latest, no zeros
       expect(history.bestScore).toBe(2.0);
     });
+
+    it("never misclassifies a high-stakes Module Assessment as practice even if 'practice purpose' appears in bodyText", () => {
+      const mockHighStakesDoc = {
+        body: {
+          innerText: "3rd Module Assessment Attempts allowed: 3 Sidebar link: Quiz only for practice purpose",
+          textContent: "3rd Module Assessment Attempts allowed: 3 Sidebar link: Quiz only for practice purpose"
+        },
+        querySelector: (sel: string) => {
+          if (sel.includes("h1")) {
+            return { innerText: "3rd Module Assessment", textContent: "3rd Module Assessment" };
+          }
+          return null;
+        },
+        querySelectorAll: (sel: string) => {
+          if (sel.includes(".quizinfo")) {
+            return [
+              { innerText: "Attempts allowed: 3", textContent: "Attempts allowed: 3", closest: () => null },
+              { innerText: "Grade to pass: 15.00 out of 30.00", textContent: "Grade to pass: 15.00 out of 30.00", closest: () => null }
+            ];
+          }
+          return [];
+        }
+      };
+
+      const stakes = StudyPilotInspector.getAssessmentStakes(mockHighStakesDoc as any);
+      expect(stakes.isHighStakes).toBe(true);
+      expect(stakes.attemptsAllowed).toBe(3);
+      expect(stakes.gradeToPass).toBe(15);
+    });
   });
 });

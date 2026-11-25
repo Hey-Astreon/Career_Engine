@@ -78,10 +78,7 @@
    * Analyzes Moodle quiz view page for attempt limits and stakes.
    */
   function getAssessmentStakes(doc = document) {
-    // 1. Practice Quiz Exemption Check:
-    // In Amity Online (AMIGO), practice quizzes explicitly declare:
-    // "This section is only for practice purpose, and its marks will not contribute towards the Internal Assessment."
-    // And their titles strictly start with "Quiz :" or "Quiz:"
+    // 1. Extract Page Heading & Main Content Text (strictly excluding nav drawers, sidebars, breadcrumbs)
     const pageHeading = (doc && typeof doc.querySelector === 'function')
       ? doc.querySelector('.page-header-headings h1, .page-header-headings h2, h1, h2')
       : null;
@@ -92,27 +89,9 @@
         headingText = (hNodes[0].innerText || hNodes[0].textContent || '').trim();
       }
     }
-    const bodyText = (doc && doc.body ? doc.body.innerText || doc.body.textContent || '' : '').toLowerCase();
 
-    const isPracticeQuiz = /^quiz\s*:/i.test(headingText) ||
-                           bodyText.includes('only for practice purpose') ||
-                           bodyText.includes('practice purpose');
-
-    if (isPracticeQuiz) {
-      return {
-        isHighStakes: false,
-        attemptsAllowed: Infinity,
-        attemptsUsed: 0,
-        attemptsRemaining: Infinity,
-        gradeToPass: null,
-        canSafelyAttempt: true,
-        stakesLabel: '⚡ Standard Practice Quiz (Unlimited Attempts)'
-      };
-    }
-
-    // 2. High-Stakes Inspection (Strictly excluding navigation dropdowns, drawers, and breadcrumbs)
     const textNodes = Array.from(
-      doc.querySelectorAll('.quizinfo, .box, p, h1, h2, h3, h4, table, .generaltable')
+      doc.querySelectorAll('.quizinfo, .box, .generalbox, #region-main p, p, h1, h2, h3, h4, table, .generaltable')
     ).filter(el => {
       if (typeof el.closest === 'function') {
         return !el.closest('#nav-drawer, .drawer-content, .courseindex, #course-index, .breadcrumb, header, footer, .urlselect, #jump-to-activity, select, .activity-navigation');
@@ -124,15 +103,39 @@
     let attemptsUsed = 0;
     let isHighStakes = false;
     let gradeToPass = null;
+    let hasMainPracticeNotice = false;
 
-    // Check if the page heading itself is a Module Assessment
-    if (/\b(?:\d+(?:st|nd|rd|th)?\s+)?module\s+assessment\b|\bgraded\s+assessment\b|\bend\s+term\s+assessment\b/i.test(headingText)) {
+    // Explicit High-Stakes Heading Check (ALWAYS wins over practice heuristics)
+    if (/\b(?:\d+(?:st|nd|rd|th)?\s+)?module\s+assessment\b|\bgraded\s+assessment\b|\bend\s+term\s+assessment\b|\binternal\s+assessment\b|\bfinal\s+assessment\b|\bmid[-\s]?term\b/i.test(headingText)) {
       isHighStakes = true;
       attemptsAllowed = 3;
     }
 
+    // Check persisted high-stakes flag (for quiz/attempt.php where "Attempts allowed: 3" isn't printed)
+    try {
+      if (!isHighStakes && typeof window !== 'undefined' && window.location && typeof localStorage !== 'undefined') {
+        const u = new URL(window.location.href);
+        const qid = u.searchParams.get('id') || u.searchParams.get('cmid');
+        if (qid) {
+          const savedRaw = localStorage.getItem(`sp_quiz_outcome_${qid}`);
+          if (savedRaw) {
+            const saved = JSON.parse(savedRaw);
+            if (saved && saved.isHighStakes === true) {
+              isHighStakes = true;
+              attemptsAllowed = 3;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
     for (const node of textNodes) {
       const txt = (node.innerText || node.textContent || '').trim();
+      const lower = txt.toLowerCase();
+
+      if (lower.includes('only for practice purpose')) {
+        hasMainPracticeNotice = true;
+      }
 
       // Check for "Grade to pass: 15.00 out of 30.00"
       const passMatch = txt.match(/grade\s*to\s*pass[^:\d]*:\s*([0-9\.]+)/i);
@@ -161,10 +164,30 @@
     }
 
     // Check if Moodle explicitly declared attempts exhausted
-    const isExhaustedText = (doc && doc.body ? doc.body.innerText || doc.body.textContent || '' : '').toLowerCase().includes('no more attempts are allowed');
+    const mainBodyText = textNodes.map(n => (n.innerText || n.textContent || '')).join(' ').toLowerCase();
+    const isExhaustedText = mainBodyText.includes('no more attempts are allowed') ||
+      (doc && doc.body ? (doc.body.innerText || doc.body.textContent || '').toLowerCase().includes('no more attempts are allowed') : false);
     if (isExhaustedText) {
       isHighStakes = true;
       if (attemptsAllowed === Infinity) attemptsAllowed = Math.max(attemptsUsed, 3);
+    }
+
+    // Practice Quiz Exemption Check ONLY if NOT explicitly high-stakes!
+    const isPracticeQuiz = !isHighStakes && (
+      /^quiz\s*:/i.test(headingText) ||
+      hasMainPracticeNotice
+    );
+
+    if (isPracticeQuiz) {
+      return {
+        isHighStakes: false,
+        attemptsAllowed: Infinity,
+        attemptsUsed: 0,
+        attemptsRemaining: Infinity,
+        gradeToPass: null,
+        canSafelyAttempt: true,
+        stakesLabel: '⚡ Standard Practice Quiz (Unlimited Attempts)'
+      };
     }
 
     const attemptsRemaining = isExhaustedText ? 0 : Math.max(0, attemptsAllowed - attemptsUsed);
