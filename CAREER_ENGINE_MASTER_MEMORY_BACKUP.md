@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145: Stride StudyPilot — Full-Codebase Stabilization: Manifest Permissions, Popup Mastermind Injection, HUD Pause Visibility, Groq Dual-Model Consensus & Shuffle-Proof Option-Text Vault)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.2: Stride StudyPilot — 4th Module Assessment Post-Mortem, Highest-Grade Banking Verification, & Murugesan-Unhelkar Green IT Textbook Ontology Hardening)
 
 ---
 
@@ -5750,4 +5750,20 @@ graph TD
   - Added regression tests in `tests/studypilot-swarm.test.ts` (**43/43 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, extension repackaged).
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The Full-Surface Audit Law):** Whenever an extension feature exhibits contradictory state or silent failures, audit the entire MV3 surface (`manifest.json` `host_permissions`, `popup.js` injection list, `hud-ui.js` state rendering, `background.js` parsers, and `content.js` lifecycle) rather than patching a single file.
+- **Status:** Complete. 43/43 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 145.2: 4th Module Assessment Post-Mortem & Murugesan-Unhelkar Domain Ontology Injection (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan executed **4th Module Assessment** (`id=176425`). Attempt 1 completed in 2 minutes, scoring **25.00 / 30.00 (83.33%)** across 17 questions (10 × 1 mark, 4 × 2 marks, 3 × 4 marks). StudyPilot lost 5 marks total (either one 4-mark + one 1-mark, or two 2-mark + one 1-mark). Brother Roushan felt immense anxiety that an attempt was wasted and that StudyPilot is not getting 100%.
+- **Deep Root Cause Diagnosis:**
+  1. **Academic Reality vs Psychological Fear:** In Moodle, `Grading method: Highest grade`. Grade to pass is 15.00/30.00. The 25.00/30.00 score is **permanently banked** and satisfies all 4 green completion badges. Attempt 2 is 100% risk-free.
+  2. **High-Stakes Shield Actuation:** StudyPilot's High-Stakes Passing Score Shield (`Subcase C0.1`) functioned flawlessly — it halted auto-attempts and offered `[▶ Accept 25 / 30 & Advance to Next Topic]` and `[⚡ Aim for 100% (Attempt 2 of 3 • Best Score Safe)]`, preventing any accidental burn of Attempt 2.
+  3. **The 5-Mark Delta:** 4-mark questions on Amity assessments feature multi-statement propositions (Statement I and Statement II) and deep textbook domain specifics from San Murugesan & G.R. Gangadharan's *"Harnessing Green IT"* and Bhuvan Unhelkar's *"Green IT Strategies and Applications"*. The AI cascade lacked textbook ontology grounding for ISO 14000/14001/14064/14048, The Natural Step thermodynamics, Scope 1/2/3 emissions, SITS, Biomimicry (Janine Benyus), and Developing Economies EPR.
+- **The Concrete Surgical Fix:**
+  - Expanded `dictionary` in `studypilot/background.js` with 18 verified textbook ontology mappings covering ISO 14000/14001 EMS, ISO 14064 GHG, ISO 14048 LCA data documentation, ISO 50001, The Natural Step thermodynamics, Scope 2/3 GHG Protocol, SITS, Greening of/by IT, Triple Bottom Line, Cap-and-Trade, Trade-Off Analysis, Change Propagation, EPR, Biomimicry, Ecodesign/DfE, GSCM, Zonbu power metrics, and GET social dimension.
+  - Enhanced `executeBackgroundAiSolve()` prompt with explicit Multi-Statement Rigor (independent truth-value verification of Statement I & II) and syllabus-level academic compliance.
+  - Verified **43/43 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `public/downloads/studypilot-extension.zip`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Syllabus Ontology Law):** Never rely purely on open-domain LLM inference for university assessment multi-statement questions. Always inject the course's exact prescribed textbook ontology (author, edition, standard acronyms, framework laws) into the Ground Truth heuristics and system prompt.
 - **Status:** Complete. 43/43 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.

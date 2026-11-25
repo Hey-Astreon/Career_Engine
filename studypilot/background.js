@@ -170,7 +170,27 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /most valuable part of a pc or tv|cathode yoke/i, match: /copper in the cathode yoke/i, reason: "In CRT displays and electronics recycling, the copper deflection yoke contains heavy recoverable copper with immediate scrap value." },
     { pattern: /materials can be extracted from alkaline batteries/i, match: /steel and zinc/i, reason: "Steel casing and zinc anode powder are extracted from spent alkaline batteries and reused in new manufacturing." },
     { pattern: /operating system.*most green|most green.*operating system/i, match: /linux/i, reason: "Academic literature on green computing consistently cites Linux as the most energy-efficient operating system due to its lightweight kernel, modular design, low CPU/RAM resource footprint, and optimization for green servers." },
-    { pattern: /social.*economic.*ecological equity/i, match: /sustainable development/i, reason: "Social, economic, and ecological equity form the three foundational pillars of sustainable development." }
+    { pattern: /social.*economic.*ecological equity/i, match: /sustainable development/i, reason: "Social, economic, and ecological equity form the three foundational pillars of sustainable development." },
+    // Phase 145.2: Murugesan & Gangadharan / Unhelkar Green IT Curriculum Ontology (Module 4 Green Compliance & Emergent Carbon Issues)
+    { pattern: /natural step/i, match: /laws of thermodynamics/i, reason: "The Natural Step sustainability framework bases its core system conditions on the fundamental Laws of Thermodynamics." },
+    { pattern: /life cycle assessment.*documentation format|lca data documentation/i, match: /iso 14048/i, reason: "ISO 14048 defines the standard data documentation format for Life Cycle Assessments (LCA)." },
+    { pattern: /iso 14000|iso 14001.*primary focus|iso 14001.*focuses on/i, match: /environmental management system/i, reason: "The ISO 14000 / ISO 14001 family focuses primarily on establishing and certifying an Environmental Management System (EMS)." },
+    { pattern: /iso 14064/i, match: /greenhouse gas|ghg/i, reason: "ISO 14064 provides standard specifications and guidance for the quantification and reporting of greenhouse gas (GHG) emissions and removals." },
+    { pattern: /iso 50001/i, match: /energy management/i, reason: "ISO 50001 defines the global requirements for Energy Management Systems." },
+    { pattern: /sits\b|sustainable it services/i, match: /sustainable it services/i, reason: "SITS stands for Sustainable IT Services in the Murugesan & Gangadharan framework." },
+    { pattern: /dual role.*it plays in achieving environmental sustainability|greening of it/i, match: /greening of it and greening by it/i, reason: "Green IT operates through a dual role: Greening OF IT (making IT systems energy efficient) and Greening BY IT (using IT as an enabler for enterprise-wide carbon reduction)." },
+    { pattern: /scope 2 emissions/i, match: /purchased electricity|indirect.*purchased/i, reason: "Under the GHG Protocol, Scope 2 emissions encompass indirect emissions from the generation of purchased electricity, steam, heating, and cooling." },
+    { pattern: /scope 3 emissions/i, match: /supply chain|value chain|employee commuting|business travel/i, reason: "Scope 3 covers all other indirect emissions across the corporate value chain, including supply chain, travel, and product disposal." },
+    { pattern: /triple bottom line/i, match: /economic.*environmental.*social|social.*environmental.*economic/i, reason: "The Triple Bottom Line framework measures performance across Economic, Environmental, and Social dimensions." },
+    { pattern: /permits to emit.*specific amount of greenhouse gases|buying and selling permits/i, match: /carbon trading|cap-and-trade/i, reason: "Carbon trading (or Cap-and-Trade) allows organizations to buy and sell permits and allowances to emit regulated quantities of greenhouse gases." },
+    { pattern: /evaluating changes to a business process.*balance conflicting goals|minimizing carbon.*maintaining operational/i, match: /trade-off/i, reason: "Trade-Off Analysis evaluates the balance between conflicting enterprise goals like carbon reduction vs operating speed and cost." },
+    { pattern: /modification in one process impacts other interconnected steps/i, match: /impact and change propagation/i, reason: "Impact and Change Propagation Analysis models how altering one business process step for sustainability affects downstream workflows." },
+    { pattern: /producers.*financially.*legally responsible for the post-consumer/i, match: /extended producer responsibility|epr/i, reason: "Extended Producer Responsibility (EPR) mandates that electronics manufacturers bear responsibility for end-of-life collection and recycling." },
+    { pattern: /emulating natural forms.*processes.*ecosystems|janine benyus/i, match: /biomimicry/i, reason: "Biomimicry emulates nature's designs, processes, and ecosystem strategies (such as 'waste equals food') to create sustainable human engineering." },
+    { pattern: /integrating environmental considerations into product design.*lifecycle/i, match: /ecodesign|design for environment|dfe/i, reason: "Ecodesign (or Design for Environment, DfE) systematically integrates environmental aspects into product development across its entire lifecycle." },
+    { pattern: /inter-organizational enterprise activity.*green issues|coordinated logistics optimization/i, match: /green supply chain management|gscm/i, reason: "Green Supply Chain Management (GSCM) coordinates inter-organizational procurement, logistics, and vendor compliance for sustainability." },
+    { pattern: /zonbu.*power|power.*compared to a typical light bulb/i, match: /one third|one-third/i, reason: "In Green IT hardware benchmarks, ultra-efficient devices like the Zonbu consume approximately one-third the power of a standard light bulb." },
+    { pattern: /third quarter.*green enterprise transformation|third quarter.*social dimension/i, match: /social dimension|attitude and behavior/i, reason: "In Bhuvan Unhelkar's GET model, the third quarter specifically drives the transformation of the social dimension (staff attitudes and culture)." }
   ];
 
   for (const entry of dictionary) {
@@ -418,18 +438,23 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
 
-  const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA (Green Computing)'}
+  const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA (Green Computing CSE433)'}
 Question: ${question.questionText}
 Options:
 ${optionsStr}
 
-Solve this academic multiple-choice question from standard university curriculum and textbook definitions.
+Solve this academic multiple-choice question from standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications").
 RULES:
-1. Academic Syllabus Compliance: Base answers on standard academic university textbooks and curriculum definitions (e.g. Green Computing, CRT e-waste, cathode yoke, standard syllabus terminology, and specific case studies).
-2. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
-3. Anti-Echo Distractor Law: Do NOT select an option merely because it echoes or repeats keywords from the question stem (e.g. if the question mentions 'four groups of systems', do NOT lazily select 'green system' if 'data repository' is the true technical definition). University exam setters intentionally plant question keywords into incorrect distractors.
-4. If the question asks for 'NOT' or 'EXCEPT', select the invalid choice.
-5. For case studies, company names, or methodologies, select the exact academic entity referenced in university curriculum.
+1. Academic Syllabus Compliance: Base answers strictly on standard academic university textbooks and curriculum definitions:
+   - Green Compliance & Protocols: ISO 14000/14001 (EMS Environmental Management Systems), ISO 14064 (GHG quantification and reporting), ISO 14040/14048 (LCA data documentation), ISO 50001 (Energy Management), RoHS (Lead, Mercury, Cadmium, Hexavalent Chromium, PBB, PBDE), WEEE, EPEAT (Bronze, Silver, Gold), Energy Star (EPA/DOE), Basel Convention / Basel Action Network (BAN).
+   - Emergent Carbon Issues: Scope 1 (direct/owned), Scope 2 (purchased electricity), Scope 3 (supply chain, employee travel, value chain), The Natural Step (Laws of Thermodynamics), Cap-and-Trade / Carbon Trading (allowances/permits), Carbon offsets.
+   - Ecodesign & Biomimicry: Design for Environment (DfE), Biomimicry (nature, ecosystems, Janine Benyus, waste equals food), Life Cycle Assessment 4 stages.
+   - SITS (Sustainable IT Services), Greening OF IT vs Greening BY IT, Green Supply Chain Management (GSCM), Trade-off Analysis, Impact and Change Propagation.
+   - Dichotomy of Developing Economies: Extended Producer Responsibility (EPR), informal e-waste hazards, technology leapfrogging.
+2. Multi-Statement Rigor (4-Mark & 2-Mark High-Stakes Questions): If the question involves multiple statements (e.g. Statement I and Statement II, or Statement 1 and 2), verify the truth value of EACH statement independently against textbook facts before evaluating combinations ('Only I', 'Only II', 'Both', or 'Neither').
+3. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
+4. Anti-Echo Distractor Law: Do NOT select an option merely because it echoes or repeats keywords from the question stem. University exam setters intentionally plant question keywords into incorrect distractors.
+5. If the question asks for 'NOT', 'EXCEPT', or 'INCORRECT', select the invalid choice.
 6. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 
