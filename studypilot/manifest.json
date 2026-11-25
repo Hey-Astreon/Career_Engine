@@ -22,6 +22,7 @@
     "*://*.moodle.org/*",
     "https://api.groq.com/*",
     "https://generativelanguage.googleapis.com/*",
+    "https://integrate.api.nvidia.com/*",
     "https://api.cerebras.ai/*",
     "https://stride.app/*",
     "http://localhost:3000/*"

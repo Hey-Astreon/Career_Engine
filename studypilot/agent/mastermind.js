@@ -26,8 +26,14 @@
     '239884': { '1': 'd', '2': 'b' }, // Quiz 3.1.6 Green IT Business Dimensions
     '239914': { '1': 'b', '2': 'b' }, // Quiz 1.1.6 Green Virtual Communities: Q1: shared service center, Q2: RoHS
     '239946': { '1': 'b', '2': 'c' }, // Quiz 2.1.5 Configuring a GET Road Map: Q1: data repository, Q2: green technical
-    '239961': { '1': 'b', '2': 'a' }, // Quiz 4.1.2 Green ICT and Technology Trends: Q1: Establish, Q2: carbon reduction
-    '239964': { '1': 'b', '2': 'd' }, // Quiz 4.1.5 Green ICT—Business and Economic Trends: Q1: one third, Q2: IPCC
+    '239961': {
+      '1': { key: 'b', text: 'establish' },
+      '2': { key: 'a', text: 'carbon reduction' }
+    }, // Quiz 4.1.2 Green ICT and Technology Trends
+    '239964': {
+      '1': { key: 'b', text: 'one third' },
+      '2': { key: 'd', text: 'ipcc' }
+    }, // Quiz 4.1.5 Green ICT—Business and Economic Trends
   };
 
   /**
@@ -105,7 +111,19 @@
       const resolvedAudits = candidateAudits.map((aud, i) => {
         const q = questions[i] || {};
         const qNum = String(q.questionNumber || i + 1);
-        const correctKey = cachedPerfect[qNum] || cachedPerfect[q.id] || aud.selectedKey;
+        const entry = cachedPerfect[qNum] || cachedPerfect[q.id];
+        let correctKey = aud.selectedKey;
+        if (entry && typeof entry === 'object') {
+          if (entry.text && Array.isArray(q.options)) {
+            const needle = String(entry.text).toLowerCase().trim();
+            const textMatch = q.options.find(o => (o.cleanText || '').toLowerCase().includes(needle));
+            correctKey = textMatch ? textMatch.key.toLowerCase() : (entry.key || aud.selectedKey);
+          } else if (entry.key) {
+            correctKey = entry.key;
+          }
+        } else if (typeof entry === 'string') {
+          correctKey = entry;
+        }
         return {
           ...aud,
           selectedKey: correctKey,

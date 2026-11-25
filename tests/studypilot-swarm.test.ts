@@ -1893,7 +1893,10 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(preseededKey).toEqual({ "1": "b", "2": "a" });
       expect(mastermindAny.getPerfectSolution("239914")).toEqual({ "1": "b", "2": "b" });
       expect(mastermindAny.getPerfectSolution("239946")).toEqual({ "1": "b", "2": "c" });
-      expect(mastermindAny.getPerfectSolution("239961")).toEqual({ "1": "b", "2": "a" }); // Phase 144: Quiz 4.1.2 Green ICT pre-seed
+      expect(mastermindAny.getPerfectSolution("239961")).toEqual({
+        "1": { key: "b", text: "establish" },
+        "2": { key: "a", text: "carbon reduction" }
+      }); // Phase 145: Shuffle-proof Quiz 4.1.2 pre-seed
 
       const mockCandidateAudits = [
         { selectedKey: "a", confidence: 0.8, reasoning: "Draft" },
@@ -2041,7 +2044,58 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(bg.GROQ_MODELS).toContain("openai/gpt-oss-120b");
 
       const mastermindAny = StudyPilotMastermind as any;
-      expect(mastermindAny.getPerfectSolution("239964")).toEqual({ "1": "b", "2": "d" });
+      expect(mastermindAny.getPerfectSolution("239964")).toEqual({
+        "1": { key: "b", text: "one third" },
+        "2": { key: "d", text: "ipcc" }
+      });
+    });
+
+    it("strips <think> blocks in safeExtractJson, resolves shuffled option text in Mastermind, and verifies manifest/popup completeness", async () => {
+      const fs = await import("fs");
+      const bg: any = await import("../studypilot/background.js");
+
+      // 1. Reasoning tag stripping in safeExtractJson
+      const parsed = bg.safeExtractJson('<think>Let me analyze the Green Computing options...</think>\n```json\n{"selectedKey":"b","alternateKey":"c","confidence":0.97}\n```');
+      expect(parsed).toEqual({ selectedKey: "b", alternateKey: "c", confidence: 0.97 });
+
+      // 2. Shuffle-proof option text resolution in Mastermind
+      const shuffledQuestions = [
+        {
+          questionNumber: 1,
+          id: "q1",
+          options: [
+            { key: "a", cleanText: "ten percent" },
+            { key: "b", cleanText: "half" },
+            { key: "c", cleanText: "one third" },
+            { key: "d", cleanText: "a fourth" }
+          ]
+        },
+        {
+          questionNumber: 2,
+          id: "q2",
+          options: [
+            { key: "a", cleanText: "IPCC" },
+            { key: "b", cleanText: "RoHS" },
+            { key: "c", cleanText: "WEEE" },
+            { key: "d", cleanText: "EPA" }
+          ]
+        }
+      ];
+      const draftAudits = [
+        { selectedKey: "a", confidence: 0.8, reasoning: "Draft" },
+        { selectedKey: "b", confidence: 0.8, reasoning: "Draft" }
+      ];
+      const mastermindAny = StudyPilotMastermind as any;
+      const plan = mastermindAny.deduceNextVector(shuffledQuestions, draftAudits, [], "239964");
+      expect(plan.applied).toBe(true);
+      expect(plan.resolvedAudits[0].selectedKey).toBe("c"); // Resolved "one third" even when shuffled to 'c'
+      expect(plan.resolvedAudits[1].selectedKey).toBe("a"); // Resolved "IPCC" even when shuffled to 'a'
+
+      // 3. Manifest & Popup completeness
+      const manifest = JSON.parse(fs.readFileSync("studypilot/manifest.json", "utf8"));
+      expect(manifest.host_permissions).toContain("https://integrate.api.nvidia.com/*");
+      const popupSrc = fs.readFileSync("studypilot/popup.js", "utf8");
+      expect(popupSrc).toContain("agent/mastermind.js");
     });
   });
 });

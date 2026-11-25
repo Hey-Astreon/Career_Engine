@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 144.3: Stride StudyPilot — Groq LPU Promoted to Tier 2 Ahead of NVIDIA NIM & 5s Timeout Guard)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145: Stride StudyPilot — Full-Codebase Stabilization: Manifest Permissions, Popup Mastermind Injection, HUD Pause Visibility, Groq Dual-Model Consensus & Shuffle-Proof Option-Text Vault)
 
 ---
 
@@ -5731,3 +5731,23 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The Sub-Second LPU Priority Law):** Always place sub-second LPU inference (`Groq 120B / Qwen 27B`) ahead of slower or timeout-prone inference endpoints (`NVIDIA NIM`) in interactive browser extension cascades.
 - **Status:** Complete. 42/42 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 145: Full-Codebase StudyPilot Stabilization — Manifest, Popup, HUD Pause Visibility, Groq Consensus & Shuffle-Proof Vault (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - On Quiz 4.1.5 (`id=239964`) Attempt 3, StudyPilot still scored `5/10` and the HUD displayed `Mastermind Permuting • Auto-Permuting Attempt 4` despite the Phase 144 pause logic. Brother Roushan demanded a full-codebase audit instead of symptom patching.
+- **Deep Root Cause Diagnosis:**
+  1. `studypilot/manifest.json` lacked `"https://integrate.api.nvidia.com/*"` in `host_permissions`.
+  2. `studypilot/popup.js` omitted `'agent/mastermind.js'` in programmatic `executeScript` fallback.
+  3. `studypilot/hud-ui.js` only rendered `statusText` when `isBusy === true` (silently discarding `setState('idle', { statusText: '⚠️ Auto-Solve Paused...' })`), and rendered `Mastermind Permuting` when `isStagnant === true`.
+  4. `studypilot/background.js` `safeExtractJson()` did not strip `<think>...</think>` blocks, and single-model Groq calls lacked cross-checking on uncertain questions.
+  5. `studypilot/agent/mastermind.js` relied solely on fragile letter keys (`'b'`, `'d'`) that break if Moodle shuffles option order.
+- **The Concrete Surgical Fix:**
+  - Added `https://integrate.api.nvidia.com/*` to `manifest.json` and `'agent/mastermind.js'` to `popup.js`.
+  - Fixed `hud-ui.js` to render `Paused for Review`, visible idle `⚠️`/`🛡️` banners, and `▶ Skip to Next Topic` as primary button on pause.
+  - Added `<think>` stripping in `safeExtractJson()` and 2-model Groq consensus (`openai/gpt-oss-120b` + `qwen/qwen3.8-27b`) in `background.js`.
+  - Upgraded `mastermind.js` `PRESEEDED_PERFECT_SOLUTIONS` & `deduceNextVector()` to resolve `{ key, text }` entries by option text dynamically.
+  - Added regression tests in `tests/studypilot-swarm.test.ts` (**43/43 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, extension repackaged).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Full-Surface Audit Law):** Whenever an extension feature exhibits contradictory state or silent failures, audit the entire MV3 surface (`manifest.json` `host_permissions`, `popup.js` injection list, `hud-ui.js` state rendering, `background.js` parsers, and `content.js` lifecycle) rather than patching a single file.
+- **Status:** Complete. 43/43 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.

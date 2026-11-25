@@ -550,15 +550,9 @@
               ? `✓ Final Grade Locked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Assessment Complete`
               : `✓ Highest Grade Banked: ${this.data.gradeInfo.gradeText} (${Math.round(this.data.gradeInfo.percentage)}%) • Moodle keeps best score • Safe to retry`;
           } else if (this.data.isStagnant) {
-            if (isHighStakes) {
-              badgeText = 'Stagnant Score';
-              badgeClass = 'sp-badge busy';
-              subtitleText = `⚠️ Stagnant: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Paused for Review`;
-            } else {
-              badgeText = 'Mastermind Permuting';
-              badgeClass = 'sp-badge review';
-              subtitleText = `🧠 Mastermind CSP: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Auto-Permuting Attempt ${(this.data.attemptsCount || 2) + 1} for 10/10...`;
-            }
+            badgeText = isHighStakes ? 'Stagnant Score' : 'Paused for Review';
+            badgeClass = 'sp-badge busy';
+            subtitleText = `⚠️ Paused: ${this.data.gradeInfo.gradeText} across ${this.data.attemptsCount || 2}+ attempts • Manual review required`;
           } else {
             badgeText = isHighStakes ? 'Needs Passing Grade' : 'Needs Re-Attempt';
             badgeClass = 'sp-badge busy';
@@ -612,6 +606,12 @@
         ${this.state === 'error' ? `
           <div class="sp-error-banner">
             <span>⚠️ ${this.escapeHtml(this.errorMessage || 'Error occurred while solving.')}</span>
+          </div>
+        ` : ''}
+
+        ${!isBusy && this.state === 'idle' && this.data.statusText && (this.data.statusText.includes('⚠️') || this.data.statusText.includes('🛡️')) ? `
+          <div class="sp-status-card" style="font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 6px 8px;">
+            <span>${this.escapeHtml(this.data.statusText)}</span>
           </div>
         ` : ''}
 
@@ -692,14 +692,14 @@
                 </button>
               ` : ''}
             ` : this.data.isStagnant ? `
-              ${this.data.hasAttemptBtn ? `
-                <button class="sp-action-btn" id="sp-attempt-btn" style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);">
-                  <span>⚡ Mastermind Auto-Permute (Target: 10/10)</span>
+              ${this.data.nextActivityTitle ? `
+                <button class="sp-action-btn" id="sp-next-btn">
+                  <span>▶ Skip to Next Topic</span>
                 </button>
               ` : ''}
-              ${this.data.nextActivityTitle ? `
-                <button class="${this.data.hasAttemptBtn ? 'sp-action-btn-secondary' : 'sp-action-btn'}" id="sp-next-btn">
-                  <span>▶ Skip to Next Topic</span>
+              ${this.data.hasAttemptBtn ? `
+                <button class="${this.data.nextActivityTitle ? 'sp-action-btn-secondary' : 'sp-action-btn'}" id="sp-attempt-btn">
+                  <span>⚡ Manual Re-Attempt</span>
                 </button>
               ` : ''}
             ` : `

@@ -52,10 +52,11 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 
 function safeExtractJson(text) {
   if (!text || typeof text !== 'string') return null;
+  const withoutThink = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   try {
-    return JSON.parse(text);
+    return JSON.parse(withoutThink);
   } catch (e) {
-    const cleaned = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+    const cleaned = withoutThink.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
     try {
       return JSON.parse(cleaned);
     } catch (e2) {
@@ -317,56 +318,91 @@ async function queryNvidiaNim(prompt, nvidiaKey, question) {
   return null;
 }
 
-async function queryGroqRotator(prompt, groqKey, question) {
-  for (let attempt = 0; attempt < GROQ_MODELS.length; attempt++) {
-    const modelName = GROQ_MODELS[(groqModelIndex + attempt) % GROQ_MODELS.length];
-    try {
-      const res = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${groqKey}`
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [
-            { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
-            { role: 'user', content: prompt }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.0
-        })
-      }, 8000);
+async function queryGroqModel(prompt, groqKey, question, modelName) {
+  try {
+    const res = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${groqKey}`
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [
+          { role: 'system', content: 'You are an academic computer science exam tutor. Return strictly valid JSON only: {"selectedKey": "...", "alternateKey": "...", "reasoning": "...", "confidence": 0.98}' },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.0
+      })
+    }, 8000);
 
-      if (res.ok) {
-        groqModelIndex = (groqModelIndex + attempt + 1) % GROQ_MODELS.length;
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content;
-        if (content) {
-          const parsed = safeExtractJson(content);
-          if (parsed && parsed.selectedKey) {
-            const cleanKey = extractOptionLetter(parsed.selectedKey);
-            let altKey = extractOptionLetter(parsed.alternateKey);
-            if (!altKey || altKey === cleanKey) {
-              const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
-              altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+    if (res.ok) {
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        const parsed = safeExtractJson(content);
+        if (parsed && parsed.selectedKey) {
+          const cleanKey = extractOptionLetter(parsed.selectedKey);
+          let altKey = extractOptionLetter(parsed.alternateKey);
+          if (!altKey || altKey === cleanKey) {
+            const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
+            altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
+          }
+          return {
+            selectedKey: cleanKey,
+            alternateKey: altKey,
+            reasoning: parsed.reasoning || `Solved via Groq LPU (${modelName}).`,
+            confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
+            engine: `Groq (${modelName})`
+          };
+        }
+      }
+    } else if (res.status === 429) {
+      console.warn(`[StudyPilot Background] Groq model (${modelName}) hit 8k TPM limit (429). Rotating to next model...`);
+    } else {
+      console.warn(`[StudyPilot Background] Groq (${modelName}) returned status: ${res.status}`);
+    }
+  } catch (err) {
+    console.warn(`[StudyPilot Background] Groq (${modelName}) fetch error: ${err.message}`);
+  }
+  return null;
+}
+
+async function queryGroqRotator(prompt, groqKey, question, userConfig = {}) {
+  for (let attempt = 0; attempt < GROQ_MODELS.length; attempt++) {
+    const idx = (groqModelIndex + attempt) % GROQ_MODELS.length;
+    const modelName = GROQ_MODELS[idx];
+    const primary = await queryGroqModel(prompt, groqKey, question, modelName);
+    if (primary) {
+      groqModelIndex = (idx + 1) % GROQ_MODELS.length;
+
+      // Dual-Model Consensus Cross-Check on uncertain, retry, or high-stakes questions
+      const needsConsensus = primary.confidence < 0.96 || userConfig.isRetry || userConfig.isHighStakes;
+      if (needsConsensus) {
+        const peerModel = GROQ_MODELS[(idx + 1) % GROQ_MODELS.length];
+        if (peerModel && peerModel !== modelName) {
+          const peer = await queryGroqModel(prompt, groqKey, question, peerModel);
+          if (peer && peer.selectedKey) {
+            if (peer.selectedKey === primary.selectedKey) {
+              primary.confidence = Math.max(primary.confidence, 0.99);
+              primary.engine = `Groq Consensus (${modelName} + ${peerModel})`;
+            } else {
+              primary.alternateKey = peer.selectedKey;
+              if (peer.confidence > primary.confidence + 0.05) {
+                const prevKey = primary.selectedKey;
+                primary.selectedKey = peer.selectedKey;
+                primary.alternateKey = prevKey;
+                primary.reasoning = peer.reasoning;
+                primary.confidence = peer.confidence;
+                primary.engine = `Groq Consensus Tie-Break (${peerModel})`;
+              }
             }
-            return {
-              selectedKey: cleanKey,
-              alternateKey: altKey,
-              reasoning: parsed.reasoning || `Solved via Groq 500+ t/s AI (${modelName}).`,
-              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.98,
-              engine: `Groq (${modelName})`
-            };
           }
         }
-      } else if (res.status === 429) {
-        console.warn(`[StudyPilot Background] Groq model (${modelName}) hit 8k TPM limit (429). Rotating to next model...`);
-      } else {
-        console.warn(`[StudyPilot Background] Groq (${modelName}) returned status: ${res.status}`);
       }
-    } catch (err) {
-      console.warn(`[StudyPilot Background] Groq (${modelName}) fetch error: ${err.message}`);
+
+      return primary;
     }
   }
   return null;
@@ -408,7 +444,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
   // Tier 2: Groq LPU Multi-Model Rotator (<0.5s latency: 120B -> Qwen 3.8 27B -> 20B)
   const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
   if (!result && groqKey) {
-    result = await queryGroqRotator(prompt, groqKey, question);
+    result = await queryGroqRotator(prompt, groqKey, question, userConfig);
   }
 
   // Tier 3: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B, 5s timeout)
@@ -427,7 +463,7 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
       result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, false);
     }
     if (!result && groqKey) {
-      result = await queryGroqRotator(prompt, groqKey, question);
+      result = await queryGroqRotator(prompt, groqKey, question, userConfig);
     }
     if (!result) {
       const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
