@@ -2157,6 +2157,20 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const audited = StudyPilotAuditor.auditAnswer(qWithDual as any, scholarWithDistractorReasoning);
       expect(audited.selectedKey).toBe("a"); // Retained option 'a', NOT flipped to 'Both of these'!
       expect(audited.auditNotes).not.toContain("Overrode single option 'a' in favor of dual option");
+
+      // 3. extractOptionLetter text-matching & 5-choice option ('e')
+      const bg = require("../studypilot/background.js");
+      const sampleOpts = [
+        { key: "a", cleanText: "ISO 14001" },
+        { key: "b", cleanText: "ISO 14040" },
+        { key: "c", cleanText: "ISO 14048" },
+        { key: "d", cleanText: "ISO 50001" },
+        { key: "e", cleanText: "All of the above" }
+      ];
+      expect(bg.extractOptionLetter("e", sampleOpts)).toBe("e");
+      expect(bg.extractOptionLetter("(e)", sampleOpts)).toBe("e");
+      expect(bg.extractOptionLetter("ISO 14048", sampleOpts)).toBe("c");
+      expect(bg.extractOptionLetter("iso 14048 data format", sampleOpts)).toBe("c");
     });
   });
 });

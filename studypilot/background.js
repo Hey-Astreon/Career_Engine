@@ -71,11 +71,29 @@ function safeExtractJson(text) {
   return null;
 }
 
-function extractOptionLetter(val) {
+function extractOptionLetter(val, options = []) {
   if (!val) return 'a';
   const str = String(val).trim().toLowerCase();
-  const m = str.match(/^(?:option\s*)?[(\[]?([a-d])[)\]\.\s:]?/i) || str.match(/\b([a-d])\b/i);
-  return m ? m[1].toLowerCase() : (['a', 'b', 'c', 'd'].includes(str[0]) ? str[0] : 'a');
+
+  // 1. Direct letter match: "a", "(b)", "Option c", "d.", "e" (supports a through e)
+  const m = str.match(/^(?:option\s*)?[(\[]?([a-e])[)\]\.\s:]?/i) || str.match(/\b([a-e])\b/i);
+  if (m) return m[1].toLowerCase();
+
+  // 2. Text match against question options (in case model returned answer text instead of letter key)
+  if (Array.isArray(options) && options.length > 0) {
+    const textMatch = options.find(o => {
+      const cleanO = (o.cleanText || '').toLowerCase().trim();
+      return cleanO === str || cleanO.includes(str) || (str.length > 3 && cleanO.length > 3 && str.includes(cleanO));
+    });
+    if (textMatch && textMatch.key) {
+      return textMatch.key.toLowerCase();
+    }
+  }
+
+  // 3. Fallback character if within a-e
+  if (['a', 'b', 'c', 'd', 'e'].includes(str[0])) return str[0];
+
+  return 'a';
 }
 
 function isMoodleUrl(url) {
@@ -252,8 +270,8 @@ async function queryGemini(prompt, geminiKey, question, candidateEndpoints = FRO
         if (text) {
           const parsed = safeExtractJson(text);
           if (parsed && parsed.selectedKey) {
-            const cleanKey = extractOptionLetter(parsed.selectedKey);
-            let altKey = extractOptionLetter(parsed.alternateKey);
+            const cleanKey = extractOptionLetter(parsed.selectedKey, question.options);
+            let altKey = extractOptionLetter(parsed.alternateKey, question.options);
             if (!altKey || altKey === cleanKey) {
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
@@ -310,8 +328,8 @@ async function queryNvidiaNim(prompt, nvidiaKey, question) {
         if (content) {
           const parsed = safeExtractJson(content);
           if (parsed && parsed.selectedKey) {
-            const cleanKey = extractOptionLetter(parsed.selectedKey);
-            let altKey = extractOptionLetter(parsed.alternateKey);
+            const cleanKey = extractOptionLetter(parsed.selectedKey, question.options);
+            let altKey = extractOptionLetter(parsed.alternateKey, question.options);
             if (!altKey || altKey === cleanKey) {
               const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
               altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');
@@ -363,8 +381,8 @@ async function queryGroqModel(prompt, groqKey, question, modelName) {
       if (content) {
         const parsed = safeExtractJson(content);
         if (parsed && parsed.selectedKey) {
-          const cleanKey = extractOptionLetter(parsed.selectedKey);
-          let altKey = extractOptionLetter(parsed.alternateKey);
+          const cleanKey = extractOptionLetter(parsed.selectedKey, question.options);
+          let altKey = extractOptionLetter(parsed.alternateKey, question.options);
           if (!altKey || altKey === cleanKey) {
             const other = (question.options || []).find(o => o.key.toLowerCase() !== cleanKey);
             altKey = other ? other.key.toLowerCase() : (cleanKey === 'a' ? 'b' : 'a');

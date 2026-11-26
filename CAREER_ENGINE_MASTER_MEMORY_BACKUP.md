@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.4: Stride StudyPilot — Pre-Flight Microscopic Audit & High-Stakes Vector Collision Immunity)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.5: Stride StudyPilot — Pre-Flight Option Text Fallback & 5-Choice 'e' Key Parsing Hardening)
 
 ---
 
@@ -5811,4 +5811,20 @@ graph TD
   - Verified **44/44 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `public/downloads/studypilot-extension.zip`, and pushed to `origin main`.
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The High-Stakes Collision Immunity Law):** Never permit automated vector-collision flipping algorithms to execute on high-stakes assessments with finite attempts. Collision-breaking permutation is strictly reserved for infinite-attempt practice quizzes.
+- **Status:** Complete. 44/44 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 145.5: Option Text-Matching Fallback & 5-Choice ('e') Key Parsing Hardening (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Second-pass paranoid audit examined what happens if a model outputs the option's text string into `selectedKey` (e.g. `"selectedKey": "ISO 14048"`) instead of the letter, or if an Amity question has 5 options (`a, b, c, d, e`).
+- **Deep Root Cause Diagnosis:**
+  - `extractOptionLetter` was hardcoded with `[a-d]`. If an option was `'e'`, it defaulted to `'a'`.
+  - If a model returned the full text instead of `'c'`, `extractOptionLetter` returned `'a'`.
+- **The Concrete Surgical Fix:**
+  - Upgraded `extractOptionLetter(val, options)` in `studypilot/background.js` to:
+    1. Match `[a-e]` (full 5-option support).
+    2. Fall back to text matching across `options.cleanText` so that even if a model outputs `"ISO 14048"`, it resolves to key `'c'` instead of defaulting to `'a'`.
+  - Added unit test in `tests/studypilot-swarm.test.ts` (**44/44 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, extension repackaged).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Dual Key-and-Text Extraction Law):** Never extract option choices solely through regexes matching single letters. Always provide a bidirectional text-matching fallback against the question's live option array to catch models that echo the answer string.
 - **Status:** Complete. 44/44 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
