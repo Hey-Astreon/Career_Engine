@@ -2385,6 +2385,65 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
         ]
       }, "Java CSIT120");
       expect(jvmAns.selectedKey).toBe("a");
+
+      // Extended Module 1 Assertions: Loops, Switch, Arrays, Overriding, Abstract, Final, Interfaces
+      const doWhileAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which loop executes at least once before testing the condition?",
+        options: [
+          { key: "a", cleanText: "for loop" },
+          { key: "b", cleanText: "while loop" },
+          { key: "c", cleanText: "do-while loop" }
+        ]
+      }, "Java CSIT120");
+      expect(doWhileAns.selectedKey).toBe("c");
+
+      const switchAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which of the following valid types can be used in a switch statement in Java?",
+        options: [
+          { key: "a", cleanText: "double" },
+          { key: "b", cleanText: "int and String" },
+          { key: "c", cleanText: "boolean" }
+        ]
+      }, "Java CSIT120");
+      expect(switchAns.selectedKey).toBe("b");
+
+      const arrayLenAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which property is used to find the size of an array in Java?",
+        options: [
+          { key: "a", cleanText: "size()" },
+          { key: "b", cleanText: "length" },
+          { key: "c", cleanText: "length()" }
+        ]
+      }, "Java CSIT120");
+      expect(arrayLenAns.selectedKey).toBe("b");
+
+      const abstractAns = bg.solveWithAcademicHeuristics({
+        questionText: "A class that cannot be instantiated directly with new is called an:",
+        options: [
+          { key: "a", cleanText: "Abstract class" },
+          { key: "b", cleanText: "Final class" }
+        ]
+      }, "Java CSIT120");
+      expect(abstractAns.selectedKey).toBe("a");
+
+      const finalAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which keyword is used to prevent method overriding in Java?",
+        options: [
+          { key: "a", cleanText: "static" },
+          { key: "b", cleanText: "final" },
+          { key: "c", cleanText: "abstract" }
+        ]
+      }, "Java CSIT120");
+      expect(finalAns.selectedKey).toBe("b");
+
+      const interfaceAns = bg.solveWithAcademicHeuristics({
+        questionText: "How is multiple inheritance achieved in Java?",
+        options: [
+          { key: "a", cleanText: "Through interfaces" },
+          { key: "b", cleanText: "Multiple classes with extends" }
+        ]
+      }, "Java CSIT120");
+      expect(interfaceAns.selectedKey).toBe("a");
     });
 
     it("Phase 145.9: verifies Mastermind 50% -> 0% -> 100% CSP delta deduction & practice circuit calibration", () => {

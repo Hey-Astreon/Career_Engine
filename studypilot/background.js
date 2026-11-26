@@ -233,7 +233,21 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /blueprint.*object|template.*object|user-defined data type/i, match: /class\b/i, reason: "In Java, a class is a user-defined blueprint or template from which objects are instantiated." },
     { pattern: /instance of a class|runtime entity/i, match: /object\b/i, reason: "An object is a runtime instance of a class that encapsulates state (fields) and behavior (methods)." },
     { pattern: /same name as the class|initialize.*object|no return type/i, match: /constructor/i, reason: "A constructor is a special member function with the exact same name as the class and no return type, used to initialize new objects." },
-    { pattern: /which.*not.*feature of oop|not.*characteristic of oop/i, match: /top-down/i, reason: "A top-down approach is a defining characteristic of Procedure Oriented Programming, NOT Object Oriented Programming (which is bottom-up)." }
+    { pattern: /which.*not.*feature of oop|not.*characteristic of oop/i, match: /top-down/i, reason: "A top-down approach is a defining characteristic of Procedure Oriented Programming, NOT Object Oriented Programming (which is bottom-up)." },
+    // Phase 145.10: Extended Java CSIT120 Module 1 Ground Truth (Arrays, Loops, Switch, Overriding, Abstract, Final, Interfaces)
+    { pattern: /loop.*executes at least once|at least once.*condition is tested|exit-controlled loop/i, match: /do-while|do\s*\.\.\.\s*while/i, reason: "In Java, the do-while loop is an exit-controlled loop that always executes its body at least once before evaluating the condition." },
+    { pattern: /switch.*expression.*types?|valid types.*switch|cannot be used.*switch/i, match: /byte|short|char|int|string|enum/i, reason: "In Java, switch expressions support byte, short, char, int, String, and enum types (float, double, boolean, and long are not permitted)." },
+    { pattern: /find the size of an array|length of an array|number of elements in array/i, match: /length\b/i, reason: "In Java, an array's size is determined using its 'length' property (not a method)." },
+    { pattern: /index.*outside the range|invalid array index|accessing invalid index/i, match: /arrayindexoutofboundsexception/i, reason: "Accessing an array element outside its valid index range (0 to length-1) throws an ArrayIndexOutOfBoundsException." },
+    { pattern: /cannot be instantiated|must be extended|contains abstract method/i, match: /abstract class/i, reason: "An abstract class in Java cannot be instantiated directly with 'new' and must be extended by a concrete subclass." },
+    { pattern: /prevent.*method overriding|prevent.*class from being inherited|cannot be overridden/i, match: /final\b/i, reason: "In Java, the 'final' keyword prevents a method from being overridden and prevents a class from being inherited." },
+    { pattern: /multiple inheritance.*java|multiple inheritance.*achieved/i, match: /interfaces?/i, reason: "Java does not support multiple inheritance with classes to avoid ambiguity, but achieves it through interfaces." },
+    { pattern: /refer to immediate parent class|invoke parent constructor|call superclass/i, match: /super\b/i, reason: "The 'super' keyword in Java is used to refer to immediate superclass members and invoke superclass constructors." },
+    { pattern: /refer to current object|current class instance/i, match: /this\b/i, reason: "The 'this' keyword in Java refers to the current class instance variable or object." },
+    { pattern: /same method name.*different parameters|compile-time polymorphism/i, match: /method overloading|overloading/i, reason: "Method overloading is compile-time polymorphism where methods in the same class share the same name with different parameter lists." },
+    { pattern: /subclass provides specific implementation|runtime polymorphism.*overrid/i, match: /method overriding|overriding/i, reason: "Method overriding is runtime polymorphism where a subclass provides its own specific implementation of a superclass method." },
+    { pattern: /terminates.*loop.*switch|exits.*switch statement/i, match: /break\b/i, reason: "The 'break' statement terminates the current loop or switch-case block immediately." },
+    { pattern: /skips.*current iteration|jumps to the next iteration/i, match: /continue\b/i, reason: "The 'continue' statement skips the remaining statements of the current iteration and advances to the next loop iteration." }
   ];
 
   for (const entry of dictionary) {
@@ -494,7 +508,16 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
      * Memory Management: Automatic garbage collection. No explicit memory management or pointers.
      * Classes & Objects: A class is a template or blueprint. An object is a runtime instance created via the 'new' keyword.
      * Constructors: Special method with the SAME NAME as the class and NO return type (not even void), used to initialize objects.
-     * Access Specifiers: private (class only), default (package-private), protected (package + subclasses), public (accessible everywhere).`;
+     * Access Specifiers: private (class only), default (package-private), protected (package + subclasses), public (accessible everywhere).
+   - Control Statements, Loops & Arrays:
+     * switch expressions: Support byte, short, char, int, String, and enum (do NOT support float, double, boolean, long). 'break' terminates switch/loop; 'continue' skips to next iteration.
+     * Loops: 'do-while' is an exit-controlled loop that executes at least once before testing condition; 'while' and 'for' are entry-controlled.
+     * Arrays: Fixed size, 0-indexed, dynamic objects. Size determined by 'array.length' property (not a method). Illegal index access throws 'ArrayIndexOutOfBoundsException'.
+   - Inheritance, Interfaces, Abstract & Final:
+     * Class Inheritance: Single inheritance only via 'extends' keyword. Multiple inheritance achieved through 'implements' with interfaces.
+     * 'super' keyword: Calls immediate parent class constructor super() or method super.method(). 'this' refers to current object.
+     * Abstract classes: Declared with 'abstract', cannot be instantiated directly with 'new', can contain both abstract and concrete methods.
+     * 'final' keyword: 'final' variable is constant; 'final' method cannot be overridden; 'final' class cannot be inherited.`;
   } else if (/green\s*computing|cse433|green\s*it|carbon|sits\b|murugesan|unhelkar|rohs|weee|epeat/i.test(combinedContext)) {
     subjectHeader = `Course Subject: ${courseContext || 'Green Computing (CSE433)'}`;
     textbookAuthority = `standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications")`;
