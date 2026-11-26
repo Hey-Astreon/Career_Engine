@@ -423,14 +423,19 @@
     if (modalStartBtn) return modalStartBtn;
 
     const directBtn = doc.querySelector(
-      'input[value*="Re-attempt" i], button[value*="Re-attempt" i], a[href*="attempt.php"], input[value*="Attempt quiz" i], button[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], button[value*="Continue the last attempt" i], input[value*="Start attempt" i], button[value*="Start attempt" i], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
+      'input[value*="Re-attempt" i], input[value*="Attempt quiz" i], input[value*="Continue the last attempt" i], input[value*="Start attempt" i], form[action*="startattempt.php"] button, form[action*="startattempt.php"] input[type="submit"], form[action*="attempt.php"] button, form[action*="attempt.php"] input[type="submit"], .quizattempt a, .quizstartbutton input'
     );
-    if (directBtn) return directBtn;
+    if (directBtn) {
+      const txt = (directBtn.innerText || directBtn.textContent || directBtn.value || '').trim().toLowerCase();
+      if (!txt.includes('cancel') && !txt.includes('close') && !txt.includes('review')) {
+        return directBtn;
+      }
+    }
 
-    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn'));
+    const candidates = Array.from(doc.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn, a[href*="attempt.php"]'));
     for (const el of candidates) {
       const txt = (el.innerText || el.textContent || el.value || '').trim().toLowerCase();
-      if (txt.includes('cancel') || txt.includes('close')) continue;
+      if (txt.includes('cancel') || txt.includes('close') || txt.includes('review')) continue;
       if (txt.includes('start attempt') || txt.includes('re-attempt') || txt.includes('attempt quiz') || txt.includes('continue the last attempt')) {
         return el;
       }

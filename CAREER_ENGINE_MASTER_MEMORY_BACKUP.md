@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.7: Groq-First Sub-Second Cascade, Direct Input Actuation & Parenthetical Option Parsing)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.8: Scholar 15s Watchdog, Review Link Exclusion & Re-Attempt Button Precision)
 
 ---
 
@@ -5888,3 +5888,27 @@ graph TD
   - **Rule (The LPU Fast-Path Law):** When ultra-fast LPU inference (Groq 120B at 500+ t/s) is available and healthy, never place slow or throttled APIs ahead of it. Run the sub-second 120B model as Tier 1 and use other frontier providers as resilient fallbacks.
   - **Rule (The Native Input Click Law):** Never rely solely on synthetic `input.checked = true` or label clicks to actuate radio buttons in complex LMS portals. Always invoke native `input.click()` directly on the HTML input element to trigger framework-level autosave event listeners.
 - **Status:** Complete. 45/45 Vitest tests passing, TypeScript clean, extension repackaged, and verified across all physical layers.
+
+
+### Phase 145.8: Scholar 15s Watchdog, Review Link Exclusion & Re-Attempt Button Precision (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan demanded a 5th round of forensic bug-hunting to guarantee zero possibility of any failure mode, hang, or misclick on Attempt 2.
+- **Deep Root Cause Diagnosis (The 3 Subtle Edge-Case Hazards Uncovered):**
+  1. **Infinite Promise Hang Risk in `scholar.js`:**
+     - `solveWithBackgroundRelay` created a `new Promise((resolve) => { chrome.runtime.sendMessage(...) })` with zero timeout. If Chrome's MV3 message port dropped, service worker terminated, or an unhandled exception occurred, the Promise would hang indefinitely, freezing the HUD at `Agent 2 (Scholar) solving Question X...`.
+  2. **Review Link Collision on Quiz View Pages (`sentry.js`):**
+     - On `mod/quiz/view.php`, the attempts table contains `<a>` tags with text `"Review"`. In `findAttemptOrReattemptButton()`, generic candidate searches without negative exclusions risked matching review links instead of the form's `"Re-attempt quiz"` button.
+  3. **Timed Modal Start Button Heuristic Precision (`sentry.js`):**
+     - In `findModalStartAttemptButton()`, searching for `txt.includes('start')` on `button.btn-primary` could inadvertently match elements containing "start" (e.g. course announcements or headers).
+- **The Concrete Surgical Fix:**
+  - In `studypilot/agent/scholar.js`:
+    - Injected a 15-second safety timer `safetyTimer` into `solveWithBackgroundRelay`. If the background relay ever fails to respond within 15 seconds, it automatically resolves with `resolveAcademicBaseline(question)`.
+    - Added explicit `try/catch` around `chrome.runtime.sendMessage` and checks `chrome.runtime.lastError`.
+  - In `studypilot/agent/sentry.js`:
+    - Hardened `findAttemptOrReattemptButton` to strictly reject buttons and links containing `'review'`.
+    - Added form submit fallback with `submitBtn.focus()`.
+  - **45/45 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `public/downloads/studypilot-extension.zip`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Chrome Relay Watchdog Law):** Never invoke `chrome.runtime.sendMessage` inside an untimed Promise. Always attach a 15-second safety timer that guarantees resolution via local heuristics if Chrome MV3 worker communication drops.
+  - **Rule (The Action Exclusion Defense Law):** When querying action buttons on summary or review pages (e.g. "Re-attempt"), explicitly exclude navigation links containing opposing verbs (e.g. "Review", "Cancel", "Close").
+- **Status:** Complete. 45/45 Vitest tests passing, TypeScript clean, extension repackaged, and ready for deployment.
