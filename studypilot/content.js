@@ -542,7 +542,7 @@
             });
           }
         }
-      } else if (Auditor && typeof Auditor.resolveVectorCollision === 'function' && pastAttempts.length > 0) {
+      } else if (Auditor && typeof Auditor.resolveVectorCollision === 'function' && pastAttempts.length > 0 && !stakes.isHighStakes) {
         const collision = Auditor.resolveVectorCollision(currentQuestions, candidateAudits, pastAttempts);
         if (collision.collisionDetected) {
           finalAudits = collision.resolvedResults;
