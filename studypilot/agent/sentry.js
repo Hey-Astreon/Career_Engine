@@ -62,6 +62,14 @@
         input.focus();
       }
 
+      // Step 3a: Direct click on radio input (triggers Moodle's native answer-saved listener)
+      if (typeof input.click === 'function') {
+        try {
+          input.click();
+        } catch (e) {}
+      }
+
+      // Step 3b: Also click label for UI styling & custom theme animations
       if (label && label !== input) {
         if (typeof MouseEvent !== 'undefined') {
           try {
@@ -70,11 +78,16 @@
           } catch (e) {}
         }
         if (typeof label.click === 'function') {
-          label.click();
+          try {
+            label.click();
+          } catch (e) {}
         }
       }
 
+      // Step 3c: Hard guarantee checked state
       input.checked = true;
+
+      // Step 3d: Dispatch synthetic input & change events for AJAX persistence
       if (typeof Event !== 'undefined') {
         try {
           input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -86,9 +99,9 @@
         input.blur();
       }
 
-      // 4. Verification Check
+      // Step 3e: Final verification check
       if (!input.checked && typeof input.click === 'function') {
-        input.click(); // retry direct click if theme blocked synthetic change
+        try { input.click(); } catch (e) {}
       }
 
       return input.checked;

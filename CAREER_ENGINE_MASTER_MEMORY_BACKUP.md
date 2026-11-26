@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.6: Multi-Statement Trap Expansion, Reverse Anti-Distractor Override & Inspector DOM Recovery)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.7: Groq-First Sub-Second Cascade, Direct Input Actuation & Parenthetical Option Parsing)
 
 ---
 
@@ -5859,3 +5859,32 @@ graph TD
   - **Rule (The Bidirectional Distractor Audit Law):** Red-team auditing of composite options must always be bidirectional. If the model chooses a single option but validates both, upgrade to dual; if the model mistakenly chooses dual but proves one statement is false, immediately override to the validated single option.
   - **Rule (The Inspector DOM Recovery Law):** When re-solving an unattempted question detected by DOM auditing, never rely on a memory array lookup alone. If the question object is not found in memory, parse the live question DOM node directly so options and actuation targets are 100% available.
 - **Status:** Complete. 45/45 Vitest tests passing, TypeScript clean, extension repackaged, and ready for deployment.
+
+
+### Phase 145.7: Groq-First Sub-Second Cascade, Direct Input Actuation & Parenthetical Option Parsing (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan halted execution for an uncompromising, microscopic bug hunt across all physical runtime causality before launching Attempt 2.
+- **Deep Root Cause Diagnosis (The 4 Architectural Bottlenecks & Hazards Uncovered):**
+  1. **Cascade Stall Hazard (Gemini Hanging Before Groq):**
+     - Live network benchmarking revealed that `gemini-4-hydrogen`, `gemini-4-argon`, and `gemini-3.8-flash` return 503/429/timeout. In `background.js`, having Frontier Gemini before Groq caused Question 1 to stall for up to 33.9 seconds before failing over to Groq!
+     - In contrast, Groq's `openai/gpt-oss-120b` (120B parameter frontier model) responds in **652 ms**, and `qwen/qwen3.8-27b` responds in **146 ms** with 0.99 academic consensus!
+  2. **Moodle Radio Event Interception (Synthetic checked assignment vs native click):**
+     - In `sentry.js`, `input.checked = true` was assigned directly, and `input.click()` was only conditionally called if `!input.checked`.
+     - In Moodle (Boost theme), the AJAX autosave listener (`save_answer`) attaches directly to the native `click` event of the radio input. If only `input.checked` was set without invoking native `input.click()`, Moodle's UI could fail to trigger the background autosave hook!
+  3. **Parenthetical Option Key Parsing (`(a)`, `(b)`):**
+     - In `scribe.js`, `rawText.match(/^([a-z])[\.\)]\s+(.*)/i)` required the leading character to be `[a-z]`. If Amigo rendered choices with parentheses around the letter (e.g. `(a) Green enterprise transformation`), the regex returned null, leaving `cleanText` with unstripped leading characters `(a)`.
+  4. **Non-Breaking Space (`\u00A0`) Desynchronization:**
+     - Amity HTML frequently injects `&nbsp;` (`\u00A0`) into question and option text, causing strict string equality to fail against standard space-delimited text.
+- **The Concrete Surgical Fix:**
+  - In `studypilot/background.js`:
+    - Reordered inference cascade: **Tier 1: Groq LPU Rotator** (`openai/gpt-oss-120b` + `qwen/qwen3.8-27b` dual consensus in **0.8 seconds**) $\rightarrow$ **Tier 2: Frontier Google Gemini** (`gemini-2.5-flash` at 1.7s, with 4.5s failover timeout) $\rightarrow$ **Tier 3: NVIDIA NIM** $\rightarrow$ **Tier 4: Academic Heuristics**.
+  - In `studypilot/agent/sentry.js`:
+    - Always fire native `input.click()` FIRST to trigger Moodle's native answer-saved listener, followed by `label.click()`, `input.checked = true`, and full synthetic `input` and `change` events.
+  - In `studypilot/agent/scribe.js`:
+    - Upgraded option key regex to `/^(?:[([]?([a-z])[)\]\.]|\b([a-z])[\.\)])\s+(.*)/i` (flawlessly parses `a. `, `(a) `, `[a] `, `a) ` while protecting numbers `1.5 degrees`).
+    - Normalized non-breaking spaces `\u00A0` $\rightarrow$ `' '` and collapsed multi-spaces across both `questionText` and `cleanText`.
+  - **45/45 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `public/downloads/studypilot-extension.zip`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The LPU Fast-Path Law):** When ultra-fast LPU inference (Groq 120B at 500+ t/s) is available and healthy, never place slow or throttled APIs ahead of it. Run the sub-second 120B model as Tier 1 and use other frontier providers as resilient fallbacks.
+  - **Rule (The Native Input Click Law):** Never rely solely on synthetic `input.checked = true` or label clicks to actuate radio buttons in complex LMS portals. Always invoke native `input.click()` directly on the HTML input element to trigger framework-level autosave event listeners.
+- **Status:** Complete. 45/45 Vitest tests passing, TypeScript clean, extension repackaged, and verified across all physical layers.

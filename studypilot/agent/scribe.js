@@ -116,13 +116,13 @@
       let questionText = '';
       const pureQText = node.querySelector('.qtext');
       if (pureQText) {
-        questionText = (pureQText.innerText || pureQText.textContent || '').trim();
+        questionText = (pureQText.innerText || pureQText.textContent || '').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
       } else {
         // Clone and strip answer section
         const clone = qtextEl.cloneNode(true);
         const ansSection = clone.querySelector('.answer');
         if (ansSection) ansSection.remove();
-        questionText = (clone.innerText || clone.textContent || '').trim();
+        questionText = (clone.innerText || clone.textContent || '').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
       }
 
       if (!questionText) return;
@@ -184,18 +184,21 @@
         }
 
         if (!key) {
-          // Strictly match single letter a-z followed by dot or paren and whitespace: e.g. "a. " or "B) "
+          // Strictly match single letter a-z followed by dot, paren or brackets: e.g. "a. ", "(b) ", "C) "
           // NEVER match numbers [0-9] so numeric options like "1.5 degrees" or "2.0 PUE" are NOT corrupted!
-          const letterMatch = rawText.match(/^([a-z])[\.\)]\s+(.*)/i);
+          const letterMatch = rawText.match(/^(?:[([]?([a-z])[)\]\.]|\b([a-z])[\.\)])\s+(.*)/i);
           if (letterMatch) {
-            key = letterMatch[1].toLowerCase();
-            cleanText = letterMatch[2].trim();
+            key = (letterMatch[1] || letterMatch[2]).toLowerCase();
+            cleanText = letterMatch[3].trim();
           } else {
             // Canonical zero-index fallback: 0 -> 'a', 1 -> 'b', 2 -> 'c', 3 -> 'd'
             key = String.fromCharCode(97 + optIdx);
             cleanText = rawText;
           }
         }
+
+        // Normalize non-breaking spaces and whitespace
+        cleanText = cleanText.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
 
         // Avoid duplicate options
         if (!options.some(o => o.key === key && o.inputId === input.id)) {

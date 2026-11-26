@@ -13,6 +13,7 @@ let nvidiaQuotaExhaustedUntil = 0;
 let groqModelIndex = 0;
 const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
 const FRONTIER_GEMINI_MODELS = [
+  'gemini-2.5-flash',
   'gemini-4-hydrogen',
   'gemini-4-argon',
   'gemini-3.8-flash',
@@ -271,7 +272,7 @@ async function queryGemini(prompt, geminiKey, question, candidateEndpoints = FRO
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { responseMimeType: 'application/json', temperature: 0.0 }
         })
-      }, 8000);
+      }, 4500);
 
       if (res.ok) {
         const data = await res.json();
@@ -488,16 +489,18 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
 
   let result = null;
 
-  // Tier 1: Frontier Google Gemini (Gemini 4 Hydrogen / Argon, 3.8 / 3.6 / 3.5 Flash — NO Lite!)
-  const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
-  if (geminiKey && Date.now() > geminiQuotaExhaustedUntil) {
-    result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, true);
+  // Tier 1: Groq LPU Multi-Model Rotator (<0.8s latency: 120B + Qwen 27B Dual Consensus)
+  const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
+  if (groqKey) {
+    result = await queryGroqRotator(prompt, groqKey, question, userConfig);
   }
 
-  // Tier 2: Groq LPU Multi-Model Rotator (<0.5s latency: 120B -> Qwen 3.8 27B -> 20B)
-  const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
-  if (!result && groqKey) {
-    result = await queryGroqRotator(prompt, groqKey, question, userConfig);
+  // Tier 2: Frontier Google Gemini (Gemini 2.5 Flash -> 3.6 Flash -> 3.8 Flash)
+  if (!result) {
+    const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
+    if (geminiKey && Date.now() > geminiQuotaExhaustedUntil) {
+      result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, true);
+    }
   }
 
   // Tier 3: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B, 5s timeout)
