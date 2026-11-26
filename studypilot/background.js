@@ -218,7 +218,22 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /epeat.*gold|epeat.*tiers|epeat.*levels/i, match: /bronze.*silver.*gold|23 required/i, reason: "EPEAT has three tiers: Bronze (meets all 23 required criteria), Silver (meets all required + 50% optional), and Gold (meets all required + 75% optional)." },
     { pattern: /embodied energy/i, match: /entire lifecycle|manufacturing.*processing|total energy consumed/i, reason: "Embodied energy is the total energy consumed across the entire lifecycle to extract raw materials, manufacture, transport, and assemble a product." },
     { pattern: /greenwash|greenwashing/i, match: /misleading|deceptive.*environmental|superficial/i, reason: "Greenwashing refers to misleading or unsubstantiated marketing claims that deceptively present an organization or product as environmentally friendly." },
-    { pattern: /carbon offset/i, match: /compensat|external.*reduction|compensate for emissions/i, reason: "A carbon offset allows an entity to compensate for its greenhouse gas emissions by funding external emission-reduction projects elsewhere." }
+    { pattern: /carbon offset/i, match: /compensat|external.*reduction|compensate for emissions/i, reason: "A carbon offset allows an entity to compensate for its greenhouse gas emissions by funding external emission-reduction projects elsewhere." },
+    // Phase 145.9: Object Oriented Programming Using Java (CSIT120) Syllabus Ground Truth
+    { pattern: /procedure oriented.*approach|pop.*approach|approach.*procedure oriented/i, match: /top-down/i, reason: "Procedure Oriented Programming (POP) follows a top-down approach, decomposing problems into functions." },
+    { pattern: /object oriented.*approach|oop.*approach|approach.*object oriented/i, match: /bottom-up/i, reason: "Object Oriented Programming (OOP) follows a bottom-up approach, organizing code around data and objects." },
+    { pattern: /procedure oriented.*emphasis|pop.*emphasis|emphasis.*procedure oriented/i, match: /functions?|procedures?|algorithms?/i, reason: "Procedure Oriented Programming places primary emphasis on functions, procedures, and algorithms." },
+    { pattern: /object oriented.*emphasis|oop.*emphasis|emphasis.*object oriented/i, match: /data|objects?/i, reason: "Object Oriented Programming places primary emphasis on data and objects rather than procedures." },
+    { pattern: /data moves freely|global data.*shared|openly accessible.*function/i, match: /procedure oriented|pop\b/i, reason: "In Procedure Oriented Programming, data moves freely across functions as global data, leading to low data security." },
+    { pattern: /data hiding|wrapping.*data.*methods|binding.*data.*functions|single unit/i, match: /encapsulation/i, reason: "Encapsulation binds data and the methods that manipulate it together into a single unit (class), achieving data hiding." },
+    { pattern: /code reusability|reusability.*classes|derive.*new class/i, match: /inheritance/i, reason: "Inheritance allows a child class to inherit attributes and methods from a parent class, facilitating code reusability." },
+    { pattern: /more than one form|many forms|overloading.*overriding/i, match: /polymorphism/i, reason: "Polymorphism ('many forms') allows a single method name or operator to exhibit different behaviors depending on parameters or invocation context." },
+    { pattern: /compiled.*bytecode|output.*javac|javac.*output|javac.*generat|generat.*javac|output of javac|compile.*bytecode|java.*compiler.*output/i, match: /bytecode|\.class/i, reason: "The Java compiler (javac) compiles source code (.java) into platform-independent Bytecode (.class files)." },
+    { pattern: /executes bytecode|runs bytecode|interprets.*bytecode/i, match: /jvm|java virtual machine/i, reason: "The Java Virtual Machine (JVM) interprets and executes compiled Java bytecode on the host OS." },
+    { pattern: /blueprint.*object|template.*object|user-defined data type/i, match: /class\b/i, reason: "In Java, a class is a user-defined blueprint or template from which objects are instantiated." },
+    { pattern: /instance of a class|runtime entity/i, match: /object\b/i, reason: "An object is a runtime instance of a class that encapsulates state (fields) and behavior (methods)." },
+    { pattern: /same name as the class|initialize.*object|no return type/i, match: /constructor/i, reason: "A constructor is a special member function with the exact same name as the class and no return type, used to initialize new objects." },
+    { pattern: /which.*not.*feature of oop|not.*characteristic of oop/i, match: /top-down/i, reason: "A top-down approach is a defining characteristic of Procedure Oriented Programming, NOT Object Oriented Programming (which is bottom-up)." }
   ];
 
   for (const entry of dictionary) {
@@ -456,6 +471,74 @@ async function queryGroqRotator(prompt, groqKey, question, userConfig = {}) {
   return null;
 }
 
+// 5. Dynamic Academic Curriculum & Subject Dispatcher (Phase 145.9)
+function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
+  const combinedContext = `${courseContext || ''} ${question.questionText || ''}`.toLowerCase();
+  
+  let subjectHeader = `Course Subject: ${courseContext || 'Computer Science / BCA'}`;
+  let textbookAuthority = 'standard university curriculum and accredited textbook definitions';
+  let domainRules = '';
+
+  if (/java|csit120|object\s*oriented|oop|procedure\s*oriented|\bpop\b|class.*object|inheritance|polymorphism|encapsulation|jvm|bytecode/i.test(combinedContext)) {
+    subjectHeader = `Course Subject: ${courseContext || 'Object Oriented Programming Using Java (CSIT120) - Semester III'}`;
+    textbookAuthority = `standard academic Java textbooks (Specifically: Herbert Schildt, "Java: The Complete Reference", and E. Balagurusamy, "Programming with Java")`;
+    domainRules = `   - Procedure Oriented Programming (POP) vs Object Oriented Programming (OOP):
+     * POP Approach: Top-down approach. Divides programs into functions/procedures. Emphasis on algorithms and doing things.
+     * POP Data: Data moves freely from function to function. Global data is shared, making it vulnerable and less secure.
+     * OOP Approach: Bottom-up approach. Divides programs into objects and classes. Emphasis on data and objects.
+     * OOP Security & Encapsulation: Wraps data and methods into a single unit (class); achieves data hiding so external functions cannot access private data.
+     * Reusability: OOP achieves code reusability through Inheritance.
+     * Polymorphism: Ability to take more than one form (Compile-time: method overloading; Run-time: method overriding).
+   - Java Architecture & Execution:
+     * Platform Independence: Java compiler (javac) compiles source code (.java) into Bytecode (.class), which is executed by the Java Virtual Machine (JVM). "Write Once, Run Anywhere" (WORA).
+     * Memory Management: Automatic garbage collection. No explicit memory management or pointers.
+     * Classes & Objects: A class is a template or blueprint. An object is a runtime instance created via the 'new' keyword.
+     * Constructors: Special method with the SAME NAME as the class and NO return type (not even void), used to initialize objects.
+     * Access Specifiers: private (class only), default (package-private), protected (package + subclasses), public (accessible everywhere).`;
+  } else if (/green\s*computing|cse433|green\s*it|carbon|sits\b|murugesan|unhelkar|rohs|weee|epeat/i.test(combinedContext)) {
+    subjectHeader = `Course Subject: ${courseContext || 'Green Computing (CSE433)'}`;
+    textbookAuthority = `standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications")`;
+    domainRules = `   - Green Compliance & Protocols: ISO 14000/14001 (EMS Environmental Management Systems), ISO 14064 (GHG quantification and reporting), ISO 14040/14048 (LCA data documentation), ISO 50001 (Energy Management), RoHS (Lead, Mercury, Cadmium, Hexavalent Chromium, PBB, PBDE), WEEE, EPEAT (Bronze, Silver, Gold), Energy Star (EPA/DOE), Basel Convention / Basel Action Network (BAN).
+   - Emergent Carbon Issues: Scope 1 (direct/owned), Scope 2 (purchased electricity), Scope 3 (supply chain, employee travel, value chain), The Natural Step (Laws of Thermodynamics), Cap-and-Trade / Carbon Trading (allowances/permits), Carbon offsets.
+   - Ecodesign & Biomimicry: Design for Environment (DfE), Biomimicry (nature, ecosystems, Janine Benyus, waste equals food), Life Cycle Assessment 4 stages.
+   - SITS (Sustainable IT Services), Greening OF IT vs Greening BY IT, Green Supply Chain Management (GSCM), Trade-off Analysis, Impact and Change Propagation.
+   - Dichotomy of Developing Economies: Extended Producer Responsibility (EPR), informal e-waste hazards, technology leapfrogging.`;
+  } else if (/data\s*structure|algorithm|dsa|stack|queue|linked\s*list|binary\s*tree|graph|sorting/i.test(combinedContext)) {
+    subjectHeader = `Course Subject: ${courseContext || 'Data Structures and Algorithms'}`;
+    textbookAuthority = `standard academic textbooks (Specifically: Seymour Lipschutz, "Data Structures", and Cormen et al., "Introduction to Algorithms")`;
+    domainRules = `   - Stacks & Queues: Stack is LIFO (Last In, First Out) with push/pop operations. Queue is FIFO (First In, First Out) with enqueue/dequeue operations.
+   - Linear vs Non-linear: Arrays, Linked Lists, Stacks, Queues are Linear. Trees and Graphs are Non-linear.
+   - Tree Traversals: Inorder (Left-Root-Right), Preorder (Root-Left-Right), Postorder (Left-Right-Root).
+   - Complexity: Big-O asymptotic notation for time and space analysis.`;
+  } else if (/dbms|database|sql|relational|normalization|acid/i.test(combinedContext)) {
+    subjectHeader = `Course Subject: ${courseContext || 'Database Management Systems (DBMS)'}`;
+    textbookAuthority = `standard academic textbooks (Specifically: Silberschatz, Korth & Sudarshan, "Database System Concepts")`;
+    domainRules = `   - Relational Model: Relations (tables), Tuples (rows), Attributes (columns). Primary Key, Foreign Key.
+   - Normalization: 1NF (atomic values), 2NF (no partial dependency), 3NF (no transitive dependency), BCNF.
+   - ACID Properties: Atomicity (all or nothing), Consistency (preserves constraints), Isolation (concurrent transactions independent), Durability (persisted changes).`;
+  } else {
+    subjectHeader = `Course Subject: ${courseContext || 'Computer Science / BCA University Curriculum'}`;
+    textbookAuthority = `standard accredited university computer science curriculum textbooks and definitions`;
+    domainRules = `   - Core Academic Rigor: Apply foundational computer science definitions, formal specification rules, and first-principles logic.`;
+  }
+
+  return `${subjectHeader}
+${marksHeader}Question: ${question.questionText}
+Options:
+${optionsStr}
+
+Solve this academic multiple-choice question from ${textbookAuthority}.
+RULES:
+1. Academic Syllabus Compliance: Base answers strictly on standard academic university textbooks:
+${domainRules}
+2. Multi-Statement Rigor (4-Mark & 2-Mark High-Stakes Questions): If the question involves multiple statements (e.g. Statement I and Statement II, or Statement 1 and 2), verify the truth value of EACH statement independently against textbook facts before evaluating combinations ('Only I', 'Only II', 'Both', or 'Neither').
+3. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
+4. Anti-Echo Distractor Law: Do NOT select an option merely because it echoes or repeats keywords from the question stem. University exam setters intentionally plant question keywords into incorrect distractors.
+5. If the question asks for 'NOT', 'EXCEPT', or 'INCORRECT', select the invalid choice.
+6. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
+Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
+}
+
 async function executeBackgroundAiSolve(question, courseContext, userConfig = {}) {
   // Step 0: Academic Knowledge Base Ground Truth (Priority 0)
   const groundTruth = solveWithAcademicHeuristics(question, courseContext);
@@ -467,25 +550,7 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
   const marksHeader = (question.marks && question.marks >= 2) ? `[Worth ${question.marks} Marks — High-Stakes Assessment Question]\n` : '';
 
-  const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA (Green Computing CSE433)'}
-${marksHeader}Question: ${question.questionText}
-Options:
-${optionsStr}
-
-Solve this academic multiple-choice question from standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications").
-RULES:
-1. Academic Syllabus Compliance: Base answers strictly on standard academic university textbooks and curriculum definitions:
-   - Green Compliance & Protocols: ISO 14000/14001 (EMS Environmental Management Systems), ISO 14064 (GHG quantification and reporting), ISO 14040/14048 (LCA data documentation), ISO 50001 (Energy Management), RoHS (Lead, Mercury, Cadmium, Hexavalent Chromium, PBB, PBDE), WEEE, EPEAT (Bronze, Silver, Gold), Energy Star (EPA/DOE), Basel Convention / Basel Action Network (BAN).
-   - Emergent Carbon Issues: Scope 1 (direct/owned), Scope 2 (purchased electricity), Scope 3 (supply chain, employee travel, value chain), The Natural Step (Laws of Thermodynamics), Cap-and-Trade / Carbon Trading (allowances/permits), Carbon offsets.
-   - Ecodesign & Biomimicry: Design for Environment (DfE), Biomimicry (nature, ecosystems, Janine Benyus, waste equals food), Life Cycle Assessment 4 stages.
-   - SITS (Sustainable IT Services), Greening OF IT vs Greening BY IT, Green Supply Chain Management (GSCM), Trade-off Analysis, Impact and Change Propagation.
-   - Dichotomy of Developing Economies: Extended Producer Responsibility (EPR), informal e-waste hazards, technology leapfrogging.
-2. Multi-Statement Rigor (4-Mark & 2-Mark High-Stakes Questions): If the question involves multiple statements (e.g. Statement I and Statement II, or Statement 1 and 2), verify the truth value of EACH statement independently against textbook facts before evaluating combinations ('Only I', 'Only II', 'Both', or 'Neither').
-3. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
-4. Anti-Echo Distractor Law: Do NOT select an option merely because it echoes or repeats keywords from the question stem. University exam setters intentionally plant question keywords into incorrect distractors.
-5. If the question asks for 'NOT', 'EXCEPT', or 'INCORRECT', select the invalid choice.
-6. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
-Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
+  const prompt = buildSubjectPrompt(question, courseContext, marksHeader, optionsStr);
 
   let result = null;
 
@@ -583,6 +648,7 @@ if (typeof module !== 'undefined' && module.exports) {
     extractOptionLetter,
     isMoodleUrl,
     solveWithAcademicHeuristics,
+    buildSubjectPrompt,
     executeBackgroundAiSolve,
     GROQ_MODELS,
     FRONTIER_GEMINI_MODELS,

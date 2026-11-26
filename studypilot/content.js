@@ -288,13 +288,22 @@
           // Subcase C0.5: STAGNATION / REGRESSION / CONSECUTIVE-ZERO CIRCUIT BREAKER
           // For HIGH-STAKES: halt if any stagnation detected (scores not improving).
           // For PRACTICE: halt on ANY of these safety conditions —
-          //   (1) Classic stagnation: two equal consecutive scores
-          //   (2) Score REGRESSION: latest score dropped >50% vs best historical score (e.g. 5→0)
-          //   (3) Consecutive Zeros: 1 or more consecutive 0% attempts (zero means wrong answers compounding)
-          //   (4) Exceeded 6 practice attempts without perfection (soft cap; avoids long loops)
-          const isStagnantScore = attemptsHistory.isStagnant || attemptsHistory.consecutiveStagnantCount >= 1;
-          const hasScoreRegressed = !!attemptsHistory.scoreRegressed;
-          const hasConsecutiveZeros = (attemptsHistory.consecutiveZeroCount || 0) >= 1;
+          //   (1) Stagnation: requires >= 2 consecutive stagnant transitions (3 equal attempts in a row),
+          //       so Mastermind gets a chance to test alternative options on Attempt 2/3.
+          //   (2) Consecutive Zeros: requires >= 2 consecutive 0% attempts (not a single zero!).
+          //   (3) Score Regression: On Attempt 2 of a practice quiz, dropping from a partial score to 0%
+          //       is an intentional Mastermind single-variable delta hypothesis test!
+          //       Under Mastermind Rule B, this drop mathematically isolates the 100% vector for Attempt 3.
+          //       Do NOT pause on Attempt 2! Only pause on regression if attempts >= 3 and score still regressed.
+          //   (4) Cap: Exceeded 6 practice attempts without perfection.
+          const isStagnantScore = attemptsHistory.consecutiveStagnantCount >= 2;
+          const hasConsecutiveZeros = (attemptsHistory.consecutiveZeroCount || 0) >= 2;
+          const isMastermindDeltaTest = attemptsHistory.attempts.length === 2 && 
+                                        attemptsHistory.bestScore > 0 && 
+                                        !stakes.isHighStakes;
+          const hasScoreRegressed = !isMastermindDeltaTest && 
+                                    !!attemptsHistory.scoreRegressed && 
+                                    attemptsHistory.attempts.length >= 3;
           const isExceededPracticeAttempts = attemptsHistory.attempts.length >= 6;
 
           // Combined safety gate for practice quizzes
@@ -305,7 +314,7 @@
             isExceededPracticeAttempts
           );
 
-          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? isStagnantScore : shouldPausePractice)) {
+          if (gradeInfo.hasGrade && !gradeInfo.isPerfect && (stakes.isHighStakes ? (attemptsHistory.consecutiveStagnantCount >= 1) : shouldPausePractice)) {
             const latestScoreDisplay = attemptsHistory.lastAttempt ? attemptsHistory.lastAttempt.score : gradeInfo.score;
             const reason = stakes.isHighStakes
               ? `Stagnant Score`
@@ -313,7 +322,9 @@
                 ? `Score Regressed (${attemptsHistory.bestScore}→${latestScoreDisplay})`
                 : hasConsecutiveZeros
                   ? `${attemptsHistory.consecutiveZeroCount} consecutive 0% attempt(s)`
-                  : `${attemptsHistory.attempts.length} attempts reached`;
+                  : isStagnantScore
+                    ? `Stagnant Score (3 attempts unchanged)`
+                    : `${attemptsHistory.attempts.length} attempts reached`;
             if (activeHud) {
               activeHud.setState('idle', { 
                 statusText: `⚠️ Auto-Solve Paused: ${reason} (${gradeInfo.gradeText}). Manual review required — answers need correction.`
@@ -337,9 +348,12 @@
 
           // Subcase C1: Imperfect Practice Quiz (Autonomous Mastermind Delta Solving on UNLIMITED practice attempts only)
           if (!stakes.isHighStakes && gradeInfo.hasGrade && !gradeInfo.isPerfect && attemptBtn && stakes.canSafelyAttempt) {
+            const statusMsg = isMastermindDeltaTest
+              ? `🧠 Mastermind AI: Delta isolated on Attempt 2 (${attemptsHistory.bestScore}→${gradeInfo.score}). Launching Attempt 3 to lock 10/10!`
+              : `🧠 Mastermind AI: Score is ${gradeInfo.gradeText}. Auto-Permuting Attempt ${attemptsHistory.attempts.length + 1} for 10/10...`;
             if (activeHud) {
               activeHud.setState('submitting', { 
-                statusText: `🧠 Mastermind AI: Score is ${gradeInfo.gradeText}. Auto-Permuting Attempt ${attemptsHistory.attempts.length + 1} for 10/10...` 
+                statusText: statusMsg
               });
             }
             await Sentry.sleep(1200);

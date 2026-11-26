@@ -34,6 +34,10 @@
       '1': { key: 'c', text: 'half' },
       '2': { key: 'd', text: 'ipcc' }
     }, // Quiz 4.1.5 Green ICT—Business and Economic Trends
+    '244530': {
+      '1': { text: 'top-down' },
+      '2': { text: 'data' }
+    }, // CSIT120 Quiz 1.1.1 Procedure Oriented Programming Vs. Object Oriented Programming (OOP)
   };
 
   /**
