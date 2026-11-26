@@ -61,7 +61,11 @@ Every line of code, design asset, and architecture decision must adhere to Tier-
 4. **Defensive Stability:** Ensure zero data loss in SQLite (`prisma/dev.db`) and Turso Cloud, strict schema safety with Prisma 7 (`@prisma/adapter-libsql`), resilient rate-limiting with exponential backoffs across 17+ scrapers, and fault isolation so one failing provider never crashes the feed.
 5. **Silicon Valley Tech Dominance:** Measure every feature against billion-dollar competitors. If Simplify or Teal does it in 5 clicks, Stride must do it in 1 click or 0 clicks.
 6. **The Unstuck Pivot Rule:** If any issue resists two consecutive attempts, immediately halt execution, declare the deadlock, and present 2–3 divergent alternative paths (Radical Simplification, Out-of-the-Box Loophole, or Decoupled Architectural Redesign).
-6. **The Unstuck Pivot Rule:** If any issue resists two consecutive attempts, immediately halt execution, declare the deadlock, and present 2–3 divergent alternative paths (Radical Simplification, Out-of-the-Box Loophole, or Decoupled Architectural Redesign).
+7. **The Pre-Action Consequence Calculation & Outcome Visualization Law:** Before writing or altering any line of code, prompt, heuristic, or circuit breaker, you MUST mentally step through the complete physical execution journey and rigorously calculate the ripple effects across 4 critical axes:
+   - **Axis 1 (Domain & Context Shifts):** What happens when the subject, course, or data changes? (e.g. switching from Green IT to Java OOP, switching from Greenhouse to Workday). Never hardcode assumptions of one domain into universal code.
+   - **Axis 2 (Mathematical & Algorithmic Extremes):** What happens at boundary conditions? (e.g. $N=2$ questions vs $N=30$ questions, score dropping from $5 \to 0$ as a delta test vs true stagnation, zero attempts, maximum attempts).
+   - **Axis 3 (User Visual Experience & Emotional Impact):** How will the user perceive the HUD state and status messages? (e.g. never show alarming error banners for intentional hypothesis permutations; always provide clear, reassuring, and actionable next steps).
+   - **Axis 4 (Downstream State & Regression Immunity):** Does this modification introduce side effects to existing passing tests, high-stakes protections, or session persistence?
 
 ---
 
