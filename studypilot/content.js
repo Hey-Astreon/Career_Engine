@@ -501,12 +501,14 @@
         }
 
         const prevChoice = lastAttemptSelections ? (lastAttemptSelections[q.questionNumber] || lastAttemptSelections[q.id]) : null;
+        const isMultiMarkOrHighStakes = Boolean(stakes.isHighStakes || (q.marks && q.marks >= 2));
         const scholarAns = await Scholar.solveQuestion(q, courseContext, {
           ...config,
           previousSelection: prevChoice,
           previousSelections: lastAttemptSelections,
           isRetry: pastAttempts.length > 0,
-          isHighStakes: stakes.isHighStakes
+          isHighStakes: isMultiMarkOrHighStakes,
+          marks: q.marks || 1.0
         });
 
         // Step 2: Auditor cross-examines & consensus

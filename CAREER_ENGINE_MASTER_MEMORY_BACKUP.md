@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.2: Stride StudyPilot — 4th Module Assessment Post-Mortem, Highest-Grade Banking Verification, & Murugesan-Unhelkar Green IT Textbook Ontology Hardening)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.3: Stride StudyPilot — Root-Cause Eradication of Attempt 1 Errors: Scribe Numeric Option Text Corruptions, Auditor Dual-Distractor Overrides, & Question Marks Awareness)
 
 ---
 
@@ -5767,3 +5767,36 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The Syllabus Ontology Law):** Never rely purely on open-domain LLM inference for university assessment multi-statement questions. Always inject the course's exact prescribed textbook ontology (author, edition, standard acronyms, framework laws) into the Ground Truth heuristics and system prompt.
 - **Status:** Complete. 43/43 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 145.3: Eradication of Attempt 1 Question Solving Bugs — Numeric Option Corruption, Auditor Distractor Overrides & Marks Extraction (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan demanded a permanent, physical fix to the root causes of StudyPilot making wrong answers on Attempt 1.
+- **Deep Root Cause Diagnosis (The 3 Smoking Guns):**
+  1. **Option Letter Extraction Regex Bug in `studypilot/agent/scribe.js`:**
+     - `rawText.match(/^([a-z0-9])[\.\)]\s*(.*)/i)` matched leading numbers in option text!
+     - When an option started with a number (e.g. `1.5 degrees Celsius`, `2.0 PUE baseline`, `10% energy reduction`), Scribe extracted `key = "1"` and corrupted `cleanText` to `5 degrees Celsius`!
+     - Because `optionsPayload` sent letters `(a)`, `(b)`, `(c)`, `(d)` to the LLM, when the LLM returned `{"selectedKey": "a"}`, `question.options.find(o => o.key === 'a')` failed to find any option with key `'a'`.
+     - Auditor then fell back to `question.options[0]` blindly, corrupting candidate answers.
+  2. **Aggressive Dual-Option Distractor Hijack in `studypilot/agent/auditor.js`:**
+     - Lines 78-85 in `auditor.js` checked `(lowerReason.includes('both') && lowerReason.includes('correct'))`.
+     - When the LLM correctly picked a single option `(a)` and explicitly explained that `Both of these` was an exam distractor (e.g., *"While both terms are mentioned in the syllabus, only option (a) is the correct technical definition"*), Auditor saw the words `"both"` and `"correct"` and **overrode the AI's correct choice to pick "Both of these"**!
+  3. **Blind Question Marks Extraction:**
+     - `scribe.js` did not extract the marks badge (`.info .grade`, e.g. "Marked out of 4.00" or "Marked out of 2.00").
+     - 4-mark questions were treated identically to 1-mark questions without triggering high-stakes multi-model consensus.
+- **The Concrete Surgical Fix:**
+  - In `studypilot/agent/scribe.js`:
+    - First check for `<span class="answernumber">` and verify it is a short token ($\le 4$ chars).
+    - Restricted regex to `^([a-z])[\.\)]\s+` (strictly letters `a-z`, NEVER numbers `0-9`), completely protecting numeric text like `1.5 degrees` or `2.0 PUE`.
+    - Added marks extraction (`node.querySelector('.info .grade')`) to capture 4-mark and 2-mark question weights.
+  - In `studypilot/agent/auditor.js`:
+    - Added `rejectsDual` guard: strictly forbids dual overrides whenever reasoning contains `"only option"`, `"only statement"`, `"distractor"`, `"not both"`, or `"is incorrect"`.
+  - In `studypilot/content.js`:
+    - Multi-mark questions ($marks \ge 2$) now automatically activate `isHighStakes: true`.
+  - In `studypilot/background.js`:
+    - Prepends `[Worth ${question.marks} Marks — High-Stakes Assessment Question]` into the prompt.
+  - Added regression test in `tests/studypilot-swarm.test.ts` (**44/44 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, extension repackaged).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Strict Alpha-Only Option Key Law):** Never allow option key parsing regexes to match digits `[0-9]`. Numeric stems in multiple choice options (such as percentages, PUE values, temperatures) will be hijacked as false option indices.
+  - **Rule (The Anti-Distractor Override Defense Law):** Never override a model's single-option selection with a composite choice ("Both of these") without checking whether the reasoning explicitly rejected the composite choice as a distractor.
+- **Status:** Complete. 44/44 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.

@@ -437,9 +437,10 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
 
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
+  const marksHeader = (question.marks && question.marks >= 2) ? `[Worth ${question.marks} Marks — High-Stakes Assessment Question]\n` : '';
 
   const prompt = `Course Subject: ${courseContext || 'Computer Science / BCA (Green Computing CSE433)'}
-Question: ${question.questionText}
+${marksHeader}Question: ${question.questionText}
 Options:
 ${optionsStr}
 

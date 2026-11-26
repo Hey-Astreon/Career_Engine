@@ -73,15 +73,24 @@
     if (question.traps && question.traps.hasDualOptionTrap) {
       const dualOption = question.options.find(o => DUAL_OPTION_REGEX.test(o.cleanText));
       if (dualOption && dualOption.key.toLowerCase() !== cleanCandidateKey) {
-        // Only override if Scholar reasoning explicitly confirms both statements are true (not just casual transition words)
         const lowerReason = finalReasoning.toLowerCase();
-        const explicitlySelectsDual = 
+        // Strictly protect single option: never override if reasoning says "only", "distractor", "not both", or "incorrect"
+        const rejectsDual = lowerReason.includes('only option') || 
+                            lowerReason.includes('only statement') || 
+                            lowerReason.includes('not both') || 
+                            lowerReason.includes('distractor') || 
+                            lowerReason.includes('neither') ||
+                            lowerReason.includes('is incorrect') ||
+                            lowerReason.includes('is not valid');
+
+        const explicitlySelectsDual = !rejectsDual && (
           lowerReason.includes('both options') ||
           lowerReason.includes('both statements') ||
           lowerReason.includes('both a and b') ||
           lowerReason.includes('all of the above') ||
           (lowerReason.includes('both') && (lowerReason.includes('valid') || lowerReason.includes('true') || lowerReason.includes('correct') || lowerReason.includes('required'))) ||
-          (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')));
+          (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')))
+        );
 
         if (explicitlySelectsDual) {
           finalKey = dualOption.key.toLowerCase();

@@ -92,10 +92,21 @@
     const questions = [];
 
     questionNodes.forEach((node, index) => {
-      // 1. Question ID or Index
+      // 1. Question ID or Index & Marks / Weight
       const id = node.id || `question-${index + 1}`;
       const qnoEl = node.querySelector('.info .no, .qno, h3.no');
       const questionNumber = qnoEl ? qnoEl.textContent.replace(/[^0-9]/g, '') : String(index + 1);
+
+      // Extract question marks / weight (e.g. "Marked out of 4.00" or "Marked out of 2.00")
+      let marks = 1.0;
+      const gradeEl = node.querySelector('.info .grade, .grade, .state');
+      if (gradeEl) {
+        const gTxt = (gradeEl.innerText || gradeEl.textContent || '').trim();
+        const m = gTxt.match(/marked\s*out\s*of\s*([0-9\.]+)/i) || gTxt.match(/([0-9\.]+)\s*marks?/i);
+        if (m) {
+          marks = parseFloat(m[1]) || 1.0;
+        }
+      }
 
       // 2. Question Text
       const qtextEl = node.querySelector('.qtext, .formulation .qtext, .formulation');
@@ -151,16 +162,39 @@
 
         const rawText = (label.innerText || label.textContent || '').trim();
 
-        // Extract option key (e.g. "a", "b", "c", "d" or option index)
-        const letterMatch = rawText.match(/^([a-z0-9])[\.\)]\s*(.*)/i);
+        // Robust Option Key & Text Extraction (Immune to Leading Numbers in CleanText)
+        // 1. Check for dedicated Moodle answer number element (e.g. <span class="answernumber">a. </span>)
+        const answerNumberEl = (label && typeof label.querySelector === 'function')
+          ? label.querySelector('.answernumber')
+          : ((optNode && typeof optNode.querySelector === 'function') ? optNode.querySelector('.answernumber') : null);
+
         let key = '';
         let cleanText = rawText;
 
-        if (letterMatch) {
-          key = letterMatch[1].toLowerCase();
-          cleanText = letterMatch[2].trim();
-        } else {
-          key = String.fromCharCode(97 + optIdx); // fallback 'a', 'b', 'c', 'd'
+        if (answerNumberEl && answerNumberEl !== label) {
+          const numTxt = (answerNumberEl.innerText || answerNumberEl.textContent || '').trim();
+          // Answer numbers are strictly short tokens like "a.", "b)", "(c)" (<= 4 chars)
+          if (numTxt.length <= 4) {
+            const m = numTxt.match(/^([a-z])[\.\)]?/i);
+            if (m) {
+              key = m[1].toLowerCase();
+              cleanText = rawText.replace(new RegExp('^' + numTxt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i'), '').trim();
+            }
+          }
+        }
+
+        if (!key) {
+          // Strictly match single letter a-z followed by dot or paren and whitespace: e.g. "a. " or "B) "
+          // NEVER match numbers [0-9] so numeric options like "1.5 degrees" or "2.0 PUE" are NOT corrupted!
+          const letterMatch = rawText.match(/^([a-z])[\.\)]\s+(.*)/i);
+          if (letterMatch) {
+            key = letterMatch[1].toLowerCase();
+            cleanText = letterMatch[2].trim();
+          } else {
+            // Canonical zero-index fallback: 0 -> 'a', 1 -> 'b', 2 -> 'c', 3 -> 'd'
+            key = String.fromCharCode(97 + optIdx);
+            cleanText = rawText;
+          }
         }
 
         // Avoid duplicate options
@@ -187,6 +221,7 @@
         questionNumber: parseInt(questionNumber, 10) || index + 1,
         questionText,
         options,
+        marks, // Question marks / weight (1.0, 2.0, 4.0)
         isMultipleChoice: options.some(o => o.isCheckbox),
         traps: {
           hasNegativeConstraint,

@@ -2097,5 +2097,66 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const popupSrc = fs.readFileSync("studypilot/popup.js", "utf8");
       expect(popupSrc).toContain("agent/mastermind.js");
     });
+
+    it("protects numeric cleanText options from key corruption, extracts question marks, and blocks Auditor false dual overrides (Phase 145.3)", () => {
+      // 1. Numeric cleanText options in Scribe
+      const inputA = { tagName: "INPUT", id: "q1_a", name: "q1", type: "radio", checked: false };
+      const labelA = { tagName: "LABEL", innerText: "1.5 degrees Celsius", textContent: "1.5 degrees Celsius" };
+      const optA = { querySelector: (sel: string) => sel.includes("input") ? inputA : (sel.includes(".answernumber") ? null : labelA) };
+
+      const inputB = { tagName: "INPUT", id: "q1_b", name: "q1", type: "radio", checked: false };
+      const labelB = { tagName: "LABEL", innerText: "2.0 PUE baseline", textContent: "2.0 PUE baseline" };
+      const optB = { querySelector: (sel: string) => sel.includes("input") ? inputB : (sel.includes(".answernumber") ? null : labelB) };
+
+      const mockDoc = {
+        querySelector: () => null,
+        querySelectorAll: (sel: string) => {
+          if (sel.includes(".que") || sel.includes("question-")) {
+            return [{
+              id: "question-1",
+              querySelector: (s: string) => {
+                if (s.includes(".no") || s.includes(".qno")) return { textContent: "Question 1" };
+                if (s.includes(".grade")) return { innerText: "Marked out of 4.00" };
+                if (s.includes(".qtext")) return { innerText: "What is the global target limit?" };
+                return null;
+              },
+              querySelectorAll: (s: string) => [optA, optB]
+            }];
+          }
+          return [];
+        }
+      };
+
+      const parsed = StudyPilotScribe.parseMoodleQuestions(mockDoc as any);
+      expect(parsed.questions.length).toBe(1);
+      const q = parsed.questions[0];
+      expect(q.marks).toBe(4.0); // Correctly extracted 4-mark weight
+      expect(q.options[0].key).toBe("a"); // Not corrupted to "1"
+      expect(q.options[0].cleanText).toBe("1.5 degrees Celsius"); // Not stripped to "5 degrees"
+      expect(q.options[1].key).toBe("b"); // Not corrupted to "2"
+      expect(q.options[1].cleanText).toBe("2.0 PUE baseline");
+
+      // 2. Auditor False Dual Override Prevention
+      const qWithDual = {
+        id: "q2",
+        questionNumber: 2,
+        options: [
+          { key: "a", cleanText: "Primary single fact" },
+          { key: "b", cleanText: "Secondary false premise" },
+          { key: "c", cleanText: "Both of these" }
+        ],
+        traps: { hasDualOptionTrap: true }
+      };
+
+      const scholarWithDistractorReasoning = {
+        selectedKey: "a",
+        reasoning: "While both terms are mentioned in the syllabus, only option (a) is the correct technical definition and option (b) is an incorrect distractor.",
+        confidence: 0.95
+      };
+
+      const audited = StudyPilotAuditor.auditAnswer(qWithDual as any, scholarWithDistractorReasoning);
+      expect(audited.selectedKey).toBe("a"); // Retained option 'a', NOT flipped to 'Both of these'!
+      expect(audited.auditNotes).not.toContain("Overrode single option 'a' in favor of dual option");
+    });
   });
 });
