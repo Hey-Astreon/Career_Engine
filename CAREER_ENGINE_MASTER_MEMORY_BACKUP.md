@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.5: Stride StudyPilot — Pre-Flight Option Text Fallback & 5-Choice 'e' Key Parsing Hardening)
+> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.6: Multi-Statement Trap Expansion, Reverse Anti-Distractor Override & Inspector DOM Recovery)
 
 ---
 
@@ -5828,3 +5828,34 @@ graph TD
 - **Hard-Won Engineering Experience & Rules:**
   - **Rule (The Dual Key-and-Text Extraction Law):** Never extract option choices solely through regexes matching single letters. Always provide a bidirectional text-matching fallback against the question's live option array to catch models that echo the answer string.
 - **Status:** Complete. 44/44 Vitest tests passing, TypeScript clean, extension repackaged, and pushed to `origin main`.
+
+
+### Phase 145.6: Multi-Statement Trap Expansion, Reverse Anti-Distractor Override & Inspector DOM Recovery (November 26, 2026)
+- **The Exact Challenge & Mistake Encountered:**
+  - Brother Roushan demanded a 3rd forensic pass across the entire StudyPilot codebase to hunt down any latent bugs, edge cases, or traps prior to launching Attempt 2 on the 4th Module Assessment (`id=176425`).
+- **Deep Root Cause Diagnosis (The 4 Subtle Traps Uncovered):**
+  1. **Inspector Missing-Question Type Mismatch & Empty Options Fallback:**
+     - In `studypilot/content.js`, Inspector re-solve compared `cq.questionNumber === missing.questionNumber`. Because `scribe.js` stored `questionNumber` as string/number variants and `inspector.js` returned an integer, strict equality could evaluate to false, falling back to an empty question object with `options: []`!
+  2. **Multi-Statement Option Trap Blindness in `scribe.js` and `auditor.js`:**
+     - Amity 4-mark questions feature choices like `"Both Statement I and Statement II are correct"` or `"Both Statements 1 and 2"`. `DUAL_OPTION_REGEX` only looked for `"both of these"` or `"both a and b"`, leaving multi-statement traps undetected (`traps.hasDualOptionTrap = false`).
+  3. **One-Way Auditor Distractor Override:**
+     - Auditor previously only checked if a single option should be upgraded to dual. If an LLM hallucinated and selected the dual choice (e.g. `'c'`), but its reasoning proved that Statement II was false and only Statement I is correct, Auditor failed to override the distractor and left the incorrect dual selection intact.
+  4. **Module 4 Extended Syllabus Ontology Gaps:**
+     - Lack of deterministic dictionary rules for Kyoto Protocol (CDM / JI), Paris Agreement (1.5°C), RoHS 6 specific substances (Lead, Mercury, Cadmium, Hexavalent Chromium, PBB, PBDE), WEEE Directive, EPEAT 3-tier criteria (Bronze/Silver/Gold), Embodied Energy, and Greenwashing.
+- **The Concrete Surgical Fix:**
+  - In `studypilot/content.js`:
+    - Hardened Inspector re-solve comparison to `String(cq.questionNumber) === String(missing.questionNumber)`.
+    - Added DOM re-parse fallback via `Scribe.parseMoodleQuestions(missing.node)` so options are always populated.
+    - Synchronized `currentSelections` in persistent memory when missing questions are actuated.
+  - In `studypilot/agent/scribe.js` and `studypilot/agent/auditor.js`:
+    - Expanded `DUAL_OPTION_REGEX` to match multi-statement patterns (`Both Statement I and Statement II`, `Both Statements 1 and 2`, `Both 1 and 2`, `Both (a) and (b)`, `All the above`, `All options are correct`).
+    - Added reverse anti-distractor audit override in Auditor: if candidate chose a dual option, but reasoning explicitly rejected dual validity or proved one statement false, Auditor flips the answer to the verified single statement.
+  - In `studypilot/background.js`:
+    - Injected complete Module 4 textbook ontology definitions into `solveWithAcademicHeuristics`.
+  - In `tests/studypilot-swarm.test.ts`:
+    - Added comprehensive unit tests for multi-statement trap recognition, reverse anti-distractor override, and Module 4 ontology lookups.
+  - **45/45 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `public/downloads/studypilot-extension.zip`.
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Bidirectional Distractor Audit Law):** Red-team auditing of composite options must always be bidirectional. If the model chooses a single option but validates both, upgrade to dual; if the model mistakenly chooses dual but proves one statement is false, immediately override to the validated single option.
+  - **Rule (The Inspector DOM Recovery Law):** When re-solving an unattempted question detected by DOM auditing, never rely on a memory array lookup alone. If the question object is not found in memory, parse the live question DOM node directly so options and actuation targets are 100% available.
+- **Status:** Complete. 45/45 Vitest tests passing, TypeScript clean, extension repackaged, and ready for deployment.

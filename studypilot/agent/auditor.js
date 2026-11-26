@@ -14,8 +14,8 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const DUAL_OPTION_REGEX = /\b(both of these|both a and b|both b and c|all of the above|all of these)\b/i;
-  const NONE_OPTION_REGEX = /\b(none of these|none of the above|neither)\b/i;
+  const DUAL_OPTION_REGEX = /\b(?:both\s*(?:of\s*these|of\s*the\s*above|a\s*(?:and|&)\s*b|b\s*(?:and|&)\s*c|\(?a\)?\s*(?:and|&)\s*\(?b\)?|[0-9ivx]+\s*(?:and|&)\s*[0-9ivx]+|statements?|are\s*(?:correct|true|valid))|all\s*(?:of\s*the\s*above|of\s*these|the\s*above|of\s*the\s*mentioned|options?\s*are\s*correct))\b/i;
+  const NONE_OPTION_REGEX = /\b(?:none\s*(?:of\s*these|of\s*the\s*above|of\s*the\s*mentioned)|neither\s*(?:of\s*these|statement|[0-9ivx]+|nor))\b/i;
 
   function auditAnswer(question, candidateAnswer, retryContext = {}) {
     if (!candidateAnswer || !candidateAnswer.selectedKey) {
@@ -72,7 +72,7 @@
     // 3. Red-Team Check: "Both of these" / "All of the above" Trap
     if (question.traps && question.traps.hasDualOptionTrap) {
       const dualOption = question.options.find(o => DUAL_OPTION_REGEX.test(o.cleanText));
-      if (dualOption && dualOption.key.toLowerCase() !== cleanCandidateKey) {
+      if (dualOption) {
         const lowerReason = finalReasoning.toLowerCase();
         // Strictly protect single option: never override if reasoning says "only", "distractor", "not both", or "incorrect"
         const rejectsDual = lowerReason.includes('only option') || 
@@ -81,22 +81,42 @@
                             lowerReason.includes('distractor') || 
                             lowerReason.includes('neither') ||
                             lowerReason.includes('is incorrect') ||
-                            lowerReason.includes('is not valid');
+                            lowerReason.includes('is false') ||
+                            lowerReason.includes('is not valid') ||
+                            lowerReason.includes('is not correct');
 
-        const explicitlySelectsDual = !rejectsDual && (
-          lowerReason.includes('both options') ||
-          lowerReason.includes('both statements') ||
-          lowerReason.includes('both a and b') ||
-          lowerReason.includes('all of the above') ||
-          (lowerReason.includes('both') && (lowerReason.includes('valid') || lowerReason.includes('true') || lowerReason.includes('correct') || lowerReason.includes('required'))) ||
-          (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')))
-        );
+        if (dualOption.key.toLowerCase() !== cleanCandidateKey) {
+          const explicitlySelectsDual = !rejectsDual && (
+            lowerReason.includes('both options') ||
+            lowerReason.includes('both statements') ||
+            lowerReason.includes('both a and b') ||
+            lowerReason.includes('all of the above') ||
+            (lowerReason.includes('both') && (lowerReason.includes('valid') || lowerReason.includes('true') || lowerReason.includes('correct') || lowerReason.includes('required'))) ||
+            (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')))
+          );
 
-        if (explicitlySelectsDual) {
-          finalKey = dualOption.key.toLowerCase();
-          auditNotes = `Overrode single option '${cleanCandidateKey}' in favor of dual option '${dualOption.key}' ('${dualOption.cleanText}') based on explicit dual validation.`;
-          finalReasoning = `Auditor verified that both statements were explicitly validated as true. Selecting '${dualOption.cleanText}'.`;
-          confidence = 0.98;
+          if (explicitlySelectsDual) {
+            finalKey = dualOption.key.toLowerCase();
+            auditNotes = `Overrode single option '${cleanCandidateKey}' in favor of dual option '${dualOption.key}' ('${dualOption.cleanText}') based on explicit dual validation.`;
+            finalReasoning = `Auditor verified that both statements were explicitly validated as true. Selecting '${dualOption.cleanText}'.`;
+            confidence = 0.98;
+          }
+        } else if (rejectsDual) {
+          // Reverse Anti-Distractor Guard: Model picked dual option by mistake, but reasoning proved one statement false!
+          const singleOptions = question.options.filter(o => o.key.toLowerCase() !== dualOption.key.toLowerCase());
+          const matchingSingle = singleOptions.find(o => {
+            const clean = o.cleanText.toLowerCase();
+            return lowerReason.includes(clean) || 
+                   (lowerReason.includes('only statement i') && (clean.includes('statement i') || clean.includes('statement 1'))) ||
+                   (lowerReason.includes('only statement ii') && (clean.includes('statement ii') || clean.includes('statement 2')));
+          }) || singleOptions[0];
+
+          if (matchingSingle) {
+            finalKey = matchingSingle.key.toLowerCase();
+            auditNotes = `Overrode dual option '${cleanCandidateKey}' in favor of single option '${finalKey}' because reasoning rejected dual statement validity.`;
+            finalReasoning = `Auditor detected reasoning rejects dual validity. Selecting verified single statement option '${matchingSingle.cleanText}'.`;
+            confidence = 0.96;
+          }
         }
       }
     }

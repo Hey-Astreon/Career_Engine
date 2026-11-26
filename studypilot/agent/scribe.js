@@ -16,7 +16,7 @@
   'use strict';
 
   const NEGATIVE_REGEX = /\b(not|except|incorrect|false|never|unlikely|cannot)\b/i;
-  const DUAL_OPTION_REGEX = /\b(both of these|both a and b|both b and c|all of the above|all of these|none of these|none of the above|neither)\b/i;
+  const DUAL_OPTION_REGEX = /\b(?:both\s*(?:of\s*these|of\s*the\s*above|a\s*(?:and|&)\s*b|b\s*(?:and|&)\s*c|\(?a\)?\s*(?:and|&)\s*\(?b\)?|[0-9ivx]+\s*(?:and|&)\s*[0-9ivx]+|statements?|are\s*(?:correct|true|valid))|all\s*(?:of\s*the\s*above|of\s*these|the\s*above|of\s*the\s*mentioned|options?\s*are\s*correct)|none\s*(?:of\s*these|of\s*the\s*above|of\s*the\s*mentioned)|neither\s*(?:of\s*these|statement|[0-9ivx]+|nor))\b/i;
   // Strictly filter only non-credit items that have NO radio button / completion tracking in AMIGO
   const NON_CREDIT_REGEX = /\b(announcements?|discussion\s*forum|interactive\s*slm|virtual\s*lab|student\s*support|planner|beSocial|e-magazine|academic\s*planner|help\s*us\s*plan|course\s*objectives|learning\s*outcomes)\b/i;
   const NON_CURRICULUM_REGEX = NON_CREDIT_REGEX;
@@ -57,7 +57,7 @@
   }
 
   function detectPageMode(doc = document, currentUrl = (typeof window !== 'undefined' ? window.location.href : '')) {
-    if (currentUrl.includes('/mod/quiz/processattempt.php') || (doc.title && doc.title.toLowerCase().includes('error'))) {
+    if (currentUrl.includes('/mod/quiz/processattempt.php') || (currentUrl.includes('/mod/quiz/') && doc.title && (/^error\b/i.test(doc.title.trim()) || /^moodle\s*error/i.test(doc.title.trim())))) {
       return 'quiz-process-error';
     }
     if (currentUrl.includes('/mod/quiz/summary.php') || (doc.querySelector && doc.querySelector('.quizsummary'))) {

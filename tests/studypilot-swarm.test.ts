@@ -2172,5 +2172,120 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(bg.extractOptionLetter("ISO 14048", sampleOpts)).toBe("c");
       expect(bg.extractOptionLetter("iso 14048 data format", sampleOpts)).toBe("c");
     });
+
+    it("verifies multi-statement trap recognition, reverse anti-distractor override, and Module 4 Green IT ontology (Phase 145.6)", () => {
+      // 1. Scribe multi-statement trap detection
+      const inputA = { tagName: "INPUT", id: "q1_a", name: "q1", type: "radio", checked: false };
+      const labelA = { tagName: "LABEL", innerText: "Only Statement I is correct", textContent: "Only Statement I is correct" };
+      const optA = { querySelector: (sel: string) => sel.includes("input") ? inputA : (sel.includes(".answernumber") ? null : labelA) };
+
+      const inputB = { tagName: "INPUT", id: "q1_b", name: "q1", type: "radio", checked: false };
+      const labelB = { tagName: "LABEL", innerText: "Both Statement I and Statement II are correct", textContent: "Both Statement I and Statement II are correct" };
+      const optB = { querySelector: (sel: string) => sel.includes("input") ? inputB : (sel.includes(".answernumber") ? null : labelB) };
+
+      const mockDoc = {
+        querySelector: () => null,
+        querySelectorAll: (sel: string) => {
+          if (sel.includes(".que") || sel.includes("question-")) {
+            return [{
+              id: "question-1",
+              querySelector: (s: string) => {
+                if (s.includes(".no") || s.includes(".qno")) return { textContent: "Question 1" };
+                if (s.includes(".grade")) return { innerText: "Marked out of 4.00" };
+                if (s.includes(".qtext")) return { innerText: "Consider Statement I and Statement II." };
+                return null;
+              },
+              querySelectorAll: (s: string) => [optA, optB]
+            }];
+          }
+          return [];
+        }
+      };
+
+      const parsed = StudyPilotScribe.parseMoodleQuestions(mockDoc as any);
+      expect(parsed.questions[0].traps.hasDualOptionTrap).toBe(true);
+
+      // 2. Reverse anti-distractor audit override in Auditor
+      const multiStatementQ = {
+        id: "q3",
+        questionNumber: 3,
+        options: [
+          { key: "a", cleanText: "Only Statement I is correct" },
+          { key: "b", cleanText: "Only Statement II is correct" },
+          { key: "c", cleanText: "Both Statement I and Statement II are correct" },
+          { key: "d", cleanText: "Neither Statement I nor Statement II is correct" }
+        ],
+        traps: { hasDualOptionTrap: true }
+      };
+
+      // Model mistakenly selected dual option (c), but reasoning clearly says Statement II is false/incorrect
+      const mistakenDualCandidate = {
+        selectedKey: "c",
+        reasoning: "Statement I is a verified factual definition from Murugesan. However, Statement II is incorrect and not valid under ISO standards. Therefore only Statement I is correct.",
+        confidence: 0.95
+      };
+
+      const correctedAudit = StudyPilotAuditor.auditAnswer(multiStatementQ as any, mistakenDualCandidate);
+      expect(correctedAudit.selectedKey).toBe("a"); // Overridden to 'a' ("Only Statement I is correct")!
+      expect(correctedAudit.auditNotes).toContain("Overrode dual option 'c' in favor of single option 'a'");
+
+      // 3. Module 4 Green IT Extended Ontology Lookups
+      const bg = require("../studypilot/background.js");
+      const kyotoAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which market-based mechanisms were introduced under the Kyoto Protocol?",
+        options: [
+          { key: "a", cleanText: "Clean Development Mechanism and Joint Implementation" },
+          { key: "b", cleanText: "Carbon border adjustment tax" },
+          { key: "c", cleanText: "Voluntary eco-labeling" }
+        ]
+      }, "Green Computing");
+      expect(kyotoAns.selectedKey).toBe("a");
+
+      const rohsAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which heavy metals and flame retardants are restricted substances under RoHS?",
+        options: [
+          { key: "a", cleanText: "Silicon and aluminum" },
+          { key: "b", cleanText: "Lead, Mercury, Cadmium, and Hexavalent Chromium" },
+          { key: "c", cleanText: "Gold and platinum" }
+        ]
+      }, "Green Computing");
+      expect(rohsAns.selectedKey).toBe("b");
+
+      const weeeAns = bg.solveWithAcademicHeuristics({
+        questionText: "What is the primary mandate of the European WEEE Directive?",
+        options: [
+          { key: "a", cleanText: "Waste Electrical and Electronic Equipment collection and recovery targets" },
+          { key: "b", cleanText: "Software license audits" }
+        ]
+      }, "Green Computing");
+      expect(weeeAns.selectedKey).toBe("a");
+
+      const epeatAns = bg.solveWithAcademicHeuristics({
+        questionText: "How are the three EPEAT tiers structured?",
+        options: [
+          { key: "a", cleanText: "Bronze meets all 23 required criteria, Silver meets required plus 50 percent, Gold meets required plus 75 percent optional" },
+          { key: "b", cleanText: "Only based on recycled plastic content" }
+        ]
+      }, "Green Computing");
+      expect(epeatAns.selectedKey).toBe("a");
+
+      const embodiedAns = bg.solveWithAcademicHeuristics({
+        questionText: "What does embodied energy represent in green IT product lifecycles?",
+        options: [
+          { key: "a", cleanText: "Total energy consumed across manufacturing, processing, and entire lifecycle" },
+          { key: "b", cleanText: "Battery standby time" }
+        ]
+      }, "Green Computing");
+      expect(embodiedAns.selectedKey).toBe("a");
+
+      const greenwashAns = bg.solveWithAcademicHeuristics({
+        questionText: "What is greenwashing in corporate sustainability communications?",
+        options: [
+          { key: "a", cleanText: "Misleading and deceptive environmental claims" },
+          { key: "b", cleanText: "Cleaning solar panels with water" }
+        ]
+      }, "Green Computing");
+      expect(greenwashAns.selectedKey).toBe("a");
+    });
   });
 });

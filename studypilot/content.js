@@ -595,16 +595,28 @@
             });
           }
           for (const missing of audit.unattemptedQuestions) {
-            const parsedQ = currentQuestions.find(cq => cq.questionNumber === missing.questionNumber) || {
+            const parsedQ = currentQuestions.find(cq => String(cq.questionNumber) === String(missing.questionNumber)) || (
+              Scribe && typeof Scribe.parseMoodleQuestions === 'function' && missing.node
+                ? (Scribe.parseMoodleQuestions(missing.node.ownerDocument || document).questions.find(q => String(q.questionNumber) === String(missing.questionNumber)) || null)
+                : null
+            ) || {
               id: missing.node.id,
               questionNumber: missing.questionNumber,
               questionText: (missing.node.innerText || '').trim(),
               options: []
             };
-            const scholarAns = await Scholar.solveQuestion(parsedQ, courseContext, config);
+            const isMissingMultiMarkOrHighStakes = Boolean(stakes.isHighStakes || (parsedQ.marks && parsedQ.marks >= 2));
+            const scholarAns = await Scholar.solveQuestion(parsedQ, courseContext, {
+              ...config,
+              isHighStakes: isMissingMultiMarkOrHighStakes,
+              marks: parsedQ.marks || 1.0
+            });
             const consensus = Auditor.auditAnswer(parsedQ, scholarAns);
             await Sentry.actuateSelection(parsedQ, consensus, speedMode);
+            const selKey = parsedQ.questionNumber || parsedQ.id || String(missing.questionNumber);
+            currentSelections[selKey] = consensus.selectedKey;
           }
+          saveQuizSelections(currentQuizId, currentSelections);
           const reAudit = Inspector.verifyAllQuestionsAttempted(document);
           if (!reAudit.isAllAttempted) {
             throw new Error(`Inspector Security Block: ${reAudit.unattemptedCount} radio buttons unselected. Submission halted.`);
