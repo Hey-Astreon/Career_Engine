@@ -525,7 +525,7 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
   let textbookAuthority = 'standard university curriculum and accredited textbook definitions';
   let domainRules = '';
 
-  if (/java|csit120|object\s*oriented|oop|procedure\s*oriented|\bpop\b|class.*object|inheritance|polymorphism|encapsulation|jvm|bytecode|package|exception|throwable|try\b|catch\b|finally\b|throws?\b|runtimeexception|interfaces?/i.test(combinedContext)) {
+  if (/java|csit120|object\s*oriented|oop|procedure\s*oriented|\bpop\b|class.*object|inheritance|polymorphism|encapsulation|jvm|bytecode|package|exception|throwable|try\b|catch\b|finally\b|throws?\b|runtimeexception|interfaces?|constructor|wrapper|command\s*line|autoboxing|unboxing|finalize/i.test(combinedContext)) {
     subjectHeader = `Course Subject: ${courseContext || 'Object Oriented Programming Using Java (CSIT120) - Semester III'}`;
     textbookAuthority = `standard academic Java textbooks (Specifically: Herbert Schildt, "Java: The Complete Reference", and E. Balagurusamy, "Programming with Java")`;
     domainRules = `   - Procedure Oriented Programming (POP) vs Object Oriented Programming (OOP):
@@ -562,7 +562,16 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
      * Hierarchy: 'java.lang.Throwable' is the root superclass of all errors and exceptions. Subclasses are 'Exception' (recoverable) and 'Error' (severe system problems like OutOfMemoryError, not catchable).
      * Checked vs Unchecked: Checked exceptions are checked at compile time and must be handled or declared with 'throws' (IOException, SQLException, ClassNotFoundException). Unchecked exceptions inherit from RuntimeException and occur at runtime (ArithmeticException, NullPointerException, ArrayIndexOutOfBoundsException).
      * 5 Keywords: 'try' (encloses code that may throw), 'catch' (handles specific exception), 'finally' (always executes for cleanup regardless of exception), 'throw' (explicitly throws an exception object), 'throws' (declares exceptions in method signature).
-     * Multiple Catch Order: Must order from most specific subclass to most generic superclass (e.g. ArithmeticException before Exception).`;
+     * Multiple Catch Order: Must order from most specific subclass to most generic superclass (e.g. ArithmeticException before Exception).
+   - Constructors, Wrapper Classes & Command Line Arguments (Module 3):
+     * Constructors: Same name as class, NO return type (not even void). Automatically called when object instantiated via 'new'. Cannot be static, final, abstract, or synchronized. Cannot be inherited, so cannot be overridden (can only be overloaded).
+     * Types: Default constructor (no-arg, generated automatically by compiler ONLY if no other constructor is defined), Parameterized constructor (passes arguments for initialization), Copy constructor (initializes object using values of another object).
+     * Constructor Chaining: 'this()' calls another constructor in same class; 'super()' calls superclass constructor. Either MUST be the FIRST statement in constructor body.
+     * Garbage Collection & finalize(): JVM automatically manages memory through garbage collection. System.gc() requests GC. finalize() method was declared in java.lang.Object (called prior to garbage collection of object).
+     * Wrapper Classes: Provide object representations for primitive types (int -> Integer, char -> Character, byte -> Byte, short -> Short, long -> Long, float -> Float, double -> Double, boolean -> Boolean). All numeric wrapper classes inherit from 'java.lang.Number'.
+     * Autoboxing & Unboxing: Autoboxing is automatic conversion from primitive to wrapper object (e.g. Integer x = 5;); Unboxing is automatic conversion from wrapper object to primitive (e.g. int y = x;).
+     * Parsing: Static methods like Integer.parseInt(str) return primitive int; Integer.valueOf(str) returns Integer object.
+     * Command Line Arguments: Passed as String array to main(String[] args). args[0] is the FIRST user argument (NOT the program name). args.length returns count of arguments (0 if none passed). Accessing args beyond args.length - 1 throws ArrayIndexOutOfBoundsException.`;
   } else if (/green\s*computing|cse433|green\s*it|carbon|sits\b|murugesan|unhelkar|rohs|weee|epeat/i.test(combinedContext)) {
     subjectHeader = `Course Subject: ${courseContext || 'Green Computing (CSE433)'}`;
     textbookAuthority = `standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications")`;
