@@ -166,7 +166,18 @@
     const perfectAttempt = attemptsData.find(a => a.percentage >= 99.9 || a.score >= a.total);
     if (perfectAttempt) {
       if (quizId) {
-        storePerfectSolution(quizId, perfectAttempt.selections);
+        // Phase 145.22: Store both key and semantic text so Moodle option shuffling never breaks restored answers
+        const enrichedSelections = {};
+        questions.forEach((q, i) => {
+          const qNum = String(q.questionNumber || i + 1);
+          const chosenKey = perfectAttempt.selections[qNum];
+          const matchedOpt = (q.options || []).find(o => o.key.toLowerCase() === chosenKey);
+          enrichedSelections[qNum] = {
+            key: chosenKey,
+            text: matchedOpt ? matchedOpt.cleanText : ''
+          };
+        });
+        storePerfectSolution(quizId, enrichedSelections);
       }
       // Re-apply the verified perfect vector!
       const resolvedAudits = candidateAudits.map((aud, i) => {
@@ -276,12 +287,37 @@
       }
     });
 
-    // 5. Select ONE Question to Permute (Prioritize Unconfirmed & Uncertain Questions)
+    // 5. Select ONE Question to Permute (Phase 145.22: Bi-Directional Alternating Pivot & Semantic Heuristics)
     let permutedQNum = null;
     let permutedFromKey = null;
     let permutedToKey = null;
 
-    for (let i = 0; i < questions.length; i++) {
+    // Detect which question was permuted in the most recent attempt (if any)
+    let lastPermutedQNum = null;
+    if (attemptsData.length >= 2) {
+      const prev1 = attemptsData[attemptsData.length - 1];
+      const prev2 = attemptsData[attemptsData.length - 2];
+      questions.forEach((q, idx) => {
+        const qNum = String(q.questionNumber || idx + 1);
+        if (prev1.selections[qNum] && prev2.selections[qNum] && prev1.selections[qNum] !== prev2.selections[qNum]) {
+          lastPermutedQNum = qNum;
+        }
+      });
+    }
+
+    // Bi-directional sorting of question order: alternate between questions if previous permutation didn't solve it
+    const questionIndices = questions.map((_, i) => i);
+    if (lastPermutedQNum) {
+      questionIndices.sort((a, b) => {
+        const qNumA = String(questions[a].questionNumber || a + 1);
+        const qNumB = String(questions[b].questionNumber || b + 1);
+        if (qNumA === lastPermutedQNum && qNumB !== lastPermutedQNum) return 1;
+        if (qNumB === lastPermutedQNum && qNumA !== lastPermutedQNum) return -1;
+        return a - b;
+      });
+    }
+
+    for (const i of questionIndices) {
       const q = questions[i];
       const qNum = String(q.questionNumber || i + 1);
 
@@ -289,6 +325,8 @@
 
       const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
       const currentChoice = nextSelections[qNum];
+      const candAudit = candidateAudits[i];
+      const preferredAltKey = candAudit && candAudit.alternateKey ? candAudit.alternateKey.toLowerCase().trim() : null;
 
       // Find an untried, non-eliminated alternative option for this question
       const candidateAlts = availableOptions.filter(optKey => {
@@ -305,6 +343,24 @@
       });
 
       if (candidateAlts.length > 0) {
+        // Prioritize Scholar's alternateKey or options mentioning compiler error/academic keywords over arbitrary order
+        candidateAlts.sort((optA, optB) => {
+          if (optA === preferredAltKey) return -1;
+          if (optB === preferredAltKey) return 1;
+
+          const optObjA = (q.options || []).find(o => o.key.toLowerCase() === optA);
+          const optObjB = (q.options || []).find(o => o.key.toLowerCase() === optB);
+          const textA = (optObjA?.cleanText || '').toLowerCase();
+          const textB = (optObjB?.cleanText || '').toLowerCase();
+
+          const isTrapA = /compiler\s*error|compile-time/i.test(textA);
+          const isTrapB = /compiler\s*error|compile-time/i.test(textB);
+          if (isTrapA && !isTrapB) return -1;
+          if (!isTrapA && isTrapB) return 1;
+
+          return 0;
+        });
+
         permutedQNum = qNum;
         permutedFromKey = currentChoice;
         permutedToKey = candidateAlts[0];

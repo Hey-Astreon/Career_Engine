@@ -2706,5 +2706,136 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const hasConsecutiveZeros = isPractice ? consecutiveZeroCount >= 3 : consecutiveZeroCount >= 1;
       expect(hasConsecutiveZeros).toBe(false); // Practice quiz is permitted to continue to Attempt 3!
     });
+
+    it("Phase 145.22: Master Brain Upgrade: Interface Compiler Errors, Module 4-5 Syllabus, and Bi-Directional Mastermind Pivot", () => {
+      const fs = require("fs");
+      const bgCode = fs.readFileSync("studypilot/background.js", "utf8");
+
+      // Extract solveWithAcademicHeuristics
+      const fnMatch = bgCode.match(/function solveWithAcademicHeuristics\([\s\S]*?\n\}/);
+      expect(fnMatch).toBeTruthy();
+      const fnBody = fnMatch[0];
+      const solveWithAcademicHeuristics = new Function("question", "courseContext", `
+        ${fnBody}
+        return solveWithAcademicHeuristics(question, courseContext);
+      `);
+
+      // 1. Module 4 Quiz 4.2.2 Question 1 Trap: Interface Instantiation Compile Error
+      const qInstantiateInterface = solveWithAcademicHeuristics({
+        questionText: "What is the output of the below Java program with an interface?\ninterface Book { char type='C'; }\npublic class InterfaceTest3 { public static void main(String[] args) { System.out.println(new Book().type); } }",
+        options: [
+          { key: "a", cleanText: "C" },
+          { key: "b", cleanText: "No output" },
+          { key: "c", cleanText: "Compiler error" },
+          { key: "d", cleanText: "None of the above" }
+        ]
+      }, "Object Oriented Programming Using Java (CSIT120)");
+      expect(qInstantiateInterface.selectedKey).toBe("c");
+
+      // 2. Module 4 Quiz 4.2.2 Question 2: All interface methods are public and abstract
+      const qInterfaceMethods = solveWithAcademicHeuristics({
+        questionText: "All Interface methods in Java are ___ by default.",
+        options: [
+          { key: "a", cleanText: "public" },
+          { key: "b", cleanText: "abstract" },
+          { key: "c", cleanText: "public and abstract" },
+          { key: "d", cleanText: "None of the above" }
+        ]
+      }, "Java CSIT120");
+      expect(qInterfaceMethods.selectedKey).toBe("c");
+
+      // 3. Module 4 Quiz 4.2.3: Static methods in interface
+      const qStaticInterface = solveWithAcademicHeuristics({
+        questionText: "Which statement is true about static method in interface in Java?",
+        options: [
+          { key: "a", cleanText: "Static method in interface cannot be overridden" },
+          { key: "b", cleanText: "They are inherited by all implementing classes" },
+          { key: "c", cleanText: "They can only be called using an instance object" }
+        ]
+      }, "Java CSIT120");
+      expect(qStaticInterface.selectedKey).toBe("a");
+
+      // 4. Module 4: Multithreading lifecycle & sleep lock retention
+      const qSleepLock = solveWithAcademicHeuristics({
+        questionText: "Does sleep() release acquired lock or monitor in Java multithreading?",
+        options: [
+          { key: "a", cleanText: "releases lock" },
+          { key: "b", cleanText: "does not release lock" }
+        ]
+      }, "Java CSIT120");
+      expect(qSleepLock.selectedKey).toBe("b");
+
+      // 5. Module 5: Strings & AWT Layouts
+      const qStringImmutable = solveWithAcademicHeuristics({
+        questionText: "Why is String immutable in Java?",
+        options: [
+          { key: "a", cleanText: "String constant pool caching and cannot be changed" },
+          { key: "b", cleanText: "Because it extends StringBuffer" }
+        ]
+      }, "Java CSIT120");
+      expect(qStringImmutable.selectedKey).toBe("a");
+
+      const qFlowLayout = solveWithAcademicHeuristics({
+        questionText: "What is the default layout manager for a Panel in AWT?",
+        options: [
+          { key: "a", cleanText: "BorderLayout" },
+          { key: "b", cleanText: "FlowLayout" },
+          { key: "c", cleanText: "GridLayout" }
+        ]
+      }, "Java CSIT120");
+      expect(qFlowLayout.selectedKey).toBe("b");
+
+      // 6. Mastermind Bi-Directional Alternating Pivot Verification:
+      // Scenario: Attempt 1 had Q1 wrong, Q2 correct (Score 1.0/2.0).
+      // Attempt 2 permuted Q1 and score stayed at 1.0/2.0 (stagnation).
+      // Attempt 3 MUST alternate to permuting Q2 instead of continuing to loop Q1!
+      const questions2Q = [
+        {
+          id: "q1",
+          questionNumber: 1,
+          options: [
+            { key: "a", cleanText: "Option A" },
+            { key: "b", cleanText: "Option B" },
+            { key: "c", cleanText: "Compiler error" },
+            { key: "d", cleanText: "Option D" }
+          ]
+        },
+        {
+          id: "q2",
+          questionNumber: 2,
+          options: [
+            { key: "a", cleanText: "Option A" },
+            { key: "b", cleanText: "Option B" },
+            { key: "c", cleanText: "Option C" },
+            { key: "d", cleanText: "Option D" }
+          ]
+        }
+      ];
+
+      const pastAttempts2Q = [
+        {
+          selections: { "1": "a", "2": "b" },
+          score: 1.0,
+          total: 2.0,
+          percentage: 50.0
+        },
+        {
+          selections: { "1": "b", "2": "b" },
+          score: 1.0,
+          total: 2.0,
+          percentage: 50.0
+        }
+      ];
+
+      const candAudits2Q = [
+        { selectedKey: "a", alternateKey: "c", confidence: 0.9, reasoning: "Audit 1" },
+        { selectedKey: "b", alternateKey: "c", confidence: 0.9, reasoning: "Audit 2" }
+      ];
+
+      const mastermindPlan3: any = StudyPilotMastermind.deduceNextVector(questions2Q as any, candAudits2Q, pastAttempts2Q, "test_quiz_bidirectional");
+      expect(mastermindPlan3.applied).toBe(true);
+      // Attempt 3 MUST permute Question 2 (Alternating Pivot), NOT Question 1!
+      expect(mastermindPlan3.permutedQuestion).toBe("2");
+    });
   });
 });

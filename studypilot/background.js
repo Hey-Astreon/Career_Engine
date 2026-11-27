@@ -279,7 +279,33 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /block.*always executes|guaranteed to execute|cleanup code/i, match: /finally/i, reason: "The 'finally' block is guaranteed to execute whether an exception is thrown, caught, or not, making it ideal for cleanup." },
     { pattern: /explicitly throw an exception|keyword used to throw an exception/i, match: /throw\b/i, reason: "The 'throw' keyword is used to explicitly throw an exception instance in Java." },
     { pattern: /declare.*exceptions.*method signature|method may throw/i, match: /throws\b/i, reason: "The 'throws' keyword is used in a method signature to declare the exceptions that the method might throw." },
-    { pattern: /severe.*problem.*cannot be handled|out of memory/i, match: /error\b/i, reason: "In Java, 'Error' represents severe system-level problems (like OutOfMemoryError) that standard applications should not attempt to catch." }
+    { pattern: /severe.*problem.*cannot be handled|out of memory/i, match: /error\b/i, reason: "In Java, 'Error' represents severe system-level problems (like OutOfMemoryError) that standard applications should not attempt to catch." },
+    // Phase 145.22: Java CSIT120 Module 4 Ground Truth (Interfaces & Multithreading)
+    { pattern: /all interface methods.*by default|methods in an interface are.*by default|interface methods are/i, match: /public and abstract|public.*abstract/i, reason: "In Java, all methods declared in an interface are implicitly public and abstract by default (prior to Java 8 default/static methods)." },
+    { pattern: /all (?:interface )?(?:variables|fields|constants).*in (?:an )?interface|variables in an interface are|interface fields are/i, match: /public static final|public.*static.*final/i, reason: "All variables declared in an interface are implicitly public, static, and final (constants) and must be initialized." },
+    { pattern: /default method.*interface|default keyword.*interface/i, match: /default\b|provide.*implementation/i, reason: "Java 8 introduced default methods in interfaces, declared with the 'default' keyword to provide backward-compatible implementations." },
+    { pattern: /static method.*interface|interface static method/i, match: /interfacename|cannot be overridden|not inherited/i, reason: "Static methods in Java interfaces cannot be inherited or overridden and must be called using the interface name directly (InterfaceName.methodName())." },
+    { pattern: /instantiat.*interface|interface.*instantiat|interface[\s\S]*new\s+[a-z0-9_]+\s*\(/i, match: /compiler error|cannot be instantiated|compile-time error/i, reason: "An interface cannot be instantiated directly with 'new' in Java; doing so results in a compile-time error." },
+    { pattern: /marker interface|tag interface/i, match: /no methods|empty interface|zero methods|serializable|cloneable|remote/i, reason: "A marker (tag) interface in Java contains no methods or fields (e.g. Serializable, Cloneable, Remote)." },
+    { pattern: /functional interface/i, match: /single abstract method|one abstract method|@functionalinterface/i, reason: "A functional interface has exactly one abstract method and can be implemented by lambda expressions." },
+    { pattern: /keyword.*implement.*interface/i, match: /implements\b/i, reason: "The 'implements' keyword is used by a class to implement an interface." },
+    { pattern: /interface extends.*interface|interface inherit.*interface/i, match: /extends\b/i, reason: "An interface inherits from another interface using the 'extends' keyword (and can extend multiple interfaces)." },
+    { pattern: /how many ways.*create a thread|ways to create a thread.*java/i, match: /two|2\b|extending thread.*implementing runnable|runnable.*thread/i, reason: "In Java, there are exactly two standard ways to create a thread: extending java.lang.Thread or implementing java.lang.Runnable." },
+    { pattern: /start\(\).*run\(\)|difference between start and run|calling run\(\) directly/i, match: /start.*creates.*new thread|run.*current thread|does not create/i, reason: "start() creates a new call stack/thread and invokes run(); calling run() directly executes code synchronously on the current thread." },
+    { pattern: /thread lifecycle states|how many states.*thread|lifecycle of a thread/i, match: /new.*runnable|six|6\b|blocked.*waiting.*timed_waiting.*terminated/i, reason: "The Java thread lifecycle has 6 states: NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, and TERMINATED." },
+    { pattern: /thread priority range|default thread priority|priority values/i, match: /1 to 10|norm_priority.*5|5\b/i, reason: "Thread priorities range from 1 (MIN_PRIORITY) to 10 (MAX_PRIORITY), with 5 (NORM_PRIORITY) as the default." },
+    { pattern: /sleep\(\).*releases? (?:lock|monitor)|does sleep\(\) release/i, match: /does not release|keeps lock|never releases/i, reason: "Thread.sleep() temporarily suspends execution but DOES NOT release acquired synchronization locks/monitors." },
+    { pattern: /wait\(\).*releases? (?:lock|monitor)|does wait\(\) release/i, match: /releases lock|releases the monitor/i, reason: "Object.wait() releases the monitor lock and waits until notify() or notifyAll() is called on that object." },
+    { pattern: /wait.*notify.*notifyall.*defined in|which class defines wait and notify/i, match: /object\b|java\.lang\.object/i, reason: "wait(), notify(), and notifyAll() are defined in java.lang.Object (not java.lang.Thread) because they operate on object monitor locks." },
+    { pattern: /daemon thread/i, match: /background|garbage collect|low priority/i, reason: "A daemon thread is a low-priority background service thread (e.g. Garbage Collector) that terminates when all user threads finish." },
+    { pattern: /join\(\).*method/i, match: /waits for.*thread to die|waits for.*thread to terminate/i, reason: "The join() method pauses execution until the thread on which it is called has died/terminated." },
+    { pattern: /yield\(\).*method/i, match: /pause.*allow other threads|temporarily pauses/i, reason: "The yield() method pauses the currently executing thread to give equal-priority threads a chance to run." },
+    // Phase 145.22: Java CSIT120 Module 5 Ground Truth (Strings, AWT, Layouts & Event Handling)
+    { pattern: /string.*immutable|immutable.*string/i, match: /cannot be changed|string constant pool|immutable/i, reason: "String objects in Java are immutable; any modification creates a new String instance in memory." },
+    { pattern: /stringbuffer vs stringbuilder|difference between stringbuffer and stringbuilder/i, match: /stringbuffer is synchronized|stringbuilder is not synchronized|stringbuffer.*thread-safe/i, reason: "StringBuffer is thread-safe and synchronized; StringBuilder is non-synchronized and faster." },
+    { pattern: /default layout manager for (?:a )?panel|default layout manager for (?:an )?applet/i, match: /flowlayout/i, reason: "FlowLayout is the default layout manager for Panel and Applet containers in Java AWT." },
+    { pattern: /default layout manager for (?:a )?frame|default layout manager for (?:a )?window/i, match: /borderlayout/i, reason: "BorderLayout is the default layout manager for Frame and Window containers in Java AWT." },
+    { pattern: /adapter class|purpose of adapter class/i, match: /empty implementation|default implementation|convenience class/i, reason: "Adapter classes provide empty default implementations of listener interfaces so programmers only override needed methods." }
   ];
 
   for (const entry of dictionary) {
@@ -486,8 +512,10 @@ async function queryGroqRotator(prompt, groqKey, question, userConfig = {}) {
     if (primary) {
       groqModelIndex = (idx + 1) % GROQ_MODELS.length;
 
-      // Dual-Model Consensus Cross-Check on uncertain, retry, or high-stakes questions
-      const needsConsensus = primary.confidence < 0.96 || userConfig.isRetry || userConfig.isHighStakes;
+      // Dual-Model Consensus Cross-Check on code snippets, uncertain, retry, or high-stakes questions (Phase 145.22)
+      const qText = question.questionText || '';
+      const hasCodeSnippet = /[{};]|class\s+\w+|interface\s+\w+|public\s+static\s+void\s+main|System\.out\.println|new\s+[a-zA-Z0-9_]+\s*\(/i.test(qText);
+      const needsConsensus = primary.confidence < 0.99 || hasCodeSnippet || userConfig.isRetry || userConfig.isHighStakes;
       if (needsConsensus) {
         const peerModel = GROQ_MODELS[(idx + 1) % GROQ_MODELS.length];
         if (peerModel && peerModel !== modelName) {
@@ -498,7 +526,17 @@ async function queryGroqRotator(prompt, groqKey, question, userConfig = {}) {
               primary.engine = `Groq Consensus (${modelName} + ${peerModel})`;
             } else {
               primary.alternateKey = peer.selectedKey;
-              if (peer.confidence > primary.confidence + 0.05) {
+              const peerReason = (peer.reasoning || '').toLowerCase();
+              const primaryReason = (primary.reasoning || '').toLowerCase();
+              const isCompilerTrap = /compiler\s*error|compile-time\s*error|cannot\s*be\s*instantiated/i.test(peerReason) || /compiler\s*error|compile-time\s*error|cannot\s*be\s*instantiated/i.test(primaryReason);
+
+              if (isCompilerTrap && /compiler\s*error|compile-time\s*error/i.test(peerReason) && !/compiler\s*error/i.test(primaryReason)) {
+                // Prioritize the model detecting static compiler violations over a model that lazily guesses output
+                primary.selectedKey = peer.selectedKey;
+                primary.reasoning = peer.reasoning;
+                primary.confidence = 0.99;
+                primary.engine = `Groq Consensus Mental Compiler (${peerModel})`;
+              } else if (peer.confidence > primary.confidence + 0.05) {
                 const prevKey = primary.selectedKey;
                 primary.selectedKey = peer.selectedKey;
                 primary.alternateKey = prevKey;
@@ -571,7 +609,40 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
      * Wrapper Classes: Provide object representations for primitive types (int -> Integer, char -> Character, byte -> Byte, short -> Short, long -> Long, float -> Float, double -> Double, boolean -> Boolean). All numeric wrapper classes inherit from 'java.lang.Number'.
      * Autoboxing & Unboxing: Autoboxing is automatic conversion from primitive to wrapper object (e.g. Integer x = 5;); Unboxing is automatic conversion from wrapper object to primitive (e.g. int y = x;).
      * Parsing: Static methods like Integer.parseInt(str) return primitive int; Integer.valueOf(str) returns Integer object.
-     * Command Line Arguments: Passed as String array to main(String[] args). args[0] is the FIRST user argument (NOT the program name). args.length returns count of arguments (0 if none passed). Accessing args beyond args.length - 1 throws ArrayIndexOutOfBoundsException.`;
+     * Command Line Arguments: Passed as String array to main(String[] args). args[0] is the FIRST user argument (NOT the program name). args.length returns count of arguments (0 if none passed). Accessing args beyond args.length - 1 throws ArrayIndexOutOfBoundsException.
+   - Interfaces & Abstract Types (Module 4):
+     * Interface Definition: Pure abstract specification declared using 'interface' keyword. Cannot be instantiated directly with 'new' (e.g. 'new Book()' causes a COMPILE-TIME ERROR).
+     * Interface Variables: All fields declared in an interface are implicitly 'public static final' (constants). Must be explicitly initialized upon declaration; cannot be reassigned or modified (reassignment causes COMPILE-TIME ERROR).
+     * Interface Methods (Pre-Java 8): All methods are implicitly 'public abstract'. Implementing class MUST declare them with 'public' visibility (omitting 'public' reduces visibility and causes a COMPILE-TIME ERROR).
+     * Interface Methods (Java 8+):
+       - Default Methods: Declared with 'default' keyword; have a body; inherited by implementing classes; can be overridden. If two interfaces define identical default methods, implementing class must resolve ambiguity using 'InterfaceName.super.method()'.
+       - Static Methods: Declared with 'static' keyword; have a body; belong exclusively to the interface; CANNOT be inherited or overridden; MUST be invoked using interface name directly: 'InterfaceName.methodName()'. Invoking via instance reference (e.g. 'obj.staticMethod()') causes a COMPILE-TIME ERROR.
+     * Extending & Implementing: A class 'implements' one or more interfaces (multiple inheritance of interface). An interface 'extends' one or more interfaces.
+     * Marker Interface: Empty interface with no methods or fields (e.g. java.io.Serializable, java.lang.Cloneable, java.rmi.Remote).
+     * Functional Interface: Contains exactly ONE abstract method; annotated with @FunctionalInterface; enables lambda expressions.
+   - Multithreading & Concurrency (Module 4):
+     * Thread Creation: Two mechanisms: (1) Extending 'java.lang.Thread' class and overriding run(), (2) Implementing 'java.lang.Runnable' interface and passing to Thread constructor (preferred to preserve class inheritance).
+     * Execution Start: Thread is started using 'thread.start()' (which creates a new JVM OS thread and calls run()). Calling 'thread.run()' directly does NOT spawn a thread (runs synchronously on current thread).
+     * Lifecycle States: 6 states defined in Thread.State enum: NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED.
+     * Thread Methods:
+       - 'Thread.sleep(millis)': Suspends current thread without releasing acquired monitor locks. Throws InterruptedException.
+       - 'thread.join()': Causes caller thread to wait until the target thread terminates.
+       - 'Thread.yield()': Pauses current thread to yield execution to equal-priority threads.
+       - Thread Priorities: Ranging from 1 (MIN_PRIORITY) to 10 (MAX_PRIORITY), default 5 (NORM_PRIORITY).
+     * Synchronization & Inter-Thread Communication:
+       - 'synchronized' keyword enforces mutual exclusion using object monitor locks.
+       - 'wait()', 'notify()', 'notifyAll()' are methods of 'java.lang.Object' (not Thread). Must be invoked inside a synchronized context on the monitor object, otherwise throws IllegalMonitorStateException. 'wait()' RELEASES the lock; 'sleep()' DOES NOT.
+     * Daemon Threads: Low-priority background service threads (e.g. Garbage Collector). Set via 'thread.setDaemon(true)' BEFORE start(). JVM terminates when all non-daemon user threads finish.
+   - Strings, AWT, Layout Managers & Event Handling (Module 5):
+     * String Immutability: 'String' objects in Java are immutable and stored in the String Constant Pool. Any concatenation or replacement produces a new object. '==' checks reference equality; '.equals()' checks character value equality.
+     * StringBuffer vs StringBuilder: 'StringBuffer' is mutable and thread-safe (synchronized methods); 'StringBuilder' is mutable, non-synchronized, and faster (introduced in Java 5).
+     * AWT Component Hierarchy: java.lang.Object -> Component -> Container -> Window -> Frame (or Container -> Panel -> Applet).
+     * Layout Managers:
+       - FlowLayout: Default layout for Panel and Applet. Arranges components in a line, left to right, wrapping to next line.
+       - BorderLayout: Default layout for Frame and Window. Arranges components in 5 regions: North, South, East, West, Center.
+       - GridLayout: Arranges components in a rectangular grid of equal-sized cells.
+     * Delegation Event Model: Event Sources generate Event Objects, which are handled by Event Listeners (interfaces containing handler callbacks like actionPerformed()).
+     * Adapter Classes: Abstract classes providing empty default implementations of listener interfaces (e.g. MouseAdapter, WindowAdapter) to simplify code.`;
   } else if (/green\s*computing|cse433|green\s*it|carbon|sits\b|murugesan|unhelkar|rohs|weee|epeat/i.test(combinedContext)) {
     subjectHeader = `Course Subject: ${courseContext || 'Green Computing (CSE433)'}`;
     textbookAuthority = `standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications")`;
@@ -610,9 +681,13 @@ ${domainRules}
 
 INSTRUCTIONS:
 1. Academic Authority: Select the option that reflects the exact standard definition and technical truth taught in accredited university courses.
-2. Negative Constraints: If the question asks for 'NOT', 'EXCEPT', 'FALSE', or 'INCORRECT', select the single statement that is factually invalid.
-3. Composite Options: If choices include 'Both', 'All of the above', or 'None of the above', select them only if all constituent statements are factually verified. Otherwise, select the specific valid statement.
-4. Response Format: Return strictly valid JSON with keys:
+2. Mental Compiler Protocol (Strict for Java Code Snippets):
+   - PASS 1: SYNTACTIC & COMPILER AUDIT: Check if an interface is instantiated via 'new InterfaceName()', if interface variables are mutated, if interface static methods are invoked via instance references ('obj.staticMethod()'), or if implemented interface methods reduce visibility from public. If ANY compiler rule is broken, you MUST select "Compiler error" or "Compile-time error" immediately! Do not guess runtime outputs.
+   - PASS 2: RUNTIME EXCEPTION AUDIT: Check for uncaught NullPointerException, ArithmeticException (/ by zero), or ArrayIndexOutOfBoundsException.
+   - PASS 3: EXECUTION TRACE: Only if Pass 1 & Pass 2 are clean, trace code execution to determine printed output.
+3. Negative Constraints: If the question asks for 'NOT', 'EXCEPT', 'FALSE', or 'INCORRECT', select the single statement that is factually invalid.
+4. Composite Options: If choices include 'Both', 'All of the above', or 'None of the above', select them only if all constituent statements are factually verified. Otherwise, select the specific valid statement.
+5. Response Format: Return strictly valid JSON with keys:
    - "selectedKey": lowercase letter of the chosen option (e.g. "a", "b", "c", "d")
    - "alternateKey": lowercase letter of the second-best plausible option
    - "reasoning": 1-2 sentence concise technical explanation citing the principle

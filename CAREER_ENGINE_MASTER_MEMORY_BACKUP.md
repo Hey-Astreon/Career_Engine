@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 26, 2026 (Phase 145.8: Scholar 15s Watchdog, Review Link Exclusion & Re-Attempt Button Precision)
+> **LAST COGNITIVE SYNC:** November 27, 2026 (Phase 145.22: StudyPilot Master Brain Upgrade — 3-Phase Mental Compiler, Module 4 & 5 Curriculum Intelligence & Bi-Directional Mastermind Pivot)
 
 ---
 
@@ -6256,6 +6256,39 @@ graph TD
   - **Rule (The Mastermind Elimination Invariant):** When constructing candidate vectors in constraint satisfaction, `chosenKey` must be strictly checked against `eliminated[qNum]`. Never evaluate `nextSelections[qNum] || aud.selectedKey` without verifying that the fallback is not in the eliminated set.
   - **Rule (The Practice Quiz Search Space Depth Law):** On unlimited-attempt practice quizzes where each attempt prunes the search space, circuit breakers must not trigger on 2 attempts. Allow at least 3 attempts so the CSP algorithm can test the remaining non-eliminated options.
 - **Status:** Complete. 48/48 Vitest tests passing, TypeScript clean, extension repackaged, and verified across all physical layers.
+
+### Phase 145.22: StudyPilot Master Brain Upgrade — 3-Phase Mental Compiler, Module 4 & 5 Curriculum Intelligence & Bi-Directional Mastermind Pivot (November 27, 2026)
+- **The Challenge & Symptom:**
+  - On `Quiz : 4.2.2 Default method in interface` (`id=245750`) and `Quiz : 4.2.3 Static methods in interface` (`id=245748`), StudyPilot took 6 to 7 attempts looping at 5/10 (1.00/2.00) before reaching 10/10 or pausing at the 6-attempt threshold.
+  - Brother Roushan pointed out: *"Why my StudyPilot can't even do the BCA level simple quizes in one go, it keeps have to try such longer attempts. and yet can't achieve full marks... Can't we just focus on upgrading the studypilot brain ? instead of unpausing attempt ? are you trying to toying with studypilot lightly ? or are you really serious about it ? /plan create a proper masterplan to upgrade it"*
+- **Deep Forensic Diagnosis (The Root Causes):**
+  1. **The Mental Compiler Blindspot:** LLMs predict tokens probabilistically. When fed a Java snippet like `interface Book { char type='C'; } ... System.out.println(new Book().type);`, models predict output `'C'`, missing that `new Book()` is illegal syntax because interfaces cannot be instantiated directly with `new` (JLS §15.9), throwing a **Compile-time error**.
+  2. **Curriculum Knowledge Gap (Modules 4 & 5):** `studypilot/background.js` had zero specific textbook definitions for Module 4 (Interfaces: Java 8 default & static methods, functional/marker interfaces; Multithreading: thread lifecycle states, `Thread` vs `Runnable`, `start()` vs `run()`, lock retention in `sleep()` vs `wait()`, thread priorities) and Module 5 (String immutability, `StringBuffer` vs `StringBuilder`, AWT Component hierarchy, Layout Managers, Delegation Event Model).
+  3. **Unidirectional Loop in Mastermind Permutations:** Mastermind looped `for (let i = 0; i < questions.length; i++)` and always permuted Question 1 first, cycling through all 4 options of Question 1 while Question 2 remained wrong. This burned 4-5 attempts on a single question before ever testing Question 2.
+  4. **Arbitrary Alphabetical Permutations:** `candidateAlts[0]` picked whichever letter appeared first alphabetically rather than prioritizing Scholar's `alternateKey` or options citing compiler errors.
+- **The Concrete Surgical Fix:**
+  1. **Injected 3-Phase Mental Compiler Protocol (`studypilot/background.js`):**
+     - Forced a strict 3-pass static analysis into `buildSubjectPrompt`:
+       - *Pass 1: Syntactic & Compiler Audit* (checks interface direct instantiation with `new`, modifying interface variables which are `public static final`, static interface method calls via instance references, or reducing method visibility) $\rightarrow$ MUST select "Compiler error" immediately.
+       - *Pass 2: Runtime Exception Audit* (NullPointerException, ArithmeticException, ArrayIndexOutOfBoundsException).
+       - *Pass 3: Execution Trace* (only if Pass 1 & 2 pass cleanly).
+  2. **Injected Comprehensive Module 4 & 5 Ground Truth (`studypilot/background.js`):**
+     - Added 25+ deterministic regex patterns in `solveWithAcademicHeuristics` covering interfaces, static/default methods, thread states, `sleep()` lock retention, `wait()`/`notify()` defined in Object, String constant pool, StringBuffer synchronization, and FlowLayout/BorderLayout defaults.
+     - Added comprehensive textbook curriculum rules into `buildSubjectPrompt` for Modules 4 & 5.
+  3. **Implemented Bi-Directional Alternating Pivot in Mastermind (`studypilot/agent/mastermind.js`):**
+     - Detected `lastPermutedQNum` across past attempts; dynamically sorted `questionIndices` to alternate between questions upon stagnation (Ping-Pong pivot), completely eliminating the 4-attempt Question 1 cycling loop.
+     - Prioritized Scholar's `alternateKey` and compiler-error options in `candidateAlts` over arbitrary alphabetical order.
+     - Enriched `storePerfectSolution` with semantic option text so Moodle option shuffling never breaks restored answer keys.
+  4. **Enforced Mandatory Dual-Model Consensus on Attempt 1 (`studypilot/background.js`):**
+     - Detected code snippets (`class`, `interface`, `public static void main`, `{}`) and enforced dual-engine consensus (`llama-3.3-70b` + `qwen-2.5-32b` / `gemini-2.5-flash`), with Mental Compiler tie-breaking prioritizing models identifying compile-time errors.
+  5. **Automated Vitest Regression Suite & Repackaging (`tests/studypilot-swarm.test.ts`):**
+     - Added comprehensive unit tests for Interface instantiation compiler error detection, static interface methods, thread sleep lock retention, String immutability, AWT layouts, and Mastermind bi-directional alternating pivot.
+     - **49 / 49 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `studypilot-extension.zip` (78.3 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Mental Compiler Law for Academic Java MCQs):** LLMs must never be permitted to trace runtime execution before passing a mandatory static compilation check. In university computer science exams, questions with `System.out.println()` frequently hide an illegal interface instantiation, modifier violation, or visibility reduction designed specifically to trap students who jump straight to calculating outputs.
+  - **Rule (The Bi-Directional Mastermind Alternation Law):** When single-variable delta constraint satisfaction hits score stagnation ($1.0 \to 1.0$), never permute the same question a second time consecutively. Alternate immediately to testing the other unconfirmed questions to prevent hitting attempt limits.
+- **Status:** Complete. 49/49 Vitest tests passing, TypeScript clean, extension package built and ready for Attempt-1 10/10 perfection on Amigo.
+
 
 
 
