@@ -298,7 +298,9 @@
           //       Do NOT pause on Attempt 2! Only pause on regression if attempts >= 3 and score still regressed.
           //   (4) Cap: Exceeded 6 practice attempts without perfection.
           const isPractice = !stakes.isHighStakes;
-          const isStagnantScore = attemptsHistory.consecutiveStagnantCount >= 2;
+          const isStagnantScore = isPractice
+            ? ((attemptsHistory.consecutiveStagnantCount || 0) >= 4)
+            : ((attemptsHistory.consecutiveStagnantCount || 0) >= 1);
           const hasConsecutiveZeros = isPractice
             ? (attemptsHistory.consecutiveZeroCount || 0) >= 3
             : (attemptsHistory.consecutiveZeroCount || 0) >= 1;
