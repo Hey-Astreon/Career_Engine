@@ -74,7 +74,7 @@
       const dualOption = question.options.find(o => DUAL_OPTION_REGEX.test(o.cleanText));
       if (dualOption) {
         const lowerReason = finalReasoning.toLowerCase();
-        // Strictly protect single option: never override if reasoning says "only", "distractor", "not both", or "incorrect"
+        // Strictly protect single option: never override if reasoning indicates contrast, negation, or single validity
         const rejectsDual = lowerReason.includes('only option') || 
                             lowerReason.includes('only statement') || 
                             lowerReason.includes('not both') || 
@@ -83,16 +83,32 @@
                             lowerReason.includes('is incorrect') ||
                             lowerReason.includes('is false') ||
                             lowerReason.includes('is not valid') ||
-                            lowerReason.includes('is not correct');
+                            lowerReason.includes('is not correct') ||
+                            lowerReason.includes('whereas') ||
+                            lowerReason.includes('however') ||
+                            lowerReason.includes('while statement') ||
+                            lowerReason.includes('statement 1 is false') ||
+                            lowerReason.includes('statement 2 is false') ||
+                            lowerReason.includes('statement i is false') ||
+                            lowerReason.includes('statement ii is false');
 
         if (dualOption.key.toLowerCase() !== cleanCandidateKey) {
+          // INVIOLABLE LAW: Never override a high-confidence (>=0.95) frontier model candidate
+          // unless the reasoning unequivocally affirms both statements are valid.
+          const candidateIsHighConfidence = (candidateAnswer.confidence && candidateAnswer.confidence >= 0.95);
           const explicitlySelectsDual = !rejectsDual && (
-            lowerReason.includes('both options') ||
-            lowerReason.includes('both statements') ||
-            lowerReason.includes('both a and b') ||
-            lowerReason.includes('all of the above') ||
-            (lowerReason.includes('both') && (lowerReason.includes('valid') || lowerReason.includes('true') || lowerReason.includes('correct') || lowerReason.includes('required'))) ||
-            (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')))
+            lowerReason.includes('both options are correct') ||
+            lowerReason.includes('both statements are correct') ||
+            lowerReason.includes('both statements are true') ||
+            lowerReason.includes('both a and b are correct') ||
+            lowerReason.includes('all of the above are correct') ||
+            lowerReason.includes('both options are valid') ||
+            (!candidateIsHighConfidence && (
+              lowerReason.includes('both options') ||
+              lowerReason.includes('both statements') ||
+              (lowerReason.includes('both') && (lowerReason.includes('valid') || lowerReason.includes('true') || lowerReason.includes('correct') || lowerReason.includes('required'))) ||
+              (lowerReason.includes('and') && (lowerReason.includes('is also required') || lowerReason.includes('are also required') || lowerReason.includes('are also valid') || lowerReason.includes('is also valid')))
+            ))
           );
 
           if (explicitlySelectsDual) {

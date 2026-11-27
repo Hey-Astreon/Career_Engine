@@ -597,12 +597,6 @@ Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning"
 }
 
 async function executeBackgroundAiSolve(question, courseContext, userConfig = {}) {
-  // Step 0: Academic Knowledge Base Ground Truth (Priority 0)
-  const groundTruth = solveWithAcademicHeuristics(question, courseContext);
-  if (groundTruth && groundTruth.confidence >= 0.95 && groundTruth.engine === 'Academic Knowledge Engine') {
-    return groundTruth;
-  }
-
   const optionsPayload = (question.options || []).map(o => ({ key: o.key, text: o.cleanText }));
   const optionsStr = optionsPayload.map(o => `(${o.key}) ${o.text}`).join('\n');
   const marksHeader = (question.marks && question.marks >= 2) ? `[Worth ${question.marks} Marks — High-Stakes Assessment Question]\n` : '';
@@ -611,13 +605,13 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
 
   let result = null;
 
-  // Tier 1: Groq LPU Multi-Model Rotator (<0.8s latency: 120B + Qwen 27B Dual Consensus)
+  // PRIORITY 1: Groq LPU Multi-Model Rotator (<0.8s latency: 120B + Qwen 27B Dual Consensus)
   const groqKey = userConfig.groqApiKey || unmaskKey(GROQ_BLOB);
   if (groqKey) {
     result = await queryGroqRotator(prompt, groqKey, question, userConfig);
   }
 
-  // Tier 2: Frontier Google Gemini (Gemini 2.5 Flash -> 3.6 Flash -> 3.8 Flash)
+  // PRIORITY 2: Frontier Google Gemini (Gemini 2.5 Flash -> 3.6 Flash -> 3.8 Flash)
   if (!result) {
     const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
     if (geminiKey && Date.now() > geminiQuotaExhaustedUntil) {
@@ -625,7 +619,7 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
     }
   }
 
-  // Tier 3: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B, 5s timeout)
+  // PRIORITY 3: NVIDIA NIM Frontier (Minimax M3.1 Flash -> Nemotron 3.5 Lightning 30B, 5s timeout)
   if (!result) {
     const nvidiaKey = userConfig.nvidiaApiKey || unmaskKey(NVIDIA_BLOB);
     if (nvidiaKey && Date.now() > nvidiaQuotaExhaustedUntil) {
@@ -633,10 +627,11 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
     }
   }
 
-  // Tier 4: Exponential Backoff on High-Stakes OR Lite Gemini Last-Resort Fallback
+  // PRIORITY 4: Exponential Backoff on High-Stakes OR Lite Gemini Fallback
   if (!result && userConfig.isHighStakes) {
     console.warn('[StudyPilot Cascade] High-Stakes question AI cascade missed. Performing 1.5s backoff retry...');
     await new Promise(r => setTimeout(r, 1500));
+    const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
     if (geminiKey) {
       result = await queryGemini(prompt, geminiKey, question, FRONTIER_GEMINI_MODELS, false);
     }
@@ -651,16 +646,19 @@ async function executeBackgroundAiSolve(question, courseContext, userConfig = {}
     }
   }
 
-  if (!result && geminiKey) {
-    result = await queryGemini(prompt, geminiKey, question, LITE_GEMINI_MODELS, false);
+  if (!result) {
+    const geminiKey = userConfig.geminiApiKey || unmaskKey(GEMINI_BLOB);
+    if (geminiKey) {
+      result = await queryGemini(prompt, geminiKey, question, LITE_GEMINI_MODELS, false);
+    }
   }
 
   if (result) {
     return result;
   }
 
-  // Emergency fallback if all AI providers fail completely
-  console.warn('[StudyPilot Cascade] All AI frontier tiers exhausted. Using academic fallback.');
+  // PRIORITY 5: Emergency Zero-Network Offline Failsafe (ONLY if all frontier AI APIs are completely unreachable)
+  console.warn('[StudyPilot Cascade] All Frontier AI providers exhausted or offline. Engaging zero-network academic fallback.');
   const emergencyFallback = solveWithAcademicHeuristics(question, courseContext);
   emergencyFallback.engine = 'Academic Emergency Fallback';
   emergencyFallback.confidence = 0.50;

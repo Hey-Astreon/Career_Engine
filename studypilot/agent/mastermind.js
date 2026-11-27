@@ -16,33 +16,15 @@
   'use strict';
 
   /**
-   * Pre-seeded verified 100% solutions across BCA CSE433 Green Computing
+   * Runtime memory cache for verified 100% solutions dynamically discovered in live attempts.
+   * Zero static hardcoded question traps.
    */
-  const PRESEEDED_PERFECT_SOLUTIONS = {
-    '239915': { '1': 'b', '2': 'a' }, // Quiz 1.1.1 Social Impact of Green IT: Q1: business methodology, Q2: Blue waters
-    '239323': { '1': 'c', '2': 'c' }, // Quiz 1.1.1 Data Servers Virtualization
-    '239882': { '1': 'a', '2': 'a' }, // Quiz 3.1.4 Green Strategic Alignment
-    '239883': { '1': 'b', '2': 'c' }, // Quiz 3.1.5 Green IT Drivers
-    '239884': { '1': 'd', '2': 'b' }, // Quiz 3.1.6 Green IT Business Dimensions
-    '239914': { '1': 'b', '2': 'b' }, // Quiz 1.1.6 Green Virtual Communities: Q1: shared service center, Q2: RoHS
-    '239946': { '1': 'b', '2': 'c' }, // Quiz 2.1.5 Configuring a GET Road Map: Q1: data repository, Q2: green technical
-    '239961': {
-      '1': { key: 'b', text: 'establish' },
-      '2': { key: 'a', text: 'carbon reduction' }
-    }, // Quiz 4.1.2 Green ICT and Technology Trends
-    '239964': {
-      '1': { key: 'c', text: 'half' },
-      '2': { key: 'd', text: 'ipcc' }
-    }, // Quiz 4.1.5 Green ICT—Business and Economic Trends
-    '244530': {
-      '1': { text: 'top-down' },
-      '2': { text: 'data' }
-    }, // CSIT120 Quiz 1.1.1 Procedure Oriented Programming Vs. Object Oriented Programming (OOP)
-    '244588': {
-      '1': { key: 'd', text: 'renamed without renaming' },
-      '2': { key: 'c', text: 'parent packages separated by dot' }
-    }, // CSIT120 Quiz 2.1.2 Type of Packages
-  };
+  const RUNTIME_PERFECT_SOLUTIONS = {};
+
+  /**
+   * Schema-versioned persistent key (v2) to purge any legacy poisoned historical caches.
+   */
+  const STORAGE_PREFIX = 'sp_v2_perfect_solution_';
 
   /**
    * Retrieves verified 100% answer key from memory or persistent localStorage.
@@ -50,14 +32,16 @@
   function getPerfectSolution(quizId) {
     if (!quizId) return null;
     const cleanId = String(quizId).trim();
-    if (PRESEEDED_PERFECT_SOLUTIONS[cleanId]) {
-      return PRESEEDED_PERFECT_SOLUTIONS[cleanId];
+    if (RUNTIME_PERFECT_SOLUTIONS[cleanId]) {
+      return RUNTIME_PERFECT_SOLUTIONS[cleanId];
     }
     try {
       if (typeof localStorage !== 'undefined') {
-        const stored = localStorage.getItem(`sp_perfect_solution_${cleanId}`);
+        const stored = localStorage.getItem(`${STORAGE_PREFIX}${cleanId}`);
         if (stored) {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          RUNTIME_PERFECT_SOLUTIONS[cleanId] = parsed;
+          return parsed;
         }
       }
     } catch (e) {}
@@ -71,9 +55,9 @@
     if (!quizId || !selections || typeof selections !== 'object') return false;
     const cleanId = String(quizId).trim();
     try {
-      PRESEEDED_PERFECT_SOLUTIONS[cleanId] = selections;
+      RUNTIME_PERFECT_SOLUTIONS[cleanId] = selections;
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(`sp_perfect_solution_${cleanId}`, JSON.stringify(selections));
+        localStorage.setItem(`${STORAGE_PREFIX}${cleanId}`, JSON.stringify(selections));
       }
       return true;
     } catch (e) {
@@ -395,6 +379,7 @@
     deduceNextVector,
     getPerfectSolution,
     storePerfectSolution,
-    PRESEEDED_PERFECT_SOLUTIONS
+    RUNTIME_PERFECT_SOLUTIONS,
+    PRESEEDED_PERFECT_SOLUTIONS: RUNTIME_PERFECT_SOLUTIONS
   };
 });

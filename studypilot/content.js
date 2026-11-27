@@ -31,9 +31,9 @@
   function loadQuizMemory(quizId) {
     try {
       let raw = null;
-      try { raw = localStorage.getItem(`sp_quiz_memory_${quizId}`); } catch (e) {}
+      try { raw = localStorage.getItem(`sp_v2_quiz_memory_${quizId}`); } catch (e) {}
       if (!raw) {
-        try { raw = sessionStorage.getItem(`sp_quiz_memory_${quizId}`); } catch (e) {}
+        try { raw = sessionStorage.getItem(`sp_v2_quiz_memory_${quizId}`); } catch (e) {}
       }
       return raw ? JSON.parse(raw) : { quizId, attempts: [] };
     } catch (e) {
@@ -46,8 +46,8 @@
       const mem = loadQuizMemory(quizId);
       mem.pendingSelections = selections;
       const str = JSON.stringify(mem);
-      try { localStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
-      try { sessionStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
+      try { localStorage.setItem(`sp_v2_quiz_memory_${quizId}`, str); } catch (e) {}
+      try { sessionStorage.setItem(`sp_v2_quiz_memory_${quizId}`, str); } catch (e) {}
     } catch (e) {}
   }
 
@@ -70,8 +70,8 @@
         });
         delete mem.pendingSelections;
         const str = JSON.stringify(mem);
-        try { localStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
-        try { sessionStorage.setItem(`sp_quiz_memory_${quizId}`, str); } catch (e) {}
+        try { localStorage.setItem(`sp_v2_quiz_memory_${quizId}`, str); } catch (e) {}
+        try { sessionStorage.setItem(`sp_v2_quiz_memory_${quizId}`, str); } catch (e) {}
       }
       if (gradeInfo && gradeInfo.hasGrade) {
         // Mastermind 10/10 Knowledge Vault Synchronization: persist cracked 100% solutions
@@ -85,9 +85,9 @@
         }
 
         try {
-          const existingRaw = localStorage.getItem(`sp_quiz_outcome_${quizId}`);
+          const existingRaw = localStorage.getItem(`sp_v2_quiz_outcome_${quizId}`);
           const existing = existingRaw ? JSON.parse(existingRaw) : {};
-          localStorage.setItem(`sp_quiz_outcome_${quizId}`, JSON.stringify({
+          localStorage.setItem(`sp_v2_quiz_outcome_${quizId}`, JSON.stringify({
             ...existing,
             score: gradeInfo.score,
             total: gradeInfo.total,

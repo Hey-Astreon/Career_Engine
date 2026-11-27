@@ -1887,16 +1887,23 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       const auditResult = StudyPilotAuditor.auditAnswer(qTravelAgency, scholarSingleAns);
       expect(auditResult.selectedKey).toBe("a"); // Retains A, does not falsely flip to C!
 
-      // 5. Mastermind Knowledge Vault Test: 0ms Attempt 1 Instant 10/10 Restore
+      // 5. Mastermind Knowledge Vault Test: Dynamic 10/10 Store & Retrieval (Zero Hardcoded Traps)
       const mastermindAny = StudyPilotMastermind as any;
+      mastermindAny.storePerfectSolution("239915", { "1": "b", "2": "a" });
       const preseededKey = mastermindAny.getPerfectSolution("239915");
       expect(preseededKey).toEqual({ "1": "b", "2": "a" });
+      mastermindAny.storePerfectSolution("239914", { "1": "b", "2": "b" });
       expect(mastermindAny.getPerfectSolution("239914")).toEqual({ "1": "b", "2": "b" });
+      mastermindAny.storePerfectSolution("239946", { "1": "b", "2": "c" });
       expect(mastermindAny.getPerfectSolution("239946")).toEqual({ "1": "b", "2": "c" });
+      mastermindAny.storePerfectSolution("239961", {
+        "1": { key: "b", text: "establish" },
+        "2": { key: "a", text: "carbon reduction" }
+      });
       expect(mastermindAny.getPerfectSolution("239961")).toEqual({
         "1": { key: "b", text: "establish" },
         "2": { key: "a", text: "carbon reduction" }
-      }); // Phase 145: Shuffle-proof Quiz 4.1.2 pre-seed
+      });
 
       const mockCandidateAudits = [
         { selectedKey: "a", confidence: 0.8, reasoning: "Draft" },
@@ -2044,6 +2051,10 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(bg.GROQ_MODELS).toContain("openai/gpt-oss-120b");
 
       const mastermindAny = StudyPilotMastermind as any;
+      mastermindAny.storePerfectSolution("239964", {
+        "1": { key: "c", text: "half" },
+        "2": { key: "d", text: "ipcc" }
+      });
       expect(mastermindAny.getPerfectSolution("239964")).toEqual({
         "1": { key: "c", text: "half" },
         "2": { key: "d", text: "ipcc" }
@@ -2447,7 +2458,11 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
     });
 
     it("Phase 145.9: verifies Mastermind 50% -> 0% -> 100% CSP delta deduction & practice circuit calibration", () => {
-      // 1. Verify pre-seeded solution for CSIT120 Quiz 1.1.1 (244530)
+      // 1. Verify dynamic 10/10 vault storage for CSIT120 Quiz 1.1.1 (244530)
+      StudyPilotMastermind.storePerfectSolution("244530", {
+        "1": { text: "top-down" },
+        "2": { text: "data" }
+      });
       const cached = StudyPilotMastermind.getPerfectSolution("244530");
       expect(cached).toBeDefined();
       expect(cached["1"]).toEqual({ text: "top-down" });
