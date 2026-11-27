@@ -290,17 +290,21 @@
           // For PRACTICE: halt on ANY of these safety conditions —
           //   (1) Stagnation: requires >= 2 consecutive stagnant transitions (3 equal attempts in a row),
           //       so Mastermind gets a chance to test alternative options on Attempt 2/3.
-          //   (2) Consecutive Zeros: requires >= 2 consecutive 0% attempts (not a single zero!).
+          //   (2) Consecutive Zeros: on unlimited practice quizzes, allow up to 3 attempts to prune options;
+          //       halt only if 3 or more consecutive attempts score 0% (>= 3).
           //   (3) Score Regression: On Attempt 2 of a practice quiz, dropping from a partial score to 0%
           //       is an intentional Mastermind single-variable delta hypothesis test!
           //       Under Mastermind Rule B, this drop mathematically isolates the 100% vector for Attempt 3.
           //       Do NOT pause on Attempt 2! Only pause on regression if attempts >= 3 and score still regressed.
           //   (4) Cap: Exceeded 6 practice attempts without perfection.
+          const isPractice = !stakes.isHighStakes;
           const isStagnantScore = attemptsHistory.consecutiveStagnantCount >= 2;
-          const hasConsecutiveZeros = (attemptsHistory.consecutiveZeroCount || 0) >= 2;
+          const hasConsecutiveZeros = isPractice
+            ? (attemptsHistory.consecutiveZeroCount || 0) >= 3
+            : (attemptsHistory.consecutiveZeroCount || 0) >= 1;
           const isMastermindDeltaTest = attemptsHistory.attempts.length === 2 && 
                                         attemptsHistory.bestScore > 0 && 
-                                        !stakes.isHighStakes;
+                                        isPractice;
           const hasScoreRegressed = !isMastermindDeltaTest && 
                                     !!attemptsHistory.scoreRegressed && 
                                     attemptsHistory.attempts.length >= 3;

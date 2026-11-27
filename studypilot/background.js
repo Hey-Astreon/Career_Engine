@@ -247,7 +247,22 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /same method name.*different parameters|compile-time polymorphism/i, match: /method overloading|overloading/i, reason: "Method overloading is compile-time polymorphism where methods in the same class share the same name with different parameter lists." },
     { pattern: /subclass provides specific implementation|runtime polymorphism.*overrid/i, match: /method overriding|overriding/i, reason: "Method overriding is runtime polymorphism where a subclass provides its own specific implementation of a superclass method." },
     { pattern: /terminates.*loop.*switch|exits.*switch statement/i, match: /break\b/i, reason: "The 'break' statement terminates the current loop or switch-case block immediately." },
-    { pattern: /skips.*current iteration|jumps to the next iteration/i, match: /continue\b/i, reason: "The 'continue' statement skips the remaining statements of the current iteration and advances to the next loop iteration." }
+    { pattern: /skips.*current iteration|jumps to the next iteration/i, match: /continue\b/i, reason: "The 'continue' statement skips the remaining statements of the current iteration and advances to the next loop iteration." },
+    // Phase 145.12: Java CSIT120 Module 2 Ground Truth (Packages & Exceptions)
+    { pattern: /how many types of packages|types of packages.*java|categories of packages|classes and interfaces.*grouped into/i, match: /two|2\b|built-in.*user-defined|user-defined.*built-in/i, reason: "In Java, packages are broadly divided into exactly two types: Built-in packages (Java API) and User-defined packages." },
+    { pattern: /which.*built-in package|built-in package.*java|example of built-in package/i, match: /java\.lang|java\.util|java\.io/i, reason: "Java API built-in packages include java.lang, java.util, java.io, and java.net." },
+    { pattern: /imported automatically|imported by default|without.*explicit.*import/i, match: /java\.lang/i, reason: "The java.lang package is automatically imported into every Java program by default." },
+    { pattern: /keyword.*create a package|keyword.*declare a package|statement.*creates a package/i, match: /package\b/i, reason: "The 'package' keyword is used to declare and create a package in Java." },
+    { pattern: /first statement in a java|placement of package/i, match: /first.*statement|beginning of the file/i, reason: "The package statement must be the first non-comment statement in a Java source file." },
+    { pattern: /keyword.*import.*package|access classes of another package/i, match: /import\b/i, reason: "The 'import' keyword is used to access classes and interfaces of other packages in Java." },
+    { pattern: /environment variable.*locate.*classes|tells javac.*jvm.*find classes/i, match: /classpath/i, reason: "CLASSPATH is the environment variable that guides the Java compiler and JVM to find user-defined classes and packages." },
+    { pattern: /root class.*exceptions|super class of all exceptions|root of exception hierarchy/i, match: /throwable/i, reason: "java.lang.Throwable is the root class of the entire Java exception and error hierarchy." },
+    { pattern: /checked exception|checked at compile-time/i, match: /ioexception|sqlexception|classnotfoundexception|filenotfoundexception/i, reason: "Checked exceptions (like IOException and SQLException) are checked at compile time and must be handled or declared." },
+    { pattern: /unchecked exception|subclass of runtimeexception|occurs at runtime/i, match: /arithmeticexception|nullpointerexception|arrayindexoutofboundsexception|runtimeexception/i, reason: "Unchecked exceptions inherit from RuntimeException and occur at runtime (e.g., ArithmeticException, NullPointerException)." },
+    { pattern: /block.*always executes|guaranteed to execute|cleanup code/i, match: /finally/i, reason: "The 'finally' block is guaranteed to execute whether an exception is thrown, caught, or not, making it ideal for cleanup." },
+    { pattern: /explicitly throw an exception|keyword used to throw an exception/i, match: /throw\b/i, reason: "The 'throw' keyword is used to explicitly throw an exception instance in Java." },
+    { pattern: /declare.*exceptions.*method signature|method may throw/i, match: /throws\b/i, reason: "The 'throws' keyword is used in a method signature to declare the exceptions that the method might throw." },
+    { pattern: /severe.*problem.*cannot be handled|out of memory/i, match: /error\b/i, reason: "In Java, 'Error' represents severe system-level problems (like OutOfMemoryError) that standard applications should not attempt to catch." }
   ];
 
   for (const entry of dictionary) {
@@ -517,7 +532,20 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
      * Class Inheritance: Single inheritance only via 'extends' keyword. Multiple inheritance achieved through 'implements' with interfaces.
      * 'super' keyword: Calls immediate parent class constructor super() or method super.method(). 'this' refers to current object.
      * Abstract classes: Declared with 'abstract', cannot be instantiated directly with 'new', can contain both abstract and concrete methods.
-     * 'final' keyword: 'final' variable is constant; 'final' method cannot be overridden; 'final' class cannot be inherited.`;
+     * 'final' keyword: 'final' variable is constant; 'final' method cannot be overridden; 'final' class cannot be inherited.
+   - Java Packages & CLASSPATH (Module 2):
+     * Types of Packages: Exactly TWO types: Built-in packages (Java API) and User-defined packages (custom packages created with 'package' keyword).
+     * Package Statement: Must be the FIRST non-comment statement in a Java source file.
+     * Import Statement: 'import' keyword accesses classes of other packages (e.g. import java.util.*;).
+     * Default Package: 'java.lang' is automatically imported into every Java program without explicit import.
+     * Common Built-in Packages: java.lang (core/system), java.util (collections/scanner), java.io (streams/files), java.net (sockets), javax.swing (GUI).
+     * CLASSPATH: Environment variable guiding javac and JVM to locate user-defined classes and packages.
+     * Access Control across Packages: 'private' (same class only), 'default' (same package only), 'protected' (same package + subclasses in other packages), 'public' (accessible everywhere).
+   - Java Exception Handling (Module 2):
+     * Hierarchy: 'java.lang.Throwable' is the root superclass of all errors and exceptions. Subclasses are 'Exception' (recoverable) and 'Error' (severe system problems like OutOfMemoryError, not catchable).
+     * Checked vs Unchecked: Checked exceptions are checked at compile time and must be handled or declared with 'throws' (IOException, SQLException, ClassNotFoundException). Unchecked exceptions inherit from RuntimeException and occur at runtime (ArithmeticException, NullPointerException, ArrayIndexOutOfBoundsException).
+     * 5 Keywords: 'try' (encloses code that may throw), 'catch' (handles specific exception), 'finally' (always executes for cleanup regardless of exception), 'throw' (explicitly throws an exception object), 'throws' (declares exceptions in method signature).
+     * Multiple Catch Order: Must order from most specific subclass to most generic superclass (e.g. ArithmeticException before Exception).`;
   } else if (/green\s*computing|cse433|green\s*it|carbon|sits\b|murugesan|unhelkar|rohs|weee|epeat/i.test(combinedContext)) {
     subjectHeader = `Course Subject: ${courseContext || 'Green Computing (CSE433)'}`;
     textbookAuthority = `standard university curriculum and textbook definitions (Specifically: San Murugesan & G.R. Gangadharan, "Harnessing Green IT: Principles and Practices", and Bhuvan Unhelkar, "Green IT Strategies and Applications")`;

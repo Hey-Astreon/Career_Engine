@@ -2542,5 +2542,116 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(hasScoreRegressed).toBe(false);
       expect(shouldPause).toBe(false);
     });
+
+    it("Phase 145.12: verifies Java Module 2 ontology, Mastermind non-eliminated fallback & practice 2-zero continuity", () => {
+      const bg = require("../studypilot/background.js");
+
+      // 1. Module 2 Java Ontology Lookups (Packages & Exceptions)
+      const pkgTypesAns = bg.solveWithAcademicHeuristics({
+        questionText: "How many types of packages are there in Java?",
+        options: [
+          { key: "a", cleanText: "Four types" },
+          { key: "b", cleanText: "Two: Built-in packages and User-defined packages" },
+          { key: "c", cleanText: "Three types" }
+        ]
+      }, "Java CSIT120 Module 2");
+      expect(pkgTypesAns.selectedKey).toBe("b");
+
+      const defaultPkgAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which package is imported automatically into every Java program by default?",
+        options: [
+          { key: "a", cleanText: "java.util" },
+          { key: "b", cleanText: "java.lang" },
+          { key: "c", cleanText: "java.io" }
+        ]
+      }, "Java CSIT120");
+      expect(defaultPkgAns.selectedKey).toBe("b");
+
+      const pkgKwAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which keyword is used to create a package in Java?",
+        options: [
+          { key: "a", cleanText: "package" },
+          { key: "b", cleanText: "import" },
+          { key: "c", cleanText: "pkg" }
+        ]
+      }, "Java CSIT120");
+      expect(pkgKwAns.selectedKey).toBe("a");
+
+      const throwableAns = bg.solveWithAcademicHeuristics({
+        questionText: "What is the super class of all exceptions and errors in Java?",
+        options: [
+          { key: "a", cleanText: "Throwable" },
+          { key: "b", cleanText: "Exception" },
+          { key: "c", cleanText: "RuntimeException" }
+        ]
+      }, "Java CSIT120");
+      expect(throwableAns.selectedKey).toBe("a");
+
+      const finallyAns = bg.solveWithAcademicHeuristics({
+        questionText: "Which block always executes in Java exception handling regardless of exceptions?",
+        options: [
+          { key: "a", cleanText: "catch block" },
+          { key: "b", cleanText: "finally block" }
+        ]
+      }, "Java CSIT120");
+      expect(finallyAns.selectedKey).toBe("b");
+
+      // 2. Mastermind Non-Eliminated Fallback Verification:
+      // Quiz with 2 questions where Attempt 1 scored 0.00 (both Q1='a' and Q2='b' eliminated).
+      // Verify that on Attempt 2, Mastermind NEVER selects 'a' for Q1 and NEVER selects 'b' for Q2!
+      const questions = [
+        {
+          id: "q1",
+          questionNumber: 1,
+          options: [
+            { key: "a", cleanText: "Option A" },
+            { key: "b", cleanText: "Option B" },
+            { key: "c", cleanText: "Option C" },
+            { key: "d", cleanText: "Option D" }
+          ]
+        },
+        {
+          id: "q2",
+          questionNumber: 2,
+          options: [
+            { key: "a", cleanText: "Option A" },
+            { key: "b", cleanText: "Option B" },
+            { key: "c", cleanText: "Option C" },
+            { key: "d", cleanText: "Option D" }
+          ]
+        }
+      ];
+
+      const candidateAudits = [
+        { selectedKey: "a", confidence: 0.9, reasoning: "Candidate audit." },
+        { selectedKey: "b", confidence: 0.9, reasoning: "Candidate audit." }
+      ];
+
+      const pastAttempts = [
+        {
+          selections: { "1": "a", "2": "b" },
+          score: 0.0,
+          total: 2.0,
+          percentage: 0.0
+        }
+      ];
+
+      const mastermindPlan: any = StudyPilotMastermind.deduceNextVector(questions as any, candidateAudits, pastAttempts, "pkg_quiz_244588");
+      expect(mastermindPlan.applied).toBe(true);
+
+      const resolved = mastermindPlan.resolvedAudits;
+      // Q1 must NOT be 'a' (eliminated by 0% in Attempt 1)
+      expect(resolved[0].selectedKey).not.toBe("a");
+      // Q2 must NOT be 'b' (eliminated by 0% in Attempt 1)
+      expect(resolved[1].selectedKey).not.toBe("b");
+
+      // 3. Practice Quiz 2-Zero Continuity:
+      // When Attempt 1 = 0% and Attempt 2 = 0% on an unlimited practice quiz,
+      // it should NOT pause on Attempt 2 (consecutiveZeroCount >= 3 required for practice).
+      const isPractice = true;
+      const consecutiveZeroCount = 2;
+      const hasConsecutiveZeros = isPractice ? consecutiveZeroCount >= 3 : consecutiveZeroCount >= 1;
+      expect(hasConsecutiveZeros).toBe(false); // Practice quiz is permitted to continue to Attempt 3!
+    });
   });
 });

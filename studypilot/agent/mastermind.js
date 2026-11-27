@@ -38,6 +38,10 @@
       '1': { text: 'top-down' },
       '2': { text: 'data' }
     }, // CSIT120 Quiz 1.1.1 Procedure Oriented Programming Vs. Object Oriented Programming (OOP)
+    '244588': {
+      '1': { text: 'two' },
+      '2': { text: 'built-in' }
+    }, // CSIT120 Quiz 2.1.2 Type of Packages
   };
 
   /**
@@ -271,14 +275,20 @@
     const nextSelections = {};
     questions.forEach((q, i) => {
       const qNum = String(q.questionNumber || i + 1);
+      const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
       if (confirmedCorrect[qNum]) {
         nextSelections[qNum] = confirmedCorrect[qNum];
       } else if (bestAttempt.selections[qNum] && !eliminated[qNum].has(bestAttempt.selections[qNum])) {
         nextSelections[qNum] = bestAttempt.selections[qNum];
       } else {
-        // Fallback to candidate audit selection if not eliminated
+        // Fallback to candidate audit selection if not eliminated, otherwise find first non-eliminated option
         const cand = candidateAudits[i] ? candidateAudits[i].selectedKey.toLowerCase().trim() : 'a';
-        nextSelections[qNum] = !eliminated[qNum].has(cand) ? cand : '';
+        if (!eliminated[qNum].has(cand)) {
+          nextSelections[qNum] = cand;
+        } else {
+          const validOpt = availableOptions.find(optKey => !eliminated[qNum].has(optKey));
+          nextSelections[qNum] = validOpt || cand;
+        }
       }
     });
 
@@ -339,7 +349,12 @@
     const resolvedAudits = candidateAudits.map((aud, i) => {
       const q = questions[i];
       const qNum = String(q.questionNumber || i + 1);
-      const chosenKey = nextSelections[qNum] || aud.selectedKey;
+      let chosenKey = nextSelections[qNum];
+      if (!chosenKey || eliminated[qNum].has(chosenKey)) {
+        const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
+        const validOpt = availableOptions.find(optKey => !eliminated[qNum].has(optKey));
+        chosenKey = validOpt || aud.selectedKey;
+      }
       const isPermuted = qNum === permutedQNum;
 
       let reasoning = aud.reasoning;
