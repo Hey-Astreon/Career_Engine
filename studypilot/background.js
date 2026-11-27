@@ -510,7 +510,7 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
   let textbookAuthority = 'standard university curriculum and accredited textbook definitions';
   let domainRules = '';
 
-  if (/java|csit120|object\s*oriented|oop|procedure\s*oriented|\bpop\b|class.*object|inheritance|polymorphism|encapsulation|jvm|bytecode/i.test(combinedContext)) {
+  if (/java|csit120|object\s*oriented|oop|procedure\s*oriented|\bpop\b|class.*object|inheritance|polymorphism|encapsulation|jvm|bytecode|package|exception|throwable|try\b|catch\b|finally\b|throws?\b|runtimeexception|interfaces?/i.test(combinedContext)) {
     subjectHeader = `Course Subject: ${courseContext || 'Object Oriented Programming Using Java (CSIT120) - Semester III'}`;
     textbookAuthority = `standard academic Java textbooks (Specifically: Herbert Schildt, "Java: The Complete Reference", and E. Balagurusamy, "Programming with Java")`;
     domainRules = `   - Procedure Oriented Programming (POP) vs Object Oriented Programming (OOP):
