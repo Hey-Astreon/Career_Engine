@@ -380,13 +380,46 @@
     return false;
   }
 
+  function isModalContainerOpen(container) {
+    if (!container) return false;
+    // 1. Class-based check (Bootstrap 4/5 .modal.show, Bootstrap 3 .modal.in, Moodle .moodle-dialogue)
+    const cls = (container.className || (container.getAttribute && container.getAttribute('class')) || '').toString();
+    if (container.classList) {
+      if (container.classList.contains('show') || container.classList.contains('in')) return true;
+      if (container.classList.contains('moodle-dialogue') && !container.classList.contains('moodle-dialogue-hidden')) return true;
+      if (container.classList.contains('modal') && !container.classList.contains('show')) return false;
+    } else if (cls) {
+      if (cls.includes('show') || cls.includes('in')) return true;
+      if (cls.includes('moodle-dialogue') && !cls.includes('moodle-dialogue-hidden')) return true;
+      if (cls.includes('modal') && !cls.includes('show')) return false;
+    }
+    // 2. Style-based check
+    if (container.style) {
+      if (container.style.display === 'none' || container.style.visibility === 'hidden') return false;
+      if (container.style.display === 'block' || container.style.display === 'flex') return true;
+    }
+    // 3. Computed style check in real browser DOM
+    if (typeof window !== 'undefined' && window.getComputedStyle) {
+      try {
+        const cs = window.getComputedStyle(container);
+        if (cs && (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0')) return false;
+      } catch (e) {}
+    }
+    // 4. aria-hidden check
+    if (typeof container.getAttribute === 'function' && container.getAttribute('aria-hidden') === 'true') {
+      return false;
+    }
+    return false;
+  }
+
   function findModalStartAttemptButton(doc = document) {
-    // 1. Search inside any modal dialogue container (Moodle Timed Quiz Dialog)
+    // 1. Search strictly inside OPEN modal dialogue containers (Moodle Timed Quiz Dialog)
     const modalContainers = Array.from(
       doc.querySelectorAll('.modal, .modal-dialog, .modal-content, [role="dialog"], [aria-modal="true"], .moodle-dialogue, .moodle-dialogue-confirm')
     );
 
     for (const container of modalContainers) {
+      if (!isModalContainerOpen(container)) continue;
       if (!container || typeof container.querySelectorAll !== 'function') continue;
       const modalBtns = Array.from(
         container.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn')
@@ -397,20 +430,9 @@
         if (txt.includes('cancel') || txt.includes('close') || txt.includes('dismiss')) {
           continue;
         }
-        if (txt.includes('start attempt') || txt.includes('start') || btn.getAttribute('data-action') === 'save') {
+        if (txt.includes('start attempt') || (typeof btn.getAttribute === 'function' && btn.getAttribute('data-action') === 'save')) {
           return btn;
         }
-      }
-    }
-
-    // 2. Direct search across document for "Start attempt" buttons inside modals or forms
-    const candidates = Array.from(
-      doc.querySelectorAll('button.btn-primary, input.btn-primary, input[value*="Start attempt" i], button[value*="Start attempt" i], input[value="Start attempt"]')
-    );
-    for (const btn of candidates) {
-      const txt = (btn.innerText || btn.textContent || btn.value || '').trim().toLowerCase();
-      if (!txt.includes('cancel') && (txt.includes('start attempt') || txt.includes('start'))) {
-        return btn;
       }
     }
 
@@ -418,7 +440,7 @@
   }
 
   function findAttemptOrReattemptButton(doc = document) {
-    // 0. Priority: If a "Start attempt" modal is ALREADY OPEN on screen, prioritize it!
+    // 0. Priority: If a "Start attempt" modal is ACTUALLY OPEN AND VISIBLE on screen, prioritize it!
     const modalStartBtn = findModalStartAttemptButton(doc);
     if (modalStartBtn) return modalStartBtn;
 
@@ -478,10 +500,20 @@
         // If programmatic .click() is ignored by the browser, invoke requestSubmit() or submit() directly!
         const form = directBtn.form || (typeof directBtn.closest === 'function' ? directBtn.closest('form') : null);
         if (form) {
-          if (typeof form.requestSubmit === 'function') {
-            try { form.requestSubmit(directBtn); } catch (e) { form.submit(); }
-          } else if (typeof form.submit === 'function') {
-            form.submit();
+          try {
+            if (typeof form.requestSubmit === 'function') {
+              form.requestSubmit(directBtn);
+            } else if (typeof HTMLFormElement !== 'undefined' && HTMLFormElement.prototype.submit) {
+              HTMLFormElement.prototype.submit.call(form);
+            } else if (typeof form.submit === 'function') {
+              form.submit();
+            }
+          } catch (e) {
+            try {
+              if (typeof HTMLFormElement !== 'undefined' && HTMLFormElement.prototype.submit) {
+                HTMLFormElement.prototype.submit.call(form);
+              }
+            } catch (err) {}
           }
         } else if (directBtn.tagName === 'A' && directBtn.href && typeof window !== 'undefined') {
           window.location.href = directBtn.href;
