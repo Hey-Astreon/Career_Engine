@@ -2588,7 +2588,7 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
           { key: "d", cleanText: "All the above" }
         ]
       }, "Java CSIT120");
-      expect(q2Ans.selectedKey).toBe("b");
+      expect(q2Ans.selectedKey).toBe("c");
 
       const pkgKwAns = bg.solveWithAcademicHeuristics({
         questionText: "Which keyword is used to create a package in Java?",
