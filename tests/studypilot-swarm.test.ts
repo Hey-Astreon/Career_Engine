@@ -2182,6 +2182,21 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(bg.extractOptionLetter("(e)", sampleOpts)).toBe("e");
       expect(bg.extractOptionLetter("ISO 14048", sampleOpts)).toBe("c");
       expect(bg.extractOptionLetter("iso 14048 data format", sampleOpts)).toBe("c");
+
+      // 4. Critical Phase 145.18 Regression: Words starting with a-e (like 'Catch') must NOT match key 'c' when option text is 'b'
+      const exceptionOpts = [
+        { key: "a", cleanText: "Try" },
+        { key: "b", cleanText: "Catch" },
+        { key: "c", cleanText: "Throw" },
+        { key: "d", cleanText: "Check" }
+      ];
+      expect(bg.extractOptionLetter("Catch", exceptionOpts)).toBe("b");
+      expect(bg.extractOptionLetter("catch", exceptionOpts)).toBe("b");
+      expect(bg.extractOptionLetter("b. Catch", exceptionOpts)).toBe("b");
+      expect(bg.extractOptionLetter("(b) Catch", exceptionOpts)).toBe("b");
+      expect(bg.extractOptionLetter("Throw", exceptionOpts)).toBe("c");
+      expect(bg.extractOptionLetter("Check", exceptionOpts)).toBe("d");
+      expect(bg.extractOptionLetter("Try", exceptionOpts)).toBe("a");
     });
 
     it("verifies multi-statement trap recognition, reverse anti-distractor override, and Module 4 Green IT ontology (Phase 145.6)", () => {

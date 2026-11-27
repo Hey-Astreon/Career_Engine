@@ -74,25 +74,40 @@ function safeExtractJson(text) {
 
 function extractOptionLetter(val, options = []) {
   if (!val) return 'a';
-  const str = String(val).trim().toLowerCase();
+  const str = String(val).trim();
+  const lower = str.toLowerCase();
 
-  // 1. Direct letter match: "a", "(b)", "Option c", "d.", "e" (supports a through e)
-  const m = str.match(/^(?:option\s*)?[(\[]?([a-e])[)\]\.\s:]?/i) || str.match(/\b([a-e])\b/i);
-  if (m) return m[1].toLowerCase();
-
-  // 2. Text match against question options (in case model returned answer text instead of letter key)
-  if (Array.isArray(options) && options.length > 0) {
-    const textMatch = options.find(o => {
-      const cleanO = (o.cleanText || '').toLowerCase().trim();
-      return cleanO === str || cleanO.includes(str) || (str.length > 3 && cleanO.length > 3 && str.includes(cleanO));
-    });
-    if (textMatch && textMatch.key) {
-      return textMatch.key.toLowerCase();
-    }
+  // 1. Pure single letter key or wrapped key: 'a', '(b)', 'Option c', 'd.', '[e]', 'Option (b)'
+  const pureKeyMatch = lower.match(/^(?:option\s*)?[(\[]?([a-e])[)\]\.\s:]*$/i);
+  if (pureKeyMatch) {
+    return pureKeyMatch[1].toLowerCase();
   }
 
-  // 3. Fallback character if within a-e
-  if (['a', 'b', 'c', 'd', 'e'].includes(str[0])) return str[0];
+  // 2. Letter prefix with explicit delimiter before text: 'b. Catch', '(c) Throw', 'a) Try', 'b: Catch'
+  const prefixMatch = lower.match(/^(?:option\s*)?[(\[]?([a-e])[)\]\.\s:]\s+\S+/i);
+  if (prefixMatch) {
+    return prefixMatch[1].toLowerCase();
+  }
+
+  // 3. Text match against question options (semantic lookup in case model returned answer text instead of letter key)
+  if (Array.isArray(options) && options.length > 0) {
+    // 3a. Exact text match
+    const exact = options.find(o => (o.cleanText || '').toLowerCase().trim() === lower);
+    if (exact && exact.key) return exact.key.toLowerCase();
+
+    // 3b. Substring inclusion
+    const sub = options.find(o => {
+      const cleanO = (o.cleanText || '').toLowerCase().trim();
+      return cleanO.length >= 2 && (cleanO.includes(lower) || lower.includes(cleanO));
+    });
+    if (sub && sub.key) return sub.key.toLowerCase();
+  }
+
+  // 4. Standalone isolated letter token: 'choice a is correct'
+  const isolatedMatch = lower.match(/\b([a-e])\b/i);
+  if (isolatedMatch) {
+    return isolatedMatch[1].toLowerCase();
+  }
 
   return 'a';
 }
