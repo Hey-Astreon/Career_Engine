@@ -580,15 +580,19 @@ ${marksHeader}Question: ${question.questionText}
 Options:
 ${optionsStr}
 
-Solve this academic multiple-choice question from ${textbookAuthority}.
-RULES:
-1. Academic Syllabus Compliance: Base answers strictly on standard academic university textbooks:
+Solve this academic multiple-choice question according to ${textbookAuthority}.
+ACADEMIC PRINCIPLES & SYLLABUS:
 ${domainRules}
-2. Multi-Statement Rigor (4-Mark & 2-Mark High-Stakes Questions): If the question involves multiple statements (e.g. Statement I and Statement II, or Statement 1 and 2), verify the truth value of EACH statement independently against textbook facts before evaluating combinations ('Only I', 'Only II', 'Both', or 'Neither').
-3. Anti-Distractor Rigor: Examine composite choices ('Both of these', 'Both a and b', 'All of the above') with extreme scrutiny. University exam setters frequently include composite options as distractor traps. ONLY select a composite option if BOTH individual statements are independently established facts. If only one statement is factual, select that specific option!
-4. Anti-Echo Distractor Law: Do NOT select an option merely because it echoes or repeats keywords from the question stem. University exam setters intentionally plant question keywords into incorrect distractors.
-5. If the question asks for 'NOT', 'EXCEPT', or 'INCORRECT', select the invalid choice.
-6. Provide your primary choice ("selectedKey"), your second-best alternative choice ("alternateKey"), your reasoning, and confidence (0.0 to 1.0).
+
+INSTRUCTIONS:
+1. Academic Authority: Select the option that reflects the exact standard definition and technical truth taught in accredited university courses.
+2. Negative Constraints: If the question asks for 'NOT', 'EXCEPT', 'FALSE', or 'INCORRECT', select the single statement that is factually invalid.
+3. Composite Options: If choices include 'Both', 'All of the above', or 'None of the above', select them only if all constituent statements are factually verified. Otherwise, select the specific valid statement.
+4. Response Format: Return strictly valid JSON with keys:
+   - "selectedKey": lowercase letter of the chosen option (e.g. "a", "b", "c", "d")
+   - "alternateKey": lowercase letter of the second-best plausible option
+   - "reasoning": 1-2 sentence concise technical explanation citing the principle
+   - "confidence": numeric value between 0.0 and 1.0 (e.g. 0.98)
 Return strictly valid JSON with keys: "selectedKey", "alternateKey", "reasoning", "confidence".`;
 }
 
