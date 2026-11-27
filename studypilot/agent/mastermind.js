@@ -39,8 +39,8 @@
       '2': { text: 'data' }
     }, // CSIT120 Quiz 1.1.1 Procedure Oriented Programming Vs. Object Oriented Programming (OOP)
     '244588': {
-      '1': { text: 'two' },
-      '2': { text: 'built-in' }
+      '1': { key: 'd', text: 'renamed without renaming' },
+      '2': { key: 'b', text: 'parent folders separated by dot' }
     }, // CSIT120 Quiz 2.1.2 Type of Packages
   };
 

@@ -2567,6 +2567,29 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       }, "Java CSIT120");
       expect(defaultPkgAns.selectedKey).toBe("b");
 
+      // Real Amity Quiz 2.1.2 Questions
+      const q1Ans = bg.solveWithAcademicHeuristics({
+        questionText: "Which of the following is an incorrect statement about packages?",
+        options: [
+          { key: "a", cleanText: "Package defines a namespace in which classes are stored" },
+          { key: "b", cleanText: "A package can contain other package within it" },
+          { key: "c", cleanText: "Java uses file system directories to store packages" },
+          { key: "d", cleanText: "A package can be renamed without renaming the directory in which the classes are stored." }
+        ]
+      }, "Java CSIT120");
+      expect(q1Ans.selectedKey).toBe("d");
+
+      const q2Ans = bg.solveWithAcademicHeuristics({
+        questionText: "The name of a package is the name of the __ in Java.",
+        options: [
+          { key: "a", cleanText: "folder" },
+          { key: "b", cleanText: "all parent folders separated by DOT symbols" },
+          { key: "c", cleanText: "All parent packages separated by DOT symbols" },
+          { key: "d", cleanText: "All the above" }
+        ]
+      }, "Java CSIT120");
+      expect(q2Ans.selectedKey).toBe("b");
+
       const pkgKwAns = bg.solveWithAcademicHeuristics({
         questionText: "Which keyword is used to create a package in Java?",
         options: [
