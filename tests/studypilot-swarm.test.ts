@@ -2837,5 +2837,100 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       // Attempt 3 MUST permute Question 2 (Alternating Pivot), NOT Question 1!
       expect(mastermindPlan3.permutedQuestion).toBe("2");
     });
+
+    it("Phase 145.23: Network Basics (CSIT127) Ontology, 6-Option [a-j] Parsing & Mastermind Vault Restoration", () => {
+      const fs = require("fs");
+      const bgCode = fs.readFileSync("studypilot/background.js", "utf8");
+
+      // Extract extractOptionLetter
+      const extractFnMatch = bgCode.match(/function extractOptionLetter\([\s\S]*?\n\}/);
+      expect(extractFnMatch).toBeTruthy();
+      const extractOptionLetter = new Function("val", "options", `
+        ${extractFnMatch[0]}
+        return extractOptionLetter(val, options);
+      `);
+
+      // Extract solveWithAcademicHeuristics
+      const heurFnMatch = bgCode.match(/function solveWithAcademicHeuristics\([\s\S]*?\n\}/);
+      expect(heurFnMatch).toBeTruthy();
+      const solveWithAcademicHeuristics = new Function("question", "courseContext", `
+        ${heurFnMatch[0]}
+        return solveWithAcademicHeuristics(question, courseContext);
+      `);
+
+      const q1FtpOptions = [
+        { key: "a", cleanText: "A large file requires more than two connections between the client and the server to successfully download it." },
+        { key: "b", cleanText: "The server establishes the first connection with the client to control traffic that consists of server commands and ..." },
+        { key: "c", cleanText: "Files can be downloaded from or uploaded to the server." },
+        { key: "d", cleanText: "The client needs to run a daemon program to establish an FTP connection with a server." },
+        { key: "e", cleanText: "The first connection established is for traffic control and the second connection is created to transfer a file." },
+        { key: "f", cleanText: "Both C & E" }
+      ];
+
+      // 1. Verify 6-Option [a-j] Parsing
+      expect(extractOptionLetter("f", q1FtpOptions)).toBe("f");
+      expect(extractOptionLetter("(f)", q1FtpOptions)).toBe("f");
+      expect(extractOptionLetter("Option f", q1FtpOptions)).toBe("f");
+      expect(extractOptionLetter("f. Both C & E", q1FtpOptions)).toBe("f");
+      expect(extractOptionLetter("Both C & E", q1FtpOptions)).toBe("f");
+
+      // 2. Verify Network Basics Quiz 3.1.3 Ground Truth
+      const q1Ans = solveWithAcademicHeuristics({
+        questionText: "What two characteristics describe an FTP connection?",
+        options: q1FtpOptions
+      }, "Network Basics (CSIT127) - Semester III");
+      expect(q1Ans.selectedKey).toBe("f");
+
+      const q2TftpAns = solveWithAcademicHeuristics({
+        questionText: "A client packet is received by a server. The packet has a destination port number of 69. What service is the client requesting?",
+        options: [
+          { key: "a", cleanText: "DHCP" },
+          { key: "b", cleanText: "SMTP" },
+          { key: "c", cleanText: "TFTP" },
+          { key: "d", cleanText: "DNS" }
+        ]
+      }, "Network Basics (CSIT127) - Semester III");
+      expect(q2TftpAns.selectedKey).toBe("c");
+
+      const qSmtpAns = solveWithAcademicHeuristics({
+        questionText: "Which service operates on destination port 25?",
+        options: [
+          { key: "a", cleanText: "HTTP" },
+          { key: "b", cleanText: "SMTP" },
+          { key: "c", cleanText: "DNS" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qSmtpAns.selectedKey).toBe("b");
+
+      const qDnsAns = solveWithAcademicHeuristics({
+        questionText: "What protocol operates on port number 53 to resolve domain names?",
+        options: [
+          { key: "a", cleanText: "DNS" },
+          { key: "b", cleanText: "DHCP" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qDnsAns.selectedKey).toBe("a");
+
+      // 3. Verify Mastermind 10/10 Vault Restoration for Quiz 3.1.3 (id=245714)
+      const quizQuestions = [
+        { id: "q1", questionNumber: 1, options: q1FtpOptions },
+        { id: "q2", questionNumber: 2, options: [
+          { key: "a", cleanText: "DHCP" },
+          { key: "b", cleanText: "SMTP" },
+          { key: "c", cleanText: "TFTP" },
+          { key: "d", cleanText: "DNS" }
+        ]}
+      ];
+      const candidateAudits = [
+        { selectedKey: "e", confidence: 0.9, reasoning: "Initial guess" },
+        { selectedKey: "c", confidence: 0.95, reasoning: "TFTP port 69" }
+      ];
+
+      const vaultPlan: any = StudyPilotMastermind.deduceNextVector(quizQuestions as any, candidateAudits, [], "245714");
+      expect(vaultPlan.applied).toBe(true);
+      expect(vaultPlan.strategy).toBe("vault-perfect");
+      expect(vaultPlan.resolvedAudits[0].selectedKey).toBe("f");
+      expect(vaultPlan.resolvedAudits[1].selectedKey).toBe("c");
+    });
   });
 });

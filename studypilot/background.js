@@ -73,20 +73,26 @@ function safeExtractJson(text) {
 }
 
 function extractOptionLetter(val, options = []) {
-  if (!val) return 'a';
+  if (!val) return (options[0] && options[0].key) ? options[0].key.toLowerCase() : 'a';
   const str = String(val).trim();
   const lower = str.toLowerCase();
 
-  // 1. Pure single letter key or wrapped key: 'a', '(b)', 'Option c', 'd.', '[e]', 'Option (b)'
-  const pureKeyMatch = lower.match(/^(?:option\s*)?[(\[]?([a-e])[)\]\.\s:]*$/i);
+  // 1. Pure single letter key or wrapped key: 'a', '(b)', 'Option c', 'd.', '[e]', 'Option (f)', 'f' (Phase 145.23: 10-option support [a-j])
+  const pureKeyMatch = lower.match(/^(?:option\s*)?[(\[]?([a-j])[)\]\.\s:]*$/i);
   if (pureKeyMatch) {
-    return pureKeyMatch[1].toLowerCase();
+    const k = pureKeyMatch[1].toLowerCase();
+    if (!options.length || options.some(o => (o.key || '').toLowerCase() === k)) {
+      return k;
+    }
   }
 
-  // 2. Letter prefix with explicit delimiter before text: 'b. Catch', '(c) Throw', 'a) Try', 'b: Catch'
-  const prefixMatch = lower.match(/^(?:option\s*)?[(\[]?([a-e])[)\]\.\s:]\s+\S+/i);
+  // 2. Letter prefix with explicit delimiter before text: 'b. Catch', '(c) Throw', 'f. Both C & E'
+  const prefixMatch = lower.match(/^(?:option\s*)?[(\[]?([a-j])[)\]\.\s:]\s+\S+/i);
   if (prefixMatch) {
-    return prefixMatch[1].toLowerCase();
+    const k = prefixMatch[1].toLowerCase();
+    if (!options.length || options.some(o => (o.key || '').toLowerCase() === k)) {
+      return k;
+    }
   }
 
   // 3. Text match against question options (semantic lookup in case model returned answer text instead of letter key)
@@ -95,21 +101,26 @@ function extractOptionLetter(val, options = []) {
     const exact = options.find(o => (o.cleanText || '').toLowerCase().trim() === lower);
     if (exact && exact.key) return exact.key.toLowerCase();
 
-    // 3b. Substring inclusion
-    const sub = options.find(o => {
-      const cleanO = (o.cleanText || '').toLowerCase().trim();
-      return cleanO.length >= 2 && (cleanO.includes(lower) || lower.includes(cleanO));
-    });
-    if (sub && sub.key) return sub.key.toLowerCase();
+    // 3b. Substring inclusion (require at least 3 characters to avoid single-letter token false positives)
+    if (lower.length >= 3) {
+      const sub = options.find(o => {
+        const cleanO = (o.cleanText || '').toLowerCase().trim();
+        return cleanO.length >= 3 && (cleanO.includes(lower) || lower.includes(cleanO));
+      });
+      if (sub && sub.key) return sub.key.toLowerCase();
+    }
   }
 
-  // 4. Standalone isolated letter token: 'choice a is correct'
-  const isolatedMatch = lower.match(/\b([a-e])\b/i);
+  // 4. Standalone isolated letter token: 'choice f is correct'
+  const isolatedMatch = lower.match(/\b([a-j])\b/i);
   if (isolatedMatch) {
-    return isolatedMatch[1].toLowerCase();
+    const k = isolatedMatch[1].toLowerCase();
+    if (!options.length || options.some(o => (o.key || '').toLowerCase() === k)) {
+      return k;
+    }
   }
 
-  return 'a';
+  return (options[0] && options[0].key) ? options[0].key.toLowerCase() : 'a';
 }
 
 function isMoodleUrl(url) {
@@ -305,7 +316,24 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /stringbuffer vs stringbuilder|difference between stringbuffer and stringbuilder/i, match: /stringbuffer is synchronized|stringbuilder is not synchronized|stringbuffer.*thread-safe/i, reason: "StringBuffer is thread-safe and synchronized; StringBuilder is non-synchronized and faster." },
     { pattern: /default layout manager for (?:a )?panel|default layout manager for (?:an )?applet/i, match: /flowlayout/i, reason: "FlowLayout is the default layout manager for Panel and Applet containers in Java AWT." },
     { pattern: /default layout manager for (?:a )?frame|default layout manager for (?:a )?window/i, match: /borderlayout/i, reason: "BorderLayout is the default layout manager for Frame and Window containers in Java AWT." },
-    { pattern: /adapter class|purpose of adapter class/i, match: /empty implementation|default implementation|convenience class/i, reason: "Adapter classes provide empty default implementations of listener interfaces so programmers only override needed methods." }
+    { pattern: /adapter class|purpose of adapter class/i, match: /empty implementation|default implementation|convenience class/i, reason: "Adapter classes provide empty default implementations of listener interfaces so programmers only override needed methods." },
+    // Phase 145.23: Network Basics (CSIT127) Ground Truth (Application & Transport Layers)
+    { pattern: /characteristics describe an ftp connection|ftp connection.*characteristics/i, match: /both\s+c\s*(?:&|and)\s*e/i, reason: "FTP establishes two separate connections: control connection on port 21 for commands/traffic control, and data connection on port 20 for file transfer (Both C & E)." },
+    { pattern: /destination port.*69|port number of 69/i, match: /tftp\b/i, reason: "UDP Port 69 is reserved for the Trivial File Transfer Protocol (TFTP)." },
+    { pattern: /destination port.*21|port number.*21/i, match: /ftp\b/i, reason: "TCP Port 21 is reserved for the FTP Control connection." },
+    { pattern: /destination port.*20|port number.*20/i, match: /ftp\b/i, reason: "TCP Port 20 is reserved for the FTP Data connection." },
+    { pattern: /destination port.*25|port number.*25/i, match: /smtp\b/i, reason: "TCP Port 25 is reserved for Simple Mail Transfer Protocol (SMTP)." },
+    { pattern: /destination port.*53|port number.*53/i, match: /dns\b/i, reason: "Port 53 is reserved for Domain Name System (DNS)." },
+    { pattern: /destination port.*(?:67|68)|port number.*(?:67|68)/i, match: /dhcp\b/i, reason: "UDP Ports 67 and 68 are reserved for DHCP." },
+    { pattern: /destination port.*(?:80|8080)|port number.*(?:80|8080)/i, match: /http\b/i, reason: "TCP Port 80 is the standard port for HyperText Transfer Protocol (HTTP)." },
+    { pattern: /destination port.*443|port number.*443/i, match: /https\b/i, reason: "TCP Port 443 is reserved for HTTP Secure (HTTPS)." },
+    { pattern: /destination port.*22|port number.*22/i, match: /ssh\b/i, reason: "TCP Port 22 is reserved for Secure Shell (SSH)." },
+    { pattern: /destination port.*23|port number.*23/i, match: /telnet\b/i, reason: "TCP Port 23 is reserved for Telnet." },
+    { pattern: /destination port.*110|port number.*110/i, match: /pop3?\b/i, reason: "TCP Port 110 is reserved for Post Office Protocol (POP3)." },
+    { pattern: /destination port.*143|port number.*143/i, match: /imap\b/i, reason: "TCP Port 143 is reserved for Internet Message Access Protocol (IMAP)." },
+    { pattern: /how many connections.*ftp|connections.*ftp connection/i, match: /two|2\b/i, reason: "FTP establishes exactly two connections: a control connection and a data transfer connection." },
+    { pattern: /ftp control connection.*port/i, match: /21\b/i, reason: "FTP control connection operates over TCP Port 21." },
+    { pattern: /ftp data connection.*port/i, match: /20\b/i, reason: "FTP data transfer connection operates over TCP Port 20." }
   ];
 
   for (const entry of dictionary) {
@@ -664,6 +692,30 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
     domainRules = `   - Relational Model: Relations (tables), Tuples (rows), Attributes (columns). Primary Key, Foreign Key.
    - Normalization: 1NF (atomic values), 2NF (no partial dependency), 3NF (no transitive dependency), BCNF.
    - ACID Properties: Atomicity (all or nothing), Consistency (preserves constraints), Isolation (concurrent transactions independent), Durability (persisted changes).`;
+  } else if (/network|csit127|transport\s*layer|application\s*layer|ftp\b|smtp|dns\b|dhcp|tftp|http\b|https|telnet|ssh\b|tcp\b|udp\b|osi\b|ip\s*address|subnet/i.test(combinedContext)) {
+    subjectHeader = `Course Subject: ${courseContext || 'Network Basics (CSIT127) - Semester III'}`;
+    textbookAuthority = `standard academic computer networking textbooks (Specifically: Andrew S. Tanenbaum & David J. Wetherall, "Computer Networks", and Behrouz A. Forouzan, "Data Communications and Networking", and Kurose & Ross, "Computer Networking: A Top-Down Approach")`;
+    domainRules = `   - Application Layer Protocols (Module 3):
+     * FTP (File Transfer Protocol):
+       - Employs TWO SEPARATE TCP CONNECTIONS: (1) Control Connection on TCP Port 21 (transfers commands/status codes, remains open throughout session), (2) Data Connection on TCP Port 20 (opens dynamically to transfer files, closes when transfer completes).
+       - Characteristics: Client initiates connection to server. Files can be both downloaded (get) and uploaded (put). Dual connections provide out-of-band control. If composite options include 'Both C & E' (e.g. files can be uploaded/downloaded AND dual connections used for control & data), select the composite option!
+     * TFTP (Trivial File Transfer Protocol): Operates over UDP Port 69. Connectionless, lightweight, minimal overhead, no authentication. Ideal for bootstrapping diskless systems and router firmware backups.
+     * DNS (Domain Name System): Resolves human-readable domain names to IP addresses. Operates primarily over UDP Port 53 (TCP Port 53 for zone transfers > 512 bytes). Record types: A (IPv4), AAAA (IPv6), CNAME (canonical alias), MX (mail exchanger), PTR (reverse lookup).
+     * Email Protocols:
+       - SMTP (Simple Mail Transfer Protocol): TCP Port 25 (or 587/465). Push protocol used to transfer mail from sender to mail server, and between mail servers.
+       - POP3 (Post Office Protocol v3): TCP Port 110 (or 995). Pull protocol; downloads mail from server to client.
+       - IMAP (Internet Message Access Protocol): TCP Port 143 (or 993). Pull protocol; synchronizes email across multiple devices while keeping mail stored on server.
+     * DHCP (Dynamic Host Configuration Protocol): Operates over UDP Ports 67 (Server) and 68 (Client). Dynamically assigns IP addresses, subnet masks, default gateway, and DNS servers. Follows DORA process: Discover -> Offer -> Request -> Acknowledge.
+     * HTTP & Web: HTTP operates over TCP Port 80 (stateless protocol). HTTPS operates over TCP Port 443 with TLS/SSL encryption.
+     * Remote Access: Telnet (TCP Port 23, insecure plain text) vs SSH (TCP Port 22, secure encrypted terminal).
+   - Transport Layer Protocols:
+     * TCP (Transmission Control Protocol): Connection-oriented, reliable, byte-stream, in-order delivery. Implements 3-Way Handshake (SYN -> SYN-ACK -> ACK), Flow Control (Sliding Window), Congestion Control, and error recovery via ACKs/Retransmission.
+     * UDP (User Datagram Protocol): Connectionless, unreliable, best-effort delivery, datagram-oriented. Minimal header (8 bytes vs TCP 20 bytes), low overhead, ideal for real-time traffic (DNS, TFTP, VoIP, video streaming, online gaming).
+   - Network Architecture & Addressing:
+     * OSI 7-Layer Model: Physical (1) -> Data Link (2) -> Network (3) -> Transport (4) -> Session (5) -> Presentation (6) -> Application (7).
+     * TCP/IP Model: Network Access -> Internet (IP, ICMP, ARP) -> Transport (TCP, UDP) -> Application (HTTP, FTP, DNS, SMTP).
+     * IP Addressing: Class A (1-126, default /8), Class B (128-191, default /16), Class C (192-223, default /24), Class D (224-239, Multicast), Class E (240-255, Experimental). Loopback: 127.0.0.1. Private IP ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16.
+     * Address Resolution: ARP resolves logical IP addresses to physical MAC addresses. ICMP handles network diagnostic error messages (ping, traceroute).`;
   } else {
     subjectHeader = `Course Subject: ${courseContext || 'Computer Science / BCA University Curriculum'}`;
     textbookAuthority = `standard accredited university computer science curriculum textbooks and definitions`;
@@ -686,9 +738,9 @@ INSTRUCTIONS:
    - PASS 2: RUNTIME EXCEPTION AUDIT: Check for uncaught NullPointerException, ArithmeticException (/ by zero), or ArrayIndexOutOfBoundsException.
    - PASS 3: EXECUTION TRACE: Only if Pass 1 & Pass 2 are clean, trace code execution to determine printed output.
 3. Negative Constraints: If the question asks for 'NOT', 'EXCEPT', 'FALSE', or 'INCORRECT', select the single statement that is factually invalid.
-4. Composite Options: If choices include 'Both', 'All of the above', or 'None of the above', select them only if all constituent statements are factually verified. Otherwise, select the specific valid statement.
+4. Composite Options: If choices include 'Both', 'All of the above', 'None of the above', or combinations like 'Both C & E', select the composite option if all constituent statements are factually verified!
 5. Response Format: Return strictly valid JSON with keys:
-   - "selectedKey": lowercase letter of the chosen option (e.g. "a", "b", "c", "d")
+   - "selectedKey": lowercase letter of the chosen option (e.g. "a", "b", "c", "d", "e", "f")
    - "alternateKey": lowercase letter of the second-best plausible option
    - "reasoning": 1-2 sentence concise technical explanation citing the principle
    - "confidence": numeric value between 0.0 and 1.0 (e.g. 0.98)

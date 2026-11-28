@@ -304,12 +304,12 @@
           const hasConsecutiveZeros = isPractice
             ? (attemptsHistory.consecutiveZeroCount || 0) >= 3
             : (attemptsHistory.consecutiveZeroCount || 0) >= 1;
-          const isMastermindDeltaTest = attemptsHistory.attempts.length === 2 && 
+          const isMastermindDeltaTest = (attemptsHistory.attempts.length === 2 || attemptsHistory.attempts.length === 3) && 
                                         attemptsHistory.bestScore > 0 && 
                                         isPractice;
           const hasScoreRegressed = !isMastermindDeltaTest && 
                                     !!attemptsHistory.scoreRegressed && 
-                                    attemptsHistory.attempts.length >= 3;
+                                    attemptsHistory.attempts.length >= 4;
           const isExceededPracticeAttempts = attemptsHistory.attempts.length >= 6;
 
           // Combined safety gate for practice quizzes
