@@ -2834,8 +2834,12 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
 
       const mastermindPlan3: any = StudyPilotMastermind.deduceNextVector(questions2Q as any, candAudits2Q, pastAttempts2Q, "test_quiz_bidirectional");
       expect(mastermindPlan3.applied).toBe(true);
-      // Attempt 3 MUST permute Question 2 (Alternating Pivot), NOT Question 1!
-      expect(mastermindPlan3.permutedQuestion).toBe("2");
+      // Phase 145.24: Under Unchanged Question Theorem, Q2 is mathematically locked as "b" (confirmed correct)
+      expect(mastermindPlan3.confirmedCorrect["2"]).toBe("b");
+      expect(mastermindPlan3.resolvedAudits[1].selectedKey).toBe("b");
+      // Since Q2 is confirmed correct, Attempt 3 tests Question 1 with non-eliminated option "c"
+      expect(mastermindPlan3.permutedQuestion).toBe("1");
+      expect(mastermindPlan3.resolvedAudits[0].selectedKey).toBe("c");
     });
 
     it("Phase 145.23: Network Basics (CSIT127) Ontology, 6-Option [a-j] Parsing & Mastermind Vault Restoration", () => {
@@ -2931,6 +2935,101 @@ describe("Stride StudyPilot — 5-Agent Swarm Test Suite", () => {
       expect(vaultPlan.strategy).toBe("vault-perfect");
       expect(vaultPlan.resolvedAudits[0].selectedKey).toBe("f");
       expect(vaultPlan.resolvedAudits[1].selectedKey).toBe("c");
+    });
+
+    it("Phase 145.24: Unchanged Question Theorem & Tanenbaum Module 4 Network Layer Heuristics", () => {
+      const fs = require("fs");
+      const bgCode = fs.readFileSync("studypilot/background.js", "utf8");
+
+      const heurFnMatch = bgCode.match(/function solveWithAcademicHeuristics\([\s\S]*?\n\}/);
+      expect(heurFnMatch).toBeTruthy();
+      const solveWithAcademicHeuristics = new Function("question", "courseContext", `
+        ${heurFnMatch[0]}
+        return solveWithAcademicHeuristics(question, courseContext);
+      `);
+
+      // 1. Tanenbaum 5.5 Connecting Devices by OSI Layer
+      const qBridge = solveWithAcademicHeuristics({
+        questionText: "Which device operates at the data link layer to connect two LAN segments and filter traffic?",
+        options: [
+          { key: "a", cleanText: "Repeater" },
+          { key: "b", cleanText: "Bridge" },
+          { key: "c", cleanText: "Router" },
+          { key: "d", cleanText: "Gateway" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qBridge.selectedKey).toBe("b");
+
+      const qRouter = solveWithAcademicHeuristics({
+        questionText: "A device that operates at the network layer to forward packets between different networks is called a:",
+        options: [
+          { key: "a", cleanText: "Repeater" },
+          { key: "b", cleanText: "Bridge" },
+          { key: "c", cleanText: "Router" },
+          { key: "d", cleanText: "Hub" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qRouter.selectedKey).toBe("c");
+
+      const qRepeater = solveWithAcademicHeuristics({
+        questionText: "Which device operates at the physical layer to regenerate signals?",
+        options: [
+          { key: "a", cleanText: "Repeater" },
+          { key: "b", cleanText: "Bridge" },
+          { key: "c", cleanText: "Router" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qRepeater.selectedKey).toBe("a");
+
+      const qGateway = solveWithAcademicHeuristics({
+        questionText: "Which connecting device acts as a protocol converter between dissimilar networks operating at the transport layer and above?",
+        options: [
+          { key: "a", cleanText: "Gateway" },
+          { key: "b", cleanText: "Repeater" },
+          { key: "c", cleanText: "Bridge" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qGateway.selectedKey).toBe("a");
+
+      const qTunnel = solveWithAcademicHeuristics({
+        questionText: "What technique encapsulates a foreign network packet inside another protocol packet to cross an intermediate network?",
+        options: [
+          { key: "a", cleanText: "Tunneling" },
+          { key: "b", cleanText: "Fragmentation" },
+          { key: "c", cleanText: "Routing" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qTunnel.selectedKey).toBe("a");
+
+      const qFrag = solveWithAcademicHeuristics({
+        questionText: "Packet fragmentation is required when a packet encounters an intermediate network with a smaller:",
+        options: [
+          { key: "a", cleanText: "Maximum Transmission Unit (MTU)" },
+          { key: "b", cleanText: "Bandwidth" },
+          { key: "c", cleanText: "Latency" }
+        ]
+      }, "Network Basics (CSIT127)");
+      expect(qFrag.selectedKey).toBe("a");
+
+      // 2. Unchanged Question Theorem in a 2-Question Quiz Simulation
+      const quiz2Q = [
+        { id: "q1", questionNumber: 1, options: [{ key: "a", cleanText: "A" }, { key: "b", cleanText: "B" }, { key: "c", cleanText: "C" }, { key: "d", cleanText: "D" }] },
+        { id: "q2", questionNumber: 2, options: [{ key: "a", cleanText: "A" }, { key: "b", cleanText: "B" }, { key: "c", cleanText: "C" }, { key: "d", cleanText: "D" }] }
+      ];
+      const attempts2Q = [
+        { selections: { "1": "a", "2": "b" }, score: 1.0, total: 2.0, percentage: 50.0 },
+        { selections: { "1": "b", "2": "b" }, score: 1.0, total: 2.0, percentage: 50.0 }
+      ];
+      const audits = [
+        { selectedKey: "a", confidence: 0.8 },
+        { selectedKey: "b", confidence: 0.8 }
+      ];
+      const plan: any = StudyPilotMastermind.deduceNextVector(quiz2Q as any, audits, attempts2Q, "sim_245974");
+      expect(plan.applied).toBe(true);
+      expect(plan.confirmedCorrect["2"]).toBe("b");
+      expect(plan.resolvedAudits[1].selectedKey).toBe("b");
+      expect(plan.resolvedAudits[0].selectedKey).toBe("c");
+      expect(plan.differingQuestions.length).toBe(1);
     });
   });
 });

@@ -256,6 +256,20 @@
             // That means neither key1 nor key2 is the correct answer (the score came from other questions)!
             eliminated[diff.qNum].add(diff.key1);
             eliminated[diff.qNum].add(diff.key2);
+
+            // Phase 145.24: Unchanged Question Theorem
+            // In a 2-question quiz where each question is worth 1.0 mark, if diff.qNum changed from key1 to key2
+            // and the score remained 1.0 mark in both attempts, that 1.0 mark MUST have been produced by the
+            // other UNCHANGED question! Therefore, the unchanged question is 100% mathematically CONFIRMED!
+            if (questions.length === 2 && Math.abs(a1.score - 1.0) < 0.01) {
+              const otherQ = questions.find(q => String(q.questionNumber || q.id) !== String(diff.qNum));
+              if (otherQ) {
+                const otherQNum = String(otherQ.questionNumber || otherQ.id);
+                if (a1.selections[otherQNum] && !eliminated[otherQNum].has(a1.selections[otherQNum])) {
+                  confirmedCorrect[otherQNum] = a1.selections[otherQNum];
+                }
+              }
+            }
           }
         }
       }
@@ -269,29 +283,19 @@
       }
     });
 
-    // 4. Construct the Next Permutation Vector (Single-Variable Delta)
-    // Start with the best known selections as the foundation
+    // 4. Construct the Next Permutation Vector (Strict Single-Variable Invariant)
+    // Start strictly with the best known selections as the foundation
     const nextSelections = {};
     questions.forEach((q, i) => {
       const qNum = String(q.questionNumber || i + 1);
-      const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
       if (confirmedCorrect[qNum]) {
         nextSelections[qNum] = confirmedCorrect[qNum];
-      } else if (bestAttempt.selections[qNum] && !eliminated[qNum].has(bestAttempt.selections[qNum])) {
-        nextSelections[qNum] = bestAttempt.selections[qNum];
       } else {
-        // Fallback to candidate audit selection if not eliminated, otherwise find first non-eliminated option
-        const cand = candidateAudits[i] ? candidateAudits[i].selectedKey.toLowerCase().trim() : 'a';
-        if (!eliminated[qNum].has(cand)) {
-          nextSelections[qNum] = cand;
-        } else {
-          const validOpt = availableOptions.find(optKey => !eliminated[qNum].has(optKey));
-          nextSelections[qNum] = validOpt || cand;
-        }
+        nextSelections[qNum] = bestAttempt.selections[qNum] || (candidateAudits[i] ? candidateAudits[i].selectedKey.toLowerCase().trim() : 'a');
       }
     });
 
-    // 5. Select ONE Question to Permute (Phase 145.22: Bi-Directional Alternating Pivot & Semantic Heuristics)
+    // 5. Select EXACTLY ONE Question to Permute (Phase 145.24: Single-Variable Preservation)
     let permutedQNum = null;
     let permutedFromKey = null;
     let permutedToKey = null;
@@ -309,67 +313,75 @@
       });
     }
 
-    // Bi-directional sorting of question order: alternate between questions if previous permutation didn't solve it
-    const questionIndices = questions.map((_, i) => i);
-    if (lastPermutedQNum) {
-      questionIndices.sort((a, b) => {
-        const qNumA = String(questions[a].questionNumber || a + 1);
-        const qNumB = String(questions[b].questionNumber || b + 1);
-        if (qNumA === lastPermutedQNum && qNumB !== lastPermutedQNum) return 1;
-        if (qNumB === lastPermutedQNum && qNumA !== lastPermutedQNum) return -1;
-        return a - b;
-      });
+    // Step 5a: If any unconfirmed question's baseline selection was eliminated by Rule A or Rule B,
+    // that question MUST be shifted to a valid non-eliminated option!
+    // To preserve the single-variable invariant, ONLY this question is shifted in this attempt!
+    for (const q of questions) {
+      const qNum = String(q.questionNumber || q.id);
+      if (confirmedCorrect[qNum]) continue;
+
+      if (eliminated[qNum].has(nextSelections[qNum])) {
+        const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
+        const validOpts = availableOptions.filter(optKey => !eliminated[qNum].has(optKey));
+        if (validOpts.length > 0) {
+          permutedQNum = qNum;
+          permutedFromKey = nextSelections[qNum];
+          permutedToKey = validOpts[0];
+          nextSelections[qNum] = permutedToKey;
+          break; // STRICT SINGLE-VARIABLE: Stop here! Do not permute another question!
+        }
+      }
     }
 
-    for (const i of questionIndices) {
-      const q = questions[i];
-      const qNum = String(q.questionNumber || i + 1);
+    // Step 5b: If no question was forced to shift by elimination, pick ONE unconfirmed question to test
+    if (!permutedQNum) {
+      const questionIndices = questions.map((_, i) => i);
+      if (lastPermutedQNum) {
+        questionIndices.sort((a, b) => {
+          const qNumA = String(questions[a].questionNumber || a + 1);
+          const qNumB = String(questions[b].questionNumber || b + 1);
+          if (qNumA === lastPermutedQNum && qNumB !== lastPermutedQNum) return 1;
+          if (qNumB === lastPermutedQNum && qNumA !== lastPermutedQNum) return -1;
+          return a - b;
+        });
+      }
 
-      if (confirmedCorrect[qNum]) continue; // Already solved!
+      for (const i of questionIndices) {
+        const q = questions[i];
+        const qNum = String(q.questionNumber || i + 1);
 
-      const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
-      const currentChoice = nextSelections[qNum];
-      const candAudit = candidateAudits[i];
-      const preferredAltKey = candAudit && candAudit.alternateKey ? candAudit.alternateKey.toLowerCase().trim() : null;
+        if (confirmedCorrect[qNum]) continue; // Already solved!
 
-      // Find an untried, non-eliminated alternative option for this question
-      const candidateAlts = availableOptions.filter(optKey => {
-        if (optKey === currentChoice) return false;
-        if (eliminated[qNum].has(optKey)) return false;
+        const availableOptions = (q.options || []).map(o => o.key.toLowerCase().trim());
+        const currentChoice = nextSelections[qNum];
+        const candAudit = candidateAudits[i];
+        const preferredAltKey = candAudit && candAudit.alternateKey ? candAudit.alternateKey.toLowerCase().trim() : null;
 
-        // Ensure this specific vector hasn't been tried before
-        const testVec = questions.map((tq, ti) => {
-          const tNum = String(tq.questionNumber || ti + 1);
-          return tNum === qNum ? optKey : nextSelections[tNum];
-        }).join(',');
+        const candidateAlts = availableOptions.filter(optKey => {
+          if (optKey === currentChoice) return false;
+          if (eliminated[qNum].has(optKey)) return false;
 
-        return !triedVectorsSet.has(testVec);
-      });
+          const testVec = questions.map((tq, ti) => {
+            const tNum = String(tq.questionNumber || ti + 1);
+            return tNum === qNum ? optKey : nextSelections[tNum];
+          }).join(',');
 
-      if (candidateAlts.length > 0) {
-        // Prioritize Scholar's alternateKey or options mentioning compiler error/academic keywords over arbitrary order
-        candidateAlts.sort((optA, optB) => {
-          if (optA === preferredAltKey) return -1;
-          if (optB === preferredAltKey) return 1;
-
-          const optObjA = (q.options || []).find(o => o.key.toLowerCase() === optA);
-          const optObjB = (q.options || []).find(o => o.key.toLowerCase() === optB);
-          const textA = (optObjA?.cleanText || '').toLowerCase();
-          const textB = (optObjB?.cleanText || '').toLowerCase();
-
-          const isTrapA = /compiler\s*error|compile-time/i.test(textA);
-          const isTrapB = /compiler\s*error|compile-time/i.test(textB);
-          if (isTrapA && !isTrapB) return -1;
-          if (!isTrapA && isTrapB) return 1;
-
-          return 0;
+          return !triedVectorsSet.has(testVec);
         });
 
-        permutedQNum = qNum;
-        permutedFromKey = currentChoice;
-        permutedToKey = candidateAlts[0];
-        nextSelections[qNum] = permutedToKey;
-        break; // STRICT SINGLE-VARIABLE DELTA: Permute exactly ONE question!
+        if (candidateAlts.length > 0) {
+          candidateAlts.sort((optA, optB) => {
+            if (optA === preferredAltKey) return -1;
+            if (optB === preferredAltKey) return 1;
+            return 0;
+          });
+
+          permutedQNum = qNum;
+          permutedFromKey = currentChoice;
+          permutedToKey = candidateAlts[0];
+          nextSelections[qNum] = permutedToKey;
+          break; // STRICT SINGLE-VARIABLE: Permute exactly ONE question!
+        }
       }
     }
 
@@ -431,6 +443,8 @@
       resolvedAudits,
       strategy: 'single-variable-delta',
       permutedQuestion: permutedQNum,
+      confirmedCorrect,
+      differingQuestions: [permutedQNum].filter(Boolean),
       notes
     };
   }

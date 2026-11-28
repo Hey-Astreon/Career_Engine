@@ -333,7 +333,17 @@ function solveWithAcademicHeuristics(question, courseContext) {
     { pattern: /destination port.*143|port number.*143/i, match: /imap\b/i, reason: "TCP Port 143 is reserved for Internet Message Access Protocol (IMAP)." },
     { pattern: /how many connections.*ftp|connections.*ftp connection/i, match: /two|2\b/i, reason: "FTP establishes exactly two connections: a control connection and a data transfer connection." },
     { pattern: /ftp control connection.*port/i, match: /21\b/i, reason: "FTP control connection operates over TCP Port 21." },
-    { pattern: /ftp data connection.*port/i, match: /20\b/i, reason: "FTP data transfer connection operates over TCP Port 20." }
+    { pattern: /ftp data connection.*port/i, match: /20\b/i, reason: "FTP data transfer connection operates over TCP Port 20." },
+    // Phase 145.24: Network Basics (CSIT127) Module 4 (Connecting Devices, Internetworking & Network Layer)
+    { pattern: /how networks? (?:are|can be) connected|connecting devices.*layers?/i, match: /bridges?.*routers?|routers?.*gateways?|repeaters?.*bridges?|layer/i, reason: "Networks are connected using devices at various layers: repeaters at physical layer, bridges at data link layer, routers at network layer, and gateways at transport/application layers." },
+    { pattern: /operates? at the data link layer|data link layer.*(?:device|bridge|switch|filter|forward|frame|mac\b)/i, match: /bridge\b|switch\b/i, reason: "A bridge operates at the Data Link Layer (Layer 2) to filter and forward frames based on MAC addresses." },
+    { pattern: /operates? at the network layer|network layer.*(?:device|router|packet|forward|route|gateway)/i, match: /router\b/i, reason: "A router operates at the Network Layer (Layer 3) to route packets based on IP addresses." },
+    { pattern: /operates? at the physical layer|physical layer.*(?:device|repeater|hub|amplify|regenerate|signal|bit\b)/i, match: /repeater\b|hub\b/i, reason: "A repeater operates at the Physical Layer (Layer 1) to amplify and regenerate signals." },
+    { pattern: /operates? at the (?:transport|application) layer|protocol converter.*different protocols|dissimilar networks|transport layer and above/i, match: /gateway\b/i, reason: "A gateway acts as a protocol converter to translate between different protocol suites and architectures." },
+    { pattern: /tunneling/i, match: /encapsulat|foreign network|intermediate/i, reason: "Tunneling encapsulates a packet from one protocol inside the payload of another protocol to cross an intermediate network." },
+    { pattern: /packet fragmentation/i, match: /mtu|maximum transmission unit|different packet sizes/i, reason: "Packet fragmentation breaks packets into smaller pieces when encountering networks with a smaller MTU (Maximum Transmission Unit)." },
+    { pattern: /leaky bucket|token bucket/i, match: /traffic shaping|burst|smooth/i, reason: "The Leaky Bucket algorithm smooths traffic bursts into a steady output rate, while the Token Bucket algorithm allows idle hosts to accumulate tokens for controlled bursts." },
+    { pattern: /load shedding/i, match: /drop.*packets?|discard.*packets?|buffer overflow/i, reason: "Load shedding is a congestion control policy where routers discard packets when buffers overflow." }
   ];
 
   for (const entry of dictionary) {
@@ -715,7 +725,25 @@ function buildSubjectPrompt(question, courseContext, marksHeader, optionsStr) {
      * OSI 7-Layer Model: Physical (1) -> Data Link (2) -> Network (3) -> Transport (4) -> Session (5) -> Presentation (6) -> Application (7).
      * TCP/IP Model: Network Access -> Internet (IP, ICMP, ARP) -> Transport (TCP, UDP) -> Application (HTTP, FTP, DNS, SMTP).
      * IP Addressing: Class A (1-126, default /8), Class B (128-191, default /16), Class C (192-223, default /24), Class D (224-239, Multicast), Class E (240-255, Experimental). Loopback: 127.0.0.1. Private IP ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16.
-     * Address Resolution: ARP resolves logical IP addresses to physical MAC addresses. ICMP handles network diagnostic error messages (ping, traceroute).`;
+     * Address Resolution: ARP resolves logical IP addresses to physical MAC addresses. ICMP handles network diagnostic error messages (ping, traceroute).
+   - Network Layer, Internetworking & Connecting Devices (Module 4):
+     * Connecting Devices by OSI Layer (Tanenbaum 5.5.1):
+       - Physical Layer (Layer 1): Repeaters & Hubs. Regenerate and amplify electrical or optical signals at the bit level; do not examine frames or packets.
+       - Data Link Layer (Layer 2): Bridges & Switches. Filter and forward frames based on physical MAC addresses; break up collision domains.
+       - Network Layer (Layer 3): Routers. Route packets between different/heterogeneous networks based on logical IP addresses; break up broadcast domains.
+       - Transport Layer (Layer 4): Transport Gateways. Connect systems using different connection-oriented or connectionless transport protocols.
+       - Application Layer (Layer 7): Application Gateways. Protocol converters translating between different application protocols and data formats (e.g. mail gateways translating between different formats).
+     * Congestion Control Policies (Tanenbaum 5.3):
+       - Traffic-aware routing, admission control (virtual circuits refuse new connections when congested).
+       - Leaky Bucket: Smooths traffic bursts into a constant, uniform output rate (rigid rate limiting).
+       - Token Bucket: Allows accumulating tokens during idle periods, permitting controlled traffic bursts up to bucket capacity.
+       - Load Shedding: When router buffers overflow, router proactively discards/drops packets (wine policy drops old packets, milk policy drops new packets).
+       - Jitter Control: Regulates packet delay variation for real-time streaming audio/video.
+     * Internetworking & Routing (Tanenbaum 5.5):
+       - Tunneling: Encapsulating a packet of one protocol inside the payload/data field of another protocol to traverse an intermediate or foreign network.
+       - Packet Fragmentation: Occurs when an IP packet exceeds the Maximum Transmission Unit (MTU) of an intermediate link. In IPv4, both hosts and routers fragment packets; in IPv6, routers do NOT fragment—only the source host fragments using Path MTU Discovery.
+       - IPv4 Header: 20-60 bytes. Identification, Flags (DF=Don't Fragment, MF=More Fragments), Fragment Offset (measured in 8-byte blocks / 64-bit units), TTL (Time to Live, decremented at each hop to prevent routing loops), Protocol (6=TCP, 17=UDP, 1=ICMP).
+       - IPv6 Header: Fixed 40 bytes base header. 128-bit addresses (hexadecimal notation, :: zero compression allowed once). Fields: Version (6), Traffic Class, Flow Label, Payload Length, Next Header (chained extension headers), Hop Limit (replaces IPv4 TTL).`;
   } else {
     subjectHeader = `Course Subject: ${courseContext || 'Computer Science / BCA University Curriculum'}`;
     textbookAuthority = `standard accredited university computer science curriculum textbooks and definitions`;

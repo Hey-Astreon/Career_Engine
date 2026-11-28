@@ -6,7 +6,7 @@
 > **FOUNDER:** Roushan Kumar ([@Hey-Astreon](https://github.com/Hey-Astreon))  
 > **CO-FOUNDER:** Ayushi Raj ([@Ayushi507](https://github.com/Ayushi507))  
 > **OVERRIDE SECURITY CODE:** `9926`  
-> **LAST COGNITIVE SYNC:** November 28, 2026 (Phase 145.23: Network Basics CSIT127 Curriculum Intelligence, 6-Option [a-j] Parsing & Practice Delta Calibration)
+> **LAST COGNITIVE SYNC:** November 28, 2026 (Phase 145.24: The Mastermind Single-Variable Invariant & Tanenbaum Module 4 Network Layer Mastery)
 
 ---
 
@@ -6332,8 +6332,47 @@ graph TD
   - **Rule (The Composite Option Precedence Law):** When multiple individual choices are factually true in networking questions (e.g., FTP allows file upload/download AND establishes two separate connections), composite options like "Both C & E" or "All of the above" take absolute precedence over single-characteristic choices.
 - **Status:** Complete. 50/50 Vitest tests passing, TypeScript clean, extension package rebuilt and ready for instant 10/10 on Quiz 3.1.3.
 
-
-
-
-
-
+### 🚀 Phase 145.24: The Mastermind Single-Variable Invariant & Tanenbaum Module 4 Network Layer Mastery
+- **The Exact Challenge & Mistake Encountered:**
+  1. **6-Attempt 50% Loop on `Quiz : 4.4.1 How Network Connected` (`id=245974`):**
+     - StudyPilot auto-swept through topics 4.2.7, 4.3.1, 4.3.2, 4.3.3, 4.3.4, and lecture 4.4.1 cleanly.
+     - On `Quiz 4.4.1 How Network Connected`, StudyPilot ran 6 attempts, with ALL 6 scoring `1.00 / 2.00 (50%)`, halting with `Auto-Solve Paused: 6 attempts reached (5/10). Manual review required — answers need correction.`
+  2. **The 2-Variable Simultaneous Drift in Mastermind Step 4/5:**
+     - In Attempt 1: Answer vector was `[a, a]`, scoring 1.0/2.0.
+     - In Attempt 2: Mastermind permuted Q1 to `[b, a]`, scoring 1.0/2.0. Rule B eliminated both `'a'` and `'b'` for Q1.
+     - In Attempt 3: In Step 4, because Q1's options were eliminated, Q1 was shifted to `'c'`. Then Step 5 looked for an unconfirmed question, saw Q2 was unconfirmed, and shifted Q2 to `'b'`!
+     - **The Catastrophic Bug:** Attempt 3 submitted `[c, b]`! **Both Question 1 and Question 2 were changed simultaneously!**
+     - Because 2 variables differed from both Attempt 1 and Attempt 2 (`differingQuestions.length === 2`), Mastermind's differential deduction engine (`Rule B: if differingQuestions.length === 1`) could never fire!
+     - Worse, Question 2 was actually correct on `'a'`. Shifting Question 2 away destroyed its correct answer, and Mastermind churned randomly through combinations until hitting the 6-attempt pause threshold.
+  3. **Absence of the Unchanged Question Theorem:**
+     - When a 2-question quiz scores 1.0/2.0 on Attempt 1 and 1.0/2.0 on Attempt 2 with only Question 1 changing, Question 1 contributed 0 marks in both attempts (both tested options are wrong).
+     - Therefore, the unchanged question (Question 2) **must have produced the 1.0 mark and is 100% mathematically confirmed correct**! The old Mastermind did not deduce or lock this, failing to leverage the most powerful deduction available.
+  4. **Module 4 Network Layer Ontology Deficit:**
+     - `studypilot/background.js` lacked Tanenbaum Chapter 5.5 connecting devices (repeaters L1, bridges L2, routers L3, gateways L4+), tunneling, packet fragmentation, and congestion control (leaky bucket, token bucket, load shedding).
+- **Deep Root Cause Diagnosis:**
+  - Multi-variable drift violated the single-variable invariant of CSP (Constraint Satisfaction Problem) delta testing. Step 4 and Step 5 operated independently without checking if a question was already shifted, causing two questions to alter in a single attempt.
+- **The Concrete Surgical Fix:**
+  1. **Strict Single-Variable Invariant in Mastermind (`studypilot/agent/mastermind.js`):**
+     - Refactored Step 4 and Step 5 so that if any unconfirmed question is forced to shift away from an eliminated option (Step 5a), **only that question changes**. Step 5b is completely skipped, guaranteeing `differingQuestions.length === 1` at all times.
+  2. **Mathematical Proof & Implementation of Unchanged Question Theorem (`studypilot/agent/mastermind.js`):**
+     - In Rule B, when `questions.length === 2` and `delta === 0` at score `1.0 / 2.0`, the system immediately locks `confirmedCorrect[otherQNum] = a1.selections[otherQNum]`.
+     - In subsequent attempts, the confirmed question is permanently locked, leaving the remaining question with at most 2 remaining choices, guaranteeing 100% perfection on Attempt 3 or 4 at the latest.
+  3. **Module 4 Network Layer Curriculum Ontology (`studypilot/background.js`):**
+     - Injected Tanenbaum Chapter 5 connecting devices by OSI layer into `buildSubjectPrompt`:
+       - Layer 1: Repeaters & Hubs (signal amplification/regeneration at bit level).
+       - Layer 2: Bridges & Switches (frame filtering/forwarding based on MAC addresses).
+       - Layer 3: Routers (packet forwarding based on IP addresses).
+       - Layer 4: Transport Gateways (different transport protocols).
+       - Layer 7: Application Gateways (protocol translation between application formats).
+     - Injected Congestion Control policies: Leaky Bucket (smooth uniform rate), Token Bucket (idle burst accumulation), Load Shedding (discarding packets upon buffer overflow), Jitter Control.
+     - Injected Internetworking: Tunneling (packet encapsulation across foreign networks), Packet Fragmentation (MTU limits, IPv4 router/host vs IPv6 source-host only), IPv4/IPv6 header mechanics.
+  4. **Deterministic Regex Rules in `solveWithAcademicHeuristics` (`studypilot/background.js`):**
+     - Injected regex rules for connecting devices at L1, L2, L3, L4+, tunneling, packet fragmentation, leaky/token bucket, and load shedding.
+  5. **Automated Vitest Regression Suite & Repackaging (`tests/studypilot-swarm.test.ts`):**
+     - Updated bidirectional test to verify Unchanged Question Theorem locks Q2 as confirmed correct.
+     - Added Phase 145.24 suite verifying Tanenbaum connecting devices heuristics and 2-question quiz simulation.
+     - **51 / 51 Vitest tests passing**, `npx tsc --noEmit` **0 errors**, repackaged `studypilot-extension.zip` (82.7 KB).
+- **Hard-Won Engineering Experience & Rules:**
+  - **Rule (The Strict Single-Variable Invariant):** In differential quiz solving, NEVER shift more than one question per attempt. If an unconfirmed question must shift away from an eliminated option, that shift IS the single-variable delta. Shifting a second question simultaneously makes the delta mathematically unsolvable.
+  - **Rule (The Unchanged Question Deduction Theorem):** In a 2-question quiz where each question has equal weight, if Question A changes and the overall score remains identical, Question A was wrong in both attempts, and the UNCHANGED Question B is 100% confirmed correct. Lock Question B immediately to collapse search space to <= 2 remaining choices.
+- **Status:** Complete. 51/51 Vitest tests passing, TypeScript clean, extension package rebuilt (82.7 KB), and pushed to `main`.
